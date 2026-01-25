@@ -574,17 +574,31 @@
 
     <div class="toast-container" id="toastContainer"></div>
 <!-- JAVASCRIPT -->
+<!-- JAVASCRIPT -->
 <script>
         // --- FIX: HIDE AUTH SCREEN IMMEDIATELY TO PREVENT REFRESH FLASH ---
         document.getElementById('auth-screen').classList.add('hidden');
 
-        // --- GLOBAL COMMISSION RATES CONFIG ---
-        let commissionRatesConfig = {
-            sales: 0.50,
-            tech: 0.20,
-            success: 0.15,
-            ops: 0.05
+        // --- 1. NEW GLOBAL COMMISSION CONFIGURATION (By Job Title) ---
+        const DEFAULT_COMMISSION_RATES = { 
+            "Founder & Managing Director": 0.05, 
+            "Project & Client Manager": 0.04, 
+            "Account / Operations / Marketing Manager": 0.04, 
+            "Finance / Billing Executive": 0.0, 
+            "People / Team Operations Executive": 0.0, 
+            "Business Development Executive": 0.125, 
+            "Sales Executive": 0.125, 
+            "Client Success Coordinator": 0.025, 
+            "Client Experience Executive": 0.025, 
+            "Technical Specialist": 0.04, 
+            "Web Developer": 0.04, 
+            "Full Stack Developer": 0.05, 
+            "Automation & AI Specialist": 0.05, 
+            "Support Operations Executive": 0.025 
         };
+
+        // Initialize rates, will be overwritten by DB if exists
+        let commissionRatesConfig = { ...DEFAULT_COMMISSION_RATES };
 
         // --- DEPARTMENT & JOB CONFIG ---
         const DEPARTMENT_MAP = {
@@ -639,22 +653,6 @@
             "Support Operations Executive": "crew"
         };
 
-        const COMMISSION_CATEGORY_MAP = {
-            "Sales Executive": "sales",
-            "Business Development Executive": "sales",
-            "Technical Specialist": "tech",
-            "Web Developer": "tech",
-            "Full Stack Developer": "tech",
-            "Automation & AI Specialist": "tech",
-            "Client Success Coordinator": "success",
-            "Client Experience Executive": "success",
-            "Support Operations Executive": "success",
-            "Finance / Billing Executive": "finance", // Special case: N/A
-            "Project & Client Manager": "ops",
-            "People / Team Operations Executive": "ops",
-            "Founder & Managing Director": "ops"
-        };
-
         // --- PERMISSION SYSTEM ---
         const PERMISSION_KEYS = {
             EDIT_ORDERS: 'edit_orders',
@@ -677,7 +675,7 @@
 
         // --- TABLE STATE MANAGEMENT ---
         const TableEngine = {
-            states: {}, // Stores data, pagination, filters for each table ID
+            states: {},
             init: function(tableId) {
                 if(!this.states[tableId]) {
                     this.states[tableId] = {
@@ -686,14 +684,8 @@
                         page: 1,
                         limit: 25,
                         sortKey: null,
-                        sortDir: 'asc', // or 'desc'
-                        filters: {
-                            search: '',
-                            status: '',
-                            dept: '',
-                            startDate: '',
-                            endDate: ''
-                        }
+                        sortDir: 'asc',
+                        filters: { search: '', status: '', dept: '', startDate: '', endDate: '' }
                     };
                 }
             },
@@ -705,7 +697,7 @@
             setLimit: function(tableId, limit) {
                 this.init(tableId);
                 this.states[tableId].limit = parseInt(limit);
-                this.states[tableId].page = 1; // Reset to page 1
+                this.states[tableId].page = 1;
                 this.processAndRender(tableId);
             },
             setPage: function(tableId, page) {
@@ -716,7 +708,7 @@
             setFilter: function(tableId, key, value) {
                 this.init(tableId);
                 this.states[tableId].filters[key] = value;
-                this.states[tableId].page = 1; // Reset on filter
+                this.states[tableId].page = 1;
                 this.processAndRender(tableId);
             },
             setSort: function(tableId, key) {
@@ -733,37 +725,23 @@
             processAndRender: function(tableId) {
                 const state = this.states[tableId];
                 if(!state) return;
-
                 let data = [...state.raw];
-
-                // 1. Apply Filters
                 const f = state.filters;
                 
-                // Search (Global field search)
                 if(f.search) {
                     const q = f.search.toLowerCase();
-                    data = data.filter(row => {
-                        // Search all string values in the row object
-                        return Object.values(row).some(val => 
-                            String(val).toLowerCase().includes(q)
-                        );
-                    });
+                    data = data.filter(row => Object.values(row).some(val => String(val).toLowerCase().includes(q)));
                 }
-
-                // Specific Filters
                 if(f.status) {
                     data = data.filter(row => (row.status || '').toLowerCase() === f.status.toLowerCase());
                 }
                 if(f.dept) {
                     data = data.filter(row => (row.department || '').toLowerCase() === f.dept.toLowerCase());
                 }
-
-                // Date Range Filter
                 if(f.startDate || f.endDate) {
                     data = data.filter(row => {
-                        if(!row.timestamp) return false; // Skip rows without date
+                        if(!row.timestamp) return false; 
                         const d = row.timestamp.toDate ? row.timestamp.toDate() : (row.timestamp instanceof Date ? row.timestamp : new Date(row.timestamp));
-                        
                         if(f.startDate && d < new Date(f.startDate)) return false;
                         if(f.endDate) {
                             const end = new Date(f.endDate);
@@ -773,65 +751,43 @@
                         return true;
                     });
                 }
-
-                // 2. Sort
                 if(state.sortKey) {
                     data.sort((a, b) => {
                         let valA = a[state.sortKey];
                         let valB = b[state.sortKey];
-                        
-                        // Handle nulls
                         if(valA == null) return 1;
                         if(valB == null) return -1;
-
-                        // Handle Dates
                         if(valA.toDate) valA = valA.toDate();
                         if(valB.toDate) valB = valB.toDate();
-
                         if (valA < valB) return state.sortDir === 'asc' ? -1 : 1;
                         if (valA > valB) return state.sortDir === 'asc' ? 1 : -1;
                         return 0;
                     });
                 }
-
                 state.filtered = data;
-
-                // 3. Paginate
                 const start = (state.page - 1) * state.limit;
                 const end = start + state.limit;
                 const pageData = data.slice(start, end);
-
-                // 4. Render
                 const tbody = document.getElementById(tableId);
                 if(!tbody) return;
-
-                // Check if there's a custom renderer for this table body
                 if(window.customTableRenderers && window.customTableRenderers[tableId]) {
                     tbody.innerHTML = window.customTableRenderers[tableId](pageData);
                 } else {
-                    // Fallback or simple render could go here, 
-                    // but we are defining renderers in specific functions below.
-                    console.warn(`No custom renderer found for ${tableId}`);
+                    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No renderer defined</td></tr>';
                 }
-
-                // Render Pagination Controls
                 this.renderPagination(tableId, data.length, state.page, state.limit);
             },
             renderPagination: function(tableId, totalItems, currentPage, limit) {
                 const container = document.getElementById(`${tableId}-pagination`);
                 if(!container) return;
-
                 const totalPages = Math.ceil(totalItems / limit);
                 const startRec = totalItems === 0 ? 0 : (currentPage - 1) * limit + 1;
                 const endRec = Math.min(currentPage * limit, totalItems);
-
                 let html = `
                     <div class="flex justify-between items-center pt-2" style="border-top:1px solid var(--border);">
-                        <div class="text-sm text-muted">
-                            Showing <strong>${startRec}</strong> to <strong>${endRec}</strong> of <strong>${totalItems}</strong> entries
-                        </div>
+                        <div class="text-sm text-muted">Showing <strong>${startRec}</strong> to <strong>${endRec}</strong> of <strong>${totalItems}</strong></div>
                         <div class="flex items-center gap-2">
-                            <span class="text-sm text-muted">Rows per page:</span>
+                            <span class="text-sm text-muted">Rows:</span>
                             <select onchange="TableEngine.setLimit('${tableId}', this.value)" style="padding: 4px; border-radius: 4px; border: 1px solid var(--border); font-size: 0.8rem;">
                                 <option value="25" ${limit===25?'selected':''}>25</option>
                                 <option value="50" ${limit===50?'selected':''}>50</option>
@@ -842,17 +798,11 @@
                                 <button class="btn btn-sm btn-secondary" onclick="TableEngine.setPage('${tableId}', ${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}><i class="ri-arrow-right-s-line"></i></button>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 container.innerHTML = html;
             }
         };
-
-        // Global Custom Renderers storage
         window.customTableRenderers = {};
-
-
-        function getDefaultRate(title) { return 0.0; } 
 
         // --- FIREBASE SETUP ---
         const firebaseConfig = {
@@ -871,9 +821,16 @@
             firebase.initializeApp(firebaseConfig); 
             db = firebase.firestore(); 
             auth = firebase.auth(); 
-            if(db && auth) { console.log("Firebase initialized successfully."); }
-            else { console.error("Firebase initialization failed."); }
         } catch(e) { console.log("Firebase init error", e); }
+
+        // --- UI LOADING HELPER ---
+        function setPageLoading(isLoading) {
+            const main = document.getElementById('main');
+            if(!main) return;
+            if(isLoading) {
+                main.innerHTML = `<div class="page-loader"><div class="loading-spinner"></div><div class="mt-2 text-muted text-sm">Loading Data...</div></div>`;
+            }
+        }
 
         // --- HELPER: LOAD COMMISSION CONFIG ---
         async function loadCommissionConfig() {
@@ -881,6 +838,9 @@
                 const doc = await db.collection("config").doc("site_settings").get();
                 if (doc.exists && doc.data().commission_rates) {
                     commissionRatesConfig = doc.data().commission_rates;
+                } else {
+                    // If not in DB, save defaults
+                    await db.collection("config").doc("site_settings").update({ commission_rates: commissionRatesConfig });
                 }
             } catch (e) {
                 console.error("Error loading commission config", e);
@@ -894,36 +854,23 @@
                 const doc = await configRef.get();
                 if (!doc.exists) {
                     console.log("Creating default config...");
-                    const defaultRates = {
-                        sales: 0.50,
-                        tech: 0.20,
-                        success: 0.15,
-                        ops: 0.05
-                    };
                     await configRef.set({
                         maintenance_active: false,
-                        maintenance_message: "IT Department currently fix Portal Bugs",
+                        maintenance_message: "System Maintenance in Progress",
                         prices: { html: 199, frontend:599 },
                         packageDetails: {
                             frontend: ["Up to 5 Pages", "Animations", "Contact Forms", "WhatsApp Integration"],
                             ai: ["All Front-End Features", "AI Chatbot Integration", "Lead Auto-Response", "Smart Analytics"]
                         },
-                        discountActive: false,
-                        discountPercent: 0.1,
                         disabled_menus: [],
-                        commission_rates: defaultRates
+                        commission_rates: DEFAULT_COMMISSION_RATES 
                     });
                 } else {
+                    // Ensure commission rates exist if upgrading from old version
                     const data = doc.data();
                     if(!data.commission_rates) {
-                         await configRef.update({
-                             commission_rates: {
-                                 sales: 0.50,
-                                 tech: 0.20,
-                                 success: 0.15,
-                                 ops: 0.05
-                             }
-                         });
+                         await configRef.update({ commission_rates: DEFAULT_COMMISSION_RATES });
+                         commissionRatesConfig = DEFAULT_COMMISSION_RATES;
                     }
                 }
                 const pmSnapshot = await db.collection("payment_methods").limit(1).get();
@@ -934,9 +881,7 @@
                     ];
                     defaults.forEach(pm => db.collection("payment_methods").add(pm));
                 }
-            } catch (error) {
-                console.error("Error initializing database defaults:", error);
-            }
+            } catch (error) { console.error("Error initializing database defaults:", error); }
         }
 
         function logActivity(msg) {
@@ -993,10 +938,7 @@
                     }
                     const paddedNum = String(nextNum).padStart(4, '0');
                     return `#Ticket-${paddedNum}`;
-                } catch (e) {
-                    console.error("Error generating ticket ID", e);
-                    return "#Ticket-0001";
-                }
+                } catch (e) { return "#Ticket-0001"; }
             }
             return null;
         }
@@ -1023,10 +965,9 @@
                         currentUser = user;
                         userData = doc.data();
                         
-                        // Backfill Department if missing based on Job Title
+                        // Backfill Department if missing
                         if (!userData.department && userData.jobTitle && DEPARTMENT_MAP[userData.jobTitle]) {
                             userData.department = DEPARTMENT_MAP[userData.jobTitle];
-                            // Silent update to DB
                             db.collection("users").doc(user.uid).update({ department: userData.department });
                         }
 
@@ -1109,7 +1050,6 @@
         function handleContextMenu(e, path, name) {
             e.preventDefault();
             if(!currentUser) return;
-            
             const isPinned = userPinnedMenus.includes(path);
             if(isPinned) {
                 if(confirm(`Unpin "${name}" from sidebar?`)) {
@@ -1128,9 +1068,7 @@
 
         function savePinnedMenus() {
             if(!currentUser) return;
-            db.collection("users").doc(currentUser.uid).update({
-                pinnedMenus: userPinnedMenus
-            });
+            db.collection("users").doc(currentUser.uid).update({ pinnedMenus: userPinnedMenus });
             renderPinnedMenus();
         }
 
@@ -1138,19 +1076,16 @@
             const container = document.getElementById('pinned-list');
             const section = document.getElementById('pinned-section');
             if(!container) return;
-            
             container.innerHTML = '';
             if(userPinnedMenus.length === 0) {
                 section.classList.add('hidden');
                 return;
             }
             section.classList.remove('hidden');
-
             const labels = {
                 '/orders': 'Orders', '/clients': 'Clients', '/support': 'Support', '/requests': 'Requests',
                 '/commissions': 'Finance', '/crew': 'Crew', '/portfolio': 'Portfolio'
             };
-
             userPinnedMenus.forEach(path => {
                 const label = labels[path] || path.substring(1);
                 const div = document.createElement('div');
@@ -1168,10 +1103,8 @@
                 resultsContainer.classList.remove('active');
                 return;
             }
-
             const q = query.toLowerCase();
             let html = '';
-
             try {
                 const oSnap = await db.collection("orders").orderBy("customerName").startAt(q).endAt(q + '\uf8ff').limit(3).get();
                 oSnap.forEach(doc => {
@@ -1182,7 +1115,6 @@
                     </div>`;
                 });
             } catch(e) {}
-
             try {
                 const cSnap = await db.collection("users").where("role", "==", "user").orderBy("name").startAt(q).endAt(q + '\uf8ff').limit(3).get();
                 cSnap.forEach(doc => {
@@ -1193,7 +1125,6 @@
                     </div>`;
                 });
             } catch(e) {}
-
             try {
                 const tSnap = await db.collection("tickets").orderBy("ticketId").startAt(q).endAt(q + '\uf8ff').limit(3).get();
                 tSnap.forEach(doc => {
@@ -1204,7 +1135,6 @@
                     </div>`;
                 });
             } catch(e) {}
-
             if(html === '') html = '<div class="p-4 text-center text-muted">No results found</div>';
             resultsContainer.innerHTML = html;
             resultsContainer.classList.add('active');
@@ -1212,14 +1142,11 @@
 
         document.addEventListener('click', (e) => {
             const container = document.querySelector('.header-search');
-            if(!container.contains(e.target)) {
-                document.getElementById('search-results').classList.remove('active');
-            }
+            if(!container.contains(e.target)) document.getElementById('search-results').classList.remove('active');
         });
 
         // --- MAINTENANCE MODE LOGIC ---
         let currentMaintenanceConfig = { active: false, disabledMenus: [], message: "" };
-
         function listenForMaintenanceChanges() {
             db.collection("config").doc("site_settings").onSnapshot(doc => {
                 if(doc.exists) {
@@ -1229,17 +1156,10 @@
                         disabledMenus: data.disabled_menus || [],
                         message: data.maintenance_message || "System Maintenance"
                     };
+                    if(data.commission_rates) commissionRatesConfig = data.commission_rates;
                     
-                    if(data.commission_rates) {
-                        commissionRatesConfig = data.commission_rates;
-                        if(document.getElementById('tab-content-tools').classList.contains('active') && canAccessFinanceTools()) {
-                            populateFinanceRatesUI();
-                        }
-                    }
-
                     const bar = document.getElementById('maintenance-bar');
                     const dash = document.getElementById('dashboard');
-                    
                     if(currentMaintenanceConfig.active) {
                         bar.classList.add('active');
                         document.getElementById('maintenance-text').innerText = currentMaintenanceConfig.message;
@@ -1248,7 +1168,6 @@
                         bar.classList.remove('active');
                         dash.classList.remove('has-maintenance');
                     }
-                    
                     const currentPath = window.location.pathname.replace(/\/[^/]+\.html$/, '') || '/';
                     loadRoute(currentPath);
                 }
@@ -1269,9 +1188,7 @@
         document.addEventListener('click', (e) => {
             const dd = document.getElementById('notifDropdown');
             const btn = document.getElementById('notif-btn');
-            if (!dd.contains(e.target) && !btn.contains(e.target)) {
-                dd.classList.remove('show');
-            }
+            if (!dd.contains(e.target) && !btn.contains(e.target)) dd.classList.remove('show');
         });
 
         function listenForNotifications() {
@@ -1294,7 +1211,7 @@
             });
         }
 
-        // --- ACCESS CONTROL & PERMISSIONS ---
+        // --- ACCESS CONTROL ---
         function isSuperAdmin() { return userData && userData.role === 'super_admin'; }
         function isMidAdmin() { return userData && userData.role === 'mid_admin'; }
         function isAdmin() { return userData && userData.role === 'admin'; }
@@ -1307,13 +1224,11 @@
             if (userData.permissions && userData.permissions[key] === true) return true;
             return false;
         }
-        
         function canAccessFinanceTools() {
             if(isSuperAdmin() || isMidAdmin() || isFinanceManager()) return true;
             if(hasPermission(PERMISSION_KEYS.FINANCE_TOOLS_ACCESS)) return true;
             return false;
         }
-
         function checkAccessOrActionAllowed(permissionKey) {
             if(!userData) return false; 
             if (isSuperAdmin() || userData.bypassApproval === true) return true;
@@ -1344,7 +1259,6 @@
                 document.getElementById('sidebar').classList.remove('mobile-open');
                 document.getElementById('sidebarOverlay').classList.remove('active');
             }
-
             if(isMaintenanceBlockingPath(path)) {
                 showToast("Access Denied: Feature under maintenance.", "error");
                 return;
@@ -1373,7 +1287,6 @@
                     mainEl.innerHTML = ''; 
                     renderFn();
                 }
-
                 document.getElementById('main').scrollTop = 0;
             }
         }
@@ -1381,7 +1294,6 @@
         function initRouter() {
             const mainEl = document.getElementById('main');
             if(!mainEl) return;
-
             const path = window.location.pathname;
             const basePath = path.replace(/\/[^/]+\.html$/, '') || '/';
             if (routes[basePath]) {
@@ -1389,8 +1301,6 @@
             } else {
                 navigateTo('/');
             }
-            
-            // Responsive Sidebar Check
             if(window.innerWidth > 1024) {
                  const sb = document.getElementById('sidebar');
                  const mn = document.getElementById('main');
@@ -1400,18 +1310,14 @@
         }
 
         window.onpopstate = (event) => {
-            if (event.state && event.state.path) {
-                loadRoute(event.state.path);
-            }
+            if (event.state && event.state.path) loadRoute(event.state.path);
         };
 
         function toggleSidebar() { 
             const sb = document.getElementById('sidebar');
             const mn = document.getElementById('main');
             const ov = document.getElementById('sidebarOverlay');
-            
             if(window.innerWidth > 1024) {
-                // Desktop collapse logic
                 if (sb.classList.contains('collapsed')) {
                     sb.classList.remove('collapsed');
                     mn.style.marginLeft = 'var(--sidebar-width)';
@@ -1419,9 +1325,7 @@
                     sb.classList.add('collapsed');
                     mn.style.marginLeft = 'var(--sidebar-width-collapsed)';
                 }
-            } 
-            else {
-                // Mobile overlay logic
+            } else {
                 sb.classList.toggle('mobile-open');
                 ov.classList.toggle('active');
             }
@@ -1436,16 +1340,36 @@
             document.getElementById('modalBody').scrollTop = 0;
         }
         function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+        
+        // UPDATED TOAST: Top Right, Cleaner Design
         function showToast(msg, type='info') {
-            const t = document.createElement('div'); t.className = `toast ${type}`;
+            // Remove old toasts if too many
+            const container = document.getElementById('toastContainer');
+            if(container.children.length > 4) container.removeChild(container.firstChild);
+
+            const t = document.createElement('div'); 
+            t.className = `toast ${type}`;
             const icon = type=='success'?'ri-checkbox-circle-fill':(type=='error'?'ri-error-warning-fill':(type=='warning'?'ri-alert-fill':'ri-information-fill'));
-            t.innerHTML = `<i class="${icon}" style="font-size:1.2rem; color: ${type=='success'?'var(--success)':(type=='error'?'var(--danger)':(type=='warning'?'var(--warning)':'black'))}"></i> <span>${msg}</span>`;
-            document.getElementById('toastContainer').appendChild(t);
-            setTimeout(()=>t.classList.add('show'), 10);
-            setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 400); }, 4000);
+            const color = type=='success'?'var(--success)':(type=='error'?'var(--danger)':(type=='warning'?'var(--warning)':'var(--text-main)'));
+            
+            t.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="${icon}" style="font-size:1.2rem; color: ${color}"></i> 
+                    <span style="font-size:0.9rem; font-weight:500;">${msg}</span>
+                </div>
+            `;
+            container.appendChild(t);
+            
+            // Trigger animation
+            requestAnimationFrame(() => t.classList.add('show'));
+            
+            setTimeout(()=>{ 
+                t.classList.remove('show'); 
+                setTimeout(()=>t.remove(), 300); 
+            }, 3000);
         }
 
-        // --- WHATSAPP HELPER FOR MOBILE ---
+        // --- WHATSAPP HELPER ---
         function formatWAPhone(phone) {
             if (!phone) return null;
             let clean = phone.replace(/[^0-9]/g, '');
@@ -1470,9 +1394,8 @@
 
         // --- 1. OVERVIEW ---
         function renderOverview() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
-            
             main.innerHTML = `
                 <div class="flex justify-between items-center mb-4" style="flex-wrap: wrap; gap:10px;">
                     <h2 style="font-size:1.5rem; font-weight:800; letter-spacing:-0.5px;">Dashboard Overview</h2>
@@ -1546,9 +1469,8 @@
 
         // --- 2. ORDERS ---
         function renderOrders() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
-
             main.innerHTML = `
                 <div class="table-container">
                     <div class="table-header" style="display:block;">
@@ -1751,13 +1673,14 @@
                     </div>
                 </div>
                 <div class="mb-4"><label>Internal Notes (Staff Only)</label><textarea id="o-notes" rows="3" placeholder="Add notes about this order...">${d.internalNotes || ''}</textarea><small class="text-muted">These notes are NOT visible to the client.</small></div>
-                <div class="mb-4"><label>Sales Representatives (Commission will split automatically)</label>${salesRepHTML}<small class="text-muted">Select all employees entitled to commission. Rules apply by Job Title (Sales, Tech, etc).</small></div>
+                <div class="mb-4"><label>Sales Representatives (Commission will split automatically)</label>${salesRepHTML}<small class="text-muted">Select all employees entitled to commission. Rates apply by Job Title.</small></div>
                 <div class="mt-4"><label>Client Domain</label><div style="display:flex; gap:10px;"><span style="padding:0.6rem; background:var(--bg-input); border:1px solid var(--border); border-radius:6px 0 0 6px 0; color:var(--text-muted);">https://</span><input id="o-domain" value="${d.domain || ''}" placeholder="example.com" style="border-radius:0 6px 6px 0;"></div><small class="text-muted">Leave empty if no domain yet.</small></div>
                 <label class="mt-4 mb-2 block">Update Status</label>
                 <select id="upd-status"><option value="Pending" ${d.status=='Pending'?'selected':''}>Pending</option><option value="Paid" ${d.status=='Paid'?'selected':''}>Paid</option><option value="Completed" ${d.status=='Completed'?'selected':''}>Completed</option><option value="Cancelled" ${d.status=='Cancelled'?'selected':''}>Cancelled</option></select>
             `, `<button class="btn btn-primary" onclick="updateOrderDetails('${id}')">Save Changes</button>`);
         }
 
+        // --- UPDATED COMMISSION LOGIC (JOB TITLE BASED) ---
         async function generateCommissionsForOrder(orderId, orderData) {
             const existingCommSnap = await db.collection("commission_overview").where("orderId", "==", orderId).get();
             const batch = db.batch();
@@ -1782,37 +1705,23 @@
 
                 const totalTeamCommission = orderTotal * teamPercentage;
                 
-                const SALES_SPLIT = commissionRatesConfig.sales;  
-                const TECH_SPLIT = commissionRatesConfig.tech;    
-                const SUCCESS_SPLIT = commissionRatesConfig.success;
-                const OPS_SPLIT = commissionRatesConfig.ops;   
+                // New Logic: Sum of rates of assigned reps must equal 100% of the split portion
+                // OR simplified: Each person gets their specific rate of the order total?
+                // The prompt says "commission rate now by job title". Usually implies Rate * OrderValue.
+                // However, previous logic had a 'team percentage'. 
+                // Let's assume the config rates are percentages of the TOTAL order value per person.
+                // Example: Sales Exec (12.5%). If Order is 1000, they get 125.
+                // Let's implement that. It's simpler and matches the user's "0.125" request directly.
 
                 repIds.forEach(repId => {
                     const rep = usersMap[repId];
                     if(rep) {
-                        // Check Department for N/A (Finance)
-                        if(rep.department === 'Finance') return;
-
-                        const category = COMMISSION_CATEGORY_MAP[rep.jobTitle] || 'other';
-                        let sharePercentage = 0.0;
-
-                        if (category === 'sales') sharePercentage = SALES_SPLIT;
-                        else if (category === 'tech') sharePercentage = TECH_SPLIT;
-                        else if (category === 'success') sharePercentage = SUCCESS_SPLIT;
-                        else if (category === 'ops') sharePercentage = OPS_SPLIT;
-                        else sharePercentage = 0.0; 
+                        const jobTitle = rep.jobTitle;
+                        // Get rate for this specific job title from config
+                        const rate = commissionRatesConfig[jobTitle] || 0.0;
                         
-                        const categoryPortion = totalTeamCommission * sharePercentage;
-                        
-                        const peopleInCategory = repIds.filter(id => {
-                             const u = usersMap[id];
-                             const cat = COMMISSION_CATEGORY_MAP[u.jobTitle] || 'other';
-                             // Filter out Finance from count too
-                             return u.department !== 'Finance' && cat === category;
-                        }).length;
-
-                        if(peopleInCategory > 0) {
-                            const finalAmount = categoryPortion / peopleInCategory;
+                        if (rate > 0) {
+                            const finalAmount = orderTotal * rate;
                             if (finalAmount > 0) {
                                 const newCommRef = db.collection("commission_overview").doc();
                                 commBatch.set(newCommRef, {
@@ -1833,7 +1742,7 @@
 
                 await commBatch.commit();
                 console.log(`Generated commission records for order ${orderId}`);
-                showToast(`Commissions calculated based on ${cycle} rules.`, "success");
+                showToast(`Commissions calculated based on Job Titles.`, "success");
             }
         }
 
@@ -1875,9 +1784,8 @@
 
         // --- 3. CLIENTS ---
         function renderClients() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
-
             main.innerHTML = `
                 <div class="table-container">
                     <div class="table-header" style="display:block;">
@@ -1919,9 +1827,7 @@
         
         async function viewClientTimeline(uid, name) {
             showModal(`Client Timeline: ${name}`, `<div class="loading-spinner"></div>`, `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
-            
             let timelineHTML = `<div class="timeline-container">`;
-            
             try {
                 const oSnap = await db.collection("orders").where("customerEmail", "==", (await db.collection("users").doc(uid).get()).data().email).orderBy("timestamp", "desc").get();
                 oSnap.forEach(doc => {
@@ -1959,10 +1865,9 @@
 
         // --- 4. CREW MANAGEMENT ---
         function renderCrew() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
             const canEdit = checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_CREW);
-            
             main.innerHTML = `
                 <div class="flex justify-between items-center mb-4">
                     <h2 style="font-size:1.25rem; font-weight:800;">Internal Crew</h2>
@@ -2034,7 +1939,7 @@
                 <div class="mb-4"><label>Email Address</label><input type="email" id="c-email"></div>
                 <div class="mb-4"><label>Phone Number (Optional)</label><input type="tel" id="c-phone" placeholder="01XXXXXXXXX"></div>
                 <div class="mb-4">
-                    <label>Job Title (Auto-Sets Role & Department)</label>
+                    <label>Job Title (Auto-Sets Role & Department & Commission Rate)</label>
                     <select id="c-job" onchange="autoSetRoleAndDept()">
                         <option value="">Select Job Title...</option>
                         ${jobOptions}
@@ -2178,8 +2083,8 @@
 
         // --- 5. SUPPORT ---
         function renderSupport() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
             const canDelete = checkAccessOrActionAllowed(PERMISSION_KEYS.DELETE_SUPPORT);
             main.innerHTML = `
                 <div class="flex justify-between items-center mb-4">
@@ -2240,8 +2145,8 @@
 
         // --- 6. VOUCHERS ---
         async function renderVouchers() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
             const canEdit = checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_VOUCHERS);
             main.innerHTML = `
                 <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
@@ -2390,8 +2295,8 @@
 
         // --- 7. CONTENT & PACKAGES ---
         function renderContent() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
             const canEdit = checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_CONTENT);
             main.innerHTML = `
                 <div class="flex justify-between items-center mb-4">
@@ -2435,8 +2340,8 @@
 
         // --- 8. CONFIG ---
         async function renderConfig() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
             const canEdit = checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_CONFIG);
             const isSA = isSuperAdmin(); 
             main.innerHTML = `
@@ -2514,8 +2419,8 @@
 
         // --- 9. PORTFOLIO ---
         function renderPortfolio() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
             const canEdit = checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_PORTFOLIO);
             main.innerHTML = `
                 <div class="flex justify-between items-center mb-4">
@@ -2581,8 +2486,8 @@
 
         // --- 10. CUSTOMER REQUESTS ---
         function renderRequests() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
             const canDelete = checkAccessOrActionAllowed(PERMISSION_KEYS.DELETE_REQUESTS);
             main.innerHTML = `
                 <div class="flex justify-between items-center mb-4">
@@ -2639,8 +2544,8 @@
 
         // --- 11. PUBLIC PROMO CODES ---
         function renderPublicPromos() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
             const canEdit = checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_PROMOS);
             main.innerHTML = `
                 <div class="flex justify-between items-center mb-4">
@@ -2686,28 +2591,9 @@
         }
 
         // --- 12. FINANCE OVERVIEW ---
-        function populateFinanceRatesUI() {
-            document.getElementById('rate-sales').value = commissionRatesConfig.sales * 100;
-            document.getElementById('rate-tech').value = commissionRatesConfig.tech * 100;
-            document.getElementById('rate-success').value = commissionRatesConfig.success * 100;
-            document.getElementById('rate-ops').value = commissionRatesConfig.ops * 100;
-            calculateRateTotal();
-        }
-        function calculateRateTotal() {
-            const s = parseFloat(document.getElementById('rate-sales').value) || 0; const t = parseFloat(document.getElementById('rate-tech').value) || 0; const su = parseFloat(document.getElementById('rate-success').value) || 0; const o = parseFloat(document.getElementById('rate-ops').value) || 0;
-            const total = (s + t + su + o) / 100; const totalDisplay = (total * 100).toFixed(1); const totalEl = document.getElementById('rate-total');
-            if(totalEl) { totalEl.innerText = `${totalDisplay}%`; if(total > 1) totalEl.style.color = 'var(--warning)'; else totalEl.style.color = 'var(--success)'; }
-        }
-        function saveCommissionRates() {
-            if(!canAccessFinanceTools()) return showToast("Access Denied", "error");
-            const salesVal = parseFloat(document.getElementById('rate-sales').value) || 0; const techVal = parseFloat(document.getElementById('rate-tech').value) || 0; const successVal = parseFloat(document.getElementById('rate-success').value) || 0; const opsVal = parseFloat(document.getElementById('rate-ops').value) || 0;
-            const newRates = { sales: salesVal / 100, tech: techVal / 100, success: successVal / 100, ops: opsVal / 100 };
-            commissionRatesConfig = newRates;
-            db.collection("config").doc("site_settings").update({ commission_rates: newRates }).then(() => { showToast("Commission Rates Updated", "success"); logActivity(`Updated commission rates`); }).catch(e => { console.error(e); showToast("Error saving rates", "error"); });
-        }
         function renderFinanceOverview() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
             const canManageFinance = canAccessFinanceTools(); const isMyView = !canManageFinance; 
             if(!canManageFinance && (!currentUser || !currentUser.uid)) {
                 main.innerHTML = `<div class="access-denied-container"><div class="access-denied-title">Access Denied</div><div class="access-denied-desc">You are not logged in or do not have access.</div></div>`;
@@ -2735,14 +2621,51 @@
                     </div>
                 </div>
                 <div id="tab-content-tools" class="tab-content">
-                    <div class="config-section"><div class="config-header flex justify-between"><h3>Commission Rate Configuration</h3><span class="badge badge-user">Finance Access</span></div><p class="text-muted text-sm mb-4">Set the percentage distribution of the team commission pot. Total must equal 100%.</p>
-                    <div class="price-grid"><div><label>Sales Split (%)</label><input type="number" id="rate-sales" step="0.01" oninput="calculateRateTotal()" ${!canManageFinance ? 'readonly' : ''}></div><div><label>Tech Split (%)</label><input type="number" id="rate-tech" step="0.01" oninput="calculateRateTotal()" ${!canManageFinance ? 'readonly' : ''}></div><div><label>Success/CX Split (%)</label><input type="number" id="rate-success" step="0.01" oninput="calculateRateTotal()" ${!canManageFinance ? 'readonly' : ''}></div><div><label>Ops Split (%)</label><input type="number" id="rate-ops" step="0.01" oninput="calculateRateTotal()" ${!canManageFinance ? 'readonly' : ''}></div></div>
-                    <div class="mt-4 text-center"><p>Total Split: <span id="rate-total">100%</span></p>${canManageFinance ? `<button class="btn btn-primary" onclick="saveCommissionRates()">Update Rates</button>` : ''}</div></div>
+                    <div class="config-section"><div class="config-header flex justify-between"><h3>Commission Rate Configuration (By Job Title)</h3><span class="badge badge-user">Finance Access</span></div><p class="text-muted text-sm mb-4">Set the percentage of the Order Value assigned to each specific Job Title.</p>
+                    <div id="job-rates-container" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:1rem;">
+                        <!-- Rates injected here -->
+                    </div>
+                    <div class="mt-4 text-center">${canManageFinance ? `<button class="btn btn-primary" onclick="saveJobRates()">Update Rates</button>` : ''}</div>
                 </div>
             `;
             if(document.getElementById('tab-content-tools').classList.contains('active') && !isMyView) populateFinanceRatesUI();
             updateCommissionView(isMyView);
         }
+        
+        function populateFinanceRatesUI() {
+            const container = document.getElementById('job-rates-container');
+            if(!container) return;
+            let html = '';
+            for (const [job, rate] of Object.entries(commissionRatesConfig)) {
+                const pct = (rate * 100).toFixed(1);
+                html += `
+                    <div style="background:white; border:1px solid var(--border); padding:10px; border-radius:8px;">
+                        <label style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:4px;">${job}</label>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <input type="number" step="0.1" id="rate-${job.replace(/\s+/g, '-')}" value="${pct}" style="flex:1;" ${!canAccessFinanceTools() ? 'readonly' : ''}>
+                            <span style="font-size:0.8rem;">%</span>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+        
+        async function saveJobRates() {
+            if(!canAccessFinanceTools()) return showToast("Access Denied", "error");
+            const newRates = {};
+            for(const job of Object.keys(commissionRatesConfig)) {
+                const inputId = `rate-${job.replace(/\s+/g, '-')}`;
+                const el = document.getElementById(inputId);
+                if(el) {
+                    const val = parseFloat(el.value) || 0;
+                    newRates[job] = val / 100;
+                }
+            }
+            commissionRatesConfig = newRates;
+            db.collection("config").doc("site_settings").update({ commission_rates: newRates }).then(() => { showToast("Commission Rates Updated", "success"); logActivity(`Updated commission rates`); }).catch(e => { console.error(e); showToast("Error saving rates", "error"); });
+        }
+
         function switchFinanceTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-btn-${tabName}`).classList.add('active');
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(`tab-content-${tabName}`).classList.add('active');
@@ -2758,18 +2681,13 @@
                 const snap = await query.get();
                 if (snap.empty) { rawFinanceData = []; tbody.innerHTML = `<tr><td colspan="${isMyView ? 6 : 8}" class="text-center text-muted">No commissions found.</td></tr>`; totalEl.innerText = 'RM 0.00'; return; }
                 rawFinanceData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Add custom filter for min amount as it's not in standard TableEngine
                 window.customTableRenderers['comm-tbody'] = function(data) {
                     const minAmt = document.getElementById('filter-finance-amount') ? parseFloat(document.getElementById('filter-finance-amount').value) : 0;
                     let filteredData = data;
                     if(minAmt > 0) filteredData = data.filter(d => d.amount >= minAmt);
-                    
                     if(filteredData.length === 0) return `<tr><td colspan="${isMyView ? 6 : 8}" class="text-center text-muted">No matching records found.</td></tr>`;
-                    
-                    // Recalculate total based on visible filtered data
                     const sum = filteredData.reduce((acc, curr) => acc + (curr.amount||0), 0);
                     document.getElementById('comm-total-earnings').innerText = `RM ${sum.toFixed(2)}`;
-
                     return filteredData.map(d => {
                         const status = d.status || 'unpaid'; const isPaid = status === 'paid';
                         const statusBadge = isPaid ? `<span class="status-badge status-paid">Paid</span>` : `<span class="status-badge status-unpaid">Unpaid</span>`;
@@ -2807,7 +2725,6 @@
                 showToast(`Marked as ${newStatus}`, "success");
                 logActivity(`Updated commission status to ${newStatus} for ${crewId}`);
                 const isMyView = !canAccessFinanceTools();
-                // Refresh
                 const snap = await db.collection("commission_overview").orderBy("orderDate", "desc").get();
                 rawFinanceData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 if(isMyView) rawFinanceData = rawFinanceData.filter(d => d.crewId === currentUser.uid);
@@ -2831,6 +2748,7 @@
 
         // --- 13. APPROVAL TOOLS ---
         function renderApprovals() {
+            setPageLoading(true);
             const main = document.getElementById('main');
             if(!main) return;
             if(!hasPermission(PERMISSION_KEYS.APPROVE_ACTIONS)) {
@@ -2891,27 +2809,18 @@
                 const requestSnap = await requestRef.get();
                 if (!requestSnap.exists) return showToast("Request not found", "error");
                 const r = requestSnap.data();
-                await requestRef.update({ status: action, processedBy: userData.name,                     processedAt: firebase.firestore.FieldValue.serverTimestamp() });
-
+                await requestRef.update({ status: action, processedBy: userData.name, processedAt: firebase.firestore.FieldValue.serverTimestamp() });
                 if (action === 'Approved') {
                     if (r.payload) {
-                        if (r.targetId) {
-                            await db.collection(r.targetCollection).doc(r.targetId).update(r.payload);
-                        } else {
-                            // Creating a new document based on the request payload
-                            // Note: Ensure targetCollection is valid
-                            await db.collection(r.targetCollection).add(r.payload); 
-                        }
+                        if (r.targetId) await db.collection(r.targetCollection).doc(r.targetId).update(r.payload);
+                        else await db.collection(r.targetCollection).add(r.payload); 
                         showToast("Changes Applied Successfully", "success");
-                    } else {
-                        showToast("Request Approved", "success");
-                    }
+                    } else showToast("Request Approved", "success");
                     logActivity(`Approved edit request by ${r.requesterName} on ${r.targetCollection}`);
                 } else {
                     showToast("Request Rejected", "error");
                     logActivity(`Rejected edit request by ${r.requesterName}`);
                 }
-
             } catch(e) {
                 console.error(e);
                 showToast("Error processing: " + e.message, "error");
@@ -2919,9 +2828,8 @@
         }
 
         function renderMyProfile() {
+            setPageLoading(true);
             const main = document.getElementById('main');
-            if(!main) return;
-
             main.innerHTML = `
                 <div class="p-4" style="background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; max-width:500px; margin:0 auto;">
                     <div class="flex items-center gap-4 mb-6">
@@ -2940,49 +2848,26 @@
                 </div>`;
         }
 
-        // --- HELPER FOR TABLE ENGINE FILTERS ---
-        // This function is used globally for simple table searching where TableEngine isn't fully implemented yet
         function filterTable(id, text) {
             const trs = document.querySelectorAll(`#${id} tr`);
             text = text.toLowerCase();
             trs.forEach(tr => tr.style.display = tr.innerText.toLowerCase().includes(text)?'':'none');
         }
 
-        // --- VOUCHER WHATSAPP HELPERS ---
-
         function notifyVoucherExpiryAdmin(voucherCode, expiryDate, customerName) {
             const msg = `Hi Admin Team,\n\nA customer’s voucher (${voucherCode}) will expire on ${expiryDate}.\nCustomer: ${customerName}\n\nPlease follow up with them and try to close the sale.\n\nThank you.\n\n> [Auto-generated from DDNet System]`;
-            
-            // Opens a generic WhatsApp link so you can choose who to send it to
             const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-            
             const win = window.open(url, '_blank');
-            if (!win || win.closed || typeof win.closed == 'undefined') {
-                window.location.href = url;
-            }
+            if (!win || win.closed || typeof win.closed == 'undefined') window.location.href = url;
         }
 
         function notifyVoucherExpiryClient(phone, name, expiryDate) {
-            // Clean phone number
             const cleanPhone = phone ? phone.replace(/[^0-9]/g, '').replace(/^0/, '60') : '';
-            
-            if(!cleanPhone) {
-                return showToast("Client has no valid phone number", "error");
-            }
-
+            if(!cleanPhone) return showToast("Client has no valid phone number", "error");
             const msg = `Hi ${name},\n\nWe noticed your voucher will expire on ${expiryDate}. Don’t miss out—use it soon! If you need any assistance, we’re happy to help.\n\nThank you,\n> [Auto-generated from DDNet System]`;
-
             const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
-            
             const win = window.open(url, '_blank');
-            if (!win || win.closed || typeof win.closed == 'undefined') {
-                window.location.href = url;
-            }
-        }
-
-        // --- DEPARTMENT HELPER (BACKFILL & DISPLAY) ---
-        function getDepartmentFromJobTitle(jobTitle) {
-            return DEPARTMENT_MAP[jobTitle] || "Operations / Admin"; // Default fallback
+            if (!win || win.closed || typeof win.closed == 'undefined') window.location.href = url;
         }
 </script>
 </body>
