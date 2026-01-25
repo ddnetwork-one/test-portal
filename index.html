@@ -579,7 +579,8 @@
         // --- FIX: HIDE AUTH SCREEN IMMEDIATELY TO PREVENT REFRESH FLASH ---
         document.getElementById('auth-screen').classList.add('hidden');
 
-        // --- 1. NEW GLOBAL COMMISSION CONFIGURATION (By Job Title) ---
+        // --- 1. COMMISSION CONFIGURATION (By Job Title) ---
+        // These rates will be used as defaults, but can be overridden per user.
         const DEFAULT_COMMISSION_RATES = { 
             "Founder & Managing Director": 0.05, 
             "Project & Client Manager": 0.04, 
@@ -597,26 +598,16 @@
             "Support Operations Executive": 0.025 
         };
 
-        // Initialize rates, will be overwritten by DB if exists
-        let commissionRatesConfig = { ...DEFAULT_COMMISSION_RATES };
-
-        // --- DEPARTMENT & JOB CONFIG ---
-        const DEPARTMENT_MAP = {
-            "Founder & Managing Director": "Founder / Owner",
-            "Project & Client Manager": "Operations / Admin",
-            "Account / Operations / Marketing Manager": "Operations / Admin",
-            "Finance / Billing Executive": "Finance",
-            "People / Team Operations Executive": "Operations / Admin",
-            "Business Development Executive": "Sales",
-            "Sales Executive": "Sales",
-            "Client Success Coordinator": "Success / CX",
-            "Client Experience Executive": "Success / CX",
-            "Technical Specialist": "Tech",
-            "Web Developer": "Tech",
-            "Full Stack Developer": "Tech",
-            "Automation & AI Specialist": "Tech",
-            "Support Operations Executive": "Operations / Admin"
-        };
+        // --- 2. DEPARTMENT CONFIGURATION ---
+        // Removed DEPARTMENT_MAP logic. Now uses manual selection.
+        const DEPARTMENTS = [
+            "Founder / Managing Director", 
+            "Operations", 
+            "Finance", 
+            "Customer Service", 
+            "Development", 
+            "Sales"
+        ];
 
         // --- CONSTANTS & CONFIG ---
         const JOB_TITLES = [
@@ -670,7 +661,9 @@
             MANAGE_USERS: 'manage_users', 
             FINANCE_TOOLS_ACCESS: 'finance_tools_access',
             APPROVE_ACTIONS: 'approve_actions', 
-            BYPASS_APPROVAL: 'bypass_approval'
+            BYPASS_APPROVAL: 'bypass_approval',
+            EDIT_ACCESS: 'edit_access', // New permission for editing profile/access
+            ADJUST_COMMISSION: 'adjust_commission' // New permission for specific rate override
         };
 
         // --- TABLE STATE MANAGEMENT ---
@@ -837,10 +830,11 @@
             try {
                 const doc = await db.collection("config").doc("site_settings").get();
                 if (doc.exists && doc.data().commission_rates) {
-                    commissionRatesConfig = doc.data().commission_rates;
+                    // We load the global defaults
+                    // Individual overrides are stored on the user doc itself
                 } else {
-                    // If not in DB, save defaults
-                    await db.collection("config").doc("site_settings").update({ commission_rates: commissionRatesConfig });
+                    // Ensure defaults exist in DB
+                    await db.collection("config").doc("site_settings").update({ commission_rates: DEFAULT_COMMISSION_RATES });
                 }
             } catch (e) {
                 console.error("Error loading commission config", e);
@@ -866,11 +860,9 @@
                         commission_rates: DEFAULT_COMMISSION_RATES 
                     });
                 } else {
-                    // Ensure commission rates exist if upgrading from old version
                     const data = doc.data();
                     if(!data.commission_rates) {
                          await configRef.update({ commission_rates: DEFAULT_COMMISSION_RATES });
-                         commissionRatesConfig = DEFAULT_COMMISSION_RATES;
                     }
                 }
                 const pmSnapshot = await db.collection("payment_methods").limit(1).get();
@@ -965,16 +957,24 @@
                         currentUser = user;
                         userData = doc.data();
                         
-                        // Backfill Department if missing
-                        if (!userData.department && userData.jobTitle && DEPARTMENT_MAP[userData.jobTitle]) {
-                            userData.department = DEPARTMENT_MAP[userData.jobTitle];
-                            db.collection("users").doc(user.uid).update({ department: userData.department });
+                        // Handle Permissions Defaults
+                        if(!userData.permissions) userData.permissions = {};
+                        
+                        // Founder Default Access
+                        if(userData.role === 'super_admin') {
+                            userData.permissions[PERMISSION_KEYS.EDIT_ACCESS] = true;
                         }
 
-                        if(!userData.permissions) userData.permissions = {};
                         if(!userData.isSuspended) userData.isSuspended = false;
                         if(userData.bypassApproval === undefined) userData.bypassApproval = false; 
                         if(!userData.pinnedMenus) userData.pinnedMenus = [];
+                        
+                        // Initialize personal commission rate if missing
+                        if(userData.personalCommissionRate === undefined) {
+                            const defaultRate = DEFAULT_COMMISSION_RATES[userData.jobTitle] || 0;
+                            db.collection("users").doc(user.uid).update({ personalCommissionRate: defaultRate });
+                            userData.personalCommissionRate = defaultRate;
+                        }
 
                         if(userData.isSuspended) {
                             auth.signOut();
@@ -1156,7 +1156,6 @@
                         disabledMenus: data.disabled_menus || [],
                         message: data.maintenance_message || "System Maintenance"
                     };
-                    if(data.commission_rates) commissionRatesConfig = data.commission_rates;
                     
                     const bar = document.getElementById('maintenance-bar');
                     const dash = document.getElementById('dashboard');
@@ -1341,17 +1340,13 @@
         }
         function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
         
-        // UPDATED TOAST: Top Right, Cleaner Design
         function showToast(msg, type='info') {
-            // Remove old toasts if too many
             const container = document.getElementById('toastContainer');
             if(container.children.length > 4) container.removeChild(container.firstChild);
-
             const t = document.createElement('div'); 
             t.className = `toast ${type}`;
             const icon = type=='success'?'ri-checkbox-circle-fill':(type=='error'?'ri-error-warning-fill':(type=='warning'?'ri-alert-fill':'ri-information-fill'));
             const color = type=='success'?'var(--success)':(type=='error'?'var(--danger)':(type=='warning'?'var(--warning)':'var(--text-main)'));
-            
             t.innerHTML = `
                 <div style="display:flex; align-items:center; gap:10px;">
                     <i class="${icon}" style="font-size:1.2rem; color: ${color}"></i> 
@@ -1359,10 +1354,7 @@
                 </div>
             `;
             container.appendChild(t);
-            
-            // Trigger animation
             requestAnimationFrame(() => t.classList.add('show'));
-            
             setTimeout(()=>{ 
                 t.classList.remove('show'); 
                 setTimeout(()=>t.remove(), 300); 
@@ -1400,14 +1392,12 @@
                 <div class="flex justify-between items-center mb-4" style="flex-wrap: wrap; gap:10px;">
                     <h2 style="font-size:1.5rem; font-weight:800; letter-spacing:-0.5px;">Dashboard Overview</h2>
                 </div>
-                
                 <div class="quick-actions-grid">
                     <div class="quick-action-card" onclick="navigateTo('/orders')"><i class="ri-shopping-cart-2-line"></i><span>New Order</span></div>
                     <div class="quick-action-card" onclick="navigateTo('/clients')"><i class="ri-user-add-line"></i><span>Add Client</span></div>
                     <div class="quick-action-card" onclick="navigateTo('/support')"><i class="ri-ticket-line"></i><span>New Ticket</span></div>
                     <div class="quick-action-card" onclick="navigateTo('/vouchers')"><i class="ri-coupon-line"></i><span>Create Voucher</span></div>
                 </div>
-
                 <div class="stats-grid" id="stats-grid">
                     <div class="page-loader" style="height:100px;"><div class="loading-spinner"></div></div>
                 </div>
@@ -1673,14 +1663,14 @@
                     </div>
                 </div>
                 <div class="mb-4"><label>Internal Notes (Staff Only)</label><textarea id="o-notes" rows="3" placeholder="Add notes about this order...">${d.internalNotes || ''}</textarea><small class="text-muted">These notes are NOT visible to the client.</small></div>
-                <div class="mb-4"><label>Sales Representatives (Commission will split automatically)</label>${salesRepHTML}<small class="text-muted">Select all employees entitled to commission. Rates apply by Job Title.</small></div>
+                <div class="mb-4"><label>Sales Representatives (Commission will be calculated individually based on Job Titles)</label>${salesRepHTML}<small class="text-muted">Select all employees entitled to commission.</small></div>
                 <div class="mt-4"><label>Client Domain</label><div style="display:flex; gap:10px;"><span style="padding:0.6rem; background:var(--bg-input); border:1px solid var(--border); border-radius:6px 0 0 6px 0; color:var(--text-muted);">https://</span><input id="o-domain" value="${d.domain || ''}" placeholder="example.com" style="border-radius:0 6px 6px 0;"></div><small class="text-muted">Leave empty if no domain yet.</small></div>
                 <label class="mt-4 mb-2 block">Update Status</label>
                 <select id="upd-status"><option value="Pending" ${d.status=='Pending'?'selected':''}>Pending</option><option value="Paid" ${d.status=='Paid'?'selected':''}>Paid</option><option value="Completed" ${d.status=='Completed'?'selected':''}>Completed</option><option value="Cancelled" ${d.status=='Cancelled'?'selected':''}>Cancelled</option></select>
             `, `<button class="btn btn-primary" onclick="updateOrderDetails('${id}')">Save Changes</button>`);
         }
 
-        // --- UPDATED COMMISSION LOGIC (JOB TITLE BASED) ---
+        // --- UPDATED COMMISSION LOGIC (INDIVIDUAL JOB TITLE BASED) ---
         async function generateCommissionsForOrder(orderId, orderData) {
             const existingCommSnap = await db.collection("commission_overview").where("orderId", "==", orderId).get();
             const batch = db.batch();
@@ -1705,23 +1695,19 @@
 
                 const totalTeamCommission = orderTotal * teamPercentage;
                 
-                // New Logic: Sum of rates of assigned reps must equal 100% of the split portion
-                // OR simplified: Each person gets their specific rate of the order total?
-                // The prompt says "commission rate now by job title". Usually implies Rate * OrderValue.
-                // However, previous logic had a 'team percentage'. 
-                // Let's assume the config rates are percentages of the TOTAL order value per person.
-                // Example: Sales Exec (12.5%). If Order is 1000, they get 125.
-                // Let's implement that. It's simpler and matches the user's "0.125" request directly.
-
                 repIds.forEach(repId => {
                     const rep = usersMap[repId];
                     if(rep) {
-                        const jobTitle = rep.jobTitle;
-                        // Get rate for this specific job title from config
-                        const rate = commissionRatesConfig[jobTitle] || 0.0;
+                        // Priority 1: Personal Rate Override
+                        let rate = rep.personalCommissionRate;
+                        
+                        // Priority 2: Global Config Rate
+                        if(rate === undefined || rate === null) {
+                            rate = DEFAULT_COMMISSION_RATES[rep.jobTitle] || 0.0;
+                        }
                         
                         if (rate > 0) {
-                            const finalAmount = orderTotal * rate;
+                            const finalAmount = orderTotal * rate; // Direct calculation based on user rate
                             if (finalAmount > 0) {
                                 const newCommRef = db.collection("commission_overview").doc();
                                 commBatch.set(newCommRef, {
@@ -1742,7 +1728,7 @@
 
                 await commBatch.commit();
                 console.log(`Generated commission records for order ${orderId}`);
-                showToast(`Commissions calculated based on Job Titles.`, "success");
+                showToast(`Commissions calculated based on individual Job Title rates.`, "success");
             }
         }
 
@@ -1879,17 +1865,12 @@
                             <input type="text" id="filter-crew-search" placeholder="Search Name, ID..." onkeyup="TableEngine.setFilter('crew-tbody', 'search', this.value)">
                             <select id="filter-crew-dept" onchange="TableEngine.setFilter('crew-tbody', 'dept', this.value)">
                                 <option value="">All Departments</option>
-                                <option value="Founder / Owner">Founder / Owner</option>
-                                <option value="Operations / Admin">Operations / Admin</option>
-                                <option value="Sales">Sales</option>
-                                <option value="Tech">Tech</option>
-                                <option value="Success / CX">Success / CX</option>
-                                <option value="Finance">Finance</option>
+                                ${DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('')}
                             </select>
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table><thead><tr><th onclick="TableEngine.setSort('crew-tbody', 'crewId')" style="cursor:pointer">Crew ID <i class="ri-arrow-up-down-line"></i></th><th onclick="TableEngine.setSort('crew-tbody', 'name')" style="cursor:pointer">Name <i class="ri-arrow-up-down-line"></i></th><th>Email</th><th>Phone</th><th>Work Loc</th><th>Department</th><th>Job Title</th><th>Status</th><th>Actions</th></tr></thead><tbody id="crew-tbody"><tr><td colspan="9" class="text-center"><div class="loading-spinner"></div></td></tr></tbody></table>
+                        <table><thead><tr><th onclick="TableEngine.setSort('crew-tbody', 'crewId')" style="cursor:pointer">Crew ID <i class="ri-arrow-up-down-line"></i></th><th onclick="TableEngine.setSort('crew-tbody', 'name')" style="cursor:pointer">Name <i class="ri-arrow-up-down-line"></i></th><th>Email</th><th>Phone</th><th>Work Loc</th><th>Department</th><th>Job Title</th><th>Comm Rate</th><th>Status</th><th>Actions</th></tr></thead><tbody id="crew-tbody"><tr><td colspan="10" class="text-center"><div class="loading-spinner"></div></td></tr></tbody></table>
                         <div id="crew-tbody-pagination"></div>
                     </div>
                 </div>`;
@@ -1900,11 +1881,17 @@
             });
 
             window.customTableRenderers['crew-tbody'] = function(data) {
-                if(data.length === 0) return '<tr><td colspan="9" class="text-center text-muted">No crew found</td></tr>';
+                if(data.length === 0) return '<tr><td colspan="10" class="text-center text-muted">No crew found</td></tr>';
                 return data.map(u => {
                     const workLoc = u.workLocation || '-';
                     const isSuspended = u.isSuspended || false;
                     const statusBadge = isSuspended ? `<span class="badge" style="background:#fef2f2; color:var(--danger); border:1px solid #fecaca">Suspended</span>` : `<span class="badge" style="background:#ecfdf5; color:var(--success); border:1px solid #a7f3d0">Active</span>`;
+                    
+                    // Commission Rate Calculation for Display
+                    let rate = u.personalCommissionRate !== undefined ? u.personalCommissionRate : (DEFAULT_COMMISSION_RATES[u.jobTitle] || 0);
+                    const ratePct = (rate * 100).toFixed(1) + '%';
+                    const rateColor = rate === 0 ? 'var(--text-faint)' : 'var(--primary)';
+
                     let buttons = '';
                     if (canEdit) buttons = `<button class="btn btn-sm btn-secondary" onclick="editCrew('${u.id}')"><i class="ri-pencil-line"></i></button>`;
                     if (isSuperAdmin()) {
@@ -1920,6 +1907,7 @@
                         <td><span class="badge badge-${u.workLocation === 'HQ' ? 'admin' : 'crew'}">${workLoc}</span></td>
                         <td><span class="badge badge-user" style="background:#f0fdf4; color:var(--success)">${u.department || '-'}</span></td>
                         <td>${u.jobTitle||'-'}</td>
+                        <td style="font-weight:bold; color:${rateColor}">${ratePct}</td>
                         <td>${statusBadge}</td>
                         <td>${buttons}</td>
                     </tr>`;
@@ -1931,7 +1919,6 @@
             if(!checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_CREW)) return showToast("Access Denied", "error");
             const newCrewId = await getNextId('crew');
             const jobOptions = JOB_TITLES.map(j => `<option value="${j}">${j}</option>`).join('');
-            const deptOptions = Object.values(DEPARTMENT_MAP).filter((v,i,a)=>a.indexOf(v)===i).map(d => `<option value="${d}">${d}</option>`).join('');
             
             showModal("Add New Crew", `
                 <div class="mb-4"><label>Crew ID</label><input id="c-id" value="${newCrewId}" readonly></div>
@@ -1939,7 +1926,7 @@
                 <div class="mb-4"><label>Email Address</label><input type="email" id="c-email"></div>
                 <div class="mb-4"><label>Phone Number (Optional)</label><input type="tel" id="c-phone" placeholder="01XXXXXXXXX"></div>
                 <div class="mb-4">
-                    <label>Job Title (Auto-Sets Role & Department & Commission Rate)</label>
+                    <label>Job Title (Auto-Sets Role & Default Rate)</label>
                     <select id="c-job" onchange="autoSetRoleAndDept()">
                         <option value="">Select Job Title...</option>
                         ${jobOptions}
@@ -1947,7 +1934,7 @@
                 </div>
                 <div class="flex gap-4 mb-4">
                     <div style="flex:1"><label>Role</label><input type="text" id="c-role" readonly style="background:#f9fafb"></div>
-                    <div style="flex:1"><label>Department</label><select id="c-dept">${deptOptions.map(d=>`<option value="${d}">${d}</option>`)}</select></div>
+                    <div style="flex:1"><label>Department</label><select id="c-dept">${DEPARTMENTS.map(d=>`<option value="${d}">${d}</option>`)}</select></div>
                 </div>
                 <div class="mb-4"><label>Work Location</label><select id="c-work-loc"><option value="HQ">HQ (Office)</option><option value="WFH">Work From Home (WFH)</option></select></div>
                 <div class="mb-4"><label>Temporary Password</label><input type="password" id="c-pass" placeholder="Set password"></div>
@@ -1960,7 +1947,8 @@
             const deptSelect = document.getElementById('c-dept');
             const dbRole = JOB_ROLE_MAP[title] || 'crew'; 
             roleInput.value = dbRole.toUpperCase();
-            deptSelect.value = DEPARTMENT_MAP[title] || 'Operations / Admin';
+            // Auto select department based on job title logic? Or leave blank?
+            // Leaving blank for manual selection as per requirements.
         }
 
         async function saveCrew(newId) {
@@ -1979,8 +1967,10 @@
                 const dbRole = JOB_ROLE_MAP[job] || 'crew';
                 const bankDetails = { bankName: '', accountHolder: '', accountNumber: '' };
                 const bypass = false; 
+                const initialRate = DEFAULT_COMMISSION_RATES[job] || 0;
+                
                 await db.collection("users").doc(userCredential.user.uid).set({
-                    crewId: newId, name: name, email: email, phone: phone, role: dbRole, jobTitle: job, workLocation: workLoc, department: dept, permissions: {}, bankDetails: bankDetails, isSuspended: false, bypassApproval: bypass, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    crewId: newId, name: name, email: email, phone: phone, role: dbRole, jobTitle: job, workLocation: workLoc, department: dept, permissions: {}, bankDetails: bankDetails, isSuspended: false, bypassApproval: bypass, timestamp: firebase.firestore.FieldValue.serverTimestamp(), personalCommissionRate: initialRate
                 });
                 closeModal();
                 showToast("Crew created successfully", "success");
@@ -2009,12 +1999,11 @@
                 const u = doc.data();
                 const jobOptions = JOB_TITLES.map(j => `<option value="${j}" ${u.jobTitle===j?'selected':''}>${j}</option>`).join('');
                 const currentWorkLoc = u.workLocation || 'HQ';
-                const deptOptions = Object.values(DEPARTMENT_MAP).filter((v,i,a)=>a.indexOf(v)===i).map(d => `<option value="${d}" ${u.department===d?'selected':''}>${d}</option>`).join('');
                 
                 let permsHTML = '<div style="margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;"><label style="margin-bottom:0.5rem; display:block;">Access Permissions</label><div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">';
                 const userPerms = u.permissions || {};
                 for (const [key, label] of Object.entries({
-                    [PERMISSION_KEYS.EDIT_ORDERS]: 'Edit Orders', [PERMISSION_KEYS.EDIT_CLIENTS]: 'Edit Clients', [PERMISSION_KEYS.DELETE_REQUESTS]: 'Delete Requests', [PERMISSION_KEYS.DELETE_SUPPORT]: 'Delete Tickets', [PERMISSION_KEYS.EDIT_VOUCHERS]: 'Edit Vouchers', [PERMISSION_KEYS.EDIT_PORTFOLIO]: 'Edit Portfolio', [PERMISSION_KEYS.EDIT_CONTENT]: 'Edit Content', [PERMISSION_KEYS.EDIT_PROMOS]: 'Edit Promos', [PERMISSION_KEYS.EDIT_CONFIG]: 'Edit Config', [PERMISSION_KEYS.APPROVE_REQUESTS]: 'Approve Requests' 
+                    [PERMISSION_KEYS.EDIT_ORDERS]: 'Edit Orders', [PERMISSION_KEYS.EDIT_CLIENTS]: 'Edit Clients', [PERMISSION_KEYS.DELETE_REQUESTS]: 'Delete Requests', [PERMISSION_KEYS.DELETE_SUPPORT]: 'Delete Tickets', [PERMISSION_KEYS.EDIT_VOUCHERS]: 'Edit Vouchers', [PERMISSION_KEYS.EDIT_PORTFOLIO]: 'Edit Portfolio', [PERMISSION_KEYS.EDIT_CONTENT]: 'Edit Content', [PERMISSION_KEYS.EDIT_PROMOS]: 'Edit Promos', [PERMISSION_KEYS.EDIT_CONFIG]: 'Edit Config', [PERMISSION_KEYS.APPROVE_REQUESTS]: 'Approve Requests', [PERMISSION_KEYS.ADJUST_COMMISSION]: 'Adjust Commission Rate', [PERMISSION_KEYS.EDIT_ACCESS]: 'Edit Access/Profile' 
                 })) {
                     const isChecked = userPerms[key] === true ? 'checked' : '';
                     permsHTML += `<label class="flex items-center gap-2" style="font-size:0.8rem; font-weight:400; color:var(--text-muted); text-transform:none;"><input type="checkbox" class="perm-toggle" value="${key}" ${isChecked} style="width:auto; margin:0;"> ${label}</label>`;
@@ -2033,6 +2022,25 @@
                 const bankHTML = `<div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);"><h4 style="font-size:0.9rem; margin-bottom:0.5rem; color:var(--primary);">Bank Details (Finance)</h4><div class="mb-2"><label>Bank Name</label><input id="c-bank-name" value="${bd.bankName||''}"></div><div class="mb-2"><label>Account Holder Name</label><input id="c-bank-holder" value="${bd.accountHolder||''}"></div><div class="mb-2"><label>Account Number</label><input id="c-bank-num" value="${bd.accountNumber||''}"></div></div>`;
 
                 const canEditRole = isSuperAdmin();
+                
+                // COMMISSION RATE OVERRIDE
+                const globalRate = DEFAULT_COMMISSION_RATES[u.jobTitle] || 0;
+                const currentRate = u.personalCommissionRate !== undefined ? u.personalCommissionRate : globalRate;
+                const canEditRate = isSuperAdmin() || hasPermission(PERMISSION_KEYS.ADJUST_COMMISSION);
+                
+                const rateHTML = `
+                    <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid #eee;">
+                        <h4 style="font-size:0.9rem; margin-bottom:0.5rem; color:var(--primary);">Commission Rate</h4>
+                        <div class="flex items-center gap-4 mb-2">
+                            <div style="font-size:0.8rem; color:var(--text-muted);">Global Default for ${u.jobTitle}: ${(globalRate*100).toFixed(1)}%</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="number" step="0.001" min="0" max="1" id="e-c-comm-rate" value="${currentRate}" ${!canEditRate ? 'disabled' : ''} style="width: 100px;">
+                            <span style="font-size:0.8rem;">(Decimal, e.g. 0.05 = 5%)</span>
+                            ${canEditRate ? '' : '<small class="text-danger text-sm">Locked: Requires Edit Access</small>'}
+                        </div>
+                    </div>
+                `;
 
                 showModal("Edit Crew Member", `
                     <div class="mb-4"><label>Crew ID</label><input id="e-c-id" value="${u.crewId}"></div>
@@ -2040,7 +2048,7 @@
                     <div class="mb-4"><label>Email Address</label><input id="e-c-email" value="${u.email}"></div>
                     <div class="mb-4"><label>Phone Number</label><input id="e-c-phone" value="${u.phone||''}"></div>
                     <div class="mb-4">
-                        <label>Job Title (Auto-Sets Role & Dept)</label>
+                        <label>Job Title</label>
                         <select id="e-c-job" onchange="autoSetEditRoleDept()">
                             <option value="">Select Job Title...</option>
                             ${jobOptions}
@@ -2048,11 +2056,12 @@
                     </div>
                     <div class="flex gap-4 mb-4">
                         <div style="flex:1"><label>System Role</label><select id="e-c-role" ${!canEditRole?'disabled':''} style="${!canEditRole?'background:#f3f4f6; cursor:not-allowed;':''}"><option value="crew" ${u.role==='crew'?'selected':''}>Crew</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option><option value="mid_admin" ${u.role==='mid_admin'?'selected':''}>Mid Admin</option><option value="super_admin" ${u.role==='super_admin'?'selected':''}>Super Admin</option></select>${!canEditRole ? '<small class="text-danger text-sm">Only Super Admins can change roles.</small>' : ''}</div>
-                        <div style="flex:1"><label>Department</label><select id="e-c-dept">${deptOptions}</select></div>
+                        <div style="flex:1"><label>Department</label><select id="e-c-dept">${DEPARTMENTS.map(d=>`<option value="${d}" ${u.department===d?'selected':''}>${d}</option>`)}</select></div>
                     </div>
                      <div class="mb-4"><label>Work Location</label><select id="e-c-work-loc"><option value="HQ" ${currentWorkLoc === 'HQ' ? 'selected' : ''}>HQ (Office)</option><option value="WFH" ${currentWorkLoc === 'WFH' ? 'selected' : ''}>Work From Home (WFH)</option></select></div>
                      ${permsHTML}
                      ${bankHTML}
+                     ${rateHTML}
                 `, `<button class="btn btn-primary" onclick="updateCrewData('${uid}')">Save</button>`);
             });
         }
@@ -2063,7 +2072,8 @@
             const deptSelect = document.getElementById('e-c-dept');
             const dbRole = JOB_ROLE_MAP[title] || 'crew'; 
             roleSelect.value = dbRole;
-            deptSelect.value = DEPARTMENT_MAP[title] || 'Operations / Admin';
+            // Dept is manual now, but we could auto-suggest if we wanted.
+            // Leaving manual selection open.
         }
 
         async function updateCrewData(uid) {
@@ -2077,6 +2087,17 @@
             newPerms[PERMISSION_KEYS.FINANCE_TOOLS_ACCESS] = financeVal;
             const bankData = { bankName: document.getElementById('c-bank-name').value, accountHolder: document.getElementById('c-bank-holder').value, accountNumber: document.getElementById('c-bank-num').value };
             let updatePayload = { crewId: document.getElementById('e-c-id').value, name: document.getElementById('e-c-name').value, email: document.getElementById('e-c-email').value, phone: document.getElementById('e-c-phone').value, jobTitle: document.getElementById('e-c-job').value, permissions: newPerms, bankDetails: bankData, bypassApproval: bypassVal, workLocation: document.getElementById('e-c-work-loc').value, department: document.getElementById('e-c-dept').value };
+            
+            // Handle Commission Rate Update
+            const canEditRate = isSuperAdmin() || hasPermission(PERMISSION_KEYS.ADJUST_COMMISSION);
+            if (canEditRate) {
+                const rateInput = document.getElementById('e-c-comm-rate');
+                if(rateInput) {
+                    const newRate = parseFloat(rateInput.value);
+                    if(!isNaN(newRate)) updatePayload.personalCommissionRate = newRate;
+                }
+            }
+
             if (isSuperAdmin()) updatePayload.role = document.getElementById('e-c-role').value;
             db.collection("users").doc(uid).update(updatePayload).then(() => { closeModal(); showToast("Crew details updated", "success"); logActivity(`Updated crew member details`); });
         }
@@ -2347,7 +2368,7 @@
             main.innerHTML = `
                 <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:1.5rem;">System Configuration</h2>
                 ${isSA ? `<div class="config-section" style="border-color: var(--danger);"><div class="config-header flex justify-between" style="color: var(--danger);"><span><i class="ri-alert-fill"></i> Super Admin Maintenance Mode</span></div><div class="flex gap-4 mb-4"><div class="flex items-center gap-2"><label class="toggle-switch"><input type="checkbox" id="maint-toggle" onchange="toggleMaintenance()"><span class="slider"></span></label><span style="font-weight:600;">Activate Maintenance</span></div></div><div class="mb-4"><label>Marquee Message</label><input id="maint-msg" class="mb-2" value="IT Department currently fix Portal Bugs"><button class="btn btn-sm btn-secondary" onclick="saveMaintMsg()">Update Message</button></div><div class="mb-4"><label>Disable Menu Items</label><div class="flex gap-2 flex-wrap mt-2">${['/orders', '/clients', '/crew', '/support', '/vouchers'].map(path => `<label class="flex items-center gap-2" style="background:#f9fafb; padding:5px 10px; border-radius:4px; border:1px solid var(--border);"><input type="checkbox" class="menu-disable-check" value="${path}"><span style="font-size:0.8rem;">${path.replace('/','').toUpperCase()}</span></label>`).join('')}</div><button class="btn btn-sm btn-primary mt-2" onclick="saveDisabledMenus()">Apply Menu Restrictions</button></div><div class="mt-4 p-3" style="background:#fef2f2; border-radius:8px;"><label style="color:var(--danger);">Crew Alert</label><p class="text-sm text-muted mb-2">Send WhatsApp message to all crew about maintenance.</p><button class="btn btn-sm btn-danger" onclick="sendMaintenanceWA()"><i class="ri-whatsapp-line"></i> Send Alert to Crew</button></div></div>` : ''}
-                <div class="config-section"><div class="config-header flex justify-between"><span>Dynamic Pricing Override</span>${canEdit ? `<span class="badge badge-user">Finance Access</span>` : ''}</div><p class="text-muted text-sm mb-4">Base prices for different modules (Syncs with Main Site).</p><div class="price-grid"><div><label>HTML Package Price</label><div class="flex gap-2"><input id="price-html" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'html\', \'price-html\')">Save</button>':''}</div></div><div><label>Frontend Package Price</label><div class="flex gap-2"><input id="price-fe" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'frontend\', \'price-fe\')">Save</button>':''}</div></div><div><label>AI/Data Price (Base)</label><div class="flex gap-2"><input id="price-ai" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'ai\', \'price-ai\')">Save</button>':''}</div></div></div></div>
+                <div class="config-section"><div class="config-header flex justify-between"><span>Dynamic Pricing Override</span>${canEdit ? `<span class="badge badge-user">Finance Access</span>` : ''}</div><p class="text-muted text-sm mb-4">Base prices for different modules (Syncs with Main Site).</p><div class="price-grid"><div><label>HTML Package Price</label><div class="flex gap-2"><input id="price-html" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'html\', \'price-html\')">Save</button>':''}</div></div><div><label>Frontend Package Price</label><div class="flex gap-2"><input id="price-fe" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'frontend\', \'price-fe\')">Save</button>':''}</div></div><div><label>AI/Data Price (Base)</label><div class="flex gap-2"><input id="price-ai" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'ai\', \'price-ai\')">Save</button>':''}</div></div></div>
                 <div class="config-section"><div class="config-header flex justify-between"><span>Payment Gateways</span>${canEdit ? `<button class="btn btn-sm btn-primary" onclick="addGateway()"><i class="ri-add-line"></i> Add Gateway</button>` : ''}</div><div id="gateway-list" class="flex flex-col gap-4"></div></div>
             `;
             if(isSA) {
@@ -2621,11 +2642,11 @@
                     </div>
                 </div>
                 <div id="tab-content-tools" class="tab-content">
-                    <div class="config-section"><div class="config-header flex justify-between"><h3>Commission Rate Configuration (By Job Title)</h3><span class="badge badge-user">Finance Access</span></div><p class="text-muted text-sm mb-4">Set the percentage of the Order Value assigned to each specific Job Title.</p>
+                    <div class="config-section"><div class="config-header flex justify-between"><h3>Global Commission Configuration (By Job Title)</h3><span class="badge badge-user">Finance Access</span></div><p class="text-muted text-sm mb-4">Set default percentage of Order Value assigned to each specific Job Title. SuperAdmins can override individual rates via Crew Management.</p>
                     <div id="job-rates-container" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:1rem;">
                         <!-- Rates injected here -->
                     </div>
-                    <div class="mt-4 text-center">${canManageFinance ? `<button class="btn btn-primary" onclick="saveJobRates()">Update Rates</button>` : ''}</div>
+                    <div class="mt-4 text-center">${canManageFinance ? `<button class="btn btn-primary" onclick="saveJobRates()">Update Global Defaults</button>` : ''}</div>
                 </div>
             `;
             if(document.getElementById('tab-content-tools').classList.contains('active') && !isMyView) populateFinanceRatesUI();
@@ -2636,7 +2657,7 @@
             const container = document.getElementById('job-rates-container');
             if(!container) return;
             let html = '';
-            for (const [job, rate] of Object.entries(commissionRatesConfig)) {
+            for (const [job, rate] of Object.entries(DEFAULT_COMMISSION_RATES)) {
                 const pct = (rate * 100).toFixed(1);
                 html += `
                     <div style="background:white; border:1px solid var(--border); padding:10px; border-radius:8px;">
@@ -2654,7 +2675,7 @@
         async function saveJobRates() {
             if(!canAccessFinanceTools()) return showToast("Access Denied", "error");
             const newRates = {};
-            for(const job of Object.keys(commissionRatesConfig)) {
+            for(const job of Object.keys(DEFAULT_COMMISSION_RATES)) {
                 const inputId = `rate-${job.replace(/\s+/g, '-')}`;
                 const el = document.getElementById(inputId);
                 if(el) {
@@ -2662,8 +2683,8 @@
                     newRates[job] = val / 100;
                 }
             }
-            commissionRatesConfig = newRates;
-            db.collection("config").doc("site_settings").update({ commission_rates: newRates }).then(() => { showToast("Commission Rates Updated", "success"); logActivity(`Updated commission rates`); }).catch(e => { console.error(e); showToast("Error saving rates", "error"); });
+            DEFAULT_COMMISSION_RATES = newRates; // Update global object
+            db.collection("config").doc("site_settings").update({ commission_rates: newRates }).then(() => { showToast("Global Commission Defaults Updated", "success"); logActivity(`Updated global commission rates`); }).catch(e => { console.error(e); showToast("Error saving rates", "error"); });
         }
 
         function switchFinanceTab(tabName) {
@@ -2827,25 +2848,60 @@
             }
         }
 
+        // --- 14. MY PROFILE ---
         function renderMyProfile() {
             setPageLoading(true);
             const main = document.getElementById('main');
+            const canEditAccess = hasPermission(PERMISSION_KEYS.EDIT_ACCESS);
+            
             main.innerHTML = `
-                <div class="p-4" style="background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; max-width:500px; margin:0 auto;">
-                    <div class="flex items-center gap-4 mb-6">
-                        <div class="u-avatar" style="width:50px; height:50px; font-size:1.5rem;">${(userData.name || 'A').charAt(0)}</div>
+                <div class="p-4" style="background:var(--bg-surface); border:1px solid var(--border); border-radius:16px; max-width:600px; margin:0 auto;">
+                    <div class="flex items-center justify-between mb-6">
                         <div>
-                            <h2 style="font-size:1.25rem;">${userData.name}</h2>
+                            <h2 style="font-size:1.25rem;">My Profile</h2>
                             <span class="badge badge-${userData.role==='super_admin'?'admin':(userData.role==='admin'?'admin':'crew')}">${userData.role==='super_admin'?'Super Admin':(userData.role==='admin'?'Admin':'Crew')}</span>
                         </div>
+                        ${canEditAccess ? `<button class="btn btn-primary" onclick="openEditMyProfile()"><i class="ri-pencil-line"></i> Edit</button>` : ''}
                     </div>
+                    
                     <div class="mb-4"><label class="text-muted">Name</label><input value="${userData.name}" readonly></div>
                     <div class="mb-4"><label class="text-muted">Email</label><input value="${userData.email}" readonly></div>
                     <div class="mb-4"><label class="text-muted">Crew ID</label><input value="${userData.crewId || 'N/A'}" readonly></div>
                     <div class="mb-4"><label class="text-muted">Job Title</label><input value="${userData.jobTitle||'N/A'}" readonly></div>
                     <div class="mb-4"><label class="text-muted">Department</label><input value="${userData.department || 'N/A'}" readonly></div>
-                    <p class="text-center text-muted text-sm mt-4">Profile is read-only.</p>
-                </div>`;
+                    
+                    ${canEditAccess ? '' : '<p class="text-center text-muted text-sm mt-4">Profile is read-only.</p>'}
+                </div>
+            `;
+        }
+
+        function openEditMyProfile() {
+            if(!hasPermission(PERMISSION_KEYS.EDIT_ACCESS)) return showToast("Access Denied", "error");
+            showModal("Edit My Profile", `
+                <div class="mb-4"><label>Name</label><input id="my-name" value="${userData.name}"></div>
+                <div class="mb-4"><label>Email</label><input id="my-email" value="${userData.email}" readonly></div>
+                <div class="mb-4"><label>Phone</label><input id="my-phone" value="${userData.phone||''}"></div>
+                <div class="mb-4"><label>Work Location</label><select id="my-work-loc"><option value="HQ" ${userData.workLocation==='HQ'?'selected':''}>HQ</option><option value="WFH" ${userData.workLocation==='WFH'?'selected':''}>WFH</option></select></div>
+                <div class="mb-4"><label>Department</label><select id="my-dept">${DEPARTMENTS.map(d=>`<option value="${d}" ${userData.department===d?'selected':''}>${d}</option>`)}</select></div>
+            `, `<button class="btn btn-primary" onclick="saveMyProfile()">Save</button>`);
+        }
+
+        async function saveMyProfile() {
+            const updates = {
+                name: document.getElementById('my-name').value,
+                phone: document.getElementById('my-phone').value,
+                workLocation: document.getElementById('my-work-loc').value,
+                department: document.getElementById('my-dept').value
+            };
+            try {
+                await db.collection("users").doc(currentUser.uid).update(updates);
+                closeModal();
+                showToast("Profile Updated", "success");
+                logActivity(`Updated own profile`);
+                renderMyProfile(); // Refresh view
+            } catch(e) {
+                showToast("Error updating profile: " + e.message, "error");
+            }
         }
 
         function filterTable(id, text) {
