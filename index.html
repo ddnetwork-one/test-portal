@@ -717,28 +717,93 @@
         }
 
         /* SUCCESS MESSAGE STYLING FOR WEBSITE IDEA FORM */
-        #idea-success-container {
-            display: none;
+        /* DEDICATED SUCCESS PAGE STYLING */
+        #profile-website-describe-success {
+            display: none; /* Hidden by default */
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             text-align: center;
-            animation: fadeIn 0.5s ease;
+            padding-top: 50px;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        #idea-success-icon {
-            font-size: 4rem;
-            color: var(--accent-success);
-            margin-bottom: 1.5rem;
+        
+        .success-checkmark {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            position: relative;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
             animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @keyframes popIn {
-            0% { transform: scale(0); }
-            80% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        
+        .success-checkmark i {
+            font-size: 4rem;
+            color: white;
         }
+
+        .success-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.3);
+            z-index: -1;
+            animation: glowPulse 2s infinite;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes glowPulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        .success-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: white;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards 0.2s;
+        }
+
+        .success-message {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards 0.4s;
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards 0.6s;
+        }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
     </style>
 </head>
 <body>
@@ -939,7 +1004,7 @@
             </div>
         </section>
 
-        <!-- === PAGE: WEBSITE DESCRIPTION (NEW & UPDATED) === -->
+        <!-- === PAGE: WEBSITE DESCRIPTION === -->
         <section id="profile-website-describe" class="page-section">
             <div class="auth-container" style="max-width: 800px;">
                 <div class="glass-card auth-card" style="text-align: left;">
@@ -951,8 +1016,7 @@
 
                     <!-- FORM CONTAINER -->
                     <div id="website-form-container">
-                        <!-- FormSubmit Form (Action handled via AJAX in JS, NOT here) -->
-                        <!-- Removed action from HTML to prevent default form submission behavior -->
+                        <!-- No action attribute. Logic handled via JS -->
                         <form id="website-idea-form">
                             
                             <!-- Anti-Spam Honeypot -->
@@ -1002,20 +1066,34 @@
                         </form>
                     </div>
 
-                    <!-- SUCCESS MESSAGE (Hidden Initially) -->
-                    <div id="idea-success-container" style="display: none;">
-                        <div id="idea-success-icon">
-                            <i class="ri-checkbox-circle-fill"></i>
-                        </div>
-                        <h2 style="margin-bottom: 1rem; color: white;">Success!</h2>
-                        <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6;">
-                            Your request has been successfully sent.<br>Our team will review it and respond soon.
-                        </p>
-                        <div style="margin-top: 2rem;">
-                            <button type="button" class="btn btn-glass" style="width: 100%;" onclick="navigateTo('/profile')">Back to Profile</button>
-                        </div>
-                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- === PAGE: SUCCESS (DEDICATED) === -->
+        <section id="profile-website-describe-success" class="page-section">
+            <div class="glass-card auth-card" style="padding: 4rem 2rem;">
+                
+                <div class="success-checkmark">
+                    <div class="success-glow"></div>
+                    <i class="ri-checkbox-circle-fill"></i>
+                </div>
+
+                <h2 class="success-title">Submission Successful!</h2>
+                <p class="success-message">
+                    Thank you! Your website idea has been recorded and sent to our team via email.<br>
+                    We will review your request and contact you shortly.
+                </p>
+
+                <div class="success-actions">
+                    <button type="button" class="btn btn-primary" onclick="navigateTo('/profile')">
+                        Back to Profile
+                    </button>
                     
+                    <!-- Go to Website FormSubmit Link -->
+                    <button type="button" class="btn btn-glass" onclick="goToFormSubmit()">
+                        View Submission History
+                    </button>
                 </div>
             </div>
         </section>
@@ -1996,7 +2074,8 @@
             '/founder-danialdanish': 'founder', '/login': 'login', '/signup': 'signup', '/profile': 'profile',
             '/helpdesk': 'helpdesk', '/contact': 'contact', '/forgot-password': 'forgot-password',
             '/thank-you': 'thank-you', '/updates': 'updates',
-            '/profile-website-describe': 'profile-website-describe' // NEW ROUTE
+            '/profile-website-describe': 'profile-website-describe',
+            '/profile-website-describe/success': 'profile-website-describe-success' // NEW ROUTE
         };
 
         function routeLink(event, path) {
@@ -2016,29 +2095,10 @@
             else performTransition(routes[window.location.pathname] || 'home');
         });
 
-function handleInitialRoute() {
-    const path = window.location.pathname;
-    
-    // ==========================================
-    // SPECIAL LOGIC FOR SUCCESS PAGE
-    // ==========================================
-    // If the URL is specifically the success page, show success message, hide form
-    if (path.includes('/profile-website-describe/success')) {
-        const formContainer = document.getElementById('website-form-container');
-        const successContainer = document.getElementById('idea-success-container');
-        
-        if(formContainer) formContainer.style.display = 'none';
-        if(successContainer) successContainer.style.display = 'flex';
-        
-        // Stop further routing
-        return;
-    }
-    
-    // ==========================================
-    // STANDARD ROUTING
-    // ==========================================
-    performTransition(routes[path] || 'home', true);
-}
+        function handleInitialRoute() {
+            const path = window.location.pathname;
+            performTransition(routes[path] || 'home', true);
+        }
 
         function performTransition(targetSectionId, isInstant = false) {
             const currentSection = document.querySelector('.page-section.active');
@@ -3100,7 +3160,17 @@ function handleInitialRoute() {
         }
 
 // ==========================================
-// FIXED: Robust FormSubmit + Firebase Sync
+// SUCCESS PAGE & FORM SUBMIT LOGIC (FIXED & COMPLETE)
+// ==========================================
+
+// Helper to navigate to FormSubmit website (View Submission History)
+function goToFormSubmit() {
+    // Opens the FormSubmit dashboard in a new tab
+    window.open("https://formsubmit.co/", "_blank");
+}
+
+// ==========================================
+// ROBUST: FormSubmit AJAX + Firebase Sync
 // ==========================================
 function handleWebsiteIdeaSubmit(event) {
     event.preventDefault(); // Stop standard HTML reload
@@ -3168,27 +3238,29 @@ function handleWebsiteIdeaSubmit(event) {
                     
                     // 6. UI UPDATE
                     showToast("Idea submitted successfully!", "success");
-                    document.getElementById('website-form-container').style.display = 'none';
-                    document.getElementById('idea-success-container').style.display = 'flex';
-
-                    // Update URL
+                    
+                    // Navigate to the dedicated Success Page (SPA Routing)
                     const successUrl = '/profile-website-describe/success';
                     window.history.pushState({ path: successUrl }, "", successUrl);
+                    performTransition(routes[successUrl]); // Trigger the page switch
 
                 })
                 .catch((firebaseError) => {
                     console.error("Database Write FAILED:", firebaseError);
                     // Show Warning but don't fail completely because email worked
                     showToast("Email sent, but failed to save to internal system.", "warning");
-                    document.getElementById('website-form-container').style.display = 'none';
-                    document.getElementById('idea-success-container').style.display = 'flex';
+                    // Still navigate to success page to keep flow
+                    const successUrl = '/profile-website-describe/success';
+                    window.history.pushState({ path: successUrl }, "", successUrl);
+                    performTransition(routes[successUrl]);
                 });
 
         } else {
             console.warn("Firebase DB is undefined. Skipping database sync.");
             showToast("Idea submitted via Email.", "success");
-            document.getElementById('website-form-container').style.display = 'none';
-            document.getElementById('idea-success-container').style.display = 'flex';
+            const successUrl = '/profile-website-describe/success';
+            window.history.pushState({ path: successUrl }, "", successUrl);
+            performTransition(routes[successUrl]);
         }
     })
     .catch((error) => {
@@ -3201,6 +3273,7 @@ function handleWebsiteIdeaSubmit(event) {
         btn.innerText = originalText;
     });
 }
+
 
         // ==========================================
         // EARTH + METEOR BACKGROUND ANIMATION (OPTIMIZED)
