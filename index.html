@@ -1319,13 +1319,14 @@
                             </div>
                             
                             <div id="input-subdomain" style="margin-top: 10px;">
-                                    <input type="text" id="subdomain-text" class="form-input" placeholder="Enter name (Required)" oninput="updateSummaryText()" required>
-                                    <span style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 5px; display: block;">URL: <span id="url-preview" style="color: var(--accent-primary); font-weight: 700;">.ddnet.my</span></span>
-                                </div>
+                                <input type="text" id="subdomain-text" class="form-input" placeholder="yourname" oninput="updateSummaryText()">
+                                <span style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 5px; display: block;">URL: <span id="url-preview" style="color: var(--accent-primary); font-weight: 700;">.ddnet.my</span></span>
+                            </div>
                             
                             <div id="input-custom" style="display: none; margin-top: 10px;">
-                                    <input type="text" id="custom-domain-text" class="form-input" placeholder="www.example.com (Required)" oninput="updateSummaryText()" required>
-                                </div>
+                                <input type="text" id="custom-domain-text" class="form-input" placeholder="www.example.com" oninput="updateSummaryText()">
+                            </div>
+                        </div>
 
                         <div class="form-group">
                             <label class="form-label">Maintenance Plan (Optional)</label>
@@ -2165,6 +2166,7 @@
             discountCode: '',
             domainType: 'sub',
             domainName: '',
+            domainNameValid: false, // NEW: Track if domain name is valid
             paymentMethodId: null,
             billingCycle: 'monthly',
             isOneTime: false // Specific for HTML
@@ -2492,42 +2494,12 @@
             else { icon.classList.add('ri-menu-4-line'); icon.classList.remove('ri-close-line'); }
         }
 
-                function attemptSelectPackage(name, type) {
-            if (typeof auth === 'undefined' || auth === null) { 
-                showToast("Authentication system initializing...", "error"); 
-                return; 
-            }
-            
-            // CHECK: Validate Domain Input before proceeding
-            const subInput = document.getElementById('subdomain-text');
-            const customInput = document.getElementById('custom-domain-text');
-            const currentType = document.querySelector('input[name="domain_type"]:checked').value;
-
-            let domainValue = "";
-
-            if (currentType === 'sub') {
-                if (!subInput.value.trim()) {
-                    showToast("Please enter a domain name first.", "error");
-                    subInput.focus();
-                    return;
-                }
-                domainValue = subInput.value;
-            } else if (currentType === 'custom') {
-                if (!customInput.value.trim()) {
-                    showToast("Please enter your custom domain.", "error");
-                    customInput.focus();
-                    return;
-                }
-                domainValue = customInput.value;
-            }
-
-            if (auth.currentUser) { 
-                selectPackage(name, type); 
-            } else { 
-                showToast("Please login or sign up to make a purchase.", "error"); 
-                setTimeout(() => { navigateTo('/login'); }, 1500); 
-            }
+        function attemptSelectPackage(name, type) {
+            if (typeof auth === 'undefined' || auth === null) { showToast("Authentication system initializing...", "error"); return; }
+            if (auth.currentUser) { selectPackage(name, type); } 
+            else { showToast("Please login or sign up to make a purchase.", "error"); setTimeout(() => { navigateTo('/login'); }, 1500); }
         }
+
         function selectPackage(name, type) {
             state.packageType = type;
             state.packagePrice = 0;
@@ -2570,6 +2542,9 @@
 
             // Defaults
             state.domainType = 'sub'; 
+            state.domainName = ''; // Reset domain name
+            state.domainNameValid = false; // Reset validity
+            document.getElementById('subdomain-text').value = ''; // Clear input
             // Trigger domain update to check yearly free status
             updateDomain('sub', document.querySelector('input[name="domain_type"][value="sub"]').parentElement); 
             state.maintenancePrice = 0;
@@ -2703,17 +2678,46 @@
 
         function updateSummaryText() {
             // UPDATE 4: Change .ddn.one to ddnet.my
+            // NEW: Domain Name Validation Logic
+            
+            // Handle Subdomain
             if(state.domainType === 'sub') {
-                const val = document.getElementById('subdomain-text').value;
+                const val = document.getElementById('subdomain-text').value.trim();
                 state.domainName = val ? `${val}.ddnet.my` : '';
                 document.getElementById('url-preview').innerText = state.domainName || '.ddnet.my';
                 document.getElementById('summary-domain').innerText = state.domainPrice > 0 ? `RM ${state.domainPrice}/yr` : 'FREE (1st Year)';
-            } else {
-                const val = document.getElementById('custom-domain-text').value;
+                
+                // Validate: If it's a subdomain, it MUST have a name.
+                state.domainNameValid = (val.length > 0);
+            } 
+            // Handle Custom Domain
+            else {
+                const val = document.getElementById('custom-domain-text').value.trim();
                 state.domainName = val;
                 document.getElementById('summary-domain').innerText = val ? 'User Provided' : 'RM 0';
+                
+                // Validate: Custom domain is optional or can be blank, but if required, check here.
+                // For now, let's treat custom domain as valid if not forced, 
+                // but if you want to enforce it, change to: state.domainNameValid = (val.length > 0);
+                state.domainNameValid = true; 
             }
         }
+
+        // ADD EVENT LISTENERS FOR DOMAIN INPUTS TO TRIGGER VALIDATION
+        document.getElementById('subdomain-text').addEventListener('input', () => {
+            updateSummaryText();
+            // If it becomes empty, we mark as invalid immediately
+            const val = document.getElementById('subdomain-text').value.trim();
+            state.domainNameValid = (val.length > 0);
+        });
+
+        document.getElementById('custom-domain-text').addEventListener('input', () => {
+            updateSummaryText();
+            // Optional: specific validation for custom domain format
+            const val = document.getElementById('custom-domain-text').value.trim();
+            state.domainNameValid = (val.length > 0); // If custom must be filled
+        });
+
 
         function updateTotal() {
             let subtotal = state.packagePrice + state.setupFee + state.maintenancePrice;
@@ -2887,7 +2891,14 @@
             
             // UPDATE 1: Double check payment checkbox even if button is disabled
             if(!paymentCheck.checked) {
-                showGlassModal("Payment Confirmation", "Please confirm that you have made the payment by ticking the checkbox.", "warning");
+                showGlassModal("Payment Confirmation", "Please confirm that you have made payment by ticking the checkbox.", "warning");
+                return;
+            }
+
+            // NEW: Check if Domain Name is required and valid
+            if(state.domainType === 'sub' && !state.domainNameValid) {
+                showToast("Please fill in your Subdomain Name (e.g. yourname).", "error");
+                document.getElementById('subdomain-text').focus();
                 return;
             }
 
@@ -2944,7 +2955,7 @@
                 msgEl.innerHTML = `Thank you for choosing DDNetwork One. We have received your order and payment details. Our team will review your order and contact you via WhatsApp or email within 24 hours.`;
                 setTimeout(() => {
                     const voucherText = state.discountCode ? state.discountCode : "None";
-                    const whatsappMessage = `Hi Admin Team,\nI have just placed a new order. Please find my details below:\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nVoucher: ${voucherText}\nPlan: ${pkgName} (${state.billingCycle})\nPayment Type: ${paymentLabel}\n\nKindly let me know if any additional information is required.\nThank you.`;
+                    const whatsappMessage = `Hi Admin Team,\nI have just placed a new order. Please find my details below:\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nVoucher: ${voucherText}\nPlan: ${pkgName} (${state.billingCycle})\nDomain: ${domain}\nPayment Type: ${paymentLabel}\n\nKindly let me know if any additional information is required.\nThank you.`;
                     window.location.href = `https://wa.me/60122600969?text=${encodeURIComponent(whatsappMessage)}`;
                 }, 3000);
             }, 2000);
@@ -3049,7 +3060,7 @@
                 const sy = (Math.cos(i * 53 + 1) * 43758.5453) % 1200;
                 // Normalize negative coords
                 const finalX = sx < 0 ? -sx : sx;
-                const finalY = sy < 0 ? -sy  : sy;
+                const finalY = sy < 0 ? -sy : sy;
                 ctx.beginPath();
                 ctx.arc(finalX, finalY, Math.random() * 1.5, 0, Math.PI * 2);
                 ctx.fill();
@@ -3066,7 +3077,7 @@
             });
 
             // Draw Rotating Earth Globe
-            rotation += 0.002;
+            rotation +=0.002;
             dots.forEach(dot => {
                 const rotX = dot.x * Math.cos(rotation) - dot.z * Math.sin(rotation);
                 const rotZ = dot.z * Math.cos(rotation) + dot.x * Math.sin(rotation);
@@ -3074,7 +3085,7 @@
                 if(alpha > 0) {
                     const scale = 800 / (800 + rotZ); 
                     const x = 600 + rotX * scale; const y = 600 + dot.y * scale;
-                    ctx.beginPath(); ctx.arc(x, y, 1.5 * scale, 0, Math.PI *2);
+                    ctx.beginPath(); ctx.arc(x, y,1.5 * scale, 0, Math.PI *2);
                     // Change color to cyan/teal to look like "Digital Earth"
                     ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`; 
                     ctx.fill();
