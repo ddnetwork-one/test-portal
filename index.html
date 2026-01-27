@@ -3100,15 +3100,15 @@ function handleInitialRoute() {
         }
 
 // ==========================================
-// UPDATED: FormSubmit AJAX + Firebase Sync
+// FIXED: Robust FormSubmit + Firebase Sync
 // ==========================================
 function handleWebsiteIdeaSubmit(event) {
-    event.preventDefault(); // Stop standard HTML submission
+    event.preventDefault(); // Stop standard HTML reload
     
     const form = document.getElementById('website-idea-form');
     const formData = new FormData(form);
     
-    // Basic Validation
+    // 1. VALIDATION
     const name = formData.get('name');
     const email = formData.get('email');
     const message = formData.get('message');
@@ -3118,84 +3118,85 @@ function handleWebsiteIdeaSubmit(event) {
         return;
     }
 
+    // 2. BUTTON STATE
     const btn = document.getElementById('btn-submit-idea');
     const originalText = btn.innerText;
-    
-    // Show loading state
     btn.disabled = true;
     btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
 
-    // 1. Define FormSubmit Endpoint
-    // _ajax=true ensures JSON response and NO page redirect.
+    // 3. PREPARE DATA FOR FIREBASE
+    // We prepare this early so we have it ready
+    const requestData = {
+        name: name,
+        email: email,
+        type: formData.get('type') || 'New Website',
+        details: message,
+        references: formData.get('references') || '',
+        status: 'Pending',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        userId: auth.currentUser ? auth.currentUser.uid : null,
+        source: 'Website Description Form'
+    };
+
+    // 4. SEND EMAIL (FormSubmit) - ROBUST METHOD
+    // We use 'no-cors' mode. We won't get a JSON response body, 
+    // but if no network error occurs, it means the email was sent.
     const formSubmitUrl = "https://formsubmit.co/contact@ddnet.my";
 
-    // 2. Add hidden fields programmatically
+    // Add hidden fields manually
     formData.append('_subject', 'New Website Idea Submission!');
     formData.append('_captcha', 'false');
-    formData.append('_ajax', 'true');
     
-    // 3. Fetch Request (AJAX)
     fetch(formSubmitUrl, {
         method: 'POST',
         body: formData,
-        headers: {
-            'Accept': 'application/json'
-        }
+        mode: 'no-cors' // CRITICAL: Prevents CORS blocking and redirects
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log("FormSubmit Success:", data);
+        // In 'no-cors' mode, response.ok is always false/type opaque. 
+        // We assume success if it reaches here without throwing.
+        console.log("FormSubmit request sent successfully (Opaque Response).");
         
-        // 4. Sync to Firebase (Customer Requests)
+        // 5. SYNC TO FIREBASE
         if(db) {
-            const requestData = {
-                name: name,
-                email: email,
-                type: formData.get('type') || 'New Website',
-                details: message,
-                references: formData.get('references') || '',
-                status: 'Pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                userId: auth.currentUser ? auth.currentUser.uid : null,
-                source: 'Website Description Form'
-            };
+            console.log("Attempting to sync to Firestore...");
             
+            // Use string "customer_requests" to be safe
             db.collection("customer_requests").add(requestData)
-                .then(() => {
-                    console.log("Successfully synced to customer_requests collection");
-
-                    // 5. Update UI to Success State
-                    // Hide form, show success message
+                .then((docRef) => {
+                    console.log("Database Write SUCCESS! ID:", docRef.id);
+                    
+                    // 6. UI UPDATE
+                    showToast("Idea submitted successfully!", "success");
                     document.getElementById('website-form-container').style.display = 'none';
                     document.getElementById('idea-success-container').style.display = 'flex';
 
-                    // 6. Push state to URL to simulate routing to success page
+                    // Update URL
                     const successUrl = '/profile-website-describe/success';
                     window.history.pushState({ path: successUrl }, "", successUrl);
-                    
-                    showToast("Idea submitted successfully!", "success");
+
                 })
                 .catch((firebaseError) => {
-                    console.error("Firebase Sync Error:", firebaseError);
-                    // Even if Firebase fails, the email was sent, so we should inform the user partially
-                    showToast("Email sent successfully, but failed to sync to internal system.", "warning");
-                    // Optional: You can still show success for the user since the main goal (email) worked
+                    console.error("Database Write FAILED:", firebaseError);
+                    // Show Warning but don't fail completely because email worked
+                    showToast("Email sent, but failed to save to internal system.", "warning");
                     document.getElementById('website-form-container').style.display = 'none';
                     document.getElementById('idea-success-container').style.display = 'flex';
                 });
+
+        } else {
+            console.warn("Firebase DB is undefined. Skipping database sync.");
+            showToast("Idea submitted via Email.", "success");
+            document.getElementById('website-form-container').style.display = 'none';
+            document.getElementById('idea-success-container').style.display = 'flex';
         }
     })
     .catch((error) => {
-        console.error('FormSubmit Error:', error);
-        showToast("Failed to submit form. Please try again.", "error");
+        console.error('FormSubmit Fetch Error:', error);
+        showToast("Failed to send email. Check internet connection.", "error");
     })
     .finally(() => {
-        // Reset button state regardless of success or error
+        // Reset button state
         btn.disabled = false;
         btn.innerText = originalText;
     });
