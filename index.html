@@ -2166,7 +2166,7 @@
             discountCode: '',
             domainType: 'sub',
             domainName: '',
-            domainNameValid: false, // Track if domain name is valid
+            domainNameValid: false, // Default to false. User must actively type valid data.
             paymentMethodId: null,
             billingCycle: 'monthly',
             isOneTime: false // Specific for HTML
@@ -2543,7 +2543,7 @@
             // Defaults
             state.domainType = 'sub'; 
             state.domainName = ''; // Reset domain name
-            state.domainNameValid = false; // Reset validity
+            state.domainNameValid = false; // Reset validity (strictly false now)
             document.getElementById('subdomain-text').value = ''; // Clear input
             document.getElementById('custom-domain-text').value = ''; // Clear input
             // Trigger domain update to check yearly free status
@@ -2679,7 +2679,7 @@
 
         function updateSummaryText() {
             // UPDATE 4: Change .ddn.one to ddnet.my
-            // NEW: Domain Name Validation Logic (Both Sub and Custom)
+            // UPDATED: Domain Name Validation Logic (Strict)
             
             // Handle Subdomain
             if(state.domainType === 'sub') {
@@ -2688,7 +2688,7 @@
                 document.getElementById('url-preview').innerText = state.domainName || '.ddnet.my';
                 document.getElementById('summary-domain').innerText = state.domainPrice > 0 ? `RM ${state.domainPrice}/yr` : 'FREE (1st Year)';
                 
-                // Validate: If it's a subdomain, it MUST have a name.
+                // Validate: Subdomain MUST have a name.
                 state.domainNameValid = (val.length > 0);
             } 
             // Handle Custom Domain
@@ -2697,8 +2697,9 @@
                 state.domainName = val;
                 document.getElementById('summary-domain').innerText = val ? 'User Provided' : 'RM 0';
                 
-                // UPDATE: Make custom domain required
-                state.domainNameValid = (val.length > 0); 
+                // UPDATED: Custom domain is now REQUIRED. 
+                // User cannot leave it blank.
+                state.domainNameValid = (val.length > 0);
             }
         }
 
@@ -2712,7 +2713,7 @@
 
         document.getElementById('custom-domain-text').addEventListener('input', () => {
             updateSummaryText();
-            // UPDATE: Mark validity based on input length for custom domain
+            // UPDATED: Must be filled to be valid
             const val = document.getElementById('custom-domain-text').value.trim();
             state.domainNameValid = (val.length > 0);
         });
@@ -2894,13 +2895,14 @@
                 return;
             }
 
-            // NEW: Check Domain Name Validity (Handles both Sub and Custom)
+            // NEW: Strict Domain Name Validation
             if(!state.domainNameValid) {
+                // Determine specific error message based on type
                 if(state.domainType === 'sub') {
-                    showToast("Please fill in your Subdomain Name.", "error");
+                    showToast("Please fill in your Subdomain Name (e.g. yourname).", "error");
                     document.getElementById('subdomain-text').focus();
                 } else {
-                    showToast("Please enter your Custom Domain Name.", "error");
+                    showToast("Please fill in your Custom Domain Name (e.g. www.example.com).", "error");
                     document.getElementById('custom-domain-text').focus();
                 }
                 return;
