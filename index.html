@@ -954,7 +954,7 @@
                         <!-- UPDATE: FormSubmit.co Integration with AJAX handling -->
                         <!-- Action set to FormSubmit endpoint. onsubmit handled by JS for AJAX -->
                         <!-- _next is set dynamically in JS to ensure return to current page without seeing FormSubmit website -->
-                        <form id="website-idea-form" action="https://formsubmit.co/contact@ddnet.my" method="POST">
+                        <form id="website-idea-form">
                             
                             <!-- FormSubmit Hidden Fields -->
                             <input type="hidden" name="_subject" value="New Website Idea Submission!">
@@ -3106,15 +3106,13 @@ function handleInitialRoute() {
         }
 
 // ==========================================
-// UPDATED: Handle FormSubmit -> Navigate to Success URL
+// FIXED: FormSubmit AJAX (No HTML Redirects)
 // ==========================================
 function handleWebsiteIdeaSubmit(event) {
-    event.preventDefault(); // Stop standard HTML submission/reload
+    event.preventDefault(); // Stop standard HTML submission
     
     const form = document.getElementById('website-idea-form');
     const formData = new FormData(form);
-    const btn = document.getElementById('btn-submit-idea');
-    const originalText = btn.innerText;
     
     // Basic Validation
     const name = formData.get('name');
@@ -3126,16 +3124,30 @@ function handleWebsiteIdeaSubmit(event) {
         return;
     }
 
+    const btn = document.getElementById('btn-submit-idea');
+    const originalText = btn.innerText;
+    
     // Show loading state
     btn.disabled = true;
     btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
 
-    // USE AJAX to submit without redirecting to FormSubmit's default page
-    // Note: If you remove '_ajax': 'true', FormSubmit will redirect immediately.
+    // CRITICAL FIX: Define URL explicitly in JS, NOT in HTML form action.
+    // This ensures the browser has no "fallback" URL to redirect to.
+    const formSubmitUrl = "https://formsubmit.co/contact@ddnet.my";
+
+    // Add hidden fields programmatically to be safe
+    formData.append('_subject', 'New Website Idea Submission!');
+    formData.append('_captcha', 'false');
+    
+    // Set _next to current page so if anything fails, it stays here
+    // OR if you use _ajax (below), this is redundant but good for safety.
+    formData.append('_next', window.location.href);
+    
+    // IMPORTANT: _ajax=1 forces JSON response and prevents FormSubmit's default page
     formData.append('_ajax', 'true');
 
-    fetch(form.action, {
-        method: form.method,
+    fetch(formSubmitUrl, {
+        method: 'POST',
         body: formData,
         headers: {
             'Accept': 'application/json'
@@ -3143,27 +3155,25 @@ function handleWebsiteIdeaSubmit(event) {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Server response was not ok.');
+            throw new Error('Network response was not ok.');
         }
         return response.json();
     })
     .then(data => {
-        // SUCCESS LOGIC
         console.log("FormSubmit Success:", data);
-        
-        // 1. Change the Browser URL to the Success Page
-        // We use pushState so the SPA doesn't fully reload
+
+        // 1. Change Browser URL to Success Page
         const successUrl = '/profile-website-describe/success';
         window.history.pushState({ path: successUrl }, "", successUrl);
         
-        // 2. Trigger the routing logic manually to handle the new URL
+        // 2. Trigger the router to handle the display update
         handleInitialRoute();
         
-        // 3. Show a small toast notification
+        // 3. Show feedback
         showToast("Idea submitted successfully!", "success");
     })
     .catch(error => {
-        console.error('Submission Error:', error);
+        console.error('Error:', error);
         showToast("Failed to submit. Please try again.", "error");
     })
     .finally(() => {
