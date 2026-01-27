@@ -1319,14 +1319,13 @@
                             </div>
                             
                             <div id="input-subdomain" style="margin-top: 10px;">
-                                <input type="text" id="subdomain-text" class="form-input" placeholder="yourname" oninput="updateSummaryText()">
-                                <span style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 5px; display: block;">URL: <span id="url-preview" style="color: var(--accent-primary); font-weight: 700;">.ddnet.my</span></span>
-                            </div>
+                                    <input type="text" id="subdomain-text" class="form-input" placeholder="Enter name (Required)" oninput="updateSummaryText()" required>
+                                    <span style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 5px; display: block;">URL: <span id="url-preview" style="color: var(--accent-primary); font-weight: 700;">.ddnet.my</span></span>
+                                </div>
                             
                             <div id="input-custom" style="display: none; margin-top: 10px;">
-                                <input type="text" id="custom-domain-text" class="form-input" placeholder="www.example.com" oninput="updateSummaryText()">
-                            </div>
-                        </div>
+                                    <input type="text" id="custom-domain-text" class="form-input" placeholder="www.example.com (Required)" oninput="updateSummaryText()" required>
+                                </div>
 
                         <div class="form-group">
                             <label class="form-label">Maintenance Plan (Optional)</label>
@@ -2493,12 +2492,42 @@
             else { icon.classList.add('ri-menu-4-line'); icon.classList.remove('ri-close-line'); }
         }
 
-        function attemptSelectPackage(name, type) {
-            if (typeof auth === 'undefined' || auth === null) { showToast("Authentication system initializing...", "error"); return; }
-            if (auth.currentUser) { selectPackage(name, type); } 
-            else { showToast("Please login or sign up to make a purchase.", "error"); setTimeout(() => { navigateTo('/login'); }, 1500); }
-        }
+                function attemptSelectPackage(name, type) {
+            if (typeof auth === 'undefined' || auth === null) { 
+                showToast("Authentication system initializing...", "error"); 
+                return; 
+            }
+            
+            // CHECK: Validate Domain Input before proceeding
+            const subInput = document.getElementById('subdomain-text');
+            const customInput = document.getElementById('custom-domain-text');
+            const currentType = document.querySelector('input[name="domain_type"]:checked').value;
 
+            let domainValue = "";
+
+            if (currentType === 'sub') {
+                if (!subInput.value.trim()) {
+                    showToast("Please enter a domain name first.", "error");
+                    subInput.focus();
+                    return;
+                }
+                domainValue = subInput.value;
+            } else if (currentType === 'custom') {
+                if (!customInput.value.trim()) {
+                    showToast("Please enter your custom domain.", "error");
+                    customInput.focus();
+                    return;
+                }
+                domainValue = customInput.value;
+            }
+
+            if (auth.currentUser) { 
+                selectPackage(name, type); 
+            } else { 
+                showToast("Please login or sign up to make a purchase.", "error"); 
+                setTimeout(() => { navigateTo('/login'); }, 1500); 
+            }
+        }
         function selectPackage(name, type) {
             state.packageType = type;
             state.packagePrice = 0;
