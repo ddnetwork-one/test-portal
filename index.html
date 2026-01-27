@@ -2022,10 +2022,29 @@
             else performTransition(routes[window.location.pathname] || 'home');
         });
 
-        function handleInitialRoute() {
-            const path = window.location.pathname;
-            performTransition(routes[path] || 'home', true);
-        }
+function handleInitialRoute() {
+    const path = window.location.pathname;
+    
+    // ==========================================
+    // SPECIAL LOGIC FOR SUCCESS PAGE
+    // ==========================================
+    // If the URL is specifically the success page, show success message, hide form
+    if (path.includes('/profile-website-describe/success')) {
+        const formContainer = document.getElementById('website-form-container');
+        const successContainer = document.getElementById('idea-success-container');
+        
+        if(formContainer) formContainer.style.display = 'none';
+        if(successContainer) successContainer.style.display = 'flex';
+        
+        // Stop further routing
+        return;
+    }
+    
+    // ==========================================
+    // STANDARD ROUTING
+    // ==========================================
+    performTransition(routes[path] || 'home', true);
+}
 
         function performTransition(targetSectionId, isInstant = false) {
             const currentSection = document.querySelector('.page-section.active');
@@ -3087,10 +3106,10 @@
         }
 
 // ==========================================
-// UPDATED: FormSubmit AJAX HANDLER (NO REDIRECT + POP-UP)
+// UPDATED: Handle FormSubmit -> Navigate to Success URL
 // ==========================================
 function handleWebsiteIdeaSubmit(event) {
-    event.preventDefault(); // Stop standard HTML form submission/reload
+    event.preventDefault(); // Stop standard HTML submission/reload
     
     const form = document.getElementById('website-idea-form');
     const formData = new FormData(form);
@@ -3111,11 +3130,8 @@ function handleWebsiteIdeaSubmit(event) {
     btn.disabled = true;
     btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
 
-    // UPDATE 1: Set _next to CURRENT URL so FormSubmit "redirects" back to this page immediately
-    // This acts as a safeguard if the AJAX call somehow falls through to default behavior.
-    formData.set('_next', window.location.href);
-    
-    // UPDATE 2: Add _ajax parameter. This strictly forces FormSubmit to return JSON and NOT redirect the browser.
+    // USE AJAX to submit without redirecting to FormSubmit's default page
+    // Note: If you remove '_ajax': 'true', FormSubmit will redirect immediately.
     formData.append('_ajax', 'true');
 
     fetch(form.action, {
@@ -3126,7 +3142,6 @@ function handleWebsiteIdeaSubmit(event) {
         }
     })
     .then(response => {
-        // Check if response is OK (200-299)
         if (!response.ok) {
             throw new Error('Server response was not ok.');
         }
@@ -3134,35 +3149,25 @@ function handleWebsiteIdeaSubmit(event) {
     })
     .then(data => {
         // SUCCESS LOGIC
-        // FormSubmit was successful.
-        // 1. Show Success POP-UP (Glass Modal)
-        showGlassModal(
-            "Submission Successful", 
-            "Your website idea has been sent successfully! We will review it and get back to you soon.", 
-            "success",  // Type
-            "Awesome",  // Button Text
-            () => {
-                // Callback AFTER user clicks "Awesome" on the modal:
-                // 2. Hide the form container
-                const formContainer = document.getElementById('website-form-container');
-                if(formContainer) {
-                    formContainer.style.display = 'none';
-                }
-                
-                // 3. Show the internal success container
-                const successContainer = document.getElementById('idea-success-container');
-                if(successContainer) {
-                    successContainer.style.display = 'flex';
-                }
-            }
-        );
+        console.log("FormSubmit Success:", data);
+        
+        // 1. Change the Browser URL to the Success Page
+        // We use pushState so the SPA doesn't fully reload
+        const successUrl = '/profile-website-describe/success';
+        window.history.pushState({ path: successUrl }, "", successUrl);
+        
+        // 2. Trigger the routing logic manually to handle the new URL
+        handleInitialRoute();
+        
+        // 3. Show a small toast notification
+        showToast("Idea submitted successfully!", "success");
     })
     .catch(error => {
         console.error('Submission Error:', error);
         showToast("Failed to submit. Please try again.", "error");
     })
     .finally(() => {
-        // Reset button state regardless of success or error
+        // Reset button state
         btn.disabled = false;
         btn.innerText = originalText;
     });
