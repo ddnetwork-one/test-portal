@@ -715,6 +715,30 @@
             .hero { padding: 0 10px; }
             .hero-content { width: 100%; }
         }
+
+        /* SUCCESS MESSAGE STYLING FOR WEBSITE IDEA FORM */
+        #idea-success-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #idea-success-icon {
+            font-size: 4rem;
+            color: var(--accent-success);
+            margin-bottom: 1.5rem;
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -822,7 +846,7 @@
                 <canvas id="globe-canvas" width="1200" height="1200"></canvas>
                 
                 <div class="hero-content">
-                    <div style="display:inline-block; padding: 6px 16px; background: rgba(255,255,255,0.05); border-radius: 30px; border: 1px solid var(--border-glass); margin-bottom: 1.5rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; color: var(--accent-primary); text-transform: uppercase;">
+                    <div style="display:inline-block; padding: 6px 16px; background: rgba(255,255,255,0.05); border-radius: 30px; border: 1px solid var(--border-glass); margin-bottom:1.5rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; color: var(--accent-primary); text-transform: uppercase;">
                         Malaysia 🇲🇾 #1 Web Solutions
                     </div>
                     <h1>Local focus.<br>Global quality.</h1>
@@ -915,7 +939,7 @@
             </div>
         </section>
 
-        <!-- === PAGE: WEBSITE DESCRIPTION (NEW) === -->
+        <!-- === PAGE: WEBSITE DESCRIPTION (NEW & UPDATED) === -->
         <section id="profile-website-describe" class="page-section">
             <div class="auth-container" style="max-width: 800px;">
                 <div class="glass-card auth-card" style="text-align: left;">
@@ -925,61 +949,75 @@
                         <p>Tell us your vision! We'll review your ideas and get back to you.</p>
                     </div>
 
-                    <!-- FormSubmit.co Integration -->
-                    <!-- Action points to FormSubmit email, next redirects back to home after success -->
-                    <form action="https://formsubmit.co/contact@ddnet.my" method="POST">
-                        
-                        <!-- FormSubmit Hidden Fields -->
-                        <input type="hidden" name="_subject" value="New Website Idea Submission!">
-                        <input type="hidden" name="_captcha" value="false">
-                        <input type="hidden" name="_next" value="https://www.ddnet.my/?success=true"> 
+                    <!-- FORM CONTAINER -->
+                    <div id="website-form-container">
+                        <!-- FormSubmit.co Integration -->
+                        <!-- Action removed to allow JS interception -->
+                        <form id="website-idea-form" onsubmit="handleWebsiteIdeaSubmit(event)">
+                            
+                            <!-- FormSubmit Hidden Fields -->
+                            <input type="hidden" name="_subject" value="New Website Idea Submission!">
+                            <input type="hidden" name="_captcha" value="false">
+                            <input type="hidden" name="_next" value="https://www.ddnet.my/?success=true"> 
 
-                        <div class="profile-details-grid">
-                            <div class="form-group">
-                                <label class="form-label">Your Name</label>
-                                <input type="text" name="name" class="form-input" placeholder="e.g. Ali Bin Abu" required>
+                            <div class="profile-details-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Your Name</label>
+                                    <input type="text" name="name" id="idea-name" class="form-input" placeholder="e.g. Ali Bin Abu" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" name="email" id="idea-email" class="form-input" placeholder="hello@example.com" required>
+                                </div>
                             </div>
+
                             <div class="form-group">
-                                <label class="form-label">Email Address</label>
-                                <input type="email" name="email" class="form-input" placeholder="hello@example.com" required>
+                                <label class="form-label">Project Type</label>
+                                <select name="type" id="idea-type" class="form-select" required>
+                                    <option value="" disabled selected>What are you looking for?</option>
+                                    <option value="New Website">New Website</option>
+                                    <option value="Redesign Existing Website">Redesign Existing Website</option>
+                                    <option value="Internal Portal / System">Internal Portal / System</option>
+                                    <option value="AI Integration">AI Integration</option>
+                                    <option value="Other">Other / Not Sure</option>
+                                </select>
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label class="form-label">Project Type</label>
-                            <select name="type" class="form-select" required>
-                                <option value="" disabled selected>What are you looking for?</option>
-                                <option value="New Website">New Website</option>
-                                <option value="Redesign Existing Website">Redesign Existing Website</option>
-                                <option value="Internal Portal / System">Internal Portal / System</option>
-                                <option value="AI Integration">AI Integration</option>
-                                <option value="Other">Other / Not Sure</option>
-                            </select>
-                        </div>
+                            <div class="form-group">
+                                <label class="form-label">Describe Your Idea</label>
+                                <textarea name="message" id="idea-message" class="form-input" rows="6" placeholder="Tell us about your business, target audience, features you need, or any specific design ideas..." required></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Reference Sites (Optional)</label>
+                                <input type="text" name="references" id="idea-references" class="form-input" placeholder="Paste links of sites you like...">
+                            </div>
 
-                        <div class="form-group">
-                            <label class="form-label">Describe Your Idea</label>
-                            <textarea name="message" class="form-input" rows="6" placeholder="Tell us about your business, target audience, features you need, or any specific design ideas..." required></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Reference Sites (Optional)</label>
-                            <input type="text" name="references" class="form-input" placeholder="Paste links of sites you like...">
-                        </div>
+                            <div class="form-group" style="margin-top: 1.5rem;">
+                                 <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary);">
+                                    <input type="checkbox" name="terms" id="idea-terms" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--accent-primary);" required>
+                                    <span>I agree that this form submission will be sent directly to DDNetwork One email for review.</span>
+                                </label>
+                            </div>
 
-                        <div class="form-group" style="margin-top: 1.5rem;">
-                             <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary);">
-                                <input type="checkbox" name="terms" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--accent-primary);" required>
-                                <span>I agree that this form submission will be sent directly to the DDNetwork One email for review.</span>
-                            </label>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Idea</button>
-                    </form>
-                    
-                    <div style="margin-top: 2rem;">
-                        <button type="button" class="btn btn-glass" style="width: 100%;" onclick="navigateTo('/profile')">Back to Profile</button>
+                            <button type="submit" id="btn-submit-idea" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Idea</button>
+                        </form>
                     </div>
+
+                    <!-- SUCCESS MESSAGE (Hidden Initially) -->
+                    <div id="idea-success-container" style="display: none;">
+                        <div id="idea-success-icon">
+                            <i class="ri-checkbox-circle-fill"></i>
+                        </div>
+                        <h2 style="margin-bottom: 1rem; color: white;">Success!</h2>
+                        <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6;">
+                            Your request has been successfully sent.<br>Our team will review it and respond soon.
+                        </p>
+                        <div style="margin-top: 2rem;">
+                            <button type="button" class="btn btn-glass" style="width: 100%;" onclick="navigateTo('/profile')">Back to Profile</button>
+                        </div>
+                    </div>
+                    
                 </div>
             </div>
         </section>
@@ -1449,7 +1487,7 @@
                             <!-- UPDATE 1: Added Payment Confirmation Checkbox -->
                             <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 0.95rem; margin-bottom: 1rem;">
                                 <input type="checkbox" id="payment-confirm-check" style="width: 20px; height: 20px; accent-color: var(--accent-success);">
-                                <span style="color: white; font-weight: 600;">I have made the payment.</span>
+                                <span style="color: white; font-weight: 600;">I have made payment.</span>
                             </label>
                             
                             <button type="button" id="btn-place-order" class="btn btn-success disabled" style="width: 100%;" onclick="submitOrder()"><i class="ri-shopping-bag-line" style="margin-right: 8px;"></i> Place Order</button>
@@ -2804,7 +2842,7 @@
             else discountAmt = subtotal * state.discountRate;
             const finalTotal = Math.max(0, Math.round(subtotal - discountAmt));
             document.getElementById('summary-final-total').innerText = `RM ${finalTotal}`;
-            document.getElementById('summary-recurring').innerText = `RM ${state.packagePrice} / ${state.billingCycle}`;
+                        document.getElementById('summary-recurring').innerText = `RM ${state.packagePrice} / ${state.billingCycle}`;
             document.getElementById('summary-setup').innerText = state.setupFee > 0 ? `RM ${state.setupFee}` : 'RM 0';
             document.getElementById('deposit-note').innerText = `Deposit Required (50%): RM ${Math.round(finalTotal / 2)}`;
         }
@@ -3009,7 +3047,7 @@
             // Success Animation
             msgEl.innerHTML = `<div style="margin-bottom:1rem; color:var(--accent-success); font-size:3rem;"><i class="ri-checkbox-circle-fill"></i></div> <div style="font-weight:700; font-size:1.5rem;">Order Successful</div>`;
 
-            const methods = siteConfig.payment_methods && siteConfig.payment_methods.length > 0 ? siteConfig.payment_methods : DEFAULT_PAYMENT_METHODS;
+            const methods = siteConfig.payment_methods && siteConfig.payment_methods.length >0 ? siteConfig.payment_methods : DEFAULT_PAYMENT_METHODS;
             const paymentObj = methods.find(m => m.id === state.paymentMethodId);
             const paymentLabel = paymentObj ? paymentObj.name : "Unknown";
 
@@ -3109,8 +3147,8 @@
                 if(!this.active) return;
                 // Create gradient trail
                 const gradient = ctx.createLinearGradient(this.x, this.y, this.x + this.len, this.y - this.len);
-                gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
-                gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+                gradient.addColorStop(0, "rgba(255,255,255,1)");
+                gradient.addColorStop(1, "rgba(255,255,255,0)");
                 
                 ctx.beginPath();
                 ctx.strokeStyle = gradient;
@@ -3137,7 +3175,7 @@
             ctx.clearRect(0,0, 1200, 1200); 
 
             // Draw Stars (Background)
-            ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.fillStyle = "rgba(255,255,255,0.4)";
             for(let i=0; i<50; i++) {
                 const sx = (Math.sin(i * 132 + 1) * 43758.5453) % 1200;
                 const sy = (Math.cos(i * 53 + 1) * 43758.5453) % 1200;
