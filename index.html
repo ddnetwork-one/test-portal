@@ -951,15 +951,9 @@
 
                     <!-- FORM CONTAINER -->
                     <div id="website-form-container">
-                        <!-- UPDATE: FormSubmit.co Integration with AJAX handling -->
-                        <!-- Action set to FormSubmit endpoint. onsubmit handled by JS for AJAX -->
-                        <!-- _next is set dynamically in JS to ensure return to current page without seeing FormSubmit website -->
+                        <!-- FormSubmit Form (Action handled via AJAX in JS, NOT here) -->
+                        <!-- Removed action from HTML to prevent default form submission behavior -->
                         <form id="website-idea-form">
-                            
-                            <!-- FormSubmit Hidden Fields -->
-                            <input type="hidden" name="_subject" value="New Website Idea Submission!">
-                            <input type="hidden" name="_captcha" value="false">
-                            <!-- _next is handled by JS success callback -->
                             
                             <!-- Anti-Spam Honeypot -->
                             <input type="text" name="_honey" style="display:none">
@@ -3106,7 +3100,7 @@ function handleInitialRoute() {
         }
 
 // ==========================================
-// FIXED: FormSubmit AJAX (No HTML Redirects)
+// UPDATED: FormSubmit AJAX + Firebase Sync
 // ==========================================
 function handleWebsiteIdeaSubmit(event) {
     event.preventDefault(); // Stop standard HTML submission
@@ -3131,21 +3125,16 @@ function handleWebsiteIdeaSubmit(event) {
     btn.disabled = true;
     btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
 
-    // CRITICAL FIX: Define URL explicitly in JS, NOT in HTML form action.
-    // This ensures the browser has no "fallback" URL to redirect to.
+    // 1. Define FormSubmit Endpoint
+    // _ajax=true ensures JSON response and NO page redirect.
     const formSubmitUrl = "https://formsubmit.co/contact@ddnet.my";
 
-    // Add hidden fields programmatically to be safe
+    // 2. Add hidden fields programmatically
     formData.append('_subject', 'New Website Idea Submission!');
     formData.append('_captcha', 'false');
-    
-    // Set _next to current page so if anything fails, it stays here
-    // OR if you use _ajax (below), this is redundant but good for safety.
-    formData.append('_next', window.location.href);
-    
-    // IMPORTANT: _ajax=1 forces JSON response and prevents FormSubmit's default page
     formData.append('_ajax', 'true');
-
+    
+    // 3. Fetch Request (AJAX)
     fetch(formSubmitUrl, {
         method: 'POST',
         body: formData,
@@ -3161,23 +3150,52 @@ function handleWebsiteIdeaSubmit(event) {
     })
     .then(data => {
         console.log("FormSubmit Success:", data);
+        
+        // 4. Sync to Firebase (Customer Requests)
+        if(db) {
+            const requestData = {
+                name: name,
+                email: email,
+                type: formData.get('type') || 'New Website',
+                details: message,
+                references: formData.get('references') || '',
+                status: 'Pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                userId: auth.currentUser ? auth.currentUser.uid : null,
+                source: 'Website Description Form'
+            };
+            
+            db.collection("customer_requests").add(requestData)
+                .then(() => {
+                    console.log("Successfully synced to customer_requests collection");
 
-        // 1. Change Browser URL to Success Page
-        const successUrl = '/profile-website-describe/success';
-        window.history.pushState({ path: successUrl }, "", successUrl);
-        
-        // 2. Trigger the router to handle the display update
-        handleInitialRoute();
-        
-        // 3. Show feedback
-        showToast("Idea submitted successfully!", "success");
+                    // 5. Update UI to Success State
+                    // Hide form, show success message
+                    document.getElementById('website-form-container').style.display = 'none';
+                    document.getElementById('idea-success-container').style.display = 'flex';
+
+                    // 6. Push state to URL to simulate routing to success page
+                    const successUrl = '/profile-website-describe/success';
+                    window.history.pushState({ path: successUrl }, "", successUrl);
+                    
+                    showToast("Idea submitted successfully!", "success");
+                })
+                .catch((firebaseError) => {
+                    console.error("Firebase Sync Error:", firebaseError);
+                    // Even if Firebase fails, the email was sent, so we should inform the user partially
+                    showToast("Email sent successfully, but failed to sync to internal system.", "warning");
+                    // Optional: You can still show success for the user since the main goal (email) worked
+                    document.getElementById('website-form-container').style.display = 'none';
+                    document.getElementById('idea-success-container').style.display = 'flex';
+                });
+        }
     })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast("Failed to submit. Please try again.", "error");
+    .catch((error) => {
+        console.error('FormSubmit Error:', error);
+        showToast("Failed to submit form. Please try again.", "error");
     })
     .finally(() => {
-        // Reset button state
+        // Reset button state regardless of success or error
         btn.disabled = false;
         btn.innerText = originalText;
     });
@@ -3340,7 +3358,6 @@ function handleWebsiteIdeaSubmit(event) {
         });
 
         initializeDatabase();
-
     </script>
 </body>
 </html>
