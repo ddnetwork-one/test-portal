@@ -1593,114 +1593,246 @@
             };
         }
 
-        // --- NEW INVOICE GENERATION LOGIC ---
+        // --- NEW INVOICE GENERATION LOGIC (APPLE STYLE) ---
         async function generateInvoice(orderId) {
             try {
                 const orderDoc = await db.collection("orders").doc(orderId).get();
                 if(!orderDoc.exists) return showToast("Order not found", "error");
                 const d = orderDoc.data();
                 
-                const dateStr = formatDateTime(d.timestamp).split(' ')[0]; // Just date part
+                const dateStr = formatDateTime(d.timestamp).split(' ')[0]; // Date only
                 const orderRef = orderId.substring(0,8).toUpperCase();
                 const total = parseFloat(d.total.replace('RM ', '')).toFixed(2);
                 
-                let paymentMethodsHTML = '<p>Please contact support for payment details.</p>';
-                try {
-                    const pmSnap = await db.collection("payment_methods").where("active", "==", true).limit(2).get();
-                    if(!pmSnap.empty) {
-                        paymentMethodsHTML = ``;
-                        pmSnap.forEach(pm => {
-                            const data = pm.data();
-                            paymentMethodsHTML += `<p><strong>${data.name}:</strong> <a href="${data.link}" target="_blank" style="color:#4f46e5;">Click to Pay</a></p>`;
-                        });
-                    }
-                } catch(e) { console.error("Error fetching payments", e); }
-
                 // INVOICE TEMPLATE
                 const invoiceContent = `
                     <!DOCTYPE html>
                     <html lang="en">
                     <head>
-                        <meta charset="UTF-8">
-                        <title>Invoice | DDNetwork</title>
-                        <style>
-                            body { font-family: "Segoe UI", Arial, sans-serif; background: #f5f7fb; padding: 30px; color: #333; margin: 0; }
-                            .invoice-box { max-width: 850px; margin: auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-                            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
-                            .company h2 { margin: 0; color: #4f46e5; }
-                            .company p { margin: 4px 0; font-size: 14px; color: #666; }
-                            .invoice-details { text-align: right; font-size: 14px; }
-                            .invoice-details strong { display: block; font-size: 16px; }
-                            .billing { display: flex; justify-content: space-between; margin-bottom: 30px; }
-                            .billing h4 { margin-bottom: 8px; color: #111; }
-                            table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-                            table thead { background: #f0f2ff; }
-                            table th, table td { padding: 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #eee; }
-                            table th { font-weight: 600; }
-                            .text-right { text-align: right; }
-                            .summary { max-width: 300px; margin-left: auto; font-size: 14px; }
-                            .summary div { display: flex; justify-content: space-between; margin-bottom: 10px; }
-                            .summary .total { font-size: 18px; font-weight: bold; border-top: 2px solid #ddd; padding-top: 10px; }
-                            .footer { margin-top: 40px; font-size: 13px; color: #666; text-align: center; }
-                            .badge { display: inline-block; padding: 6px 12px; background: #e0e7ff; color: #4338ca; border-radius: 20px; font-size: 12px; font-weight: 600; }
-                            @media print { body { background: none; padding: 0; } .invoice-box { box-shadow: none; border-radius: 0; } }
-                        </style>
+                    <meta charset="UTF-8">
+                    <title>Invoice | DDNetwork</title>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                      * {
+                        box-sizing: border-box;
+                      }
+
+                      body {
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                                     Roboto, Helvetica, Arial, sans-serif;
+                        background: #f2f2f2;
+                        padding: 40px;
+                        color: #1d1d1f;
+                        margin: 0;
+                      }
+
+                      .receipt {
+                        max-width: 720px;
+                        margin: auto;
+                        background: #ffffff;
+                        padding: 48px;
+                        border-radius: 16px;
+                        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+                      }
+
+                      /* Header */
+                      .header {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 40px;
+                      }
+
+                      .brand {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                      }
+
+                      .brand img {
+                        width: 36px;
+                        height: auto;
+                      }
+
+                      .brand strong {
+                        font-size: 18px;
+                        font-weight: 600;
+                      }
+
+                      .invoice-meta {
+                        text-align: right;
+                        font-size: 13px;
+                        color: #6e6e73;
+                      }
+
+                      .invoice-meta span {
+                        display: block;
+                      }
+
+                      /* Section */
+                      .section {
+                        margin-bottom: 32px;
+                      }
+
+                      .section h4 {
+                        font-size: 13px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.08em;
+                        color: #6e6e73;
+                        margin-bottom: 8px;
+                      }
+
+                      .section p {
+                        margin: 0;
+                        font-size: 14px;
+                        line-height: 1.5;
+                      }
+
+                      /* Table */
+                      table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                      }
+
+                      table th {
+                        text-align: left;
+                        font-size: 13px;
+                        color: #6e6e73;
+                        font-weight: 500;
+                        padding-bottom: 12px;
+                        border-bottom: 1px solid #e5e5ea;
+                      }
+
+                      table td {
+                        padding: 16px 0;
+                        font-size: 14px;
+                        border-bottom: 1px solid #f0f0f0;
+                        vertical-align: top;
+                      }
+
+                      .amount {
+                        text-align: right;
+                        white-space: nowrap;
+                      }
+
+                      /* Summary */
+                      .summary {
+                        margin-top: 30px;
+                        max-width: 320px;
+                        margin-left: auto;
+                      }
+
+                      .summary div {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 10px;
+                        font-size: 14px;
+                      }
+
+                      .summary .total {
+                        font-size: 18px;
+                        font-weight: 600;
+                        padding-top: 12px;
+                        border-top: 1px solid #e5e5ea;
+                      }
+
+                      /* Footer */
+                      .footer {
+                        margin-top: 50px;
+                        text-align: center;
+                        font-size: 13px;
+                        color: #6e6e73;
+                      }
+
+                      /* Print Optimisation */
+                      @media print {
+                        body {
+                          background: none;
+                          padding: 0;
+                        }
+
+                        .receipt {
+                          box-shadow: none;
+                          border-radius: 0;
+                          padding: 32px;
+                        }
+
+                        @page {
+                          margin: 0;
+                        }
+                      }
+                    </style>
                     </head>
                     <body>
-                        <div class="invoice-box">
-                            <div class="header">
-                                <div class="company">
-                                    <h2>DDNetwork</h2>
-                                    <p>Web & Digital Solutions</p>
-                                    <p>www.ddnet.my</p>
-                                    <p>support@ddnet.my</p>
-                                </div>
-                                <div class="invoice-details">
-                                    <strong>INVOICE</strong>
-                                    Invoice No: INV-${orderRef}<br>
-                                    Date: ${dateStr}<br>
-                                    <span class="badge">${d.status}</span>
-                                </div>
-                            </div>
-                            <div class="billing">
-                                <div>
-                                    <h4>Bill To</h4>
-                                    ${d.customerName}<br>
-                                    ${d.customerEmail}<br>
-                                    ${d.domain ? 'Domain: '+d.domain : ''}
-                                </div>
-                                <div>
-                                    <h4>Payment Method</h4>
-                                    ${paymentMethodsHTML}
-                                </div>
-                            </div>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Service</th>
-                                        <th>Description</th>
-                                        <th class="text-right">Amount (RM)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>${d.package}</td>
-                                        <td>${d.billingCycle ? d.billingCycle + ' Billing Cycle' : 'One-time Service'}</td>
-                                        <td class="text-right">${total}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div class="summary">
-                                <div><span>Subtotal</span><span>RM ${total}</span></div>
-                                <div><span>Tax (0%)</span><span>RM 0.00</span></div>
-                                <div class="total"><span>Total</span><span>RM ${total}</span></div>
-                            </div>
-                            <div class="footer">
-                                Thank you for your business.<br>
-                                Please make payment within 7 days.
-                            </div>
+
+                    <div class="receipt">
+
+                      <!-- Header -->
+                      <div class="header">
+                        <div class="brand">
+                          <img src="https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png" alt="DDNetwork Logo">
+                          <strong>DDNetwork</strong>
                         </div>
-                        <script>window.onload = function() { window.print(); }<\/script>
+
+                        <div class="invoice-meta">
+                          <span>Invoice</span>
+                          <span>INV-${orderRef}</span>
+                          <span>${dateStr}</span>
+                        </div>
+                      </div>
+
+                      <!-- Billing -->
+                      <div class="section">
+                        <h4>Bill To</h4>
+                        <p>
+                          <strong>${d.customerName}</strong><br>
+                          ${d.domain ? d.domain : 'N/A'}<br>
+                          ${d.customerEmail}
+                        </p>
+                      </div>
+
+                      <!-- Items -->
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Description</th>
+                            <th class="amount">Amount (RM)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>${d.package} ${d.billingCycle ? `(${d.billingCycle})` : ''}</td>
+                            <td class="amount">${total}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      <!-- Summary -->
+                      <div class="summary">
+                        <div>
+                          <span>Subtotal</span>
+                          <span>RM ${total}</span>
+                        </div>
+                        <div>
+                          <span>Tax</span>
+                          <span>RM 0.00</span>
+                        </div>
+                        <div class="total">
+                          <span>Total</span>
+                          <span>RM ${total}</span>
+                        </div>
+                      </div>
+
+                      <!-- Footer -->
+                      <div class="footer">
+                        Thank you for choosing DDNetwork.<br>
+                        Payment due within 7 days.
+                      </div>
+
+                    </div>
+
+                    <script>window.onload = function() { window.print(); }<\/script>
                     </body>
                     </html>
                 `;
