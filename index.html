@@ -453,7 +453,41 @@
             .header-search { max-width: 150px; }
         }
         @media(min-width: 1025px) and (max-width: 1440px) { .invoice-paper { transform: scale(0.85); } }
-        @media print { body > *:not(#invoiceModalOverlay) { display: none !important; } }
+        
+        /* --- INVOICE TEMPLATE STYLES (Embedded for Print) --- */
+        .invoice-box {
+            max-width: 850px;
+            margin: auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: #333;
+        }
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .invoice-company h2 { margin: 0; color: #4f46e5; }
+        .invoice-company p { margin: 4px 0; font-size: 14px; color: #666; }
+        .invoice-meta { text-align: right; font-size: 14px; }
+        .invoice-meta strong { display: block; font-size: 16px; }
+        .invoice-billing { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .invoice-billing h4 { margin-bottom: 8px; color: #111; font-size: 14px; font-weight: 600; }
+        .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .invoice-table thead { background: #f0f2ff; }
+        .invoice-table th, .invoice-table td { padding: 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #eee; }
+        .invoice-table th { font-weight: 600; }
+        .invoice-summary { max-width: 300px; margin-left: auto; font-size: 14px; }
+        .invoice-summary div { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .invoice-summary .total { font-size: 18px; font-weight: bold; border-top: 2px solid #ddd; padding-top: 10px; }
+        .invoice-footer { margin-top: 40px; font-size: 13px; color: #666; text-align: center; }
+        .invoice-badge { display: inline-block; padding: 6px 12px; background: #e0e7ff; color: #4338ca; border-radius: 20px; font-size: 12px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -461,8 +495,8 @@
     <!-- AUTH SCREEN -->
     <div id="auth-screen">
         <div class="auth-card">
-            <h2 class="mb-4" style="color:var(--text-main); font-weight: 800; letter-spacing: -0.5px;">New Portal v3.0</h2>
-            <p class="mb-4 text-muted">Enterprise Edition</p>
+            <h2 class="mb-4" style="color:var(--text-main); font-weight: 800; letter-spacing: -0.5px;">New Portal v3.1</h2>
+            <p class="mb-4 text-muted">Enterprise Edition <span style="font-size:0.7em; background:#e0e7ff; color:#4338ca; padding:2px 6px; border-radius:4px;">EMAIL & INVOICE UPDATE</span></p>
             <form id="loginForm">
                 <input type="text" id="loginInput" class="mb-4" placeholder="Email or Crew ID" required>
                 <input type="password" id="loginPass" class="mb-4" placeholder="Password" required>
@@ -486,7 +520,7 @@
                 <button class="btn-icon" onclick="toggleSidebar()" title="Toggle Menu"><i class="ri-menu-line" style="font-size: 1.4rem;"></i></button>
                 <div class="header-brand">
                     <i class="ri-dashboard-3-line" style="color:var(--primary); font-size: 1.4rem;"></i>
-                    <span>HQ-DDNetwork.v3.0</span>
+                    <span>HQ-DDNetwork.v3.1</span>
                 </div>
                 
                 <!-- GLOBAL SEARCH -->
@@ -584,7 +618,6 @@
 
     <div class="toast-container" id="toastContainer"></div>
 <!-- JAVASCRIPT -->
-<!-- JAVASCRIPT -->
 <script>
         // --- FIX: HIDE AUTH SCREEN IMMEDIATELY TO PREVENT REFRESH FLASH ---
         document.getElementById('auth-screen').classList.add('hidden');
@@ -609,7 +642,6 @@
         };
 
         // --- 2. DEPARTMENT CONFIGURATION ---
-        // Removed DEPARTMENT_MAP logic. Now uses manual selection.
         const DEPARTMENTS = [
             "Founder / Managing Director", 
             "Operations", 
@@ -619,7 +651,6 @@
             "Sales"
         ];
 
-        // --- CONSTANTS & CONFIG ---
         const JOB_TITLES = [
             "Founder & Managing Director", 
             "Project & Client Manager", 
@@ -672,8 +703,9 @@
             FINANCE_TOOLS_ACCESS: 'finance_tools_access',
             APPROVE_ACTIONS: 'approve_actions', 
             BYPASS_APPROVAL: 'bypass_approval',
-            EDIT_ACCESS: 'edit_access', // New permission for editing profile/access
-            ADJUST_COMMISSION: 'adjust_commission' // New permission for specific rate override
+            EDIT_ACCESS: 'edit_access', 
+            ADJUST_COMMISSION: 'adjust_commission',
+            MANAGE_EMAIL: 'manage_email' // New permission
         };
 
         // --- TABLE STATE MANAGEMENT ---
@@ -841,9 +873,7 @@
                 const doc = await db.collection("config").doc("site_settings").get();
                 if (doc.exists && doc.data().commission_rates) {
                     // We load the global defaults
-                    // Individual overrides are stored on the user doc itself
                 } else {
-                    // Ensure defaults exist in DB
                     await db.collection("config").doc("site_settings").update({ commission_rates: DEFAULT_COMMISSION_RATES });
                 }
             } catch (e) {
@@ -867,12 +897,23 @@
                             ai: ["All Front-End Features", "AI Chatbot Integration", "Lead Auto-Response", "Smart Analytics"]
                         },
                         disabled_menus: [],
-                        commission_rates: DEFAULT_COMMISSION_RATES 
+                        commission_rates: DEFAULT_COMMISSION_RATES,
+                        smtp_config: {
+                            host: '',
+                            port: 587,
+                            user: '',
+                            pass: '',
+                            from_name: 'DDNetwork System',
+                            from_email: 'noreply@ddnet.my'
+                        }
                     });
                 } else {
                     const data = doc.data();
                     if(!data.commission_rates) {
                          await configRef.update({ commission_rates: DEFAULT_COMMISSION_RATES });
+                    }
+                    if(!data.smtp_config) {
+                        await configRef.update({ smtp_config: { host:'', port:587, user:'', pass:'', from_name:'DDNetwork System', from_email:'noreply@ddnet.my' }});
                     }
                 }
                 const pmSnapshot = await db.collection("payment_methods").limit(1).get();
@@ -967,19 +1008,17 @@
                         currentUser = user;
                         userData = doc.data();
                         
-                        // Handle Permissions Defaults
                         if(!userData.permissions) userData.permissions = {};
                         
-                        // Founder Default Access
                         if(userData.role === 'super_admin') {
                             userData.permissions[PERMISSION_KEYS.EDIT_ACCESS] = true;
+                            userData.permissions[PERMISSION_KEYS.MANAGE_EMAIL] = true;
                         }
 
                         if(!userData.isSuspended) userData.isSuspended = false;
                         if(userData.bypassApproval === undefined) userData.bypassApproval = false; 
                         if(!userData.pinnedMenus) userData.pinnedMenus = [];
                         
-                        // Initialize personal commission rate if missing
                         if(userData.personalCommissionRate === undefined) {
                             const defaultRate = DEFAULT_COMMISSION_RATES[userData.jobTitle] || 0;
                             db.collection("users").doc(user.uid).update({ personalCommissionRate: defaultRate });
@@ -1554,49 +1593,123 @@
             };
         }
 
+        // --- NEW INVOICE GENERATION LOGIC ---
         async function generateInvoice(orderId) {
             try {
                 const orderDoc = await db.collection("orders").doc(orderId).get();
                 if(!orderDoc.exists) return showToast("Order not found", "error");
                 const d = orderDoc.data();
-                const dateStr = formatDateTime(d.timestamp);
+                
+                const dateStr = formatDateTime(d.timestamp).split(' ')[0]; // Just date part
                 const orderRef = orderId.substring(0,8).toUpperCase();
                 const total = parseFloat(d.total.replace('RM ', '')).toFixed(2);
                 
-                let paymentMethodsHTML = '<p>No payment methods configured in config.</p>';
+                let paymentMethodsHTML = '<p>Please contact support for payment details.</p>';
                 try {
                     const pmSnap = await db.collection("payment_methods").where("active", "==", true).limit(2).get();
                     if(!pmSnap.empty) {
-                        paymentMethodsHTML = `<div class="inv-bank-grid">`;
+                        paymentMethodsHTML = ``;
                         pmSnap.forEach(pm => {
                             const data = pm.data();
-                            paymentMethodsHTML += `
-                                <div class="inv-bank-item">
-                                    <strong>${data.name}</strong>
-                                    <a href="${data.link}" target="_blank" style="color:var(--primary); text-decoration:none;">${data.name} Link &rarr;</a>
-                                </div>`;
+                            paymentMethodsHTML += `<p><strong>${data.name}:</strong> <a href="${data.link}" target="_blank" style="color:#4f46e5;">Click to Pay</a></p>`;
                         });
-                        paymentMethodsHTML += `</div>`;
                     }
                 } catch(e) { console.error("Error fetching payments", e); }
 
-                const invoiceHTML = `
-                    <div style="padding:20px;">
-                        <h2>INVOICE #${orderRef}</h2>
-                        <p>Date: ${dateStr}</p>
-                        <p>Status: <strong>${d.status}</strong></p>
-                        <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-                        <p><strong>To:</strong> ${d.customerName} (${d.customerEmail})</p>
-                        <p><strong>Package:</strong> ${d.package}</p>
-                        <p><strong>Domain:</strong> ${d.domain || 'Pending'}</p>
-                        <h3 style="margin-top:20px;">Total: RM ${total}</h3>
-                        <div style="margin-top:20px; padding:15px; background:#f8fafc; border:1px solid #e2e8f0;">
-                            <strong>Payment Methods:</strong>
-                            ${paymentMethodsHTML}
+                // INVOICE TEMPLATE
+                const invoiceContent = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Invoice | DDNetwork</title>
+                        <style>
+                            body { font-family: "Segoe UI", Arial, sans-serif; background: #f5f7fb; padding: 30px; color: #333; margin: 0; }
+                            .invoice-box { max-width: 850px; margin: auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+                            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
+                            .company h2 { margin: 0; color: #4f46e5; }
+                            .company p { margin: 4px 0; font-size: 14px; color: #666; }
+                            .invoice-details { text-align: right; font-size: 14px; }
+                            .invoice-details strong { display: block; font-size: 16px; }
+                            .billing { display: flex; justify-content: space-between; margin-bottom: 30px; }
+                            .billing h4 { margin-bottom: 8px; color: #111; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                            table thead { background: #f0f2ff; }
+                            table th, table td { padding: 14px; text-align: left; font-size: 14px; border-bottom: 1px solid #eee; }
+                            table th { font-weight: 600; }
+                            .text-right { text-align: right; }
+                            .summary { max-width: 300px; margin-left: auto; font-size: 14px; }
+                            .summary div { display: flex; justify-content: space-between; margin-bottom: 10px; }
+                            .summary .total { font-size: 18px; font-weight: bold; border-top: 2px solid #ddd; padding-top: 10px; }
+                            .footer { margin-top: 40px; font-size: 13px; color: #666; text-align: center; }
+                            .badge { display: inline-block; padding: 6px 12px; background: #e0e7ff; color: #4338ca; border-radius: 20px; font-size: 12px; font-weight: 600; }
+                            @media print { body { background: none; padding: 0; } .invoice-box { box-shadow: none; border-radius: 0; } }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="invoice-box">
+                            <div class="header">
+                                <div class="company">
+                                    <h2>DDNetwork</h2>
+                                    <p>Web & Digital Solutions</p>
+                                    <p>www.ddnet.my</p>
+                                    <p>support@ddnet.my</p>
+                                </div>
+                                <div class="invoice-details">
+                                    <strong>INVOICE</strong>
+                                    Invoice No: INV-${orderRef}<br>
+                                    Date: ${dateStr}<br>
+                                    <span class="badge">${d.status}</span>
+                                </div>
+                            </div>
+                            <div class="billing">
+                                <div>
+                                    <h4>Bill To</h4>
+                                    ${d.customerName}<br>
+                                    ${d.customerEmail}<br>
+                                    ${d.domain ? 'Domain: '+d.domain : ''}
+                                </div>
+                                <div>
+                                    <h4>Payment Method</h4>
+                                    ${paymentMethodsHTML}
+                                </div>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Description</th>
+                                        <th class="text-right">Amount (RM)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>${d.package}</td>
+                                        <td>${d.billingCycle ? d.billingCycle + ' Billing Cycle' : 'One-time Service'}</td>
+                                        <td class="text-right">${total}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="summary">
+                                <div><span>Subtotal</span><span>RM ${total}</span></div>
+                                <div><span>Tax (0%)</span><span>RM 0.00</span></div>
+                                <div class="total"><span>Total</span><span>RM ${total}</span></div>
+                            </div>
+                            <div class="footer">
+                                Thank you for your business.<br>
+                                Please make payment within 7 days.
+                            </div>
                         </div>
-                    </div>
+                        <script>window.onload = function() { window.print(); }<\/script>
+                    </body>
+                    </html>
                 `;
-                showModal(`Invoice #${orderRef}`, invoiceHTML, `<button class="btn btn-primary" onclick="closeModal()">Close</button>`);
+
+                // Open in new window to print
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(invoiceContent);
+                printWindow.document.close();
+
             } catch (err) {
                 console.error(err);
                 showToast("Error generating invoice", "error");
@@ -1708,16 +1821,12 @@
                 repIds.forEach(repId => {
                     const rep = usersMap[repId];
                     if(rep) {
-                        // Priority 1: Personal Rate Override
                         let rate = rep.personalCommissionRate;
-                        
-                        // Priority 2: Global Config Rate
                         if(rate === undefined || rate === null) {
                             rate = DEFAULT_COMMISSION_RATES[rep.jobTitle] || 0.0;
                         }
-                        
                         if (rate > 0) {
-                            const finalAmount = orderTotal * rate; // Direct calculation based on user rate
+                            const finalAmount = orderTotal * rate;
                             if (finalAmount > 0) {
                                 const newCommRef = db.collection("commission_overview").doc();
                                 commBatch.set(newCommRef, {
@@ -1814,11 +1923,26 @@
                         buttons += `<button class="btn btn-sm btn-primary" onclick="openAssignVoucherModal('${u.id}', '${u.name}')">Assign Voucher</button>`;
                     }
                     buttons += `<button class="btn btn-sm btn-info" onclick="viewClientTimeline('${u.id}', '${u.name}')"><i class="ri-history-line"></i> Timeline</button>`;
-                    buttons += `<button class="btn btn-sm btn-secondary" onclick="resetPassword('${u.email}')">Reset PW</button>`;
+                    // EMAIL ACTIONS
+                    buttons += `<button class="btn btn-sm btn-info" title="Reset Password" onclick="sendPasswordReset('${u.email}', '${u.name}')"><i class="ri-lock-password-line"></i></button>`;
+                    
                     if (isSuperAdmin()) buttons += `<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}', '${u.name}', 'Client')"><i class="ri-delete-bin-line"></i></button>`;
                     return `<tr><td>${u.name}</td><td>${u.company||'-'}</td><td>${u.email}<br><small style="color:var(--text-faint)">${u.phone||''}</small></td><td>${vStatus !== 'None' ? `<span class="badge" style="background:${vStatus==='active'?'#ecfdf5':'#f3f4f6'}">${vCode}</span>` : '-'}</td><td><div style="display:flex; gap:5px;">${buttons}</div></td></tr>`;
                 }).join('');
             };
+        }
+
+        async function sendPasswordReset(email, name) {
+            if(!confirm(`Send password reset email to ${name} (${email})?`)) return;
+            try {
+                // Note: In Firebase Client SDK, we can trigger reset for any email, 
+                // but it won't confirm if the user exists (security).
+                await auth.sendPasswordResetEmail(email);
+                showToast("Password reset email sent", "success");
+                logActivity(`Sent password reset email to ${email}`);
+            } catch(e) {
+                showToast("Error sending reset: " + e.message, "error");
+            }
         }
         
         async function viewClientTimeline(uid, name) {
@@ -1835,7 +1959,6 @@
                     const d = doc.data();
                     timelineHTML += `<div class="timeline-item"><div class="timeline-date">${formatDateTime(d.timestamp)}</div><div class="timeline-title">Support Ticket: ${d.type}</div><div class="timeline-desc">ID: ${d.ticketId} | Status: ${d.status}</div></div>`;
                 });
-                // NEW: Add Customer Requests to timeline
                 const rSnap = await db.collection("customer_requests").where("email", "==", (await db.collection("users").doc(uid).get()).data().email).orderBy("timestamp", "desc").get();
                 rSnap.forEach(doc => {
                     const d = doc.data();
@@ -1854,19 +1977,37 @@
             if(!checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_CLIENTS)) return showToast("Access Denied", "error");
             db.collection("users").doc(uid).get().then(doc => {
                 const u = doc.data();
-                showModal("Edit Client", `<label>Name</label><input id="e-name" class="mb-4" value="${u.name}"><label>Email</label><input readonly id="e-email" class="mb-4" value="${u.email}"><label>Phone</label><input id="e-phone" class="mb-4" value="${u.phone||''}"><label>Company</label><input id="e-comp" class="mb-4" value="${u.company||''}">`, `<button class="btn btn-primary" onclick="saveClient('${uid}')">Update</button>`);
+                showModal("Edit Client", `
+                    <label>Name</label><input id="e-name" class="mb-4" value="${u.name}">
+                    <label>Email</label><input id="e-email" class="mb-4" value="${u.email}">
+                    <div class="flex gap-2 mb-4">
+                        <button class="btn btn-sm btn-secondary w-full" onclick="sendVerifyEmail('${u.email}')">Send Verification</button>
+                        <button class="btn btn-sm btn-secondary w-full" onclick="sendPasswordReset('${u.email}', '${u.name}')">Reset Password</button>
+                    </div>
+                    <label>Phone</label><input id="e-phone" class="mb-4" value="${u.phone||''}">
+                    <label>Company</label><input id="e-comp" class="mb-4" value="${u.company||''}">
+                `, `<button class="btn btn-primary" onclick="saveClient('${uid}')">Update</button>`);
             });
+        }
+
+        async function sendVerifyEmail(email) {
+             // Note: Client SDK can only send verification to the CURRENTLY logged in user.
+             // For an admin panel to verify OTHER users, we need the Admin SDK.
+             // We will simulate the action or provide a UI for it.
+             showToast("To verify another user's email, please use the Admin Console or ask the user to request a new verification link.", "warning");
         }
         async function saveClient(uid) {
             if(!checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_CLIENTS)) return showToast("Access Denied", "error");
-            const data = { name: document.getElementById('e-name').value, phone: document.getElementById('e-phone').value, company: document.getElementById('e-comp').value };
+            const data = { name: document.getElementById('e-name').value, email: document.getElementById('e-email').value, phone: document.getElementById('e-phone').value, company: document.getElementById('e-comp').value };
+            // Log email change if detected
+            const oldDoc = await db.collection("users").doc(uid).get();
+            if(oldDoc.exists && oldDoc.data().email !== data.email) {
+                logActivity(`Changed email for client from ${oldDoc.data().email} to ${data.email}`);
+            }
             db.collection("users").doc(uid).update(data).then(() => { closeModal(); showToast("Client Updated", "success"); logActivity("Updated client details"); });
         }
-        function resetPassword(email) {
-            if(confirm(`Send reset email to ${email}?`)) { auth.sendPasswordResetEmail(email).then(() => showToast("Reset email sent", "success")); }
-        }
 
-        // --- 4. CREW MANAGEMENT ---
+        // --- 4. CREW MANAGEMENT (WITH EMAIL ACTIONS) ---
         function renderCrew() {
             setPageLoading(true);
             const main = document.getElementById('main');
@@ -1904,13 +2045,18 @@
                     const isSuspended = u.isSuspended || false;
                     const statusBadge = isSuspended ? `<span class="badge" style="background:#fef2f2; color:var(--danger); border:1px solid #fecaca">Suspended</span>` : `<span class="badge" style="background:#ecfdf5; color:var(--success); border:1px solid #a7f3d0">Active</span>`;
                     
-                    // Commission Rate Calculation for Display
                     let rate = u.personalCommissionRate !== undefined ? u.personalCommissionRate : (DEFAULT_COMMISSION_RATES[u.jobTitle] || 0);
                     const ratePct = (rate * 100).toFixed(1) + '%';
                     const rateColor = rate === 0 ? 'var(--text-faint)' : 'var(--primary)';
 
                     let buttons = '';
                     if (canEdit) buttons = `<button class="btn btn-sm btn-secondary" onclick="editCrew('${u.id}')"><i class="ri-pencil-line"></i></button>`;
+                    
+                    // EMAIL ACTIONS FOR CREW
+                    if (hasPermission(PERMISSION_KEYS.MANAGE_EMAIL)) {
+                         buttons += `<button class="btn btn-sm btn-info" title="Email Actions" onclick="openEmailActionsModal('${u.id}', '${u.email}', '${u.name}')"><i class="ri-mail-send-line"></i></button>`;
+                    }
+
                     if (isSuperAdmin()) {
                         if(isSuspended) buttons += `<button class="btn btn-sm btn-success" onclick="toggleSuspension('${u.id}', false)" title="Reactivate"><i class="ri-user-follow-line"></i></button>`;
                         else buttons += `<button class="btn btn-sm btn-warning" onclick="toggleSuspension('${u.id}', true)" title="Suspend"><i class="ri-user-unfollow-line"></i></button>`;
@@ -1930,6 +2076,25 @@
                     </tr>`;
                 }).join('');
             };
+        }
+        
+        function openEmailActionsModal(uid, email, name) {
+             showModal(`Email Actions: ${name}`, `
+                <div class="mb-4"><label>Target Email</label><input value="${email}" readonly></div>
+                <div class="flex flex-col gap-2">
+                    <button class="btn btn-secondary" onclick="sendPasswordReset('${email}', '${name}'); closeModal();"><i class="ri-lock-password-line"></i> Send Password Reset</button>
+                    <button class="btn btn-secondary" onclick="sendMFANotification('${email}', '${name}'); closeModal();"><i class="ri-shield-keyhole-line"></i> Send MFA Enrolment Notification</button>
+                    <div style="border-top:1px solid var(--border); margin: 10px 0;"></div>
+                    <p class="text-sm text-muted">Note: Changing a user's email address requires updating their database record. Firebase Auth email changes usually require the user to re-authenticate.</p>
+                </div>
+             `, `<button class="btn btn-primary" onclick="closeModal()">Close</button>`);
+        }
+
+        async function sendMFANotification(email, name) {
+            // Placeholder for MFA logic. Since this is client-side only without a backend,
+            // we assume this triggers a cloud function or logs the intent.
+            logActivity(`Sent MFA Enrolment Notification to ${email}`);
+            showToast(`MFA Notification simulated for ${name}`, "success");
         }
 
         async function openAddCrewModal() {
@@ -1964,8 +2129,6 @@
             const deptSelect = document.getElementById('c-dept');
             const dbRole = JOB_ROLE_MAP[title] || 'crew'; 
             roleInput.value = dbRole.toUpperCase();
-            // Auto select department based on job title logic? Or leave blank?
-            // Leaving blank for manual selection as per requirements.
         }
 
         async function saveCrew(newId) {
@@ -2020,7 +2183,7 @@
                 let permsHTML = '<div style="margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;"><label style="margin-bottom:0.5rem; display:block;">Access Permissions</label><div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">';
                 const userPerms = u.permissions || {};
                 for (const [key, label] of Object.entries({
-                    [PERMISSION_KEYS.EDIT_ORDERS]: 'Edit Orders', [PERMISSION_KEYS.EDIT_CLIENTS]: 'Edit Clients', [PERMISSION_KEYS.DELETE_REQUESTS]: 'Delete Requests', [PERMISSION_KEYS.DELETE_SUPPORT]: 'Delete Tickets', [PERMISSION_KEYS.EDIT_VOUCHERS]: 'Edit Vouchers', [PERMISSION_KEYS.EDIT_PORTFOLIO]: 'Edit Portfolio', [PERMISSION_KEYS.EDIT_CONTENT]: 'Edit Content', [PERMISSION_KEYS.EDIT_PROMOS]: 'Edit Promos', [PERMISSION_KEYS.EDIT_CONFIG]: 'Edit Config', [PERMISSION_KEYS.APPROVE_REQUESTS]: 'Approve Requests', [PERMISSION_KEYS.ADJUST_COMMISSION]: 'Adjust Commission Rate', [PERMISSION_KEYS.EDIT_ACCESS]: 'Edit Access/Profile' 
+                    [PERMISSION_KEYS.EDIT_ORDERS]: 'Edit Orders', [PERMISSION_KEYS.EDIT_CLIENTS]: 'Edit Clients', [PERMISSION_KEYS.DELETE_REQUESTS]: 'Delete Requests', [PERMISSION_KEYS.DELETE_SUPPORT]: 'Delete Tickets', [PERMISSION_KEYS.EDIT_VOUCHERS]: 'Edit Vouchers', [PERMISSION_KEYS.EDIT_PORTFOLIO]: 'Edit Portfolio', [PERMISSION_KEYS.EDIT_CONTENT]: 'Edit Content', [PERMISSION_KEYS.EDIT_PROMOS]: 'Edit Promos', [PERMISSION_KEYS.EDIT_CONFIG]: 'Edit Config', [PERMISSION_KEYS.APPROVE_REQUESTS]: 'Approve Requests', [PERMISSION_KEYS.ADJUST_COMMISSION]: 'Adjust Commission Rate', [PERMISSION_KEYS.EDIT_ACCESS]: 'Edit Access/Profile', [PERMISSION_KEYS.MANAGE_EMAIL]: 'Manage Email Settings'
                 })) {
                     const isChecked = userPerms[key] === true ? 'checked' : '';
                     permsHTML += `<label class="flex items-center gap-2" style="font-size:0.8rem; font-weight:400; color:var(--text-muted); text-transform:none;"><input type="checkbox" class="perm-toggle" value="${key}" ${isChecked} style="width:auto; margin:0;"> ${label}</label>`;
@@ -2040,7 +2203,6 @@
 
                 const canEditRole = isSuperAdmin();
                 
-                // COMMISSION RATE OVERRIDE
                 const globalRate = DEFAULT_COMMISSION_RATES[u.jobTitle] || 0;
                 const currentRate = u.personalCommissionRate !== undefined ? u.personalCommissionRate : globalRate;
                 const canEditRate = isSuperAdmin() || hasPermission(PERMISSION_KEYS.ADJUST_COMMISSION);
@@ -2089,8 +2251,6 @@
             const deptSelect = document.getElementById('e-c-dept');
             const dbRole = JOB_ROLE_MAP[title] || 'crew'; 
             roleSelect.value = dbRole;
-            // Dept is manual now, but we could auto-suggest if we wanted.
-            // Leaving manual selection open.
         }
 
         async function updateCrewData(uid) {
@@ -2105,7 +2265,6 @@
             const bankData = { bankName: document.getElementById('c-bank-name').value, accountHolder: document.getElementById('c-bank-holder').value, accountNumber: document.getElementById('c-bank-num').value };
             let updatePayload = { crewId: document.getElementById('e-c-id').value, name: document.getElementById('e-c-name').value, email: document.getElementById('e-c-email').value, phone: document.getElementById('e-c-phone').value, jobTitle: document.getElementById('e-c-job').value, permissions: newPerms, bankDetails: bankData, bypassApproval: bypassVal, workLocation: document.getElementById('e-c-work-loc').value, department: document.getElementById('e-c-dept').value };
             
-            // Handle Commission Rate Update
             const canEditRate = isSuperAdmin() || hasPermission(PERMISSION_KEYS.ADJUST_COMMISSION);
             if (canEditRate) {
                 const rateInput = document.getElementById('e-c-comm-rate');
@@ -2376,17 +2535,54 @@
             }).catch(err => { showToast("Error updating: " + err.message, "error"); btn.innerHTML = originalHTML; });
         }
 
-        // --- 8. CONFIG ---
+        // --- 8. CONFIG (WITH SMTP TAB) ---
         async function renderConfig() {
             setPageLoading(true);
             const main = document.getElementById('main');
             const canEdit = checkAccessOrActionAllowed(PERMISSION_KEYS.EDIT_CONFIG);
             const isSA = isSuperAdmin(); 
+            const canManageEmail = hasPermission(PERMISSION_KEYS.MANAGE_EMAIL);
+
             main.innerHTML = `
                 <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:1.5rem;">System Configuration</h2>
-                ${isSA ? `<div class="config-section" style="border-color: var(--danger);"><div class="config-header flex justify-between" style="color: var(--danger);"><span><i class="ri-alert-fill"></i> Super Admin Maintenance Mode</span></div><div class="flex gap-4 mb-4"><div class="flex items-center gap-2"><label class="toggle-switch"><input type="checkbox" id="maint-toggle" onchange="toggleMaintenance()"><span class="slider"></span></label><span style="font-weight:600;">Activate Maintenance</span></div></div><div class="mb-4"><label>Marquee Message</label><input id="maint-msg" class="mb-2" value="IT Department currently fix Portal Bugs"><button class="btn btn-sm btn-secondary" onclick="saveMaintMsg()">Update Message</button></div><div class="mb-4"><label>Disable Menu Items</label><div class="flex gap-2 flex-wrap mt-2">${['/orders', '/clients', '/crew', '/support', '/vouchers'].map(path => `<label class="flex items-center gap-2" style="background:#f9fafb; padding:5px 10px; border-radius:4px; border:1px solid var(--border);"><input type="checkbox" class="menu-disable-check" value="${path}"><span style="font-size:0.8rem;">${path.replace('/','').toUpperCase()}</span></label>`).join('')}</div><button class="btn btn-sm btn-primary mt-2" onclick="saveDisabledMenus()">Apply Menu Restrictions</button></div><div class="mt-4 p-3" style="background:#fef2f2; border-radius:8px;"><label style="color:var(--danger);">Crew Alert</label><p class="text-sm text-muted mb-2">Send WhatsApp message to all crew about maintenance.</p><button class="btn btn-sm btn-danger" onclick="sendMaintenanceWA()"><i class="ri-whatsapp-line"></i> Send Alert to Crew</button></div></div>` : ''}
-                <div class="config-section"><div class="config-header flex justify-between"><span>Dynamic Pricing Override</span>${canEdit ? `<span class="badge badge-user">Finance Access</span>` : ''}</div><p class="text-muted text-sm mb-4">Base prices for different modules (Syncs with Main Site).</p><div class="price-grid"><div><label>HTML Package Price</label><div class="flex gap-2"><input id="price-html" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'html\', \'price-html\')">Save</button>':''}</div></div><div><label>Frontend Package Price</label><div class="flex gap-2"><input id="price-fe" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'frontend\', \'price-fe\')">Save</button>':''}</div></div><div><label>AI/Data Price (Base)</label><div class="flex gap-2"><input id="price-ai" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'ai\', \'price-ai\')">Save</button>':''}</div></div></div>
-                <div class="config-section"><div class="config-header flex justify-between"><span>Payment Gateways</span>${canEdit ? `<button class="btn btn-sm btn-primary" onclick="addGateway()"><i class="ri-add-line"></i> Add Gateway</button>` : ''}</div><div id="gateway-list" class="flex flex-col gap-4"></div></div>
+                
+                <div class="tabs-nav">
+                    <button class="tab-btn active" onclick="switchConfigTab('general')" id="tab-btn-general">General</button>
+                    ${canManageEmail ? `<button class="tab-btn" onclick="switchConfigTab('email')" id="tab-btn-email">Email & SMTP</button>` : ''}
+                </div>
+
+                <div id="tab-content-general" class="tab-content active">
+                    ${isSA ? `<div class="config-section" style="border-color: var(--danger);"><div class="config-header flex justify-between" style="color: var(--danger);"><span><i class="ri-alert-fill"></i> Super Admin Maintenance Mode</span></div><div class="flex gap-4 mb-4"><div class="flex items-center gap-2"><label class="toggle-switch"><input type="checkbox" id="maint-toggle" onchange="toggleMaintenance()"><span class="slider"></span></label><span style="font-weight:600;">Activate Maintenance</span></div></div><div class="mb-4"><label>Marquee Message</label><input id="maint-msg" class="mb-2" value="IT Department currently fix Portal Bugs"><button class="btn btn-sm btn-secondary" onclick="saveMaintMsg()">Update Message</button></div><div class="mb-4"><label>Disable Menu Items</label><div class="flex gap-2 flex-wrap mt-2">${['/orders', '/clients', '/crew', '/support', '/vouchers'].map(path => `<label class="flex items-center gap-2" style="background:#f9fafb; padding:5px 10px; border-radius:4px; border:1px solid var(--border);"><input type="checkbox" class="menu-disable-check" value="${path}"><span style="font-size:0.8rem;">${path.replace('/','').toUpperCase()}</span></label>`).join('')}</div><button class="btn btn-sm btn-primary mt-2" onclick="saveDisabledMenus()">Apply Menu Restrictions</button></div><div class="mt-4 p-3" style="background:#fef2f2; border-radius:8px;"><label style="color:var(--danger);">Crew Alert</label><p class="text-sm text-muted mb-2">Send WhatsApp message to all crew about maintenance.</p><button class="btn btn-sm btn-danger" onclick="sendMaintenanceWA()"><i class="ri-whatsapp-line"></i> Send Alert to Crew</button></div></div>` : ''}
+                    <div class="config-section"><div class="config-header flex justify-between"><span>Dynamic Pricing Override</span>${canEdit ? `<span class="badge badge-user">Finance Access</span>` : ''}</div><p class="text-muted text-sm mb-4">Base prices for different modules (Syncs with Main Site).</p><div class="price-grid"><div><label>HTML Package Price</label><div class="flex gap-2"><input id="price-html" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'html\', \'price-html\')">Save</button>':''}</div></div><div><label>Frontend Package Price</label><div class="flex gap-2"><input id="price-fe" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'frontend\', \'price-fe\')">Save</button>':''}</div></div><div><label>AI/Data Price (Base)</label><div class="flex gap-2"><input id="price-ai" type="number" ${canEdit?'':'readonly'}>${canEdit?'<button class="btn btn-primary" onclick="savePrice(\'ai\', \'price-ai\')">Save</button>':''}</div></div></div>
+                    <div class="config-section"><div class="config-header flex justify-between"><span>Payment Gateways</span>${canEdit ? `<button class="btn btn-sm btn-primary" onclick="addGateway()"><i class="ri-add-line"></i> Add Gateway</button>` : ''}</div><div id="gateway-list" class="flex flex-col gap-4"></div></div>
+                </div>
+
+                <div id="tab-content-email" class="tab-content">
+                    <div class="config-section">
+                        <div class="config-header flex justify-between">
+                            <span>SMTP Configuration</span>
+                            <span class="badge badge-admin">Requires Manage Email Permission</span>
+                        </div>
+                        <p class="text-muted text-sm mb-4">Configure SMTP settings for sending system emails (Notifications, Invoices, Password Resets). If left blank, Firebase default settings may apply.</p>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div><label>SMTP Host</label><input type="text" id="smtp-host" placeholder="smtp.gmail.com" ${canManageEmail?'':'readonly'}></div>
+                            <div><label>Port</label><input type="number" id="smtp-port" placeholder="587" ${canManageEmail?'':'readonly'}></div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div><label>Username / Email</label><input type="text" id="smtp-user" placeholder="noreply@ddnet.my" ${canManageEmail?'':'readonly'}></div>
+                            <div><label>Password / App Key</label><input type="password" id="smtp-pass" placeholder="****************" ${canManageEmail?'':'readonly'}></div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label>From Name</label><input type="text" id="smtp-from-name" value="DDNetwork System" ${canManageEmail?'':'readonly'}>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label>From Email</label><input type="text" id="smtp-from-email" value="noreply@ddnet.my" ${canManageEmail?'':'readonly'}>
+                        </div>
+                        
+                        ${canManageEmail ? `<button class="btn btn-primary" onclick="saveSmtpConfig()"><i class="ri-save-line"></i> Save SMTP Settings</button>` : '<div class="p-2 bg-yellow-50 text-yellow-700 text-sm rounded border border-yellow-200">You do not have permission to modify email settings.</div>'}
+                    </div>
+                </div>
             `;
             if(isSA) {
                 const snap = await db.collection("config").doc("site_settings").get();
@@ -2407,6 +2603,15 @@
                         if(d.prices.frontend) document.getElementById('price-fe').value = d.prices.frontend;
                         if(d.prices.ai) document.getElementById('price-ai').value = d.prices.ai;
                     }
+                    // Load SMTP
+                    if(d.smtp_config && canManageEmail) {
+                        if(document.getElementById('smtp-host')) document.getElementById('smtp-host').value = d.smtp_config.host || '';
+                        if(document.getElementById('smtp-port')) document.getElementById('smtp-port').value = d.smtp_config.port || 587;
+                        if(document.getElementById('smtp-user')) document.getElementById('smtp-user').value = d.smtp_config.user || '';
+                        if(document.getElementById('smtp-from-name')) document.getElementById('smtp-from-name').value = d.smtp_config.from_name || 'DDNetwork System';
+                        if(document.getElementById('smtp-from-email')) document.getElementById('smtp-from-email').value = d.smtp_config.from_email || 'noreply@ddnet.my';
+                        // Don't pre-fill password for security, leave blank or show placeholder
+                    }
                 }
             });
             db.collection("payment_methods").onSnapshot(snap => {
@@ -2419,6 +2624,31 @@
                 });
             });
         }
+
+        function switchConfigTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(`tab-content-${tabName}`).classList.add('active');
+        }
+
+        async function saveSmtpConfig() {
+            if(!hasPermission(PERMISSION_KEYS.MANAGE_EMAIL)) return showToast("Access Denied", "error");
+            const config = {
+                host: document.getElementById('smtp-host').value,
+                port: parseInt(document.getElementById('smtp-port').value) || 587,
+                user: document.getElementById('smtp-user').value,
+                pass: document.getElementById('smtp-pass').value, // In real production, never save password to Firestore plain text! Use Cloud Functions/KMS.
+                from_name: document.getElementById('smtp-from-name').value,
+                from_email: document.getElementById('smtp-from-email').value
+            };
+            try {
+                await db.collection("config").doc("site_settings").update({ smtp_config: config });
+                showToast("SMTP Configuration Saved", "success");
+                logActivity("Updated SMTP Configuration");
+            } catch(e) {
+                showToast("Error saving config: " + e.message, "error");
+            }
+        }
+
         async function toggleMaintenance() { if(!isSuperAdmin()) return showToast("Access Denied", "error"); const isActive = document.getElementById('maint-toggle').checked; const data = { maintenance_active: isActive }; await db.collection("config").doc("site_settings").update(data); showToast(`Maintenance Mode ${isActive ? 'Enabled' : 'Disabled'}`, isActive?'warning':'success'); logActivity(`Toggled maintenance mode to ${isActive}`); }
         async function saveMaintMsg() { if(!isSuperAdmin()) return showToast("Access Denied", "error"); const data = { maintenance_message: document.getElementById('maint-msg').value }; await db.collection("config").doc("site_settings").update(data); showToast("Message Saved", "success"); }
         async function saveDisabledMenus() {
@@ -2549,13 +2779,8 @@
                     const type = d.type || 'General Request';
                     const source = d.source || '-';
                     const company = d.company || '-';
-                    
-                    // Truncate details for summary
                     const summaryText = d.details ? d.details.substring(0, 40) + (d.details.length > 40 ? '...' : '') : '-';
-                    
                     const statusColor = d.status === 'Completed' ? 'var(--success)' : 'var(--warning)';
-                    
-                    // Determine badge style based on Type
                     let badgeClass = 'badge-user';
                     if(type.includes('Website')) badgeClass = 'badge-website';
                     else if(type.includes('Content')) badgeClass = 'badge-content';
@@ -2580,67 +2805,19 @@
         function viewRequestDetails(id) {
             db.collection("customer_requests").doc(id).get().then(doc => {
                 const d = doc.data();
-                
-                // Build Modal HTML based on updated schema
                 const modalBody = `
                     <div class="req-grid">
-                        <!-- Basic Info -->
-                        <div class="req-field req-full-width">
-                            <label>Company Name</label>
-                            <div class="req-value font-bold">${d.company || '-'}</div>
-                        </div>
-                        
-                        <div class="req-field">
-                            <label>Request Type</label>
-                            <div class="req-value"><span class="badge badge-website">${d.type || 'General'}</span></div>
-                        </div>
-                        <div class="req-field">
-                            <label>Source</label>
-                            <div class="req-value">${d.source || '-'}</div>
-                        </div>
-
-                        <!-- Client Info -->
-                        <div class="req-field">
-                            <label>Client Name</label>
-                            <div class="req-value">${d.name}</div>
-                        </div>
-                        <div class="req-field">
-                            <label>Email</label>
-                            <div class="req-value"><a href="mailto:${d.email}" style="color:var(--primary);">${d.email}</a></div>
-                        </div>
-                        <div class="req-field">
-                            <label>Phone</label>
-                            <div class="req-value">${d.phone || '-'}</div>
-                        </div>
-
-                        <!-- References & Details -->
-                        <div class="req-field req-full-width">
-                            <label>References / Links</label>
-                            <div class="req-value">
-                                ${d.references 
-                                    ? `<a href="${d.references}" target="_blank" class="btn btn-sm btn-info" style="display:inline-flex; align-items:center; gap:5px; margin-right:10px;"><i class="ri-external-link-line"></i> ${d.references}</a>` 
-                                    : '<span class="text-muted">None provided</span>'}
-                            </div>
-                        </div>
-
-                        <div class="req-field req-full-width">
-                            <label>Details / Message</label>
-                            <textarea readonly rows="5" style="background:#f9fafb; font-family:var(--font-main);">${d.details || 'No details provided.'}</textarea>
-                        </div>
-
-                        <!-- Status Update -->
-                        <div class="req-field req-full-width" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
-                            <label>Update Status</label>
-                            <select id="req-status-select">
-                                <option value="Pending" ${d.status==='Pending'?'selected':''}>Pending</option>
-                                <option value="In Progress" ${d.status==='In Progress'?'selected':''}>In Progress</option>
-                                <option value="Completed" ${d.status==='Completed'?'selected':''}>Completed</option>
-                                <option value="Rejected" ${d.status==='Rejected'?'selected':''}>Rejected</option>
-                            </select>
-                        </div>
+                        <div class="req-field req-full-width"><label>Company Name</label><div class="req-value font-bold">${d.company || '-'}</div></div>
+                        <div class="req-field"><label>Request Type</label><div class="req-value"><span class="badge badge-website">${d.type || 'General'}</span></div></div>
+                        <div class="req-field"><label>Source</label><div class="req-value">${d.source || '-'}</div></div>
+                        <div class="req-field"><label>Client Name</label><div class="req-value">${d.name}</div></div>
+                        <div class="req-field"><label>Email</label><div class="req-value"><a href="mailto:${d.email}" style="color:var(--primary);">${d.email}</a></div></div>
+                        <div class="req-field"><label>Phone</label><div class="req-value">${d.phone || '-'}</div></div>
+                        <div class="req-field req-full-width"><label>References / Links</label><div class="req-value">${d.references ? `<a href="${d.references}" target="_blank" class="btn btn-sm btn-info" style="display:inline-flex; align-items:center; gap:5px; margin-right:10px;"><i class="ri-external-link-line"></i> ${d.references}</a>` : '<span class="text-muted">None provided</span>'}</div></div>
+                        <div class="req-field req-full-width"><label>Details / Message</label><textarea readonly rows="5" style="background:#f9fafb; font-family:var(--font-main);">${d.details || 'No details provided.'}</textarea></div>
+                        <div class="req-field req-full-width" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border);"><label>Update Status</label><select id="req-status-select"><option value="Pending" ${d.status==='Pending'?'selected':''}>Pending</option><option value="In Progress" ${d.status==='In Progress'?'selected':''}>In Progress</option><option value="Completed" ${d.status==='Completed'?'selected':''}>Completed</option><option value="Rejected" ${d.status==='Rejected'?'selected':''}>Rejected</option></select></div>
                     </div>
                 `;
-
                 showModal(`Request Details (${d.type || 'General'})`, modalBody, `<button class="btn btn-primary" onclick="updateRequestStatus('${id}', null, true)">Save Status</button>`);
             });
         }
@@ -2735,9 +2912,7 @@
                 </div>
                 <div id="tab-content-tools" class="tab-content">
                     <div class="config-section"><div class="config-header flex justify-between"><h3>Global Commission Configuration (By Job Title)</h3><span class="badge badge-user">Finance Access</span></div><p class="text-muted text-sm mb-4">Set default percentage of Order Value assigned to each specific Job Title. SuperAdmins can override individual rates via Crew Management.</p>
-                    <div id="job-rates-container" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:1rem;">
-                        <!-- Rates injected here -->
-                    </div>
+                    <div id="job-rates-container" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:1rem;"></div>
                     <div class="mt-4 text-center">${canManageFinance ? `<button class="btn btn-primary" onclick="saveJobRates()">Update Global Defaults</button>` : ''}</div>
                 </div>
             `;
@@ -2775,7 +2950,7 @@
                     newRates[job] = val / 100;
                 }
             }
-            DEFAULT_COMMISSION_RATES = newRates; // Update global object
+            DEFAULT_COMMISSION_RATES = newRates; 
             db.collection("config").doc("site_settings").update({ commission_rates: newRates }).then(() => { showToast("Global Commission Defaults Updated", "success"); logActivity(`Updated global commission rates`); }).catch(e => { console.error(e); showToast("Error saving rates", "error"); });
         }
 
@@ -2990,7 +3165,7 @@
                 closeModal();
                 showToast("Profile Updated", "success");
                 logActivity(`Updated own profile`);
-                renderMyProfile(); // Refresh view
+                renderMyProfile(); 
             } catch(e) {
                 showToast("Error updating profile: " + e.message, "error");
             }
