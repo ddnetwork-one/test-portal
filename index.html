@@ -3120,7 +3120,7 @@
         };
 
         // ==========================================
-        // REVIEWS LOGIC (FIXED MARQUEE WITH DUMMIES)
+        // REVIEWS LOGIC (FIXED MARQUEE WITH DUMMIES & SYNC)
         // ==========================================
         let selectedRating = 0;
         let reviewsCache = []; // Cache reviews for marquee
@@ -3170,6 +3170,27 @@
             });
         }
 
+        // --- NEW: Live Listener for Reviews ---
+        function listenToReviews() {
+            if(!db) return;
+            db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20)
+                .onSnapshot((snapshot) => {
+                    reviewsCache = []; // Clear cache
+                    snapshot.forEach(doc => reviewsCache.push(doc.data()));
+                    
+                    // Update the Marquee immediately with new data
+                    loadReviewsMarquee();
+                    
+                    // If the full grid is currently visible, update it too
+                    const list = document.getElementById('reviews-list');
+                    if(!list.classList.contains('hidden')) {
+                        toggleFullReviews(); // Re-trigger render
+                    }
+                }, (error) => {
+                    console.error("Error syncing reviews:", error);
+                });
+        }
+
         function loadReviewsMarquee() {
             const row1 = document.getElementById('reviews-marquee-row-1');
             const row2 = document.getElementById('reviews-marquee-row-2');
@@ -3217,8 +3238,8 @@
             if (list.classList.contains('hidden')) {
                 // Load grid data
                 list.innerHTML = '';
-                let allReviews = [...reviewsCache]; // Only show DB reviews in grid
-                if(allReviews.length === 0) allReviews = DUMMY_REVIEWS; // Fallback
+                // Use database cache, fallback to dummies
+                let allReviews = reviewsCache.length > 0 ? reviewsCache : DUMMY_REVIEWS;
 
                 if(allReviews.length > 0) {
                     allReviews.forEach(data => {
@@ -3294,8 +3315,8 @@
                 document.getElementById('review-form').reset();
                 selectedRating = 0;
                 highlightStars(0);
-                // Refresh marquee to show new review immediately
-                loadReviewsMarquee(); 
+                // Listener will catch the update automatically, but we can force update if needed:
+                // loadReviewsMarquee(); 
             }).catch(err => {
                 console.error(err);
                 showToast("Failed to submit review.", "error");
@@ -3305,8 +3326,8 @@
         // Initialize stars on load
         document.addEventListener('DOMContentLoaded', () => {
             setupStarRating();
-            // Initial load of marquee with dummies
-            if(!db) loadReviewsMarquee(); 
+            // Start listening to reviews immediately
+            listenToReviews();
         });
 
 
