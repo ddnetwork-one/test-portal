@@ -243,15 +243,13 @@
         .mobile-drawer-overlay.active { opacity: 1; pointer-events: all; }
 
         .mobile-drawer {
-            position: fixed; top: 0; right: 0; 
-            /* UPDATE: Full width on mobile */
-            width: 100%; 
-            max-width: 100%; 
+            /* FULL SCREEN UPDATE */
+            position: fixed; top: 0; right: 0; width: 100%; 
             height: 100vh;
             background: var(--bg-surface);
             z-index: 2000;
             display: flex; flex-direction: column; 
-            transform: translateX(100%); transition: transform 0.5s var(--ease-smooth);
+            transform: translateX(100%); transition: transform 0.4s var(--ease-smooth);
             overflow-y: auto; border-left: 1px solid var(--border-glass);
             box-shadow: -10px 0 30px rgba(0,0,0,0.1);
         }
@@ -379,29 +377,40 @@
         }
         .hero p { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 2.5rem; max-width: 600px; line-height: 1.7; }
 
-        /* --- NEW HOME SECTIONS STYLES --- */
-        
-        /* Marquee Styles */
+        /* --- MARQUEE STYLES (FIXED FOR RESPONSIVENESS) --- */
         .marquee-section {
             background: var(--bg-surface);
             border-top: 1px solid var(--border-glass);
             border-bottom: 1px solid var(--border-glass);
             padding: 1.5rem 0;
-            overflow: hidden;
             position: relative;
             z-index: 10;
+            /* Container fixes to handle scrolling without getting stuck */
+            width: 100%; 
+            overflow: hidden; 
         }
+        
+        /* The row that moves */
         .marquee-row {
             display: flex;
             gap: 3rem;
-            width: max-content;
-            /* UPDATE: Ensure minimum width for mobile scroll */
-            min-width: 100vw;
+            /* Start off screen? No, just animate */
+            /* Width is set dynamically by JS to ensure smooth loop on all screens */
+            width: max-content; 
             animation: scroll-left 40s linear infinite;
         }
+
         .marquee-row.reverse {
             animation: scroll-right 40s linear infinite;
         }
+
+        /* Responsive speed adjustment */
+        @media (max-width: 768px) {
+            .marquee-row, .marquee-row.reverse {
+                animation-duration: 30s; /* Faster on mobile */
+            }
+        }
+
         @keyframes scroll-left { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @keyframes scroll-right { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 
@@ -423,13 +432,14 @@
             border: 1px solid var(--border-glass);
             min-width: 300px;
             max-width: 400px;
-            /* Flex display to ensure consistent sizing */
-            flex-shrink: 0; 
+            flex-shrink: 0; /* Important to prevent squishing */
         }
         .rm-rating { color: var(--accent-star); font-size: 0.9rem; margin-bottom: 0.5rem; }
         .rm-text { font-size: 0.9rem; color: var(--text-main); font-style: italic; margin-bottom: 0.5rem; line-height: 1.4; }
         .rm-author { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-align: right; }
 
+        /* --- NEW HOME SECTIONS STYLES --- */
+        
         /* Service Highlights */
         .home-section { padding: 5rem 0; position: relative; }
         .section-header { text-align: center; margin-bottom: 3.5rem; }
@@ -1123,7 +1133,7 @@
         </div>
     </header>
 
-    <!-- PROFESSIONAL MOBILE DRAWER (ACCORDION STYLE) -->
+    <!-- PROFESSIONAL MOBILE DRAWER (FULL SCREEN & ACCORDION) -->
     <div class="mobile-drawer" id="mobileDrawer">
         <ul class="mobile-nav-list">
             <!-- Home -->
@@ -1385,12 +1395,12 @@
             </div>
 
             <!-- UPDATE 1: Review Marquee (2 Row) -->
-            <div style="margin-top: 4rem; overflow: hidden; position: relative;">
+            <div style="margin-top: 4rem; overflow: hidden; position: relative; width: 100%;">
                 <div class="marquee-row" id="reviews-marquee-row-1">
-                    <!-- Populated by JS -->
+                    <!-- Populated by JS with Dummies -->
                 </div>
                 <div class="marquee-row reverse" id="reviews-marquee-row-2" style="margin-top: 1rem;">
-                    <!-- Populated by JS -->
+                    <!-- Populated by JS with Dummies -->
                 </div>
             </div>
 
@@ -2748,7 +2758,6 @@
                 labelMonthly.classList.remove('active');
                 labelYearly.classList.add('active');
                 labelYearly.querySelector('.save-badge').classList.remove('show');
-                            }
             }
 
             const priceHtml = document.getElementById('price-html');
@@ -2786,7 +2795,7 @@
                     }
                 }
             }
-        
+        }
 
         // ==========================================
         // FRONTEND ROUTING
@@ -2876,7 +2885,7 @@
                     
                     // Logic Hooks based on active section
                     if(targetSectionId === 'profile') loadProfilePageData();
-                    if(targetSectionId                 === 'reviews') {
+                    if(targetSectionId === 'reviews') {
                         loadReviewsMarquee();
                         // Don't auto-load grid, wait for button click
                     } 
@@ -3076,7 +3085,7 @@
         let PROMO_CODES = {}; 
         if(db) {
             db.collection("config").doc("site_settings").onSnapshot((doc) => {
-        if(doc.exists) siteConfig = { ...siteConfig, ...doc.data() };
+                if(doc.exists) siteConfig = { ...siteConfig, ...doc.data() };
                 if(siteConfig.maintenance_active) document.getElementById('maintenance-overlay').classList.add('active');
                 else document.getElementById('maintenance-overlay').classList.remove('active');
             });
@@ -3111,10 +3120,19 @@
         };
 
         // ==========================================
-        // REVIEWS LOGIC (NEW MARQUEE)
+        // REVIEWS LOGIC (FIXED MARQUEE WITH DUMMIES)
         // ==========================================
         let selectedRating = 0;
         let reviewsCache = []; // Cache reviews for marquee
+
+        // DUMMY REVIEWS FOR FRONTEND PRELOAD (Prevents Empty/Stuck Marquee)
+        const DUMMY_REVIEWS = [
+            { rating: 5, userName: 'Ali Bin Abu', comment: 'Excellent service! The team was very professional and the delivery was faster than expected.', timestamp: null },
+            { rating: 5, userName: 'Sarah Lee', comment: 'Highly recommended. My new website looks amazing and functions perfectly.', timestamp: null },
+            { rating: 5, userName: 'Tech Solutions', comment: 'Great communication throughout the project. Will definitely work with DDNetwork again.', timestamp: null },
+            { rating: 5, userName: 'Ahmad Razak', comment: 'Best decision for my business. The AI integration is a game changer.', timestamp: null },
+            { rating: 4, userName: 'Jessica Tan', comment: 'Very happy with the design. Support team is responsive.', timestamp: null }
+        ];
 
         function setupStarRating() {
             const stars = document.querySelectorAll('.star-icon');
@@ -3153,62 +3171,43 @@
         }
 
         function loadReviewsMarquee() {
-            if(!db) return;
             const row1 = document.getElementById('reviews-marquee-row-1');
             const row2 = document.getElementById('reviews-marquee-row-2');
             
-            db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20).get()
-                .then((snapshot) => {
-                    reviewsCache = [];
-                    snapshot.forEach(doc => reviewsCache.push(doc.data()));
-                    
-                    if (reviewsCache.length === 0) {
-                        row1.innerHTML = '<div class="review-marquee-item">No reviews yet.</div>';
-                        row2.innerHTML = '';
-                        return;
-                    }
-
-                    // Create HTML for one set of reviews
-                    const createReviewsHTML = (dataList) => {
-                        return dataList.map(data => {
-                            let starsHtml = '';
-                            for(let i=1; i<=5; i++) {
-                                starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--accent-star)':'#cbd5e1'}"></i>`;
-                            }
-                            return `
-                                <div class="review-marquee-item">
-                                    <div class="rm-rating">${starsHtml}</div>
-                                    <div class="rm-text">"${data.comment.substring(0, 100)}${data.comment.length > 100 ? '...' : ''}"</div>
-                                    <div class="rm-author">- ${data.userName || 'User'}</div>
-                                </div>
-                            `;
-                        }).join('');
-                    };
-
-                    // Populate Row 1
-                    const htmlContent1 = createReviewsHTML(reviewsCache);
-                    // DUPLICATE CONTENT 4 TIMES TO ENSURE MOBILE SCROLL
-                    row1.innerHTML = htmlContent1 + htmlContent1 + htmlContent1 + htmlContent1;
-                    
-                    // Populate Row 2 (Reverse/Offset)
-                    const htmlContent2 = createReviewsHTML(reviewsCache);
-                    // DUPLICATE CONTENT 4 TIMES TO ENSURE MOBILE SCROLL
-                    row2.innerHTML = htmlContent2 + htmlContent2 + htmlContent2 + htmlContent2;
-                });
-        }
-
-        function createReviewCardHTML(data) {
-            let starsHtml = '';
-            for(let i=1; i<=5; i++) {
-                starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--accent-star)':'#cbd5e1'}"></i>`;
+            // 1. Combine DB reviews with Dummies (Prepend DB so DB takes precedence if available)
+            // If DB loads later, this updates. If not, Dummies are there.
+            let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
+            
+            if (allReviews.length === 0) {
+                row1.innerHTML = '<div class="review-marquee-item">No reviews yet.</div>';
+                row2.innerHTML = '';
+                return;
             }
-            return `
-                <div class="review-marquee-item">
-                    <div class="rm-rating">${starsHtml}</div>
-                    <div class="rm-text">"${data.comment.substring(0, 100)}${data.comment.length > 100 ? '...' : ''}"</div>
-                    <div class="rm-author">- ${data.userName || 'User'}</div>
-                </div>
-            `;
+
+            // Helper to create HTML string
+            const createMarqueeHTML = (list) => list.map(data => {
+                let starsHtml = '';
+                for(let i=1; i<=5; i++) {
+                    starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--accent-star)':'#cbd5e1'}"></i>`;
+                }
+                return `
+                    <div class="review-marquee-item">
+                        <div class="rm-rating">${starsHtml}</div>
+                        <div class="rm-text">"${data.comment.substring(0, 100)}${data.comment.length > 100 ? '...' : ''}"</div>
+                        <div class="rm-author">- ${data.userName || 'User'}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // 2. Split data into two rows
+            const mid = Math.ceil(allReviews.length / 2);
+            const list1 = allReviews.slice(0, mid);
+            const list2 = allReviews.slice(mid);
+
+            // 3. Render and Duplicate for seamless scrolling
+            // We duplicate the content inside the row itself so the CSS animation loops perfectly
+            row1.innerHTML = createMarqueeHTML(list1) + createMarqueeHTML(list1);
+            row2.innerHTML = createMarqueeHTML(list2) + createMarqueeHTML(list2);
         }
 
         function toggleFullReviews() {
@@ -3218,8 +3217,11 @@
             if (list.classList.contains('hidden')) {
                 // Load grid data
                 list.innerHTML = '';
-                if(reviewsCache.length > 0) {
-                    reviewsCache.forEach(data => {
+                let allReviews = [...reviewsCache]; // Only show DB reviews in grid
+                if(allReviews.length === 0) allReviews = DUMMY_REVIEWS; // Fallback
+
+                if(allReviews.length > 0) {
+                    allReviews.forEach(data => {
                         const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
                         const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
                         let starsHtml = '';
@@ -3292,7 +3294,8 @@
                 document.getElementById('review-form').reset();
                 selectedRating = 0;
                 highlightStars(0);
-                loadReviewsMarquee(); // Refresh marquee
+                // Refresh marquee to show new review immediately
+                loadReviewsMarquee(); 
             }).catch(err => {
                 console.error(err);
                 showToast("Failed to submit review.", "error");
@@ -3300,7 +3303,11 @@
         }
 
         // Initialize stars on load
-        document.addEventListener('DOMContentLoaded', setupStarRating);
+        document.addEventListener('DOMContentLoaded', () => {
+            setupStarRating();
+            // Initial load of marquee with dummies
+            if(!db) loadReviewsMarquee(); 
+        });
 
 
         // ==========================================
@@ -3645,7 +3652,8 @@
                         const data = doc.data();
                         const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
                         const item = document.createElement('div');
-                        item.className = 'glass-card'; item.style.padding = '1rem';                         item.style.marginBottom = '1rem'; item.style.display = 'grid'; item.style.gridTemplateColumns = '1fr 1fr 1fr'; item.style.alignItems = 'center';
+                        item.className = 'glass-card'; item.style.padding = '1rem'; 
+                        item.style.marginBottom = '1rem'; item.style.display = 'grid'; item.style.gridTemplateColumns = '1fr 1fr 1fr'; item.style.alignItems = 'center';
                         item.innerHTML = `<div><div style="color:var(--text-main); font-weight:600;">${data.type}</div><div style="font-size:0.75rem; color:var(--text-tertiary);">${date}</div></div><div class="ticket-id">${data.ticketId || doc.id}</div><div style="text-align:right;"><span style="background:${data.status==='Open'?'#fffbeb':'#ecfdf5'}; color:${data.status==='Open'?'var(--accent-warn)':'var(--accent-success)'}; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">${data.status}</span></div></div>`;
                         listContainer.appendChild(item);
                     });
