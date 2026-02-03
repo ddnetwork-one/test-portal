@@ -2545,19 +2545,46 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
 
 // Define what happens when Tawk loads
 Tawk_API.onLoad = function(){
-    // Create a style element
-    var style = document.createElement('style');
-    style.innerHTML = `
-        /* Target the Tawk widget container */
-        iframe[title="chat widget"] {
-            /* Force it to the bottom right on mobile screens */
-            bottom: 0px !important;
-            top: auto !important;
-            right: 10px !important; /* Adjust this value for spacing from edge */
-            left: auto !important;
+    
+    // Function to inject the overriding styles
+    var forceBottomPosition = function() {
+        var styleId = 'tawk-custom-style';
+        var existingStyle = document.getElementById(styleId);
+        
+        // Only add if it doesn't exist
+        if (!existingStyle) {
+            var style = document.createElement('style');
+            style.id = styleId;
+            
+            // We use 'body iframe[title="chat widget"]' to be very specific
+            // and override the default top positioning with !important
+            style.innerHTML = `
+                body iframe[title="chat widget"] {
+                    bottom: 10px !important;
+                    top: auto !important;
+                    right: 10px !important;
+                    left: auto !important;
+                    important: true; /* Extra flag sometimes needed by browsers */
+                }
+            `;
+            document.head.appendChild(style);
+            console.log("Tawk.to style injected");
         }
-    `;
-    document.head.appendChild(style);
+    };
+
+    // Apply immediately
+    forceBottomPosition();
+
+    // Also apply every 100ms for the first 2 seconds 
+    // (This catches the iframe in case it renders slightly late)
+    var checkCount = 0;
+    var checkInterval = setInterval(function() {
+        forceBottomPosition();
+        checkCount++;
+        if(checkCount > 20) { // Stop after 2 seconds (20 * 100ms)
+            clearInterval(checkInterval);
+        }
+    }, 100);
 };
 
 (function(){
