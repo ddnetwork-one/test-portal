@@ -2262,7 +2262,7 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
   var s1 = document.createElement("script"),
       s0 = document.getElementsByTagName("script")[0];
   s1.async = true;
-  s1.src = 'https://embed.tawk.to/6982123316f76a1c388d4f74/default';
+  s1.src = 'https://embed.tawk.to/69821233116f76a1c388d4f74/default';
   s1.charset = 'UTF-8';
   s1.setAttribute('crossorigin', '*');
   s0.parentNode.insertBefore(s1, s0);
@@ -2601,6 +2601,7 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
 
         let db, auth;
         let ADMIN_EMAIL = "ddnetwork.one@outlook.com";
+        let ADMIN_PHONE_NO = "60122600969"; // Added for WhatsApp
         let currentUserPersonalVoucher = null;
         
         const DEFAULT_PAYMENT_METHODS = [
@@ -2631,12 +2632,18 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
         };
 
         try {
-            if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+            // Robust Initialization Check
+            if(firebaseConfig.apiKey && firebaseConfig.projectId) {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
                 auth = firebase.auth();
+            } else {
+                console.error("Firebase Config is missing API Key or Project ID.");
             }
-        } catch(e) { console.error("Firebase init error:", e); }
+        } catch(e) { 
+            console.error("Firebase init error:", e); 
+            showToast("System initialization failed. Check console.", "error");
+        }
 
         // ==========================================
         // UPDATED TOAST FUNCTION
@@ -2652,7 +2659,7 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
             if (type === 'error') iconClass = 'ri-error-warning-fill';
             if (type === 'warning') iconClass = 'ri-alert-fill';
 
-            toast.className = `toast ${type}`;
+            toast.className = `toast ${            type}`;
             toast.innerHTML = `
                 <div class="toast-content">
                     <i class="toast-icon ${iconClass}"></i>
@@ -2735,6 +2742,10 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
                                 }
                             }
                         }
+                    }).catch((err) => {
+                        console.error("User Doc Error:", err);
+                        // If doc fetch fails but user is logged in, at least update header
+                        updateHeaderForUser(user);
                     });
                 } else {
                     updateHeaderForGuest(); clearUserData(); hideVoucherCard();
@@ -2745,7 +2756,9 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
         function loadProfilePageData() {
             if(!auth || !auth.currentUser) return;
             const profFields = ['prof-name', 'prof-phone', 'prof-email', 'prof-company'];
+            // Set loading state
             profFields.forEach(id => document.getElementById(id).value = "Loading...");
+            
             db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
@@ -2755,8 +2768,14 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
                     if(data.company) document.getElementById('prof-company').value = data.company;
                     if(data.personalVoucher) showVoucherCard(data.personalVoucher); else hideVoucherCard();
                     loadOrderHistory(auth.currentUser.uid);
+                } else {
+                    // If doc doesn't exist for some reason
+                    profFields.forEach(id => document.getElementById(id).value = "");
                 }
-            }).catch((error) => showToast("Error loading profile data.", "error"));
+            }).catch((error) => {
+                showToast("Error loading profile data.", "error");
+                profFields.forEach(id => document.getElementById(id).value = "");
+            });
         }
 
         function loadOrderHistory(uid) {
@@ -2788,17 +2807,19 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
                             if(status === 'Completed') statusClass = 'status-completed';
                             if(status === 'Cancelled') statusClass = 'status-cancelled';
                             
-                            const row = `
-                                <tr>
-                                    <td>${date}</td>
-                                    <td style="font-weight:600; color:var(--text-main);">${pkg}</td>
-                                    <td>${total}</td>
-                                    <td><span class="status-badge ${statusClass}">${status}</span></td>
-                                </tr>
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${date}</td>
+                                <td style="font-weight:600; color:var(--text-main);">${pkg}</td>
+                                <td>${total}</td>
+                                <td><span class="status-badge ${statusClass}">${status}</span></td>
                             `;
-                            tbody.innerHTML += row;
+                            tbody.appendChild(row);
                         });
                     }
+                }, (error) => {
+                    console.error("Orders Error:", error);
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Failed to load orders.</td></tr>';
                 });
         }
 
@@ -3640,19 +3661,20 @@ function loadHomePortfolio() {
             if(exists) return;
 
             const data = doc.data();
-            const html = `
-                <div class="portfolio-item" data-id="${doc.id}">
-                    <div class="portfolio-img-wrapper">
-                        <img src="${data.img}" alt="${data.name}">
-                    </div>
-                    <div class="portfolio-info">
-                        <h4>${data.name}</h4>
-                        <p>Visit Website</p>
-                        <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
-                    </div>
+            const div = document.createElement('div');
+            div.className = 'portfolio-item';
+            div.setAttribute('data-id', doc.id);
+            div.innerHTML = `
+                <div class="portfolio-img-wrapper">
+                    <img src="${data.img}" alt="${data.name}">
+                </div>
+                <div class="portfolio-info">
+                    <h4>${data.name}</h4>
+                    <p>Visit Website</p>
+                    <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
                 </div>
             `;
-            container.innerHTML += html;
+            container.appendChild(div);
         });
     }, (error) => {
         // THIS IS THE IMPORTANT ERROR HANDLER
@@ -3672,19 +3694,20 @@ function loadPortfolio() {
             if(exists) return;
 
             const data = doc.data();
-            const html = `
-                <div class="portfolio-item" data-id="${doc.id}">
-                    <div class="portfolio-img-wrapper">
-                        <img src="${data.img}" alt="${data.name}">
-                    </div>
-                    <div class="portfolio-info">
-                        <h4>${data.name}</h4>
-                        <p>Visit Website</p>
-                        <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
-                    </div>
+            const div = document.createElement('div');
+            div.className = 'portfolio-item';
+            div.setAttribute('data-id', doc.id);
+            div.innerHTML = `
+                <div class="portfolio-img-wrapper">
+                    <img src="${data.img}" alt="${data.name}">
+                </div>
+                <div class="portfolio-info">
+                    <h4>${data.name}</h4>
+                    <p>Visit Website</p>
+                    <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
                 </div>
             `;
-            container.innerHTML += html;
+            container.appendChild(div);
         });
     }, (error) => {
         console.error("Firestore Error:", error);
@@ -3715,11 +3738,13 @@ function loadReviewsFromDB() {
         // Avoid duplicates in marquee
         if(id && row1.querySelector(`[data-rid="${id}"]`)) return;
         
-        const html = renderReview(data);
-        if(id) html = html.replace('review-marquee-item"', `review-marquee-item" data-rid="${id}"`);
+        const div = document.createElement('div');
+        div.innerHTML = renderReview(data);
+        const newItem = div.firstElementChild;
+        if(id) newItem.setAttribute('data-rid', id);
         
-        row1.innerHTML += html;
-        row2.innerHTML += html;
+        row1.appendChild(newItem);
+        row2.appendChild(newItem.cloneNode(true));
     };
 
     // Add Demo immediately
@@ -3750,7 +3775,9 @@ function loadReviewsFromDB() {
             `;
             // Check if already in list
             if(!list.querySelector(`[data-rid="${doc.id}"]`)) {
-                list.innerHTML += cardHtml;
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = cardHtml;
+                list.appendChild(wrapper.firstElementChild);
             }
         });
     }, (error) => {
