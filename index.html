@@ -3621,76 +3621,122 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
         // PORTFOLIO & REVIEWS (SYNC LOGIC)
         // ==========================================
         
-        function loadHomePortfolio() {
-            if(!db) return;
-            const container = document.getElementById('home-portfolio-grid');
-            // We keep the static HTML (Mory) and append DB items
-            db.collection("clients_portfolio").where("status", "==", true).limit(3).onSnapshot((snapshot) => {
-                // Don't clear container completely to keep Mory (though we only add if not empty)
-                // A safer way to avoid duplicates on multiple loads:
-                if (snapshot.empty) return; 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    // Check if already exists (simple check by text content could work, but easier to just append)
-                    const html = `
-                        <div class="portfolio-item">
-                            <div class="portfolio-img-wrapper">
-                                <img src="${data.img}" alt="${data.name}">
-                            </div>
-                            <div class="portfolio-info">
-                                <h4>${data.name}</h4>
-                                <p>Visit Website</p>
-                                <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += html;
-                });
-            });
-        }
+// --- ROBUST PORTFOLIO SYNC WITH ERROR HANDLING ---
+function loadHomePortfolio() {
+    if(!db) return showToast("Database offline", "error");
+    const container = document.getElementById('home-portfolio-grid');
+    // NOTE: Ensure Mory is in HTML initially, we don't clear it here to keep it.
+    
+    db.collection("clients_portfolio").where("status", "==", true).limit(5)
+    .onSnapshot((snapshot) => {
+        // Remove "Loading" if you had one, or just append
+        if (snapshot.empty) {
+            console.log("Portfolio collection is empty.");
+            return;
+        } 
+        snapshot.forEach((doc) => {
+            // Check if item already exists to avoid duplicates
+            const exists = container.querySelector(`[data-id="${doc.id}"]`);
+            if(exists) return;
 
-        function loadPortfolio() {
-            if(!db) return;
-            const container = document.getElementById('portfolio-grid');
-            // Again, we keep Mory (Static) and append
-            db.collection("clients_portfolio").where("status", "==", true).onSnapshot((snapshot) => {
-                if (snapshot.empty) return;
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const html = `
-                        <div class="portfolio-item">
-                            <div class="portfolio-img-wrapper">
-                                <img src="${data.img}" alt="${data.name}">
-                            </div>
-                            <div class="portfolio-info">
-                                <h4>${data.name}</h4>
-                                <p>Visit Website</p>
-                                <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += html;
-                });
-            });
-        }
-
-        function loadReviewsFromDB() {
-            if(!db) return;
-            const row1 = document.getElementById('reviews-marquee-row-1');
-            const row2 = document.getElementById('reviews-marquee-row-2');
-            const list = document.getElementById('reviews-list');
-
-            // DEMO REVIEW ADDED FIRST
-            const demoReview = { name: "Mory Matcha", rating: 5, comment: "Excellent service! DDNetwork delivered a stunning e-commerce site very quickly.", date: "Just Now" };
-            const renderReview = (data) => `
-                <div class="review-marquee-item">
-                    <div class="rm-rating">${"★".repeat(data.rating)}</div>
-                    <div class="rm-text">"${data.comment}"</div>
-                    <div class="rm-author">- ${data.name}</div>
+            const data = doc.data();
+            const html = `
+                <div class="portfolio-item" data-id="${doc.id}">
+                    <div class="portfolio-img-wrapper">
+                        <img src="${data.img}" alt="${data.name}">
+                    </div>
+                    <div class="portfolio-info">
+                        <h4>${data.name}</h4>
+                        <p>Visit Website</p>
+                        <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
+                    </div>
                 </div>
             `;
-            const renderReviewCard = (data) => `
-                <div class="review-card">
+            container.innerHTML += html;
+        });
+    }, (error) => {
+        // THIS IS THE IMPORTANT ERROR HANDLER
+        console.error("Firestore Error:", error);
+        showToast("Failed to load portfolio. Check Console.", "error");
+    });
+}
+
+function loadPortfolio() {
+    if(!db) return showToast("Database offline", "error");
+    const container = document.getElementById('portfolio-grid');
+    // We keep Mory (Static) and append
+    db.collection("clients_portfolio").where("status", "==", true).onSnapshot((snapshot) => {
+        if (snapshot.empty) return;
+        snapshot.forEach((doc) => {
+            const exists = container.querySelector(`[data-id="${doc.id}"]`);
+            if(exists) return;
+
+            const data = doc.data();
+            const html = `
+                <div class="portfolio-item" data-id="${doc.id}">
+                    <div class="portfolio-img-wrapper">
+                        <img src="${data.img}" alt="${data.name}">
+                    </div>
+                    <div class="portfolio-info">
+                        <h4>${data.name}</h4>
+                        <p>Visit Website</p>
+                        <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+    }, (error) => {
+        console.error("Firestore Error:", error);
+        showToast("Failed to load portfolio.", "error");
+    });
+}
+
+// --- ROBUST REVIEWS SYNC WITH ERROR HANDLING ---
+function loadReviewsFromDB() {
+    if(!db) return showToast("Database offline", "error");
+    const row1 = document.getElementById('reviews-marquee-row-1');
+    const row2 = document.getElementById('reviews-marquee-row-2');
+    const list = document.getElementById('reviews-list');
+
+    // DEMO REVIEW
+    const demoReview = { name: "Mory Matcha", rating: 5, comment: "Excellent service! DDNetwork delivered a stunning site quickly.", date: "Just Now" };
+    
+    const renderReview = (data) => `
+        <div class="review-marquee-item">
+            <div class="rm-rating">${"★".repeat(data.rating)}</div>
+            <div class="rm-text">"${data.comment}"</div>
+            <div class="rm-author">- ${data.name}</div>
+        </div>
+    `;
+    
+    // Helper to append safely
+    const appendReview = (data, id) => {
+        // Avoid duplicates in marquee
+        if(id && row1.querySelector(`[data-rid="${id}"]`)) return;
+        
+        const html = renderReview(data);
+        if(id) html = html.replace('review-marquee-item"', `review-marquee-item" data-rid="${id}"`);
+        
+        row1.innerHTML += html;
+        row2.innerHTML += html;
+    };
+
+    // Add Demo immediately
+    appendReview(demoReview);
+
+    db.collection("customer_reviews").where("status", "==", true).onSnapshot((snapshot) => {
+        if (snapshot.empty) {
+            console.log("Reviews collection is empty.");
+            return;
+        }
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            appendReview(data, doc.id);
+            
+            // Add to static list
+            const cardHtml = `
+                <div class="review-card" data-rid="${doc.id}">
                     <div class="review-header">
                         <div class="review-avatar">${data.name.charAt(0)}</div>
                         <div class="review-info">
@@ -3702,26 +3748,16 @@ var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
                     <div class="review-text">${data.comment}</div>
                 </div>
             `;
-
-            // Add demo to rows immediately
-            row1.innerHTML += renderReview(demoReview);
-            row2.innerHTML += renderReview(demoReview); // Add to second row too for effect
-
-            // Listen to DB
-            db.collection("customer_reviews").where("status", "==", true).onSnapshot((snapshot) => {
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    // Only add to marquee rows (avoiding duplicates if possible or just appending)
-                    // Since snapshot returns all, we might want to rebuild rows if data changes significantly
-                    // But for simplicity in marquee:
-                    row1.innerHTML += renderReview(data);
-                    row2.innerHTML += renderReview(data);
-                    
-                    // Add to static list
-                    list.innerHTML += renderReviewCard(data);
-                });
-            });
-        }
+            // Check if already in list
+            if(!list.querySelector(`[data-rid="${doc.id}"]`)) {
+                list.innerHTML += cardHtml;
+            }
+        });
+    }, (error) => {
+        console.error("Reviews Load Error:", error);
+        showToast("Failed to load reviews.", "error");
+    });
+}
 
         // ==========================================
         // EARTH + METEOR BACKGROUND ANIMATION
