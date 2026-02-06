@@ -342,11 +342,23 @@
             background: #f8fafc;
         }
 
-        /* --- FAB (HIDDEN FOR TAWK.TO) --- */
+        /* --- FAB (UPDATED) --- */
+        /* 
+           FIX: Removed 'display: none !important' to allow chat widget elements to appear.
+           Also added generic styles if the custom FAB is used again. 
+        */
         .mobile-fab {
-            /* Hidden by CSS override for FreshChat, but element remains in DOM */
-            display: none !important; 
+            position: fixed; bottom: 30px; right: 30px;
+            width: 60px; height: 60px;
+            background: var(--soft-black); color: white;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 30px rgba(30, 41, 59, 0.3);
+            font-size: 1.5rem; cursor: pointer;
+            z-index: 2000;
+            transition: transform 0.3s ease;
         }
+        .mobile-fab:hover { transform: scale(1.1) rotate(10deg); }
 
         /* --- MAIN CONTENT AREA --- */
         main { flex:1; width: 100%; position: relative; overflow-x: hidden; }
@@ -1051,6 +1063,25 @@
             .review-avatar { width: 35px; height: 35px; font-size: 0.9rem; }
         }
 
+        /* ========================================== */
+        /* FIX: FORCE CHAT WIDGET VISIBILITY           */
+        /* ========================================== */
+        /* 
+           This rule ensures that any element injected by the chat script 
+           (which usually has 'chat', 'lc-' (livechat), or 'widget' in its ID/Class)
+           sits ABOVE the sticky header (z-index 2100) and other overlays.
+        */
+        div[id*="chat"], div[class*="chat"], 
+        div[id*="lc-"], div[class*="lc-"], 
+        div[id*="widget"], div[class*="widget"],
+        iframe[id*="chat"], iframe[class*="chat"] {
+            z-index: 999999 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            transform: none !important; /* Prevent accidental translation off-screen */
+        }
+        
     </style>
 </head>
 <body>
@@ -1106,12 +1137,6 @@
 
     <!-- Mobile Drawer Overlay -->
     <div id="mobileDrawerOverlay" class="mobile-drawer-overlay" onclick="toggleDrawer()"></div>
-
-    <!-- FAB (Hidden via CSS for FreshChat) -->
-    <div class="mobile-fab" id="mobileFab" onclick="handleFabClick()">
-        <div class="fab-pulse"></div>
-        <i class="ri-customer-service-2-fill"></i>
-    </div>
 
     <!-- Header (Sticky + About Us + Solutions Dropdowns) -->
     <header id="mainHeader">
@@ -2635,1853 +2660,1851 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 <p>DDNetwork One retains right to showcase completed projects for portfolio and promotional purposes unless otherwise agreed in writing.</p>
 
                 <h3>10. Termination</h3>
-                <p>DDNetwork One reserves right to terminate services if payments are overdue, terms are violated, or abusive behavior occurs.</p>
-                <p>No refunds will be issued for work already completed.</p>
+<p>DDNetwork One reserves right to terminate services if payments are overdue, terms are violated, or abusive behavior occurs.</p>
+<p>No refunds will be issued for work already completed.</p>
 
-                <h3>11. Refund Policy</h3>
-                <p>All payments made are <strong>non-refundable</strong>, unless otherwise stated in writing.</p>
-                <p>Setup fees and completed work are strictly non-refundable.</p>
+<h3>11. Refund Policy</h3>
+<p>All payments made are <strong>non-refundable</strong>, unless otherwise stated in writing.</p>
+<p>Setup fees and completed work are strictly non-refundable.</p>
 
-                <h3>12. Limitation of Liability</h3>
-                <p>DDNetwork One shall not be held liable for loss of data, revenue, or business arising from use or inability to use services.</p>
-                <p>Clients are advised to maintain their own backups and business continuity plans.</p>
+<h3>12. Limitation of Liability</h3>
+<p>DDNetwork One shall not be held liable for loss of data, revenue, or business arising from use or inability to use services.</p>
+<p>Clients are advised to maintain their own backups and business continuity plans.</p>
 
-                <h3>13. Changes to Terms</h3>
-                <p>DDNetwork One reserves right to update or modify these Terms & Conditions at any time.</p>
-                <p>Continued use of services constitutes acceptance of updated terms.</p>
+<h3>13. Changes to Terms</h3>
+<p>DDNetwork One reserves right to update or modify these Terms & Conditions at any time.</p>
+<p>Continued use of services constitutes acceptance of updated terms.</p>
+
+<p style="margin-top: 3rem; font-weight: 700; text-align:center;">&copy; 2025–2026 DD Cloud Network · DDNetwork · Reg. No. 202603040752 (MA0342542-K)</p>
+</div>
+</div>
+</div>
+
+<!-- JAVASCRIPT -->
+<script>
+    // Preloader Removal
+    window.addEventListener('load', () => {
+        const preloader = document.getElementById('preloader');
+        preloader.style.opacity = '0';
+        setTimeout(() => { preloader.style.display = 'none'; }, 600);
+    });
+
+    // ==========================================
+    // SEO TITLES CONFIGURATION
+    // ==========================================
+    const PAGE_TITLES = {
+        '/': 'DDNetwork by DD Cloud Network',
+        '/home': 'DDNetwork',
+        '/pricing': 'Pricing Packages',
+        '/reviews': 'Client Reviews',
+        '/order': 'Secure Checkout',
+        '/clients': 'Portfolio & Clients',
+        '/founder-danialdanish': 'Danial Danish – Founder of DD Cloud Network & DDNetwork',
+        '/login': 'Login',
+        '/signup': 'Sign Up',
+        '/profile': 'User Profile',
+        '/profile-website-describe': 'Describe Website Idea',
+        '/helpdesk': 'Support Helpdesk @ DDNetwork',
+        '/contact': 'Contact Us @ DDNetwork',
+        '/forgot-password': 'Reset Password',
+        '/thank-you': 'Order Successful - DDNetwork',
+        '/updates': 'Customer Requests',
+        '/about-company': 'About Company',
+        '/terms': 'Terms & Conditions',
+        '/faq': 'Frequently Asked Questions',
+        '/privacy': 'Privacy Policy - DDNetwork'
+    };
+
+    function updatePageTitle(path) {
+        const title = PAGE_TITLES[path] || 'DDNetwork One';
+        document.title = title;
+    }
+
+    // ==========================================
+    // GLASSMORPHIC NOTIFICATION MODAL
+    // ==========================================
+    const modalOverlay = document.getElementById('glass-modal-overlay');
+    const modalTitle = document.getElementById('glass-modal-title');
+    const modalDesc = document.getElementById('glass-modal-desc');
+    const modalIconContainer = document.getElementById('glass-modal-icon-container');
+    const modalBtn = document.getElementById('glass-modal-btn');
+
+    function showGlassModal(title, message, type = 'warning', btnText = 'Okay', btnCallback = null) {
+        modalTitle.innerText = title;
+        modalDesc.innerText = message;
+        
+        modalIconContainer.className = 'glass-modal-icon';
+        modalIconContainer.innerHTML = '';
+        if (type === 'warning') { modalIconContainer.classList.add('warning'); modalIconContainer.innerHTML = '<i class="ri-error-warning-line"></i>'; } 
+        else if (type === 'success') { modalIconContainer.classList.add('success'); modalIconContainer.innerHTML = '<i class="ri-checkbox-circle-line"></i>'; }
+
+        modalBtn.innerText = btnText;
+        modalBtn.onclick = () => {
+            modalOverlay.classList.remove('active');
+            setTimeout(() => { modalOverlay.style.display = 'none'; }, 300);
+            if (btnCallback) btnCallback();
+        };
+        modalOverlay.style.display = 'flex';
+        requestAnimationFrame(() => { modalOverlay.classList.add('active'); });
+    }
+
+    // ==========================================
+    // WEBSITE IDEA SUCCESS MODAL LOGIC
+    // ==========================================
+    function closeIdeaSuccessModal() {
+        const modal = document.getElementById('idea-success-modal');
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            navigateTo('/'); // Redirect to home after closing
+        }, 300);
+    }
+
+    // ==========================================
+    // FAQ ACCORDION LOGIC (UPDATED FOR BETTER VISIBILITY)
+    // ==========================================
+    function toggleFaq(element) {
+        const item = element.parentElement;
+        const answer = item.querySelector('.faq-answer');
+        
+        // Close others if you want accordion style (optional)
+        // document.querySelectorAll('.faq-item').forEach(i => {
+        //     if(i !== item) {
+        //         i.classList.remove('active');
+        //         i.querySelector('.faq-answer').style.maxHeight = null;
+        //     }
+        // });
+
+        item.classList.toggle('active');
+        if (item.classList.contains('active')) {
+            // Increase buffer for desktop readability
+            answer.style.maxHeight = (answer.scrollHeight + 50) + "px";
+        } else {
+            answer.style.maxHeight = null;
+        }
+    }
+
+    // ==========================================
+    // PRICING DATA & TOGGLE LOGIC
+    // ==========================================
+    let PRICING_DATA = {
+        html: { 
+            oneTime: 249, 
+            monthly: 39, 
+            setupFee: 100, 
+            desc: "1 Static Landing Page. Mobile Responsive. Basic SEO." 
+        },
+        frontend: { 
+            oneTime: 1399, 
+            monthly: 99, 
+            setupFee: 200, 
+            desc: "Up to 5 Pages. Animations & Interactive UI." 
+        },
+        bundle: { 
+            oneTime: 3499, 
+            monthly: 249, 
+            setupFee: 700, 
+            desc: "Full website & internal management." 
+        },
+        ai: { 
+            oneTime: 2499, 
+            monthly: 149, 
+            setupFee: 400, 
+            desc: "Advanced automation & chatbots." 
+        },
+        portal: { 
+            oneTime: 3999, 
+            monthly: 279, 
+            setupFee: 700, 
+            desc: "Internal portal for existing sites." 
+        }
+    };
+
+    let billingCycle = 'monthly'; 
+
+    function setBilling(cycle) {
+        billingCycle = cycle;
+        const toggle = document.getElementById('billing-toggle');
+        if(cycle === 'onetime') toggle.checked = true;
+        else toggle.checked = false;
+        updatePricingUI();
+        // Re-run domain calculation logic if needed
+        if(state.domainType === 'sub') updateDomain('sub', document.querySelector('input[name="domain_type"][value="sub"]').parentElement);
+    }
+
+    function toggleBilling() {
+        const toggle = document.getElementById('billing-toggle');
+        billingCycle = toggle.checked ? 'onetime' : 'monthly';
+        updatePricingUI();
+        if(state.domainType === 'sub') updateDomain('sub', document.querySelector('input[name="domain_type"][value="sub"]').parentElement);
+    }
+
+    function updatePricingUI() {
+        const labelMonthly = document.getElementById('label-monthly');
+        const labelOnetime = document.getElementById('label-onetime');
+        
+        if(billingCycle === 'monthly') {
+            labelMonthly.classList.add('active');
+            labelOnetime.classList.remove('active');
+        } else {
+            labelMonthly.classList.remove('active');
+            labelOnetime.classList.add('active');
+        }
+
+        // --- HTML PACKAGE ---
+        const priceHtml = document.getElementById('price-html');
+        const periodHtml = document.getElementById('period-html');
+        const setupHtml = document.getElementById('html-setup-display');
+        const featHtmlSub = document.getElementById('html-feat-sub');
+        const featHtmlContent = document.getElementById('html-feat-content');
+        const featHtmlNoSupport = document.getElementById('html-feat-no-support');
+        const featHtmlCharge = document.getElementById('html-feat-content-charge');
+
+        if (priceHtml && periodHtml) {
+            if (billingCycle === 'onetime') {
+                priceHtml.innerText = `RM ${PRICING_DATA.html.oneTime}`;
+                periodHtml.innerText = '/one-time';
+                setupHtml.classList.add('hidden');
                 
-                <p style="margin-top: 3rem; font-weight: 700; text-align:center;">&copy; 2025–2026 DD Cloud Network · DDNetwork · Reg. No. 202603040752 (MA0342542-K)</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT -->
-    <script>
-        // Preloader Removal
-        window.addEventListener('load', () => {
-            const preloader = document.getElementById('preloader');
-            preloader.style.opacity = '0';
-            setTimeout(() => { preloader.style.display = 'none'; }, 600);
-        });
-
-        // ==========================================
-        // SEO TITLES CONFIGURATION
-        // ==========================================
-        const PAGE_TITLES = {
-            '/': 'DDNetwork by DD Cloud Network',
-            '/home': 'DDNetwork',
-            '/pricing': 'Pricing Packages',
-            '/reviews': 'Client Reviews',
-            '/order': 'Secure Checkout',
-            '/clients': 'Portfolio & Clients',
-            '/founder-danialdanish': 'Danial Danish – Founder of DD Cloud Network & DDNetwork',
-            '/login': 'Login',
-            '/signup': 'Sign Up',
-            '/profile': 'User Profile',
-            '/profile-website-describe': 'Describe Website Idea',
-            '/helpdesk': 'Support Helpdesk @ DDNetwork',
-            '/contact': 'Contact Us @ DDNetwork',
-            '/forgot-password': 'Reset Password',
-            '/thank-you': 'Order Successful - DDNetwork',
-            '/updates': 'Customer Requests',
-            '/about-company': 'About Company',
-            '/terms': 'Terms & Conditions',
-            '/faq': 'Frequently Asked Questions',
-            '/privacy': 'Privacy Policy - DDNetwork' // Added Privacy Title
-        };
-
-        function updatePageTitle(path) {
-            const title = PAGE_TITLES[path] || 'DDNetwork One';
-            document.title = title;
-        }
-
-        // ==========================================
-        // GLASSMORPHIC NOTIFICATION MODAL
-        // ==========================================
-        const modalOverlay = document.getElementById('glass-modal-overlay');
-        const modalTitle = document.getElementById('glass-modal-title');
-        const modalDesc = document.getElementById('glass-modal-desc');
-        const modalIconContainer = document.getElementById('glass-modal-icon-container');
-        const modalBtn = document.getElementById('glass-modal-btn');
-
-        function showGlassModal(title, message, type = 'warning', btnText = 'Okay', btnCallback = null) {
-            modalTitle.innerText = title;
-            modalDesc.innerText = message;
-            
-            modalIconContainer.className = 'glass-modal-icon';
-            modalIconContainer.innerHTML = '';
-            if (type === 'warning') { modalIconContainer.classList.add('warning'); modalIconContainer.innerHTML = '<i class="ri-error-warning-line"></i>'; } 
-            else if (type === 'success') { modalIconContainer.classList.add('success'); modalIconContainer.innerHTML = '<i class="ri-checkbox-circle-line"></i>'; }
-
-            modalBtn.innerText = btnText;
-            modalBtn.onclick = () => {
-                modalOverlay.classList.remove('active');
-                setTimeout(() => { modalOverlay.style.display = 'none'; }, 300);
-                if (btnCallback) btnCallback();
-            };
-            modalOverlay.style.display = 'flex';
-            requestAnimationFrame(() => { modalOverlay.classList.add('active'); });
-        }
-
-        // ==========================================
-        // WEBSITE IDEA SUCCESS MODAL LOGIC
-        // ==========================================
-        function closeIdeaSuccessModal() {
-            const modal = document.getElementById('idea-success-modal');
-            modal.classList.remove('active');
-            setTimeout(() => {
-                modal.style.display = 'none';
-                navigateTo('/'); // Redirect to home after closing
-            }, 300);
-        }
-
-        // ==========================================
-        // FAQ ACCORDION LOGIC (UPDATED FOR BETTER VISIBILITY)
-        // ==========================================
-        function toggleFaq(element) {
-            const item = element.parentElement;
-            const answer = item.querySelector('.faq-answer');
-            
-            // Close others if you want accordion style (optional)
-            // document.querySelectorAll('.faq-item').forEach(i => {
-            //     if(i !== item) {
-            //         i.classList.remove('active');
-            //         i.querySelector('.faq-answer').style.maxHeight = null;
-            //     }
-            // });
-
-            item.classList.toggle('active');
-            if (item.classList.contains('active')) {
-                // Increase buffer for desktop readability
-                answer.style.maxHeight = (answer.scrollHeight + 50) + "px";
+                // Show "No Support" features
+                if(featHtmlSub) featHtmlSub.classList.add('hidden');
+                if(featHtmlContent) featHtmlContent.classList.add('hidden');
+                if(featHtmlNoSupport) featHtmlNoSupport.classList.remove('hidden');
+                if(featHtmlCharge) featHtmlCharge.classList.remove('hidden');
             } else {
-                answer.style.maxHeight = null;
+                priceHtml.innerText = `RM ${PRICING_DATA.html.monthly}`;
+                periodHtml.innerText = '/month';
+                setupHtml.classList.remove('hidden');
+                
+                // Show "Support Included" features
+                if(featHtmlSub) featHtmlSub.classList.remove('hidden');
+                if(featHtmlContent) featHtmlContent.classList.remove('hidden');
+                if(featHtmlNoSupport) featHtmlNoSupport.classList.add('hidden');
+                if(featHtmlCharge) featHtmlCharge.classList.add('hidden');
             }
         }
 
-        // ==========================================
-        // PRICING DATA & TOGGLE LOGIC
-        // ==========================================
-        let PRICING_DATA = {
-            html: { 
-                oneTime: 249, 
-                monthly: 39, 
-                setupFee: 100, 
-                desc: "1 Static Landing Page. Mobile Responsive. Basic SEO." 
-            },
-            frontend: { 
-                oneTime: 1399, 
-                monthly: 99, 
-                setupFee: 200, 
-                desc: "Up to 5 Pages. Animations & Interactive UI." 
-            },
-            bundle: { 
-                oneTime: 3499, 
-                monthly: 249, 
-                setupFee: 700, 
-                desc: "Full website & internal management." 
-            },
-            ai: { 
-                oneTime: 2499, 
-                monthly: 149, 
-                setupFee: 400, 
-                desc: "Advanced automation & chatbots." 
-            },
-            portal: { 
-                oneTime: 3999, 
-                monthly: 279, 
-                setupFee: 700, 
-                desc: "Internal portal for existing sites." 
-            }
-        };
-
-        let billingCycle = 'monthly'; 
-
-        function setBilling(cycle) {
-            billingCycle = cycle;
-            const toggle = document.getElementById('billing-toggle');
-            if(cycle === 'onetime') toggle.checked = true;
-            else toggle.checked = false;
-            updatePricingUI();
-            // Re-run domain calculation logic if needed
-            if(state.domainType === 'sub') updateDomain('sub', document.querySelector('input[name="domain_type"][value="sub"]').parentElement);
-        }
-
-        function toggleBilling() {
-            const toggle = document.getElementById('billing-toggle');
-            billingCycle = toggle.checked ? 'onetime' : 'monthly';
-            updatePricingUI();
-            if(state.domainType === 'sub') updateDomain('sub', document.querySelector('input[name="domain_type"][value="sub"]').parentElement);
-        }
-
-        function updatePricingUI() {
-            const labelMonthly = document.getElementById('label-monthly');
-            const labelOnetime = document.getElementById('label-onetime');
+        // --- OTHER PACKAGES (Iterate through keys) ---
+        const keys = ['frontend', 'bundle', 'ai', 'portal'];
+        keys.forEach(key => {
+            const priceEl = document.getElementById(`price-${key}`);
+            const periodEl = document.getElementById(`period-${key}`);
+            const setupEl = document.getElementById(`${key}-setup-display`);
             
-            if(billingCycle === 'monthly') {
-                labelMonthly.classList.add('active');
-                labelOnetime.classList.remove('active');
-            } else {
-                labelMonthly.classList.remove('active');
-                labelOnetime.classList.add('active');
-            }
+            // Feature Elements
+            const featMaint = document.getElementById(`${key}-feat-maint`);
+            const featContent = document.getElementById(`${key}-feat-content`);
+            const featNoSupport = document.getElementById(`${key}-feat-no-support`);
+            const featContentCharge = document.getElementById(`${key}-feat-content-charge`);
+            const featEnt = document.getElementById(`${key}-feat-ent`);
 
-            // --- HTML PACKAGE ---
-            const priceHtml = document.getElementById('price-html');
-            const periodHtml = document.getElementById('period-html');
-            const setupHtml = document.getElementById('html-setup-display');
-            const featHtmlSub = document.getElementById('html-feat-sub');
-            const featHtmlContent = document.getElementById('html-feat-content');
-            const featHtmlNoSupport = document.getElementById('html-feat-no-support');
-            const featHtmlCharge = document.getElementById('html-feat-content-charge');
-
-            if (priceHtml && periodHtml) {
+            if(priceEl && periodEl) {
                 if (billingCycle === 'onetime') {
-                    priceHtml.innerText = `RM ${PRICING_DATA.html.oneTime}`;
-                    periodHtml.innerText = '/one-time';
-                    setupHtml.classList.add('hidden');
+                    priceEl.innerText = `RM ${PRICING_DATA[key].oneTime}`;
+                    periodEl.innerText = '/one-time';
+                    if(setupEl) setupEl.classList.add('hidden');
                     
                     // Show "No Support" features
-                    if(featHtmlSub) featHtmlSub.classList.add('hidden');
-                    if(featHtmlContent) featHtmlContent.classList.add('hidden');
-                    if(featHtmlNoSupport) featHtmlNoSupport.classList.remove('hidden');
-                    if(featHtmlCharge) featHtmlCharge.classList.remove('hidden');
+                    if(featMaint) featMaint.classList.add('hidden');
+                    if(featContent) featContent.classList.add('hidden');
+                    if(featEnt) featEnt.classList.add('hidden');
+                    if(featNoSupport) featNoSupport.classList.remove('hidden');
+                    if(featContentCharge) featContentCharge.classList.remove('hidden');
+
                 } else {
-                    priceHtml.innerText = `RM ${PRICING_DATA.html.monthly}`;
-                    periodHtml.innerText = '/month';
-                    setupHtml.classList.remove('hidden');
-                    
+                    priceEl.innerText = `RM ${PRICING_DATA[key].monthly}`;
+                    periodEl.innerText = '/month';
+                    if(setupEl) setupEl.classList.remove('hidden');
+
                     // Show "Support Included" features
-                    if(featHtmlSub) featHtmlSub.classList.remove('hidden');
-                    if(featHtmlContent) featHtmlContent.classList.remove('hidden');
-                    if(featHtmlNoSupport) featHtmlNoSupport.classList.add('hidden');
-                    if(featHtmlCharge) featHtmlCharge.classList.add('hidden');
+                    if(featMaint) featMaint.classList.remove('hidden');
+                    if(featContent) featContent.classList.remove('hidden');
+                    if(featEnt) featEnt.classList.remove('hidden');
+                    if(featNoSupport) featNoSupport.classList.add('hidden');
+                    if(featContentCharge) featContentCharge.classList.add('hidden');
                 }
-            }
-
-            // --- OTHER PACKAGES (Iterate through keys) ---
-            const keys = ['frontend', 'bundle', 'ai', 'portal'];
-            keys.forEach(key => {
-                const priceEl = document.getElementById(`price-${key}`);
-                const periodEl = document.getElementById(`period-${key}`);
-                const setupEl = document.getElementById(`${key}-setup-display`);
-                
-                // Feature Elements
-                const featMaint = document.getElementById(`${key}-feat-maint`);
-                const featContent = document.getElementById(`${key}-feat-content`);
-                const featNoSupport = document.getElementById(`${key}-feat-no-support`);
-                const featContentCharge = document.getElementById(`${key}-feat-content-charge`);
-                const featEnt = document.getElementById(`${key}-feat-ent`);
-
-                if(priceEl && periodEl) {
-                    if (billingCycle === 'onetime') {
-                        priceEl.innerText = `RM ${PRICING_DATA[key].oneTime}`;
-                        periodEl.innerText = '/one-time';
-                        if(setupEl) setupEl.classList.add('hidden');
-                        
-                        // Show "No Support" features
-                        if(featMaint) featMaint.classList.add('hidden');
-                        if(featContent) featContent.classList.add('hidden');
-                        if(featEnt) featEnt.classList.add('hidden');
-                        if(featNoSupport) featNoSupport.classList.remove('hidden');
-                        if(featContentCharge) featContentCharge.classList.remove('hidden');
-
-                    } else {
-                        priceEl.innerText = `RM ${PRICING_DATA[key].monthly}`;
-                        periodEl.innerText = '/month';
-                        if(setupEl) setupEl.classList.remove('hidden');
-
-                        // Show "Support Included" features
-                        if(featMaint) featMaint.classList.remove('hidden');
-                        if(featContent) featContent.classList.remove('hidden');
-                        if(featEnt) featEnt.classList.remove('hidden');
-                        if(featNoSupport) featNoSupport.classList.add('hidden');
-                        if(featContentCharge) featContentCharge.classList.add('hidden');
-                    }
-                }
-            });
-        }
-
-        // ==========================================
-        // FRONTEND ROUTING
-        // ==========================================
-        const routes = {
-            '/': 'home', 
-            '/home': 'home', 
-            '/pricing': 'services', 
-            '/reviews': 'reviews', 
-            '/order': 'buynow', 
-            '/clients': 'clients',
-            '/founder-danialdanish': 'founder', 
-            '/login': 'login', 
-            '/signup': 'signup', 
-            '/profile': 'profile',
-            '/helpdesk': 'helpdesk', 
-            '/contact': 'contact', 
-            '/forgot-password': 'forgot-password',
-            '/thank-you': 'thank-you', 
-            '/updates': 'updates',
-            '/profile-website-describe': 'profile-website-describe',
-            '/about-company': 'about-company',
-            '/terms': 'terms',
-            '/faq': 'faq',
-            '/privacy': 'privacy' // Added Privacy Route
-        };
-
-        function routeLink(event, path) {
-            event.preventDefault();
-            navigateTo(path);
-        }
-
-        function navigateTo(path) {
-            const sectionId = routes[path];
-            if (!sectionId) return;
-            
-            // Update URL without reloading
-            window.history.pushState({ path: path }, "", path);
-            
-            // Update Title
-            updatePageTitle(path);
-
-            performTransition(sectionId);
-        }
-
-        window.addEventListener('popstate', (event) => {
-            if (event.state && event.state.path) {
-                performTransition(routes[event.state.path]);
-                updatePageTitle(event.state.path);
-            }
-            else {
-                const path = window.location.pathname;
-                performTransition(routes[path] || 'home');
-                updatePageTitle(path);
             }
         });
+    }
 
-        function handleInitialRoute() {
+    // ==========================================
+    // FRONTEND ROUTING
+    // ==========================================
+    const routes = {
+        '/': 'home', 
+        '/home': 'home', 
+        '/pricing': 'services', 
+        '/reviews': 'reviews', 
+        '/order': 'buynow', 
+        '/clients': 'clients',
+        '/founder-danialdanish': 'founder', 
+        '/login': 'login', 
+        '/signup': 'signup', 
+        '/profile': 'profile',
+        '/helpdesk': 'helpdesk', 
+        '/contact': 'contact', 
+        '/forgot-password': 'forgot-password',
+        '/thank-you': 'thank-you', 
+        '/updates': 'updates',
+        '/profile-website-describe': 'profile-website-describe',
+        '/about-company': 'about-company',
+        '/terms': 'terms',
+        '/faq': 'faq',
+        '/privacy': 'privacy'
+    };
+
+    function routeLink(event, path) {
+        event.preventDefault();
+        navigateTo(path);
+    }
+
+    function navigateTo(path) {
+        const sectionId = routes[path];
+        if (!sectionId) return;
+        
+        // Update URL without reloading
+        window.history.pushState({ path: path }, "", path);
+        
+        // Update Title
+        updatePageTitle(path);
+
+        performTransition(sectionId);
+    }
+
+    window.addEventListener('popstate', (event) => {
+        if (event.state && event.state.path) {
+            performTransition(routes[event.state.path]);
+            updatePageTitle(event.state.path);
+        }
+        else {
             const path = window.location.pathname;
-            const target = routes[path] || 'home'; 
-            performTransition(target, true);
+            performTransition(routes[path] || 'home');
             updatePageTitle(path);
         }
+    });
 
-        function performTransition(targetSectionId, isInstant = false) {
-            const currentSection = document.querySelector('.page-section.active');
-            const targetSection = document.getElementById(targetSectionId);
-            if (currentSection === targetSection) return; 
+    function handleInitialRoute() {
+        const path = window.location.pathname;
+        const target = routes[path] || 'home'; 
+        performTransition(target, true);
+        updatePageTitle(path);
+    }
 
-            if(currentSection && currentSection.id === 'home') {
-                if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-            }
+    function performTransition(targetSectionId, isInstant = false) {
+        const currentSection = document.querySelector('.page-section.active');
+        const targetSection = document.getElementById(targetSectionId);
+        if (currentSection === targetSection) return; 
 
-            if (currentSection) {
-                currentSection.classList.remove('active');
-                currentSection.style.display = 'none';
-            }
-
-            if (!isInstant) window.scrollTo({ top: 0, behavior: 'smooth' });
-            else window.scrollTo(0, 0);
-
-            setTimeout(() => {
-                if (targetSection) {
-                    targetSection.style.display = 'block'; 
-                    void targetSection.offsetWidth; 
-                    targetSection.classList.add('active');
-                    
-                    // Logic Hooks based on active section
-                    if(targetSectionId === 'profile') loadProfilePageData();
-                    if(targetSectionId === 'reviews') {
-                        loadReviewsMarquee();
-                        // Don't auto-load grid, wait for button click
-                    } 
-                    if(targetSectionId === 'buynow' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-                    if(targetSectionId === 'updates' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-                    if(targetSectionId === 'home') {
-                        startGlobeAnimation();
-                        loadHomePortfolio();
-                    }
-                    if(targetSectionId === 'clients') loadPortfolio();
-                }
-            }, isInstant ? 0 : 100);
-        }
-        setTimeout(handleInitialRoute, 100);
-
-        // ==========================================
-        // FIREBASE & APP LOGIC
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyAwf31b-wpYQwPbd-3DxnqGVRw8g3xq938",
-            authDomain: "ddnetwork-database.firebaseapp.com",
-            projectId: "ddnetwork-database",
-            storageBucket: "ddnetwork-database.firebasestorage.app",
-            messagingSenderId: "699127560990",
-            appId: "1:699127560990:web:50cfd61ff620bc85fb670f"
-        };
-
-        let db, auth;
-        let ADMIN_EMAIL = "ddnetwork.one@outlook.com";
-        let currentUserPersonalVoucher = null;
-        
-        const DEFAULT_PAYMENT_METHODS = [
-            { id: 'tng', name: 'TNG eWallet', link: 'https://payment.tngdigital.com.my/sc/bDLob7YcpG', active: true },
-            { id: 'fpx', name: 'Online Banking (FPX)', link: 'https://toyyibpay.com', active: true } 
-        ];
-
-        let siteConfig = { maintenance_active: false, payment_methods: [], packageDetails: {} };
-        let currentUserRole = 'user'; 
-        
-        try {
-            if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-                auth = firebase.auth();
-            }
-        } catch(e) { console.error("Firebase init error:", e); }
-
-        // ==========================================
-        // UPDATED TOAST FUNCTION
-        // ==========================================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            if (!container) return;
-
-            const toast = document.createElement('div');
-            
-            let iconClass = 'ri-information-fill';
-            if (type === 'success') iconClass = 'ri-checkbox-circle-fill';
-            if (type === 'error') iconClass = 'ri-error-warning-fill';
-            if (type === 'warning') iconClass = 'ri-alert-fill';
-
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <div class="toast-content">
-                    <i class="toast-icon ${iconClass}"></i>
-                    <span>${message}</span>
-                </div>
-                <i class="ri-close-fill toast-close" onclick="dismissToast(this.parentElement)"></i>
-            `;
-
-            container.appendChild(toast);
-
-            requestAnimationFrame(() => {
-                toast.classList.add('show');
-            });
-
-            setTimeout(() => {
-                dismissToast(toast);
-            }, 3500);
+        if(currentSection && currentSection.id === 'home') {
+            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
         }
 
-        function dismissToast(toastElement) {
-            if (!toastElement) return;
-            toastElement.classList.remove('show');
-            setTimeout(() => {
-                if (toastElement.parentElement) {
-                    toastElement.parentElement.removeChild(toastElement);
-                }
-            }, 400);
+        if (currentSection) {
+            currentSection.classList.remove('active');
+            currentSection.style.display = 'none';
         }
 
-        async function initializeDatabase() {
-            if(!db) return;
-            const configRef = db.collection("config").doc("site_settings");
-            const doc = await configRef.get();
-            if (!doc.exists) {
-                console.log("Config not found, creating default...");
-                await configRef.set({ maintenance_active: false, payment_methods: [] });
-            }
-            const pmSnapshot = await db.collection("payment_methods").limit(1).get();
-            if (pmSnapshot.empty) {
-                console.log("Payment methods collection empty, adding defaults...");
-                const defaults = [
-                    { id: 'tng', name: 'TNG eWallet', link: 'https://payment.tngdigital.com.my/sc/bDLob7YcpG', active: true },
-                    { id: 'fpx', name: 'Online Banking (FPX)', link: 'https://toyyibpay.com', active: true }
-                ];
-                defaults.forEach(pm => db.collection("payment_methods").add(pm));
-            }
-        }
+        if (!isInstant) window.scrollTo({ top: 0, behavior: 'smooth' });
+        else window.scrollTo(0, 0);
 
-        function listenToConfig() {
-            if(!db) return;
-            db.collection("config").doc("site_settings").onSnapshot((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    if(data.maintenance_active) document.getElementById('maintenance-overlay').classList.add('active');
-                    else document.getElementById('maintenance-overlay').classList.remove('active');
-                    if(data.prices) {
-                        if(data.prices.html) PRICING_DATA.html.monthly = data.prices.html;
-                        if(data.prices.frontend) PRICING_DATA.frontend.monthly = data.prices.frontend;
-                        if(data.prices.ai) PRICING_DATA.ai.monthly = data.prices.ai;
-                        updatePricingUI(); 
-                    }
-                    if(data.packageDetails) {
-                        const featContainerFront = document.getElementById('frontend-feats-list');
-                        const featContainerAi = document.getElementById('ai-feats-list');
-                        if(featContainerFront && data.packageDetails.frontend && data.packageDetails.frontend.features) {
-                            featContainerFront.innerHTML = data.packageDetails.frontend.features.map(f => `<li>${f}</li>`).join('');
-                        }
-                        if(featContainerAi && data.packageDetails.ai && data.packageDetails.ai.features) {
-                            featContainerAi.innerHTML = data.packageDetails.ai.features.map(f => `<li>${f}</li>`).join('');
-                        }
-                    }
-                }
-            });
-        }
-
-        function listenToPaymentMethods() {
-            if(!db) return;
-            db.collection("payment_methods").onSnapshot((snapshot) => {
-                const methods = [];
-                snapshot.forEach(doc => methods.push(doc.data()));
-                siteConfig.payment_methods = methods;
-                renderPaymentMethods();
-            }, (error) => { console.error("Error listening to payment methods:", error); renderPaymentMethods(); });
-        }
-
-        function renderPaymentMethods() {
-            const select = document.getElementById('payment-method-select');
-            if(!select) return;
-            const currentSelection = select.value;
-            select.innerHTML = '<option value="" disabled selected>Select Payment Method</option>';
-            const methods = siteConfig.payment_methods && siteConfig.payment_methods.length > 0 
-                            ? siteConfig.payment_methods 
-                            : DEFAULT_PAYMENT_METHODS;
-            let hasActiveMethods = false;
-            methods.forEach(pm => {
-                if(pm.active !== false) {
-                    const option = document.createElement('option');
-                    option.value = pm.id;
-                    option.innerText = pm.name;
-                    select.appendChild(option);
-                    hasActiveMethods = true;
-                }
-            });
-            if(currentSelection) select.value = currentSelection;
-            if (!hasActiveMethods) select.innerHTML = '<option value="" disabled selected>No Payment Methods Available</option>';
-        }
-
-        function loadPortfolio() {
-            if(!db) return;
-            const container = document.getElementById('portfolio-grid');
-            db.collection("clients_portfolio").where("status", "==", true).onSnapshot((snapshot) => {
-                container.innerHTML = ''; 
-                if (snapshot.empty) {
-                    container.innerHTML = '<div class="text-center" style="grid-column:1/-1; padding: 2rem; color: var(--text-tertiary);">No portfolio items available at moment.</div>';
-                    return;
-                }
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const cardHTML = `
-                        <div class="glass-card" style="padding: 0; overflow: hidden;">
-                            <div style="height: 200px; overflow: hidden;">
-                                <img src="${data.img}" alt="${data.name}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                            </div>
-                            <div style="padding: 1.5rem;">
-                                <h4 style="margin-bottom: 0.5rem;">${data.name}</h4>
-                                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Visit Website</p>
-                                <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
-                            </div>
-                        </div>`;
-                    container.innerHTML += cardHTML;
-                });
-            });
-        }
-
-        let PROMO_CODES = {}; 
-        if(db) {
-            db.collection("config").doc("site_settings").onSnapshot((doc) => {
-                if(doc.exists) siteConfig = { ...siteConfig, ...doc.data() };
-                if(siteConfig.maintenance_active) document.getElementById('maintenance-overlay').classList.add('active');
-                else document.getElementById('maintenance-overlay').classList.remove('active');
-            });
-            db.collection("promo_codes").onSnapshot((snapshot) => {
-                PROMO_CODES = {};
-                snapshot.forEach(doc => PROMO_CODES[doc.id] = doc.data().discount);
-            });
-            listenToPaymentMethods();
-            listenToConfig();
-            loadPortfolio();
-        }
-
-        const PHONE_NO = "60122600969"; 
-        const ADMIN_PHONE_NO = "60122600969"; 
-        
-        let state = {
-            packageType: null,
-            packagePrice: 0, 
-            setupFee: 0,
-            domainPrice: 0,
-            maintenancePrice: 0,
-            discountRate: 0,
-            discountFixed: 0,
-            discountType: 'percent',
-            discountCode: '',
-            domainType: 'sub',
-            domainName: '',
-            domainNameValid: false, 
-            paymentMethodId: null,
-            billingCycle: 'monthly',
-            isOneTime: false 
-        };
-
-        // ==========================================
-        // REVIEWS LOGIC (FIXED MARQUEE WITH DUMMIES & SYNC)
-        // ==========================================
-        let selectedRating = 0;
-        let reviewsCache = []; // Cache reviews for marquee
-
-        // DUMMY REVIEWS FOR FRONTEND PRELOAD (Prevents Empty/Stuck Marquee)
-        const DUMMY_REVIEWS = [
-            { rating: 5, userName: 'PNE Arena Enterprise', comment: 'Excellent service! The team was very professional and the delivery was faster than expected.', timestamp: null },
-        ];
-
-        function setupStarRating() {
-            const stars = document.querySelectorAll('.star-icon');
-            const container = document.getElementById('star-input-container');
-            const hiddenInput = document.getElementById('rating-value');
-
-            stars.forEach(star => {
-                star.addEventListener('mouseover', function() {
-                    const val = parseInt(this.getAttribute('data-val'));
-                    highlightStars(val);
-                });
+        setTimeout(() => {
+            if (targetSection) {
+                targetSection.style.display = 'block'; 
+                void targetSection.offsetWidth; 
+                targetSection.classList.add('active');
                 
-                star.addEventListener('click', function() {
-                    selectedRating = parseInt(this.getAttribute('data-val'));
-                    hiddenInput.value = selectedRating;
-                    highlightStars(selectedRating);
-                    document.getElementById('rating-error').style.display = 'none';
-                });
-            });
-
-            container.addEventListener('mouseleave', function() {
-                highlightStars(selectedRating);
-            });
-        }
-
-        function highlightStars(count) {
-            const stars = document.querySelectorAll('.star-icon');
-            stars.forEach(star => {
-                const val = parseInt(star.getAttribute('data-val'));
-                if (val <= count) {
-                    star.classList.add('selected');
-                } else {
-                    star.classList.remove('selected');
-                }
-            });
-        }
-
-        // --- NEW: Live Listener for Reviews ---
-        function listenToReviews() {
-            if(!db) return;
-            db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20)
-                .onSnapshot((snapshot) => {
-                    reviewsCache = []; // Clear cache
-                    snapshot.forEach(doc => reviewsCache.push(doc.data()));
-                    
-                    // Update the Marquee immediately with new data
+                // Logic Hooks based on active section
+                if(targetSectionId === 'profile') loadProfilePageData();
+                if(targetSectionId === 'reviews') {
                     loadReviewsMarquee();
-                    
-                    // If the full grid is currently visible, update it too
-                    const list = document.getElementById('reviews-list');
-                    if(!list.classList.contains('hidden')) {
-                        toggleFullReviews(); // Re-trigger render
-                    }
-                }, (error) => {
-                    console.error("Error syncing reviews:", error);
-                });
-        }
-
-        function loadReviewsMarquee() {
-            const row1 = document.getElementById('reviews-marquee-row-1');
-            const row2 = document.getElementById('reviews-marquee-row-2');
-            
-            // 1. Combine DB reviews with Dummies (Prepend DB so DB takes precedence if available)
-            let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
-            
-            if (allReviews.length === 0) {
-                row1.innerHTML = '<div class="review-marquee-item">No reviews yet.</div>';
-                row2.innerHTML = '';
-                return;
-            }
-
-            // Helper to create HTML string
-            const createMarqueeHTML = (list) => list.map(data => {
-                let starsHtml = '';
-                for(let i=1; i<=5; i++) {
-                    starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--accent-star)':'#cbd5e1'}"></i>`;
+                    // Don't auto-load grid, wait for button click
+                } 
+                if(targetSectionId === 'buynow' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+                if(targetSectionId === 'updates' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+                if(targetSectionId === 'home') {
+                    startGlobeAnimation();
+                    loadHomePortfolio();
                 }
-                return `
-                    <div class="review-marquee-item">
-                        <div class="rm-rating">${starsHtml}</div>
-                        <div class="rm-text">"${data.comment.substring(0, 100)}${data.comment.length > 100 ? '...' : ''}"</div>
-                        <div class="rm-author">- ${data.userName || 'User'}</div>
-                    </div>
-                `;
-            }).join('');
-
-            // 2. Split data into two rows
-            const mid = Math.ceil(allReviews.length / 2);
-            const list1 = allReviews.slice(0, mid);
-            const list2 = allReviews.slice(mid);
-
-            // 3. Render and Duplicate for seamless scrolling
-            row1.innerHTML = createMarqueeHTML(list1) + createMarqueeHTML(list1);
-            row2.innerHTML = createMarqueeHTML(list2) + createMarqueeHTML(list2);
-        }
-
-        function toggleFullReviews() {
-            const list = document.getElementById('reviews-list');
-            const btn = event.target;
-            
-            if (list.classList.contains('hidden')) {
-                // Load grid data
-                list.innerHTML = '';
-                // Use database cache, fallback to dummies
-                let allReviews = reviewsCache.length > 0 ? reviewsCache : DUMMY_REVIEWS;
-
-                if(allReviews.length > 0) {
-                    allReviews.forEach(data => {
-                        const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
-                        const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
-                        let starsHtml = '';
-                        for(let i=1; i<=5; i++) {
-                            starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--accent-star)':'#cbd5e1'}"></i>`;
-                        }
-                        
-                        const html = `
-                            <div class="review-card">
-                                <div class="review-header">
-                                    <div class="review-avatar">${initials}</div>
-                                    <div class="review-info">
-                                        <h4>${data.userName || 'Anonymous'}</h4>
-                                        <div class="review-date">${date}</div>
-                                    </div>
-                                </div>
-                                <div class="review-stars">${starsHtml}</div>
-                                <p class="review-text">"${data.comment}"</p>
-                            </div>
-                        `;
-                        list.innerHTML += html;
-                    });
-                } else {
-                    list.innerHTML = '<div class="text-center" style="grid-column: 1/-1;">No reviews found.</div>';
-                }
-                
-                list.classList.remove('hidden');
-                btn.innerText = "Hide Reviews";
-            } else {
-                list.classList.add('hidden');
-                btn.innerText = "View All Reviews";
+                if(targetSectionId === 'clients') loadPortfolio();
             }
+        }, isInstant ? 0 : 100);
+    }
+    setTimeout(handleInitialRoute, 100);
+
+    // ==========================================
+    // FIREBASE & APP LOGIC
+    // ==========================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyAwf31b-wpYQwPbd-3DxnqGVRw8g3xq938",
+        authDomain: "ddnetwork-database.firebaseapp.com",
+        projectId: "ddnetwork-database",
+        storageBucket: "ddnetwork-database.firebasestorage.app",
+        messagingSenderId: "699127560990",
+        appId: "1:699127560990:web:50cfd61ff620bc85fb670f"
+    };
+
+    let db, auth;
+    let ADMIN_EMAIL = "ddnetwork.one@outlook.com";
+    let currentUserPersonalVoucher = null;
+    
+    const DEFAULT_PAYMENT_METHODS = [
+        { id: 'tng', name: 'TNG eWallet', link: 'https://payment.tngdigital.com.my/sc/bDLob7YcpG', active: true },
+        { id: 'fpx', name: 'Online Banking (FPX)', link: 'https://toyyibpay.com', active: true } 
+    ];
+
+    let siteConfig = { maintenance_active: false, payment_methods: [], packageDetails: {} };
+    let currentUserRole = 'user'; 
+    
+    try {
+        if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
         }
+    } catch(e) { console.error("Firebase init error:", e); }
 
-        function handleReviewSubmit(e) {
-            e.preventDefault();
-            if(!auth || !auth.currentUser) {
-                showGlassModal("Login Required", "You must be logged in to submit a review.", "warning", "Login", () => {
-                    navigateTo('/login');
-                });
-                return;
-            }
+    // ==========================================
+    // UPDATED TOAST FUNCTION
+    // ==========================================
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
 
-            if(selectedRating === 0) {
-                document.getElementById('rating-error').style.display = 'block';
-                return;
-            }
+        const toast = document.createElement('div');
+        
+        let iconClass = 'ri-information-fill';
+        if (type === 'success') iconClass = 'ri-checkbox-circle-fill';
+        if (type === 'error') iconClass = 'ri-error-warning-fill';
+        if (type === 'warning') iconClass = 'ri-alert-fill';
 
-            const comment = document.getElementById('review-comment').value;
-            const user = auth.currentUser;
-            
-            let displayName = user.email.split('@')[0];
-            
-            db.collection("users").doc(user.uid).get().then(doc => {
-                if(doc.exists && doc.data().name) displayName = doc.data().name;
-                
-                const reviewData = {
-                    userId: user.uid,
-                    userName: displayName,
-                    userEmail: user.email,
-                    rating: selectedRating,
-                    comment: comment,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    status: 'approved' // Auto approve for simplicity
-                };
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="toast-icon ${iconClass}"></i>
+                <span>${message}</span>
+            </div>
+            <i class="ri-close-fill toast-close" onclick="dismissToast(this.parentElement)"></i>
+        `;
 
-                return db.collection("customer_reviews").add(reviewData);
-            }).then(() => {
-                showToast("Review submitted successfully!", "success");
-                document.getElementById('review-form').reset();
-                selectedRating = 0;
-                highlightStars(0);
-                // Listener will catch the update automatically, but we can force update if needed:
-                // loadReviewsMarquee(); 
-            }).catch(err => {
-                console.error(err);
-                showToast("Failed to submit review.", "error");
-            });
-        }
+        container.appendChild(toast);
 
-        // Initialize stars on load
-        document.addEventListener('DOMContentLoaded', () => {
-            setupStarRating();
-            // Start listening to reviews immediately
-            listenToReviews();
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
         });
 
+        setTimeout(() => {
+            dismissToast(toast);
+        }, 3500);
+    }
 
-        // ==========================================
-        // AUTH & USER DATA (WITH GOOGLE SUPPORT)
-        // ==========================================
-        
-        // Google Auth Handler
-        function handleGoogleAuth() {
-            if(!auth) return showToast("Auth not initialized", "error");
-            const provider = new firebase.auth.GoogleAuthProvider();
-            
-            auth.signInWithPopup(provider).then((result) => {
-                const user = result.user;
-                // Check if user doc exists in Firestore
-                db.collection("users").doc(user.uid).get().then((doc) => {
-                    if (!doc.exists) {
-                        // New user, create doc
-                        return db.collection("users").doc(user.uid).set({
-                            name: user.displayName || 'Google User',
-                            email: user.email,
-                            phone: '', 
-                            role: 'user',
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
+    function dismissToast(toastElement) {
+        if (!toastElement) return;
+        toastElement.classList.remove('show');
+        setTimeout(() => {
+            if (toastElement.parentElement) {
+                toastElement.parentElement.removeChild(toastElement);
+            }
+        }, 400);
+    }
+
+    async function initializeDatabase() {
+        if(!db) return;
+        const configRef = db.collection("config").doc("site_settings");
+        const doc = await configRef.get();
+        if (!doc.exists) {
+            console.log("Config not found, creating default...");
+            await configRef.set({ maintenance_active: false, payment_methods: [] });
+        }
+        const pmSnapshot = await db.collection("payment_methods").limit(1).get();
+        if (pmSnapshot.empty) {
+            console.log("Payment methods collection empty, adding defaults...");
+            const defaults = [
+                { id: 'tng', name: 'TNG eWallet', link: 'https://payment.tngdigital.com.my/sc/bDLob7YcpG', active: true },
+                { id: 'fpx', name: 'Online Banking (FPX)', link: 'https://toyyibpay.com', active: true }
+            ];
+            defaults.forEach(pm => db.collection("payment_methods").add(pm));
+        }
+    }
+
+    function listenToConfig() {
+        if(!db) return;
+        db.collection("config").doc("site_settings").onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                if(data.maintenance_active) document.getElementById('maintenance-overlay').classList.add('active');
+                else document.getElementById('maintenance-overlay').classList.remove('active');
+                if(data.prices) {
+                    if(data.prices.html) PRICING_DATA.html.monthly = data.prices.html;
+                    if(data.prices.frontend) PRICING_DATA.frontend.monthly = data.prices.frontend;
+                    if(data.prices.ai) PRICING_DATA.ai.monthly = data.prices.ai;
+                    updatePricingUI(); 
+                }
+                if(data.packageDetails) {
+                    const featContainerFront = document.getElementById('frontend-feats-list');
+                    const featContainerAi = document.getElementById('ai-feats-list');
+                    if(featContainerFront && data.packageDetails.frontend && data.packageDetails.frontend.features) {
+                        featContainerFront.innerHTML = data.packageDetails.frontend.features.map(f => `<li>${f}</li>`).join('');
                     }
-                }).then(() => {
-                    showToast("Login Successful!", "success");
-                    navigateTo('/');
-                });
-            }).catch((error) => {
-                console.error(error);
-                showToast("Google Login Failed: " + error.message, "error");
+                    if(featContainerAi && data.packageDetails.ai && data.packageDetails.ai.features) {
+                        featContainerAi.innerHTML = data.packageDetails.ai.features.map(f => `<li>${f}</li>`).join('');
+                    }
+                }
+            }
+        });
+    }
+
+    function listenToPaymentMethods() {
+        if(!db) return;
+        db.collection("payment_methods").onSnapshot((snapshot) => {
+            const methods = [];
+            snapshot.forEach(doc => methods.push(doc.data()));
+            siteConfig.payment_methods = methods;
+            renderPaymentMethods();
+        }, (error) => { console.error("Error listening to payment methods:", error); renderPaymentMethods(); });
+    }
+
+    function renderPaymentMethods() {
+        const select = document.getElementById('payment-method-select');
+        if(!select) return;
+        const currentSelection = select.value;
+        select.innerHTML = '<option value="" disabled selected>Select Payment Method</option>';
+        const methods = siteConfig.payment_methods && siteConfig.payment_methods.length > 0 
+                        ? siteConfig.payment_methods 
+                        : DEFAULT_PAYMENT_METHODS;
+        let hasActiveMethods = false;
+        methods.forEach(pm => {
+            if(pm.active !== false) {
+                const option = document.createElement('option');
+                option.value = pm.id;
+                option.innerText = pm.name;
+                select.appendChild(option);
+                hasActiveMethods = true;
+            }
+        });
+        if(currentSelection) select.value = currentSelection;
+        if (!hasActiveMethods) select.innerHTML = '<option value="" disabled selected>No Payment Methods Available</option>';
+    }
+
+    function loadPortfolio() {
+        if(!db) return;
+        const container = document.getElementById('portfolio-grid');
+        db.collection("clients_portfolio").where("status", "==", true).onSnapshot((snapshot) => {
+            container.innerHTML = ''; 
+            if (snapshot.empty) {
+                container.innerHTML = '<div class="text-center" style="grid-column:1/-1; padding: 2rem; color: var(--text-tertiary);">No portfolio items available at moment.</div>';
+                return;
+            }
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const cardHTML = `
+                    <div class="glass-card" style="padding: 0; overflow: hidden;">
+                        <div style="height: 200px; overflow: hidden;">
+                            <img src="${data.img}" alt="${data.name}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        </div>
+                        <div style="padding: 1.5rem;">
+                            <h4 style="margin-bottom: 0.5rem;">${data.name}</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Visit Website</p>
+                            <a href="${data.link}" target="_blank" class="btn btn-glass" style="width: 100%; font-size: 0.8rem;">Visit Live Site</a>
+                        </div>
+                    </div>`;
+                container.innerHTML += cardHTML;
             });
+        });
+    }
+
+    let PROMO_CODES = {}; 
+    if(db) {
+        db.collection("config").doc("site_settings").onSnapshot((doc) => {
+            if(doc.exists) siteConfig = { ...siteConfig, ...doc.data() };
+            if(siteConfig.maintenance_active) document.getElementById('maintenance-overlay').classList.add('active');
+            else document.getElementById('maintenance-overlay').classList.remove('active');
+        });
+        db.collection("promo_codes").onSnapshot((snapshot) => {
+            PROMO_CODES = {};
+            snapshot.forEach(doc => PROMO_CODES[doc.id] = doc.data().discount);
+        });
+        listenToPaymentMethods();
+        listenToConfig();
+        loadPortfolio();
+    }
+
+    const PHONE_NO = "60122600969"; 
+    const ADMIN_PHONE_NO = "60122600969"; 
+    
+    let state = {
+        packageType: null,
+        packagePrice: 0, 
+        setupFee: 0,
+        domainPrice: 0,
+        maintenancePrice: 0,
+        discountRate: 0,
+        discountFixed: 0,
+        discountType: 'percent',
+        discountCode: '',
+        domainType: 'sub',
+        domainName: '',
+        domainNameValid: false, 
+        paymentMethodId: null,
+        billingCycle: 'monthly',
+        isOneTime: false 
+    };
+
+    // ==========================================
+    // REVIEWS LOGIC (FIXED MARQUEE WITH DUMMIES & SYNC)
+    // ==========================================
+    let selectedRating = 0;
+    let reviewsCache = []; // Cache reviews for marquee
+
+    // DUMMY REVIEWS FOR FRONTEND PRELOAD (Prevents Empty/Stuck Marquee)
+    const DUMMY_REVIEWS = [
+        { rating: 5, userName: 'PNE Arena Enterprise', comment: 'Excellent service! The team was very professional and the delivery was faster than expected.', timestamp: null },
+    ];
+
+    function setupStarRating() {
+        const stars = document.querySelectorAll('.star-icon');
+        const container = document.getElementById('star-input-container');
+        const hiddenInput = document.getElementById('rating-value');
+
+        stars.forEach(star => {
+            star.addEventListener('mouseover', function() {
+                const val = parseInt(this.getAttribute('data-val'));
+                highlightStars(val);
+            });
+            
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.getAttribute('data-val'));
+                hiddenInput.value = selectedRating;
+                highlightStars(selectedRating);
+                document.getElementById('rating-error').style.display = 'none';
+            });
+        });
+
+        container.addEventListener('mouseleave', function() {
+            highlightStars(selectedRating);
+        });
+    }
+
+    function highlightStars(count) {
+        const stars = document.querySelectorAll('.star-icon');
+        stars.forEach(star => {
+            const val = parseInt(star.getAttribute('data-val'));
+            if (val <= count) {
+                star.classList.add('selected');
+            } else {
+                star.classList.remove('selected');
+            }
+        });
+    }
+
+    // --- NEW: Live Listener for Reviews ---
+    function listenToReviews() {
+        if(!db) return;
+        db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20)
+            .onSnapshot((snapshot) => {
+                reviewsCache = []; // Clear cache
+                snapshot.forEach(doc => reviewsCache.push(doc.data()));
+                
+                // Update the Marquee immediately with new data
+                loadReviewsMarquee();
+                
+                // If the full grid is currently visible, update it too
+                const list = document.getElementById('reviews-list');
+                if(!list.classList.contains('hidden')) {
+                    toggleFullReviews(); // Re-trigger render
+                }
+            }, (error) => {
+                console.error("Error syncing reviews:", error);
+            });
+    }
+
+    function loadReviewsMarquee() {
+        const row1 = document.getElementById('reviews-marquee-row-1');
+        const row2 = document.getElementById('reviews-marquee-row-2');
+        
+        // 1. Combine DB reviews with Dummies (Prepend DB so DB takes precedence if available)
+        let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
+        
+        if (allReviews.length === 0) {
+            row1.innerHTML = '<div class="review-marquee-item">No reviews yet.</div>';
+            row2.innerHTML = '';
+            return;
         }
 
-        if(auth) {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    db.collection("users").doc(user.uid).get().then((doc) => {
-                        if (doc.exists) {
-                            const data = doc.data();
-                            currentUserRole = data.role || 'user'; 
-                            updateHeaderForUser(user); 
-                            if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; showVoucherCard(data.personalVoucher); } 
-                            else { currentUserPersonalVoucher = null; hideVoucherCard(); }
-                            fetchAndSyncUserData(user.uid);
-                            
-                            // Check if user profile is incomplete (specifically phone number for new Google users)
-                            if(!data.phone) {
-                                showToast("Please complete your profile (Phone Number).", "warning");
-                                if(window.location.pathname !== '/profile') {
-                                    setTimeout(() => navigateTo('/profile'), 1000);
-                                }
+        // Helper to create HTML string
+        const createMarqueeHTML = (list) => list.map(data => {
+            let starsHtml = '';
+            for(let i=1; i<=5; i++) {
+                starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--accent-star)':'#cbd5e1'}"></i>`;
+            }
+            return `
+                <div class="review-marquee-item">
+                    <div class="rm-rating">${starsHtml}</div>
+                    <div class="rm-text">"${data.comment.substring(0, 100)}${data.comment.length > 100 ? '...' : ''}"</div>
+                    <div class="rm-author">- ${data.userName || 'User'}</div>
+                </div>`;
+        }).join('');
+
+        // 2. Split data into two rows
+        const mid = Math.ceil(allReviews.length / 2);
+        const list1 = allReviews.slice(0, mid);
+        const list2 = allReviews.slice(mid);
+
+        // 3. Render and Duplicate for seamless scrolling
+        row1.innerHTML = createMarqueeHTML(list1) + createMarqueeHTML(list1);
+        row2.innerHTML = createMarqueeHTML(list2) + createMarqueeHTML(list2);
+    }
+
+    function toggleFullReviews() {
+        const list = document.getElementById('reviews-list');
+        const btn = event.target;
+        
+        if (list.classList.contains('hidden')) {
+            // Load grid data
+            list.innerHTML = '';
+            // Use database cache, fallback to dummies
+            let allReviews = reviewsCache.length > 0 ? reviewsCache : DUMMY_REVIEWS;
+
+            if(allReviews.length > 0) {
+                allReviews.forEach(data => {
+                    const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
+                    const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
+                    let starsHtml = '';
+                    for(let i=1; i<=5; i++) {
+                        starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--accent-star)':'#cbd5e1'}"></i>`;
+                    }
+                    
+                    const html = `
+                        <div class="review-card">
+                            <div class="review-header">
+                                <div class="review-avatar">${initials}</div>
+                                <div class="review-info">
+                                    <h4>${data.userName || 'Anonymous'}</h4>
+                                    <div class="review-date">${date}</div>
+                                </div>
+                            </div>
+                            <div class="review-stars">${starsHtml}</div>
+                            <p class="review-text">"${data.comment}"</p>
+                        </div>`;
+                    list.innerHTML += html;
+                });
+            } else {
+                list.innerHTML = '<div class="text-center" style="grid-column: 1/-1;">No reviews found.</div>';
+            }
+            
+            list.classList.remove('hidden');
+            btn.innerText = "Hide Reviews";
+        } else {
+            list.classList.add('hidden');
+            btn.innerText = "View All Reviews";
+        }
+    }
+
+    function handleReviewSubmit(e) {
+        e.preventDefault();
+        if(!auth || !auth.currentUser) {
+            showGlassModal("Login Required", "You must be logged in to submit a review.", "warning", "Login", () => {
+                navigateTo('/login');
+            });
+            return;
+        }
+
+        if(selectedRating === 0) {
+            document.getElementById('rating-error').style.display = 'block';
+            return;
+        }
+
+        const comment = document.getElementById('review-comment').value;
+        const user = auth.currentUser;
+        
+        let displayName = user.email.split('@')[0];
+        
+        db.collection("users").doc(user.uid).get().then(doc => {
+            if(doc.exists && doc.data().name) displayName = doc.data().name;
+            
+            const reviewData = {
+                userId: user.uid,
+                userName: displayName,
+                userEmail: user.email,
+                rating: selectedRating,
+                comment: comment,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                status: 'approved' // Auto approve for simplicity
+            };
+
+            return db.collection("customer_reviews").add(reviewData);
+        }).then(() => {
+            showToast("Review submitted successfully!", "success");
+            document.getElementById('review-form').reset();
+            selectedRating = 0;
+            highlightStars(0);
+            // Listener will catch the update automatically, but we can force update if needed:
+            // loadReviewsMarquee(); 
+        }).catch(err => {
+            console.error(err);
+            showToast("Failed to submit review.", "error");
+        });
+    }
+
+    // Initialize stars on load
+    document.addEventListener('DOMContentLoaded', () => {
+        setupStarRating();
+        // Start listening to reviews immediately
+        listenToReviews();
+    });
+
+
+    // ==========================================
+    // AUTH & USER DATA (WITH GOOGLE SUPPORT)
+    // ==========================================
+    
+    // Google Auth Handler
+    function handleGoogleAuth() {
+        if(!auth) return showToast("Auth not initialized", "error");
+        const provider = new firebase.auth.GoogleAuthProvider();
+        
+        auth.signInWithPopup(provider).then((result) => {
+            const user = result.user;
+            // Check if user doc exists in Firestore
+            db.collection("users").doc(user.uid).get().then((doc) => {
+                if (!doc.exists) {
+                    // New user, create doc
+                    return db.collection("users").doc(user.uid).set({
+                        name: user.displayName || 'Google User',
+                        email: user.email,
+                        phone: '', 
+                        role: 'user',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            }).then(() => {
+                showToast("Login Successful!", "success");
+                navigateTo('/');
+            });
+        }).catch((error) => {
+            console.error(error);
+            showToast("Google Login Failed: " + error.message, "error");
+        });
+    }
+
+    if(auth) {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        currentUserRole = data.role || 'user'; 
+                        updateHeaderForUser(user); 
+                        if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; showVoucherCard(data.personalVoucher); } 
+                        else { currentUserPersonalVoucher = null; hideVoucherCard(); }
+                        fetchAndSyncUserData(user.uid);
+                        
+                        // Check if user profile is incomplete (specifically phone number for new Google users)
+                        if(!data.phone) {
+                            showToast("Please complete your profile (Phone Number).", "warning");
+                            if(window.location.pathname !== '/profile') {
+                                setTimeout(() => navigateTo('/profile'), 1000);
                             }
                         }
-                    });
-                } else {
-                    updateHeaderForGuest(); clearUserData(); hideVoucherCard();
-                }
-            });
-        }
-
-        function loadProfilePageData() {
-            if(!auth || !auth.currentUser) return;
-            const profFields = ['prof-name', 'prof-phone', 'prof-email', 'prof-company'];
-            profFields.forEach(id => document.getElementById(id).value = "Loading...");
-            db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    if(data.name) document.getElementById('prof-name').value = data.name;
-                    if(data.phone) document.getElementById('prof-phone').value = data.phone;
-                    if(data.email) document.getElementById('prof-email').value = data.email || auth.currentUser.email;
-                    if(data.company) document.getElementById('prof-company').value = data.company;
-                    if(data.personalVoucher) showVoucherCard(data.personalVoucher); else hideVoucherCard();
-                    loadOrderHistory(auth.currentUser.uid);
-                }
-            }).catch((error) => showToast("Error loading profile data.", "error"));
-        }
-
-        function loadOrderHistory(uid) {
-            if(!db) return;
-            const tbody = document.getElementById('order-history-body');
-            const container = document.getElementById('profile-history-section');
-            const noMsg = document.getElementById('no-orders-msg');
-            
-            container.style.display = 'block';
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
-
-            db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(10)
-                .onSnapshot((snapshot) => {
-                    tbody.innerHTML = '';
-                    if (snapshot.empty) {
-                        noMsg.classList.remove('hidden');
-                        tbody.parentElement.style.display = 'none';
-                    } else {
-                        noMsg.classList.add('hidden');
-                        tbody.parentElement.style.display = 'table';
-                        snapshot.forEach((doc) => {
-                            const data = doc.data();
-                            const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
-                            const total = data.total || 'RM 0';
-                            const pkg = data.package || 'Unknown Package';
-                            const status = data.status || 'Pending';
-                            let statusClass = 'status-pending';
-                            if(status === 'Paid') statusClass = 'status-paid';
-                            if(status === 'Completed') statusClass = 'status-completed';
-                            if(status === 'Cancelled') statusClass = 'status-cancelled';
-                            
-                            const row = `
-                                <tr>
-                                    <td>${date}</td>
-                                    <td style="font-weight:600; color:var(--text-main);">${pkg}</td>
-                                    <td>${total}</td>
-                                    <td><span class="status-badge ${statusClass}">${status}</span></td>
-                                </tr>
-                            `;
-                            tbody.innerHTML += row;
-                        });
                     }
                 });
-        }
-
-        function fetchAndSyncUserData(uid) {
-            if(!db) return;
-            db.collection("users").doc(uid).get().then((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    const coFields = ['co-name', 'co-phone', 'co-email', 'co-company', 'req-name', 'req-phone'];
-                    const map = { 'co-name':'name', 'co-phone':'phone', 'co-email':'email', 'co-company':'company', 'req-name':'name', 'req-phone':'phone' };
-                    coFields.forEach(id => { if(data[map[id]]) document.getElementById(id).value = data[map[id]]; });
-                    const autoFillLabel = document.getElementById('auto-fill-label');
-                    if(data.name && data.phone && data.email && autoFillLabel) autoFillLabel.style.display = 'inline';
-                    if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; showCheckoutVoucher(data.personalVoucher); } 
-                    else { hideCheckoutVoucher(); }
-                }
-            });
-        }
-
-        function showVoucherCard(voucher) {
-            const section = document.getElementById('profile-voucher-section');
-            const text = document.getElementById('profile-voucher-text');
-            const actionBtn = document.getElementById('profile-voucher-action');
-            section.style.display = 'block';
-            const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
-            let expiryText = voucher.expiryDate ? ` | Exp: ${voucher.expiryDate.toDate().toLocaleDateString()}` : "";
-            text.innerText = `Code: ${voucher.code} | Value: ${displayVal}${expiryText}`;
-            if (voucher.status === 'redeemed') {
-                document.getElementById('profile-voucher-title').innerText = "Voucher Redeemed";
-                text.style.textDecoration = 'line-through';
-                actionBtn.innerHTML = '<span style="color:var(--accent-success); font-weight:700; border:1px solid var(--accent-success); padding:4px 12px; border-radius:20px; font-size:0.8rem;">USED</span>';
             } else {
-                document.getElementById('profile-voucher-title').innerText = "You have a Gift Voucher!";
-                actionBtn.innerHTML = '<button type="button" class="btn btn-danger" style="width: auto; padding: 0.6rem 1.2rem;" onclick="deletePersonalVoucher()">Delete</button>';
+                updateHeaderForGuest(); clearUserData(); hideVoucherCard();
             }
-        }
+        });
+    }
 
-        function showCheckoutVoucher(voucher) {
-            const section = document.getElementById('checkout-voucher-section');
-            const text = document.getElementById('checkout-voucher-text');
-            const applyBtn = document.getElementById('btn-apply-voucher');
-            const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
-            let expiryText = voucher.expiryDate ? ` | Exp: ${voucher.expiryDate.toDate().toLocaleDateString()}` : "";
-            text.innerText = `${voucher.code} (-${displayVal})${expiryText}`;
-            section.style.display = 'block';
-            const isApplied = (state.discountCode === voucher.code);
-            if (voucher.status === 'redeemed') {
-                document.getElementById('checkout-voucher-title').innerText = "Voucher Redeemed";
-                text.style.textDecoration = 'line-through';
-                applyBtn.disabled = true; applyBtn.innerText = "Redeemed"; applyBtn.classList.replace('btn-primary', 'btn-secondary');
-            } else {
-                document.getElementById('checkout-voucher-title').innerText = "Gift Voucher Available";
-                if(isApplied) { applyBtn.disabled = true; applyBtn.innerText = "Applied"; applyBtn.classList.replace('btn-secondary', 'btn-success'); }
-                else { applyBtn.disabled = false; applyBtn.innerText = "Apply"; applyBtn.classList.replace('btn-secondary', 'btn-primary'); }
+    function loadProfilePageData() {
+        if(!auth || !auth.currentUser) return;
+        const profFields = ['prof-name', 'prof-phone', 'prof-email', 'prof-company'];
+        profFields.forEach(id => document.getElementById(id).value = "Loading...");
+        db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                if(data.name) document.getElementById('prof-name').value = data.name;
+                if(data.phone) document.getElementById('prof-phone').value = data.phone;
+                if(data.email) document.getElementById('prof-email').value = data.email || auth.currentUser.email;
+                if(data.company) document.getElementById('prof-company').value = data.company;
+                if(data.personalVoucher) showVoucherCard(data.personalVoucher); else hideVoucherCard();
+                loadOrderHistory(auth.currentUser.uid);
             }
-        }
+        }).catch((error) => showToast("Error loading profile data.", "error"));
+    }
 
-        function hideVoucherCard() {
-            document.getElementById('profile-voucher-section').style.display = 'none';
-            document.getElementById('checkout-voucher-section').style.display = 'none';
-        }
+    function loadOrderHistory(uid) {
+        if(!db) return;
+        const tbody = document.getElementById('order-history-body');
+        const container = document.getElementById('profile-history-section');
+        const noMsg = document.getElementById('no-orders-msg');
+        
+        container.style.display = 'block';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
 
-        function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            if(!auth) return showToast("Firebase not configured", "error");
-            auth.signInWithEmailAndPassword(email, password).then(() => { showToast("Login Successful!", "success"); navigateTo('/'); })
-            .catch((error) => showToast(error.message, "error"));
-        }
-
-        function handleSignup(e) {
-            e.preventDefault();
-            const name = document.getElementById('signup-name').value;
-            const phone = document.getElementById('signup-phone').value;
-            const email = document.getElementById('signup-email').value;
-            const password = document.getElementById('signup-password').value;
-            if(!auth) return showToast("Firebase not configured", "error");
-            auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
-                return db.collection("users").doc(userCredential.user.uid).set({ name: name, phone: phone, email: email, role: 'user', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-            }).then(() => { showToast("Account Created!", "success"); navigateTo('/'); })
-            .catch((error) => showToast(error.message, "error"));
-        }
-
-        function handleProfileUpdate(e) {
-            e.preventDefault();
-            if(!auth || !auth.currentUser) return;
-            const name = document.getElementById('prof-name').value;
-            const phone = document.getElementById('prof-phone').value;
-            const company = document.getElementById('prof-company').value;
-            db.collection("users").doc(auth.currentUser.uid).update({ name: name, phone: phone, company: company })
-            .then(() => { showToast("Profile Updated Successfully!", "success"); fetchAndSyncUserData(auth.currentUser.uid); })
-            .catch((error) => showToast(error.message, "error"));
-        }
-
-        function clearUserData() {
-            const inputs = ['prof-name', 'prof-phone', 'prof-email', 'prof-company', 'co-name', 'co-phone', 'co-email', 'co-company', 'req-name', 'req-phone'];
-            inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-            const label = document.getElementById('auto-fill-label'); if(label) label.style.display = 'none';
-        }
-
-        function handleLogout() {
-            if(auth) { currentUserPersonalVoucher = null; auth.signOut().then(() => { showToast("Logged out", "success"); navigateTo('/'); }); }
-        }
-
-        function handleFabClick() { navigateTo('/helpdesk'); }
-
-        function updateHeaderForUser(user) {
-            const isAdmin = currentUserRole === 'admin';
-            const deskAuth = document.getElementById('desktopAuthLinks');
-            if(deskAuth) {
-                let userControls = `<a href="/profile" onclick="routeLink(event, '/profile')" class="btn-glass" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-user-smile-fill"></i> Profile</a><span class="logout-btn" onclick="handleLogout()">Logout</span>`;
-                if (isAdmin) userControls = `<a href="admin.html" target="_blank" class="admin-link" title="Admin Portal"><i class="ri-shield-user-fill"></i></a><span style="color:var(--text-tertiary); margin: 0 10px;">|</span>${userControls}`;
-                deskAuth.innerHTML = userControls;
-            }
-            
-            const mobAuth = document.getElementById('mobileAuthLinksContainer');
-            if(mobAuth) {
-                let authButtons = `<a href="/profile" onclick="routeLink(event, '/profile'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-user-fill" style="margin-right:15px;"></i> Profile</a>`;
-                if (isAdmin) authButtons += `<a href="admin.html" target="_blank" onclick="toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-shield-user-fill" style="margin-right:15px; color:var(--accent-warn);"></i> Admin</a>`;
-                authButtons += `<a href="#" onclick="handleLogout(); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; color: var(--accent-warn);"><i class="ri-logout-box-r-fill" style="margin-right:15px;"></i> Logout</a>`;
-                mobAuth.innerHTML = authButtons;
-            }
-        }
-
-        function updateHeaderForGuest() {
-            const deskAuth = document.getElementById('desktopAuthLinks');
-            if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="routeLink(event, '/login')" class="btn-glass" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-login-circle-fill"></i> Login</a>`;
-            
-            const mobAuth = document.getElementById('mobileAuthLinksContainer');
-            if(mobAuth) {
-                mobAuth.innerHTML = `<a href="/login" onclick="routeLink(event, '/login'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-login-circle-fill" style="margin-right:15px;"></i> Login</a><a href="/signup" onclick="routeLink(event, '/signup'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-user-add-fill" style="margin-right:15px;"></i> Sign Up</a>`;
-            }
-        }
-
-        function handleProfileReset() {
-            if(!auth || !auth.currentUser) return;
-            document.getElementById('reset-email').value = auth.currentUser.email;
-            navigateTo('/forgot-password');
-            showToast("Email pre-filled. Please check spam folder.", "success");
-        }
-
-        function handleForgotPassword(e) {
-            e.preventDefault();
-            const email = document.getElementById('reset-email').value;
-            if(!auth) return showToast("Firebase not configured", "error");
-            auth.sendPasswordResetEmail(email).then(() => {
-                showToast("Reset email sent. Please check your spam folder.", "success");
-                setTimeout(() => navigateTo('/login'), 3000);
-            }).catch((error) => showToast(error.message, "error"));
-        }
-
-        // --- TICKET SUBMISSION & HISTORY ---
-        async function generateSmartTicketId() {
-            if(!db) return `#Ticket-${Math.floor(1000 + Math.random() * 9000)}`;
-            try {
-                const snapshot = await db.collection("tickets").where("ticketId", "!=", null).orderBy("ticketId", "desc").limit(1).get();
-                let nextNumber =1;
-                if (!snapshot.empty) {
-                    const lastTicket = snapshot.docs[0].data();
-                    const parts = lastTicket.ticketId.split('-');
-                    const lastNum = parseInt(parts[1]);
-                    if (!isNaN(lastNum)) nextNumber = lastNum + 1;
-                }
-                const idString = String(nextNumber).padStart(4, '0');
-                return `#Ticket-${idString}`;
-            } catch (error) { return `#Ticket-${Math.floor(1000 + Math.random() * 9000)}`; }
-        }
-
-        async function handleTicketSubmit(e) {
-            e.preventDefault();
-            if(!db) return showToast("Database offline", "error");
-            const btn = document.getElementById('btn-submit-ticket');
-            const name = document.getElementById('ticket-name').value;
-            const email = document.getElementById('ticket-email').value;
-            const type = document.getElementById('ticket-type').value;
-            const message = document.getElementById('ticket-message').value;
-            if(!name || !email || !type || !message) return showToast("Please fill in all fields.", "error");
-
-            btn.disabled = true;
-            const originalText = btn.innerText;
-            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Generating ID...';
-
-            try {
-                const smartId = await generateSmartTicketId();
-                showToast("ID Generated. Saving...", "success");
-                const ticketData = {
-                    ticketId: smartId, name: name, email: email, type: type, message: message, status: "Open",
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), userId: auth.currentUser ? auth.currentUser.uid : null
-                };
-                await db.collection("tickets").add(ticketData);
-                document.getElementById('display-case-id').innerText = smartId;
-                document.getElementById('case-id-display').style.display = 'block';
-                e.target.reset();
-                showToast(`Ticket Submitted! ID: ${smartId}`, "success");
-                setTimeout(() => {
-                    let notifyMsg = `Hi Admin,\n*New Ticket Received.*\n\n*Case ID:* ${smartId}\n*Name:* ${name}\n*Type:* ${type}`;
-                    window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(notifyMsg)}`, '_blank');
-                }, 1000);
-            } catch (error) {
-                console.error(error); showToast("Failed to submit ticket. Try again.", "error");
-            } finally {
-                btn.disabled = false; btn.innerText = originalText;
-            }
-        }
-
-        function copyTicketId() {
-            const idText = document.getElementById('display-case-id').innerText;
-            navigator.clipboard.writeText(idText).then(() => showToast("ID copied to clipboard!", "success")).catch(err => showToast("Failed to copy", "error"));
-        }
-
-        function fetchTicketHistory() {
-            if(!db) return;
-            const caseId = document.getElementById('history-search-id').value.trim();
-            if(!caseId) return showToast("Please enter a Case ID.", "error");
-            const listContainer = document.getElementById('ticket-list');
-            listContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary);">Searching...</div>';
-            db.collection("tickets").where("ticketId", "==", caseId).get()
-                .then((snapshot) => {
-                    listContainer.innerHTML = ''; 
-                    if (snapshot.empty) { listContainer.innerHTML = '<div style="text-align:center; color: #ef4444; padding: 1rem;">No ticket found with that Case ID.</div>'; return; }
+        db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(10)
+            .onSnapshot((snapshot) => {
+                tbody.innerHTML = '';
+                if (snapshot.empty) {
+                    noMsg.classList.remove('hidden');
+                    tbody.parentElement.style.display = 'none';
+                } else {
+                    noMsg.classList.add('hidden');
+                    tbody.parentElement.style.display = 'table';
                     snapshot.forEach((doc) => {
                         const data = doc.data();
                         const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
-                        const item = document.createElement('div');
-                        item.className = 'glass-card'; item.style.padding = '1rem'; 
-                        item.style.marginBottom = '1rem'; item.style.display = 'grid'; item.style.gridTemplateColumns = '1fr 1fr 1fr'; item.style.alignItems = 'center';
-                        item.innerHTML = `<div><div style="color:var(--text-main); font-weight:600;">${data.type}</div><div style="font-size:0.75rem; color:var(--text-tertiary);">${date}</div></div><div class="ticket-id">${data.ticketId || doc.id}</div><div style="text-align:right;"><span style="background:${data.status==='Open'?'#fffbeb':'#ecfdf5'}; color:${data.status==='Open'?'var(--accent-warn)':'var(--accent-success)'}; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">${data.status}</span></div></div>`;
-                        listContainer.appendChild(item);
+                        const total = data.total || 'RM 0';
+                        const pkg = data.package || 'Unknown Package';
+                        const status = data.status || 'Pending';
+                        let statusClass = 'status-pending';
+                        if(status === 'Paid') statusClass = 'status-paid';
+                        if(status === 'Completed') statusClass = 'status-completed';
+                        if(status === 'Cancelled') statusClass = 'status-cancelled';
+                        
+                        const row = `
+                            <tr>
+                                <td>${date}</td>
+                                <td style="font-weight:600; color:var(--text-main);">${pkg}</td>
+                                <td>${total}</td>
+                                <td><span class="status-badge ${statusClass}">${status}</span></td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
                     });
-                }).catch((error) => { console.error(error); listContainer.innerHTML = '<div style="text-align:center; color: #ef4444;">Error loading ticket.</div>'; });
-        }
-
-        function toggleDrawer() {
-            const drawer = document.getElementById('mobileDrawer');
-            const overlay = document.getElementById('mobileDrawerOverlay');
-            const toggle = document.querySelector('.mobile-toggle');
-            const icon = toggle.querySelector('i');
-            drawer.classList.toggle('open');
-            toggle.classList.toggle('open');
-            overlay.classList.toggle('active');
-            if(drawer.classList.contains('open')) { icon.classList.remove('ri-menu-4-line'); icon.classList.add('ri-close-line'); } 
-            else { icon.classList.add('ri-menu-4-line'); icon.classList.remove('ri-close-line'); }
-        }
-
-        // NEW MOBILE MENU ACCORDION LOGIC
-        function toggleMobileSub(element) {
-            const submenu = element.nextElementSibling;
-            const parentLi = element.parentElement;
-            
-            submenu.classList.toggle('open');
-            element.classList.toggle('active');
-        }
-
-        function attemptSelectPackage(name, type) {
-            if (typeof auth === 'undefined' || auth === null) { showToast("Authentication system initializing...", "error"); return; }
-            if (auth.currentUser) { selectPackage(name, type); } 
-            else { showToast("Please login or sign up to make a purchase.", "error"); setTimeout(() => { navigateTo('/login'); }, 1500); }
-        }
-
-        function selectPackage(name, type) {
-            state.packageType = type;
-            state.packagePrice = 0;
-            state.setupFee = 0;
-            state.billingCycle = billingCycle;
-            state.isOneTime = (billingCycle === 'onetime');
-
-            document.getElementById('summary-pkg-name').innerText = name;
-            const priceArea = document.getElementById('dynamic-price-area');
-            priceArea.innerHTML = ''; 
-
-            let basePrice = 0;
-            let desc = "";
-            let setupFee = 0;
-
-            if(PRICING_DATA[type]) {
-                if (state.isOneTime) {
-                    basePrice = PRICING_DATA[type].oneTime;
-                    desc = "One-time purchase. No support.";
-                    setupFee = 0; // Setup fee is usually baked into the one-time price or not applicable in same way
-                } else {
-                    basePrice = PRICING_DATA[type].monthly;
-                    setupFee = PRICING_DATA[type].setupFee;
-                    desc = PRICING_DATA[type].desc;
-                }
-            }
-            state.packagePrice = basePrice;
-            state.setupFee = setupFee;
-
-            document.getElementById('summary-pkg-desc').innerText = desc;
-            let priceHTML = '';
-            if (state.isOneTime) {
-                priceHTML = `<div style="text-align:right; font-weight:700; color:var(--soft-black);">Price: RM ${basePrice}</div>`;
-            } else if (type === 'ai' || type === 'portal') {
-                priceHTML = `<div style="padding:10px; background:white; border-radius:8px; color:var(--text-secondary); text-align:center;">Monthly Quote: RM ${basePrice}</div>`;
-            } else {
-                priceHTML = `<div style="text-align:right; font-weight:700; color:var(--soft-black);">Price: RM ${basePrice} (Monthly)</div>`;
-            }
-            priceArea.innerHTML = priceHTML;
-
-            state.domainType = 'sub'; 
-            state.domainName = ''; 
-            state.domainNameValid = false; 
-            document.getElementById('subdomain-text').value = ''; 
-            document.getElementById('custom-domain-text').value = ''; 
-            updateDomain('sub', document.querySelector('input[name="domain_type"][value="sub"]').parentElement); 
-            state.maintenancePrice = 0;
-            state.discountRate = 0; state.discountFixed = 0; state.discountType = 'percent'; state.discountCode = ''; state.paymentMethodId = null; 
-            document.getElementById('payment-method-select').value = ""; document.getElementById('terms-check').checked = false;
-            
-            resetPaymentCheckbox();
-
-            if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-            else { document.getElementById('auto-fill-label').style.display = 'none'; hideVoucherCard(); }
-            updateSummaryText(); updateUI(); navigateTo('/order');
-        }
-
-        function updateDomain(type, element) {
-            state.domainType = type;
-            if(element) {
-                const options = element.parentElement.querySelectorAll('.radio-option');
-                options.forEach(opt => opt.classList.remove('selected'));
-                element.classList.add('selected');
-            }
-            
-            if(type === 'sub') {
-                document.getElementById('input-subdomain').style.display = 'block';
-                document.getElementById('input-custom').style.display = 'none';
-                state.domainPrice = 55; 
-            } else {
-                document.getElementById('input-subdomain').style.display = 'none';
-                document.getElementById('input-custom').style.display = 'block';
-                state.domainPrice = 0; 
-            }
-            updateSummaryText(); updateTotal();
-        }
-
-        function updateMaintenance(plan, element) {
-            const options = element.parentElement.querySelectorAll('.radio-option');
-            options.forEach(opt => opt.classList.remove('selected'));
-            element.classList.add('selected');
-            if(plan === 'none') state.maintenancePrice = 0;
-            if(plan === 'basic') state.maintenancePrice = 50;
-            if(plan === 'business') state.maintenancePrice = 100;
-            const label = plan === 'none' ? 'None' : (plan === 'basic' ? 'Basic (RM 50/mo)' : 'Business (RM 100/mo)');
-            document.getElementById('summary-maintenance').innerText = label;
-            updateTotal();
-        }
-
-        function applyPromo() {
-            if(!auth || !auth.currentUser) return showToast("Please login to use Promo Codes.", "error");
-            const input = document.getElementById('promo-input');
-            const code = input.value.trim().toUpperCase();
-            
-            if(!code || code === "") {
-                showToast("Please enter a voucher code first.", "error");
-                input.focus(); 
-                return;
-            }
-            
-            if(PROMO_CODES.hasOwnProperty(code)) {
-                state.discountType = 'percent';
-                state.discountRate = PROMO_CODES[code];
-                state.discountCode = code;
-                showToast(`Promo Applied: ${code}`, 'success');
-                document.getElementById('row-discount').style.display = 'flex';
-                document.getElementById('summary-promo-code').innerText = code;
-                document.getElementById('summary-discount-val').innerText = `-${state.discountRate * 100}%`;
-                updateTotal();
-            } else {
-                showToast("Invalid code. Please check and try again.", "error");
-            }
-        }
-
-        function applyPersonalVoucher() {
-            if(!currentUserPersonalVoucher) return; 
-            if(currentUserPersonalVoucher.status === 'redeemed') return showToast("This voucher has already been used.", "error");
-            if(state.discountCode === currentUserPersonalVoucher.code) return showToast("Voucher already applied.", "info");
-            if(currentUserPersonalVoucher.expiryDate) {
-                const now = new Date();
-                const expiry = currentUserPersonalVoucher.expiryDate.toDate();
-                if(now > expiry) return showToast("This voucher has expired.", "error");
-            }
-            state.discountType = currentUserPersonalVoucher.type;
-            state.discountCode = currentUserPersonalVoucher.code;
-            if(state.discountType === 'fixed') { state.discountFixed = currentUserPersonalVoucher.value; state.discountRate = 0; } 
-            else { state.discountRate = currentUserPersonalVoucher.value; state.discountFixed = 0; }
-            showToast(`Voucher ${state.discountCode} Applied!`, "success");
-            document.getElementById('row-discount').style.display = 'flex';
-            document.getElementById('summary-promo-code').innerText = state.discountCode;
-            const displayVal = state.discountType === 'fixed' ? `RM ${state.discountFixed}` : `${state.discountRate * 100}%`;
-            document.getElementById('summary-discount-val').innerText = `-${displayVal}`;
-            showCheckoutVoucher(currentUserPersonalVoucher);
-            updateTotal();
-        }
-
-        function deletePersonalVoucher() {
-            if(!auth || !auth.currentUser) return;
-            if(confirm("Are you sure you want to remove this voucher?")) {
-                db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
-                    currentUserPersonalVoucher = null;
-                    loadProfilePageData();
-                    fetchAndSyncUserData(auth.currentUser.uid);
-                    showToast("Voucher removed from account.", "success");
-                });
-            }
-        }
-
-        function removeVoucher() {
-            state.discountCode = ''; state.discountRate = 0; state.discountFixed = 0;
-            document.getElementById('row-discount').style.display = 'none';
-            showToast("Voucher removed", "success");
-            updateTotal();
-            if(currentUserPersonalVoucher) showCheckoutVoucher(currentUserPersonalVoucher);
-        }
-
-        function updateSummaryText() {
-            if(state.domainType === 'sub') {
-                const val = document.getElementById('subdomain-text').value.trim();
-                state.domainName = val ? `${val}.ddnet.my` : '';
-                document.getElementById('url-preview').innerText = state.domainName || '.ddnet.my';
-                document.getElementById('summary-domain').innerText = state.domainPrice > 0 ? `RM ${state.domainPrice}/yr` : 'FREE (1st Year)';
-                state.domainNameValid = (val.length > 0);
-            } 
-            else {
-                const val = document.getElementById('custom-domain-text').value.trim();
-                state.domainName = val;
-                document.getElementById('summary-domain').innerText = val ? 'User Provided' : 'RM 0';
-                state.domainNameValid = (val.length > 0);
-            }
-        }
-
-        document.getElementById('subdomain-text').addEventListener('input', () => {
-            updateSummaryText();
-            const val = document.getElementById('subdomain-text').value.trim();
-            state.domainNameValid = (val.length > 0);
-        });
-
-        document.getElementById('custom-domain-text').addEventListener('input', () => {
-            updateSummaryText();
-            const val = document.getElementById('custom-domain-text').value.trim();
-            state.domainNameValid = (val.length > 0);
-        });
-
-        function updateTotal() {
-            let subtotal = state.packagePrice + state.setupFee + state.maintenancePrice;
-            if(state.domainType === 'sub') subtotal += state.domainPrice;
-            let discountAmt = 0;
-            if(state.discountType === 'fixed') discountAmt = state.discountFixed;
-            else discountAmt = subtotal * state.discountRate;
-            const finalTotal = Math.max(0, Math.round(subtotal - discountAmt));
-            document.getElementById('summary-final-total').innerText = `RM ${finalTotal}`;
-            document.getElementById('summary-recurring').innerText = `RM ${state.packagePrice} / ${state.isOneTime ? 'one-time' : 'month'}`;
-            document.getElementById('summary-setup').innerText = state.setupFee > 0 ? `RM ${state.setupFee}` : 'RM 0';
-            document.getElementById('deposit-note').innerText = `Deposit Required (50%): RM ${Math.round(finalTotal / 2)}`;
-        }
-
-        function updateUI() {
-            document.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
-            const subOpt = document.querySelector('input[name="domain_type"][value="sub"]').parentElement;
-            const noneOpt = document.querySelector('input[name="maint"][value="none"]').parentElement;
-            if(subOpt) subOpt.classList.add('selected');
-            if(noneOpt) noneOpt.classList.add('selected');
-            updateSummaryText(); updateTotal();
-        }
-
-        function updatePaymentSelection() {
-            const select = document.getElementById('payment-method-select');
-            state.paymentMethodId = select.value;
-        }
-
-        const paymentCheck = document.getElementById('payment-confirm-check');
-        const placeOrderBtn = document.getElementById('btn-place-order');
-        placeOrderBtn.classList.add('disabled');
-        placeOrderBtn.disabled = true;
-
-        if(paymentCheck) {
-            paymentCheck.addEventListener('change', (e) => {
-                if(e.target.checked) {
-                    placeOrderBtn.classList.remove('disabled');
-                    placeOrderBtn.disabled = false;
-                } else {
-                    placeOrderBtn.classList.add('disabled');
-                    placeOrderBtn.disabled = true;
                 }
             });
-        }
+    }
 
-        function resetPaymentCheckbox() {
-            if(paymentCheck) {
-                paymentCheck.checked = false;
-                paymentCheck.dispatchEvent(new Event('change'));
+    function fetchAndSyncUserData(uid) {
+        if(!db) return;
+        db.collection("users").doc(uid).get().then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                const coFields = ['co-name', 'co-phone', 'co-email', 'co-company', 'req-name', 'req-phone'];
+                const map = { 'co-name':'name', 'co-phone':'phone', 'co-email':'email', 'co-company':'company', 'req-name':'name', 'req-phone':'phone' };
+                coFields.forEach(id => { if(data[map[id]]) document.getElementById(id).value = data[map[id]]; });
+                const autoFillLabel = document.getElementById('auto-fill-label');
+                if(data.name && data.phone && data.email && autoFillLabel) autoFillLabel.style.display = 'inline';
+                if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; showCheckoutVoucher(data.personalVoucher); } 
+                else { hideCheckoutVoucher(); }
             }
+        });
+    }
+
+    function showVoucherCard(voucher) {
+        const section = document.getElementById('profile-voucher-section');
+        const text = document.getElementById('profile-voucher-text');
+        const actionBtn = document.getElementById('profile-voucher-action');
+        section.style.display = 'block';
+        const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
+        let expiryText = voucher.expiryDate ? ` | Exp: ${voucher.expiryDate.toDate().toLocaleDateString()}` : "";
+        text.innerText = `Code: ${voucher.code} | Value: ${displayVal}${expiryText}`;
+        if (voucher.status === 'redeemed') {
+            document.getElementById('profile-voucher-title').innerText = "Voucher Redeemed";
+            text.style.textDecoration = 'line-through';
+            actionBtn.innerHTML = '<span style="color:var(--accent-success); font-weight:700; border:1px solid var(--accent-success); padding:4px 12px; border-radius:20px; font-size:0.8rem;">USED</span>';
+        } else {
+            document.getElementById('profile-voucher-title').innerText = "You have a Gift Voucher!";
+            actionBtn.innerHTML = '<button type="button" class="btn btn-danger" style="width: auto; padding: 0.6rem 1.2rem;" onclick="deletePersonalVoucher()">Delete</button>';
         }
+    }
 
-        // ==========================================
-        // REQUEST & UPDATES LOGIC
-        // ==========================================
-        function handleUpdateTypeChange(type, element) {
-            const options = element.parentElement.querySelectorAll('.radio-option');
-            options.forEach(opt => opt.classList.remove('selected'));
-            element.classList.add('selected');
-            document.querySelectorAll('.req-type-fields, #field-content, #field-upgrade, #field-renew, #field-remove').forEach(el => el.classList.add('hidden'));
-            if(type === 'content') document.getElementById('field-content').classList.remove('hidden');
-            if(type === 'upgrade') document.getElementById('field-upgrade').classList.remove('hidden');
-            if(type === 'renew') document.getElementById('field-renew').classList.remove('hidden');
-            if(type === 'remove') document.getElementById('field-remove').classList.remove('hidden');
+    function showCheckoutVoucher(voucher) {
+        const section = document.getElementById('checkout-voucher-section');
+        const text = document.getElementById('checkout-voucher-text');
+        const applyBtn = document.getElementById('btn-apply-voucher');
+        const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
+        let expiryText = voucher.expiryDate ? ` | Exp: ${voucher.expiryDate.toDate().toLocaleDateString()}` : "";
+        text.innerText = `${voucher.code} (-${displayVal})${expiryText}`;
+        section.style.display = 'block';
+        const isApplied = (state.discountCode === voucher.code);
+        if (voucher.status === 'redeemed') {
+            document.getElementById('checkout-voucher-title').innerText = "Voucher Redeemed";
+            text.style.textDecoration = 'line-through';
+            applyBtn.disabled = true; applyBtn.innerText = "Redeemed"; applyBtn.classList.replace('btn-primary', 'btn-secondary');
+        } else {
+            document.getElementById('checkout-voucher-title').innerText = "Gift Voucher Available";
+            if(isApplied) { applyBtn.disabled = true; applyBtn.innerText = "Applied"; applyBtn.classList.replace('btn-secondary', 'btn-success'); }
+            else { applyBtn.disabled = false; applyBtn.innerText = "Apply"; applyBtn.classList.replace('btn-secondary', 'btn-primary'); }
         }
+    }
 
-        function handleRequestSubmit(e) {
-            e.preventDefault();
-            if(!db) return showToast("Database offline", "error");
-            const btn = document.getElementById('btn-submit-request');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
+    function hideVoucherCard() {
+        document.getElementById('profile-voucher-section').style.display = 'none';
+        document.getElementById('checkout-voucher-section').style.display = 'none';
+    }
 
-            const name = document.getElementById('req-name').value;
-            const phone = document.getElementById('req-phone').value;
-            const typeInput = document.querySelector('input[name="req_type"]:checked');
-            if(!typeInput) { showToast("Please select a request type.", "error"); btn.disabled = false; btn.innerText = originalText; return; }
-            const type = typeInput.value;
+    function handleLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        if(!auth) return showToast("Firebase not configured", "error");
+        auth.signInWithEmailAndPassword(email, password).then(() => { showToast("Login Successful!", "success"); navigateTo('/'); })
+        .catch((error) => showToast(error.message, "error"));
+    }
 
-            let requestData = { name: name, phone: phone, type: type, status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp(), userId: auth.currentUser ? auth.currentUser.uid : null };
+    function handleSignup(e) {
+        e.preventDefault();
+        const name = document.getElementById('signup-name').value;
+        const phone = document.getElementById('signup-phone').value;
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        if(!auth) return showToast("Firebase not configured", "error");
+        auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
+            return db.collection("users").doc(userCredential.user.uid).set({ name: name, phone: phone, email: email, role: 'user', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        }).then(() => { showToast("Account Created!", "success"); navigateTo('/'); })
+        .catch((error) => showToast(error.message, "error"));
+    }
 
-            try {
-                if (type === 'content') { requestData.details = document.getElementById('req-desc-content').value; } 
-                else if (type === 'upgrade') {
-                    requestData.currentPlan = document.getElementById('req-current-plan').value;
-                    requestData.newPlan = document.getElementById('req-new-plan').value;
-                    requestData.details = document.getElementById('req-desc-upgrade').value;
-                } else if (type === 'renew') {
-                    requestData.plan = document.getElementById('req-renew-plan').value;
-                    requestData.duration = "1 Year"; 
-                } else if (type === 'remove') { requestData.details = document.getElementById('req-desc-remove').value; }
+    function handleProfileUpdate(e) {
+        e.preventDefault();
+        if(!auth || !auth.currentUser) return;
+        const name = document.getElementById('prof-name').value;
+        const phone = document.getElementById('prof-phone').value;
+        const company = document.getElementById('prof-company').value;
+        db.collection("users").doc(auth.currentUser.uid).update({ name: name, phone: phone, company: company })
+        .then(() => { showToast("Profile Updated Successfully!", "success"); fetchAndSyncUserData(auth.currentUser.uid); })
+        .catch((error) => showToast(error.message, "error"));
+    }
 
-                db.collection("customer_requests").add(requestData).then(() => {
-                    showToast("Request Submitted Successfully!", "success");
-                    e.target.reset();
-                    handleUpdateTypeChange('content', document.querySelector('input[value="content"]').parentElement);
-                    let waMsg = `Hi Admin,\n*New Customer Request*\n\n*Name:* ${name}\n*Phone:* ${phone}\n*Type:* ${type}`;
-                    if(type === 'upgrade') waMsg += `\nFrom: ${requestData.currentPlan} To: ${requestData.newPlan}`;
-                    if(requestData.details) waMsg += `\n*Details:* ${requestData.details}`;
-                    setTimeout(() => { window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(waMsg)}`, '_blank'); }, 1000);
-                }).catch((err) => { console.error(err); showToast("Error submitting request.", "error"); });
-            } catch (error) { console.error(error); showToast("Invalid form data.", "error"); } 
-            finally { btn.disabled = false; btn.innerText = originalText; }
+    function clearUserData() {
+        const inputs = ['prof-name', 'prof-phone', 'prof-email', 'prof-company', 'co-name', 'co-phone', 'co-email', 'co-company', 'req-name', 'req-phone'];
+        inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+        const label = document.getElementById('auto-fill-label'); if(label) label.style.display = 'none';
+    }
+
+    function handleLogout() {
+        if(auth) { currentUserPersonalVoucher = null; auth.signOut().then(() => { showToast("Logged out", "success"); navigateTo('/'); }); }
+    }
+
+    function handleFabClick() { navigateTo('/helpdesk'); }
+
+    function updateHeaderForUser(user) {
+        const isAdmin = currentUserRole === 'admin';
+        const deskAuth = document.getElementById('desktopAuthLinks');
+        if(deskAuth) {
+            let userControls = `<a href="/profile" onclick="routeLink(event, '/profile')" class="btn-glass" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-user-smile-fill"></i> Profile</a><span class="logout-btn" onclick="handleLogout()">Logout</span>`;
+            if (isAdmin) userControls = `<a href="admin.html" target="_blank" class="admin-link" title="Admin Portal"><i class="ri-shield-user-fill"></i></a><span style="color:var(--text-tertiary); margin: 0 10px;">|</span>${userControls}`;
+            deskAuth.innerHTML = userControls;
         }
+        
+        const mobAuth = document.getElementById('mobileAuthLinksContainer');
+        if(mobAuth) {
+            let authButtons = `<a href="/profile" onclick="routeLink(event, '/profile'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-user-fill" style="margin-right:15px;"></i> Profile</a>`;
+            if (isAdmin) authButtons += `<a href="admin.html" target="_blank" onclick="toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-shield-user-fill" style="margin-right:15px; color:var(--accent-warn);"></i> Admin</a>`;
+            authButtons += `<a href="#" onclick="handleLogout(); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; color: var(--accent-warn);"><i class="ri-logout-box-r-fill" style="margin-right:15px;"></i> Logout</a>`;
+            mobAuth.innerHTML = authButtons;
+        }
+    }
 
-        // ==========================================
-        // PAYMENT & ORDER SUBMISSION
-        // ==========================================
-        function triggerPayment() {
-            if(!state.packageType) return showToast("Please select a package first.", "error");
-            const select = document.getElementById('payment-method-select');
-            const methodId = select.value;
+    function updateHeaderForGuest() {
+        const deskAuth = document.getElementById('desktopAuthLinks');
+        if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="routeLink(event, '/login')" class="btn-glass" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-login-circle-fill"></i> Login</a>`;
+        
+        const mobAuth = document.getElementById('mobileAuthLinksContainer');
+        if(mobAuth) {
+            mobAuth.innerHTML = `<a href="/login" onclick="routeLink(event, '/login'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-login-circle-fill" style="margin-right:15px;"></i> Login</a><a href="/signup" onclick="routeLink(event, '/signup'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-user-add-fill" style="margin-right:15px;"></i> Sign Up</a>`;
+        }
+    }
 
-            if(!methodId) {
-                showGlassModal("Payment Method Required", "Please select a payment method from dropdown list before proceeding.", "warning", "Select Method");
-                return;
+    function handleProfileReset() {
+        if(!auth || !auth.currentUser) return;
+        document.getElementById('reset-email').value = auth.currentUser.email;
+        navigateTo('/forgot-password');
+        showToast("Email pre-filled. Please check spam folder.", "success");
+    }
+
+    function handleForgotPassword(e) {
+        e.preventDefault();
+        const email = document.getElementById('reset-email').value;
+        if(!auth) return showToast("Firebase not configured", "error");
+        auth.sendPasswordResetEmail(email).then(() => {
+            showToast("Reset email sent. Please check your spam folder.", "success");
+            setTimeout(() => navigateTo('/login'), 3000);
+        }).catch((error) => showToast(error.message, "error"));
+    }
+
+    // --- TICKET SUBMISSION & HISTORY ---
+    async function generateSmartTicketId() {
+        if(!db) return `#Ticket-${Math.floor(1000 + Math.random() * 9000)}`;
+        try {
+            const snapshot = await db.collection("tickets").where("ticketId", "!=", null).orderBy("ticketId", "desc").limit(1).get();
+            let nextNumber =1;
+            if (!snapshot.empty) {
+                const lastTicket = snapshot.docs[0].data();
+                const parts = lastTicket.ticketId.split('-');
+                const lastNum = parseInt(parts[1]);
+                if (!isNaN(lastNum)) nextNumber = lastNum + 1;
             }
+            const idString = String(nextNumber).padStart(4, '0');
+            return `#Ticket-${idString}`;
+        } catch (error) { return `#Ticket-${Math.floor(1000 + Math.random() * 9000)}`; }
+    }
 
-            const methods = siteConfig.payment_methods && siteConfig.payment_methods.length > 0 ? siteConfig.payment_methods : DEFAULT_PAYMENT_METHODS;
-            const selectedMethod = methods.find(m => m.id === methodId);
-            if(!selectedMethod || !selectedMethod.link) return showToast("Payment link error.", "error");
+    async function handleTicketSubmit(e) {
+        e.preventDefault();
+        if(!db) return showToast("Database offline", "error");
+        const btn = document.getElementById('btn-submit-ticket');
+        const name = document.getElementById('ticket-name').value;
+        const email = document.getElementById('ticket-email').value;
+        const type = document.getElementById('ticket-type').value;
+        const message = document.getElementById('ticket-message').value;
+        if(!name || !email || !type || !message) return showToast("Please fill in all fields.", "error");
 
-            const overlay = document.getElementById('processing-overlay');
-            const msgEl = document.getElementById('process-message');
-            
-            overlay.style.display = 'flex';
-            msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-alarm-warning-fill" style="color:var(--soft-black);"></i></div> Please ensure payment amount is correct. You may enter either a deposit or full payment amount. Kindly screenshot payment for proof.`;
+        btn.disabled = true;
+        const originalText = btn.innerText;
+        btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Generating ID...';
 
-            let existingClose = document.getElementById('temp-close-ov');
-            if(existingClose) existingClose.remove();
-            const tempClose = document.createElement('button');
-            tempClose.id = 'temp-close-ov'; tempClose.className = 'btn btn-glass'; tempClose.innerText = "Close"; tempClose.style.marginTop = "20px";
-            tempClose.onclick = () => { overlay.style.display = 'none'; };
-            overlay.appendChild(tempClose);
-
-            setTimeout(() => { window.open(selectedMethod.link, '_blank'); },500);
-        }
-
-        function openTermsModal() {
-            document.getElementById('termsModal').classList.add("open");
-            document.body.style.overflow = "hidden";
-        }
-
-        function closeTermsModal() {
-            document.getElementById('termsModal').classList.remove("open");
-            document.body.style.overflow = "auto";
-        }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('termsModal');
-            if (event.target == modal) closeTermsModal();
-        }
-
-        function submitOrder() {
-            const termsCheck = document.getElementById('terms-check');
-            const paymentCheck = document.getElementById('payment-confirm-check');
-            
-            if(!termsCheck.checked) {
-                showGlassModal("Agreement Required", "Please agree to Terms & Conditions to proceed with your order.", "warning", "I Agree", () => {
-                    document.getElementById('terms-check').checked = true;
-                });
-                return;
-            }
-            
-            if(!paymentCheck.checked) {
-                showGlassModal("Payment Confirmation", "Please confirm that you have made payment by ticking checkbox.", "warning");
-                return;
-            }
-
-            if(!state.domainNameValid) {
-                if(state.domainType === 'sub') {
-                    showToast("Please fill in your Subdomain Name (e.g. yourname).", "error");
-                    document.getElementById('subdomain-text').focus();
-                } else {
-                    showToast("Please fill in your Custom Domain Name (e.g. www.example.com).", "error");
-                    document.getElementById('custom-domain-text').focus();
-                }
-                return;
-            }
-
-            if(!state.packageType) return showToast("Please select a package first.", "error");
-            
-            if(!state.paymentMethodId) {
-                return showToast("Please select and proceed payment to place an order.", "error");
-            }
-
-            const name = document.getElementById('co-name').value;
-            const phone = document.getElementById('co-phone').value;
-            const email = document.getElementById('co-email').value;
-            const company = document.getElementById('co-company').value;
-            if(!name || !phone || !email) return showToast("Please enter Name, Phone, and Email.", "error");
-
-            let existingClose = document.getElementById('temp-close-ov');
-            if(existingClose) existingClose.remove();
-            const tempClose = document.createElement('button');
-            tempClose.id = 'temp-close-ov'; 
-            tempClose.className = 'btn btn-glass'; 
-            tempClose.innerText = "Close"; 
-            tempClose.style.marginTop = "20px";
-            tempClose.onclick = () => { overlay.style.display = 'none'; };
-            const overlay = document.getElementById('processing-overlay');
-            const msgEl = document.getElementById('process-message');
-            overlay.appendChild(tempClose);
-            
-            overlay.style.display = 'flex';
-            msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Order...`;
-
-            const pkgName = document.getElementById('summary-pkg-name').innerText;
-            const domain = document.getElementById('summary-domain').innerText;
-            const total = document.getElementById('summary-final-total').innerText;
-            const paymentLabel = document.getElementById('payment-method-select').options[document.getElementById('payment-method-select').selectedIndex].text;
-
-            const orderData = {
-                userId: auth.currentUser ? auth.currentUser.uid : null,
-                name: name, phone: phone, email: email, company: company,
-                package: pkgName,
-                domainType: state.domainType,
-                domainName: state.domainName,
-                domainPrice: state.domainPrice,
-                packagePrice: state.packagePrice,
-                setupFee: state.setupFee,
-                maintenancePrice: state.maintenancePrice,
-                total: total,
-                discountCode: state.discountCode || null,
-                paymentMethod: paymentLabel,
-                billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
-                status: 'Pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        try {
+            const smartId = await generateSmartTicketId();
+            showToast("ID Generated. Saving...", "success");
+            const ticketData = {
+                ticketId: smartId, name: name, email: email, type: type, message: message, status: "Open",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(), userId: auth.currentUser ? auth.currentUser.uid : null
             };
-
-            db.collection("orders").add(orderData).then(() => {
-                showToast("Order Submitted Successfully!", "success");
-                const voucherText = state.discountCode ? state.discountCode : "None";
-                const whatsappMessage = `Hi Admin Team,\nI have just placed a new order. Please find my details below:\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nVoucher: ${voucherText}\nPlan: ${pkgName} (${state.isOneTime ? 'One-Time' : 'Monthly'})\nDomain: ${domain}\nTotal: ${total}\nPayment: ${paymentLabel}\n\nKindly let me know if any additional information is required.\nThank you.`;
-                setTimeout(() => {
-                    window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
-                    navigateTo('/thank-you');
-                }, 2000);
-            }).catch((error) => {
-                console.error("Order Error:", error);
-                showToast("Failed to submit order. Please contact support.", "error");
-                msgEl.innerText = "Error submitting order.";
-                tempClose.style.display = 'inline-block';
-            });
+            await db.collection("tickets").add(ticketData);
+            document.getElementById('display-case-id').innerText = smartId;
+            document.getElementById('case-id-display').style.display = 'block';
+            e.target.reset();
+            showToast(`Ticket Submitted! ID: ${smartId}`, "success");
+            setTimeout(() => {
+                let notifyMsg = `Hi Admin,\n*New Ticket Received.*\n\n*Case ID:* ${smartId}\n*Name:* ${name}\n*Type:* ${type}`;
+                window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(notifyMsg)}`, '_blank');
+            }, 1000);
+        } catch (error) {
+            console.error(error); showToast("Failed to submit ticket. Try again.", "error");
+        } finally {
+            btn.disabled = false; btn.innerText = originalText;
         }
+    }
 
-        // ==========================================
-        // WEBSITE IDEA SUBMISSION
-        // ==========================================
-        function handleWebsiteIdeaSubmit(event) {
-            event.preventDefault(); 
-            
-            const form = document.getElementById('website-idea-form');
-            const name = document.getElementById('idea-name').value;
-            const phone = document.getElementById('idea-phone').value;
-            const email = document.getElementById('idea-email').value;
-            const company = document.getElementById('idea-company').value;
-            const type = document.getElementById('idea-type').value;
-            const message = document.getElementById('idea-message').value;
-            const references = document.getElementById('idea-references').value;
+    function copyTicketId() {
+        const idText = document.getElementById('display-case-id').innerText;
+        navigator.clipboard.writeText(idText).then(() => showToast("ID copied to clipboard!", "success")).catch(err => showToast("Failed to copy", "error"));
+    }
 
-            if(!name || !phone || !email || !message) {
-                showToast("Please fill in Name, Phone, Email and Description.", "error");
-                return;
-            }
-
-            const btn = document.getElementById('btn-submit-idea');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Saving...';
-
-            const requestData = {
-                name: name, phone: phone, email: email, company: company || '', type: type || 'New Website',
-                details: message, references: references || '', status: 'Pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                userId: auth.currentUser ? auth.currentUser.uid : null, source: 'Website Description Form'
-            };
-
-            if(db) {
-                db.collection("customer_requests").add(requestData)
-                    .then(() => {
-                        form.reset();
-                        const successModal = document.getElementById('idea-success-modal');
-                        if(successModal) {
-                            successModal.style.display = 'flex';
-                            requestAnimationFrame(() => { successModal.classList.add('active'); });
-                        }
-                    })
-                    .catch((error) => {
-                        console.error("Firebase Save Error:", error);
-                        showToast("Failed to save idea. Please try again.", "error");
-                    })
-                    .finally(() => {
-                        btn.disabled = false;
-                        btn.innerText = originalText;
-                    });
-            } else {
-                showToast("Database connection error.", "error");
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
-        }
-
-        // ==========================================
-        // CONTACT PAGE FORM SUBMISSION
-        // ==========================================
-        function handleContactSubmit(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('contact-name').value;
-            const email = document.getElementById('contact-email').value;
-            const message = document.getElementById('contact-message').value;
-
-            if(!name || !email || !message) {
-                showToast("Please fill in all fields.", "error");
-                return;
-            }
-
-            // Visual feedback on button
-            const btn = e.target.querySelector('button');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
-
-            // Prepare data for Firestore
-            const data = {
-                name: name, 
-                email: email, 
-                message: message, 
-                type: 'Contact Inquiry', 
-                status: 'Pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                userId: auth.currentUser ? auth.currentUser.uid : null, 
-                source: 'Contact Page Form'
-            };
-
-            if(db) {
-                db.collection("customer_requests").add(data)
-                    .then(() => {
-                        // SUCCESS
-                        showToast("Thank you for your interest!", "success");
-                        e.target.reset();
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                        showToast("Failed to send message. Please try again.", "error");
-                    })
-                    .finally(() => {
-                        // Reset button state
-                        btn.disabled = false;
-                        btn.innerText = originalText;
-                    });
-            } else {
-                showToast("System offline. Please try again later.", "error");
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
-        }
-
-        function loadHomePortfolio() {
-            if(!db) return;
-            const container = document.getElementById('home-portfolio-grid');
-            db.collection("clients_portfolio").where("status", "==", true).limit(3).onSnapshot((snapshot) => {
-                container.innerHTML = ''; 
-                if (snapshot.empty) {
-                    container.innerHTML = '<div class="text-center" style="grid-column:1/-1;">No portfolio items.</div>';
-                    return;
-                }
+    function fetchTicketHistory() {
+        if(!db) return;
+        const caseId = document.getElementById('history-search-id').value.trim();
+        if(!caseId) return showToast("Please enter a Case ID.", "error");
+        const listContainer = document.getElementById('ticket-list');
+        listContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary);">Searching...</div>';
+        db.collection("tickets").where("ticketId", "==", caseId).get()
+            .then((snapshot) => {
+                listContainer.innerHTML = ''; 
+                if (snapshot.empty) { listContainer.innerHTML = '<div style="text-align:center; color: #ef4444; padding: 1rem;">No ticket found with that Case ID.</div>'; return; }
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    const html = `
-                        <div class="portfolio-item">
-                            <div class="portfolio-img-wrapper">
-                                <img src="${data.img}" alt="${data.name}">
-                            </div>
-                            <div class="portfolio-info">
-                                <h4>${data.name}</h4>
-                                <p>${data.desc || 'View our work'}</p>
-                            </div>
-                        </div>`;
-                    container.innerHTML += html;
+                    const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
+                    const item = document.createElement('div');
+                    item.className = 'glass-card'; item.style.padding = '1rem'; 
+                    item.style.marginBottom = '1rem'; item.style.display = 'grid'; item.style.gridTemplateColumns = '1fr 1fr 1fr'; item.style.alignItems = 'center';
+                    item.innerHTML = `<div><div style="color:var(--text-main); font-weight:600;">${data.type}</div><div style="font-size:0.75rem; color:var(--text-tertiary);">${date}</div></div><div class="ticket-id">${data.ticketId || doc.id}</div><div style="text-align:right;"><span style="background:${data.status==='Open'?'#fffbeb':'#ecfdf5'}; color:${data.status==='Open'?'var(--accent-warn)':'var(--accent-success)'}; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">${data.status}</span></div></div>`;
+                    listContainer.appendChild(item);
                 });
+            }).catch((error) => { console.error(error); listContainer.innerHTML = '<div style="text-align:center; color: #ef4444;">Error loading ticket.</div>'; });
+    }
+
+    function toggleDrawer() {
+        const drawer = document.getElementById('mobileDrawer');
+        const overlay = document.getElementById('mobileDrawerOverlay');
+        const toggle = document.querySelector('.mobile-toggle');
+        const icon = toggle.querySelector('i');
+        drawer.classList.toggle('open');
+        toggle.classList.toggle('open');
+        overlay.classList.toggle('active');
+        if(drawer.classList.contains('open')) { icon.classList.remove('ri-menu-4-line'); icon.classList.add('ri-close-line'); } 
+        else { icon.classList.add('ri-menu-4-line'); icon.classList.remove('ri-close-line'); }
+    }
+
+    // NEW MOBILE MENU ACCORDION LOGIC
+    function toggleMobileSub(element) {
+        const submenu = element.nextElementSibling;
+        const parentLi = element.parentElement;
+        
+        submenu.classList.toggle('open');
+        element.classList.toggle('active');
+    }
+
+    function attemptSelectPackage(name, type) {
+        if (typeof auth === 'undefined' || auth === null) { showToast("Authentication system initializing...", "error"); return; }
+        if (auth.currentUser) { selectPackage(name, type); } 
+        else { showToast("Please login or sign up to make a purchase.", "error"); setTimeout(() => { navigateTo('/login'); }, 1500); }
+    }
+
+    function selectPackage(name, type) {
+        state.packageType = type;
+        state.packagePrice = 0;
+        state.setupFee = 0;
+        state.billingCycle = billingCycle;
+        state.isOneTime = (billingCycle === 'onetime');
+
+        document.getElementById('summary-pkg-name').innerText = name;
+        const priceArea = document.getElementById('dynamic-price-area');
+        priceArea.innerHTML = ''; 
+
+        let basePrice = 0;
+        let desc = "";
+        let setupFee = 0;
+
+        if(PRICING_DATA[type]) {
+            if (state.isOneTime) {
+                basePrice = PRICING_DATA[type].oneTime;
+                desc = "One-time purchase. No support.";
+                setupFee = 0; // Setup fee is usually baked into one-time price or not applicable in same way
+            } else {
+                basePrice = PRICING_DATA[type].monthly;
+                setupFee = PRICING_DATA[type].setupFee;
+                desc = PRICING_DATA[type].desc;
+            }
+        }
+        state.packagePrice = basePrice;
+        state.setupFee = setupFee;
+
+        document.getElementById('summary-pkg-desc').innerText = desc;
+        let priceHTML = '';
+        if (state.isOneTime) {
+            priceHTML = `<div style="text-align:right; font-weight:700; color:var(--soft-black);">Price: RM ${basePrice}</div>`;
+        } else if (type === 'ai' || type === 'portal') {
+            priceHTML = `<div style="padding:10px; background:white; border-radius:8px; color:var(--text-secondary); text-align:center;">Monthly Quote: RM ${basePrice}</div>`;
+        } else {
+            priceHTML = `<div style="text-align:right; font-weight:700; color:var(--soft-black);">Price: RM ${basePrice} (Monthly)</div>`;
+        }
+        priceArea.innerHTML = priceHTML;
+
+        state.domainType = 'sub'; 
+        state.domainName = ''; 
+        state.domainNameValid = false; 
+        document.getElementById('subdomain-text').value = ''; 
+        document.getElementById('custom-domain-text').value = ''; 
+        updateDomain('sub', document.querySelector('input[name="domain_type"][value="sub"]').parentElement); 
+        state.maintenancePrice = 0;
+        state.discountRate = 0; state.discountFixed = 0; state.discountType = 'percent'; state.discountCode = ''; state.paymentMethodId = null; 
+        document.getElementById('payment-method-select').value = ""; document.getElementById('terms-check').checked = false;
+        
+        resetPaymentCheckbox();
+
+        if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+        else { document.getElementById('auto-fill-label').style.display = 'none'; hideVoucherCard(); }
+        updateSummaryText(); updateUI(); navigateTo('/order');
+    }
+
+    function updateDomain(type, element) {
+        state.domainType = type;
+        if(element) {
+            const options = element.parentElement.querySelectorAll('.radio-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+        
+        if(type === 'sub') {
+            document.getElementById('input-subdomain').style.display = 'block';
+            document.getElementById('input-custom').style.display = 'none';
+            state.domainPrice = 55; 
+        } else {
+            document.getElementById('input-subdomain').style.display = 'none';
+            document.getElementById('input-custom').style.display = 'block';
+            state.domainPrice = 0; 
+        }
+        updateSummaryText(); updateTotal();
+    }
+
+    function updateMaintenance(plan, element) {
+        const options = element.parentElement.querySelectorAll('.radio-option');
+        options.forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+        if(plan === 'none') state.maintenancePrice = 0;
+        if(plan === 'basic') state.maintenancePrice = 50;
+        if(plan === 'business') state.maintenancePrice = 100;
+        const label = plan === 'none' ? 'None' : (plan === 'basic' ? 'Basic (RM 50/mo)' : 'Business (RM 100/mo)');
+        document.getElementById('summary-maintenance').innerText = label;
+        updateTotal();
+    }
+
+    function applyPromo() {
+        if(!auth || !auth.currentUser) return showToast("Please login to use Promo Codes.", "error");
+        const input = document.getElementById('promo-input');
+        const code = input.value.trim().toUpperCase();
+        
+        if(!code || code === "") {
+            showToast("Please enter a voucher code first.", "error");
+            input.focus(); 
+            return;
+        }
+        
+        if(PROMO_CODES.hasOwnProperty(code)) {
+            state.discountType = 'percent';
+            state.discountRate = PROMO_CODES[code];
+            state.discountCode = code;
+            showToast(`Promo Applied: ${code}`, 'success');
+            document.getElementById('row-discount').style.display = 'flex';
+            document.getElementById('summary-promo-code').innerText = code;
+            document.getElementById('summary-discount-val').innerText = `-${state.discountRate * 100}%`;
+            updateTotal();
+        } else {
+            showToast("Invalid code. Please check and try again.", "error");
+        }
+    }
+
+    function applyPersonalVoucher() {
+        if(!currentUserPersonalVoucher) return; 
+        if(currentUserPersonalVoucher.status === 'redeemed') return showToast("This voucher has already been used.", "error");
+        if(state.discountCode === currentUserPersonalVoucher.code) return showToast("Voucher already applied.", "info");
+        if(currentUserPersonalVoucher.expiryDate) {
+            const now = new Date();
+            const expiry = currentUserPersonalVoucher.expiryDate.toDate();
+            if(now > expiry) return showToast("This voucher has expired.", "error");
+        }
+        state.discountType = currentUserPersonalVoucher.type;
+        state.discountCode = currentUserPersonalVoucher.code;
+        if(state.discountType === 'fixed') { state.discountFixed = currentUserPersonalVoucher.value; state.discountRate = 0; } 
+        else { state.discountRate = currentUserPersonalVoucher.value; state.discountFixed = 0; }
+        showToast(`Voucher ${state.discountCode} Applied!`, "success");
+        document.getElementById('row-discount').style.display = 'flex';
+        document.getElementById('summary-promo-code').innerText = state.discountCode;
+        const displayVal = state.discountType === 'fixed' ? `RM ${state.discountFixed}` : `${state.discountRate * 100}%`;
+        document.getElementById('summary-discount-val').innerText = `-${displayVal}`;
+        showCheckoutVoucher(currentUserPersonalVoucher);
+        updateTotal();
+    }
+
+    function deletePersonalVoucher() {
+        if(!auth || !auth.currentUser) return;
+        if(confirm("Are you sure you want to remove this voucher?")) {
+            db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
+                currentUserPersonalVoucher = null;
+                loadProfilePageData();
+                fetchAndSyncUserData(auth.currentUser.uid);
+                showToast("Voucher removed from account.", "success");
             });
         }
+    }
 
-        // ==========================================
-        // EARTH + METEOR BACKGROUND ANIMATION
-        // ==========================================
-        const canvas = document.getElementById('globe-canvas');
-        const ctx = canvas.getContext('2d');
-        let dots = [];
-        let meteors = [];
-        const DOT_COUNT_DESKTOP = 700; 
-        const DOT_COUNT_MOBILE = 350;  
-        let DOT_COUNT = window.innerWidth < 768 ? DOT_COUNT_MOBILE : DOT_COUNT_DESKTOP;
-        const GLOBE_RADIUS = 380; 
-        let rotation = 0;
-        let animationId;
+    function removeVoucher() {
+        state.discountCode = ''; state.discountRate = 0; state.discountFixed = 0;
+        document.getElementById('row-discount').style.display = 'none';
+        showToast("Voucher removed", "success");
+        updateTotal();
+        if(currentUserPersonalVoucher) showCheckoutVoucher(currentUserPersonalVoucher);
+    }
 
-        function initDots() {
-            dots = [];
-            for(let i=0; i<DOT_COUNT; i++) {
-                const phi = Math.acos(-1 + (2 * i) / DOT_COUNT);
-                const theta = Math.sqrt(DOT_COUNT * Math.PI) * phi;
-                dots.push({ x: GLOBE_RADIUS * Math.cos(theta) * Math.sin(phi), y: GLOBE_RADIUS * Math.sin(theta) * Math.sin(phi), z: GLOBE_RADIUS * Math.cos(phi) });
+    function updateSummaryText() {
+        if(state.domainType === 'sub') {
+            const val = document.getElementById('subdomain-text').value.trim();
+            state.domainName = val ? `${val}.ddnet.my` : '';
+            document.getElementById('url-preview').innerText = state.domainName || '.ddnet.my';
+            document.getElementById('summary-domain').innerText = state.domainPrice > 0 ? `RM ${state.domainPrice}/yr` : 'FREE (1st Year)';
+            state.domainNameValid = (val.length > 0);
+        } 
+        else {
+            const val = document.getElementById('custom-domain-text').value.trim();
+            state.domainName = val;
+            document.getElementById('summary-domain').innerText = val ? 'User Provided' : 'RM 0';
+            state.domainNameValid = (val.length > 0);
+        }
+    }
+
+    document.getElementById('subdomain-text').addEventListener('input', () => {
+        updateSummaryText();
+        const val = document.getElementById('subdomain-text').value.trim();
+        state.domainNameValid = (val.length > 0);
+    });
+
+    document.getElementById('custom-domain-text').addEventListener('input', () => {
+        updateSummaryText();
+        const val = document.getElementById('custom-domain-text').value.trim();
+        state.domainNameValid = (val.length > 0);
+    });
+
+    function updateTotal() {
+        let subtotal = state.packagePrice + state.setupFee + state.maintenancePrice;
+        if(state.domainType === 'sub') subtotal += state.domainPrice;
+        let discountAmt = 0;
+        if(state.discountType === 'fixed') discountAmt = state.discountFixed;
+        else discountAmt = subtotal * state.discountRate;
+        const finalTotal = Math.max(0, Math.round(subtotal - discountAmt));
+        document.getElementById('summary-final-total').innerText = `RM ${finalTotal}`;
+        document.getElementById('summary-recurring').innerText = `RM ${state.packagePrice} / ${state.isOneTime ? 'one-time' : 'month'}`;
+        document.getElementById('summary-setup').innerText = state.setupFee > 0 ? `RM ${state.setupFee}` : 'RM 0';
+        document.getElementById('deposit-note').innerText = `Deposit Required (50%): RM ${Math.round(finalTotal / 2)}`;
+    }
+
+    function updateUI() {
+        document.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
+        const subOpt = document.querySelector('input[name="domain_type"][value="sub"]').parentElement;
+        const noneOpt = document.querySelector('input[name="maint"][value="none"]').parentElement;
+        if(subOpt) subOpt.classList.add('selected');
+        if(noneOpt) noneOpt.classList.add('selected');
+        updateSummaryText(); updateTotal();
+    }
+
+    function updatePaymentSelection() {
+        const select = document.getElementById('payment-method-select');
+        state.paymentMethodId = select.value;
+    }
+
+    const paymentCheck = document.getElementById('payment-confirm-check');
+    const placeOrderBtn = document.getElementById('btn-place-order');
+    placeOrderBtn.classList.add('disabled');
+    placeOrderBtn.disabled = true;
+
+    if(paymentCheck) {
+        paymentCheck.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                placeOrderBtn.classList.remove('disabled');
+                placeOrderBtn.disabled = false;
+            } else {
+                placeOrderBtn.classList.add('disabled');
+                placeOrderBtn.disabled = true;
             }
+        });
+    }
+
+    function resetPaymentCheckbox() {
+        if(paymentCheck) {
+            paymentCheck.checked = false;
+            paymentCheck.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // ==========================================
+    // REQUEST & UPDATES LOGIC
+    // ==========================================
+    function handleUpdateTypeChange(type, element) {
+        const options = element.parentElement.querySelectorAll('.radio-option');
+        options.forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+        document.querySelectorAll('.req-type-fields, #field-content, #field-upgrade, #field-renew, #field-remove').forEach(el => el.classList.add('hidden'));
+        if(type === 'content') document.getElementById('field-content').classList.remove('hidden');
+        if(type === 'upgrade') document.getElementById('field-upgrade').classList.remove('hidden');
+        if(type === 'renew') document.getElementById('field-renew').classList.remove('hidden');
+        if(type === 'remove') document.getElementById('field-remove').classList.remove('hidden');
+    }
+
+    function handleRequestSubmit(e) {
+        e.preventDefault();
+        if(!db) return showToast("Database offline", "error");
+        const btn = document.getElementById('btn-submit-request');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
+
+        const name = document.getElementById('req-name').value;
+        const phone = document.getElementById('req-phone').value;
+        const typeInput = document.querySelector('input[name="req_type"]:checked');
+        if(!typeInput) { showToast("Please select a request type.", "error"); btn.disabled = false; btn.innerText = originalText; return; }
+        const type = typeInput.value;
+
+        let requestData = { name: name, phone: phone, type: type, status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp(), userId: auth.currentUser ? auth.currentUser.uid : null };
+
+        try {
+            if (type === 'content') { requestData.details = document.getElementById('req-desc-content').value; } 
+            else if (type === 'upgrade') {
+                requestData.currentPlan = document.getElementById('req-current-plan').value;
+                requestData.newPlan = document.getElementById('req-new-plan').value;
+                requestData.details = document.getElementById('req-desc-upgrade').value;
+            } else if (type === 'renew') {
+                requestData.plan = document.getElementById('req-renew-plan').value;
+                requestData.duration = "1 Year"; 
+            } else if (type === 'remove') { requestData.details = document.getElementById('req-desc-remove').value; }
+
+            db.collection("customer_requests").add(requestData).then(() => {
+                showToast("Request Submitted Successfully!", "success");
+                e.target.reset();
+                handleUpdateTypeChange('content', document.querySelector('input[value="content"]').parentElement);
+                let waMsg = `Hi Admin,\n*New Customer Request*\n\n*Name:* ${name}\n*Phone:* ${phone}\n*Type:* ${type}`;
+                if(type === 'upgrade') waMsg += `\nFrom: ${requestData.currentPlan} To: ${requestData.newPlan}`;
+                if(requestData.details) waMsg += `\n*Details:* ${requestData.details}`;
+                setTimeout(() => { window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(waMsg)}`, '_blank'); }, 1000);
+            }).catch((err) => { console.error(err); showToast("Error submitting request.", "error"); });
+        } catch (error) { console.error(error); showToast("Invalid form data.", "error"); } 
+        finally { btn.disabled = false; btn.innerText = originalText; }
+    }
+
+    // ==========================================
+    // PAYMENT & ORDER SUBMISSION
+    // ==========================================
+    function triggerPayment() {
+        if(!state.packageType) return showToast("Please select a package first.", "error");
+        const select = document.getElementById('payment-method-select');
+        const methodId = select.value;
+
+        if(!methodId) {
+            showGlassModal("Payment Method Required", "Please select a payment method from dropdown list before proceeding.", "warning", "Select Method");
+            return;
         }
 
-        class Meteor {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = Math.random() * 1200;
-                this.y = -100; 
-                this.len = Math.random() * 80 + 20;
-                this.speed = Math.random() * 5 + 5;
-                this.size = Math.random() * 2 + 0.5;
-                this.active = false;
-            }
-            spawn() {
-                this.reset();
-                this.active = true;
-                this.x = 800 + Math.random() * 400; 
-                this.y = -50 - Math.random() * 100;
-            }
-            update() {
-                if(!this.active) return;
-                this.x -= this.speed * 1.5; 
-                this.y += this.speed; 
-                if(this.y > 800 || this.x < -200) { this.active = false; }
-            }
-            draw() {
-                if(!this.active) return;
-                const gradient = ctx.createLinearGradient(this.x, this.y, this.x + this.len, this.y - this.len);
-                gradient.addColorStop(0, "rgba(99, 102, 241, 0.8)"); // Indigo meteor
-                gradient.addColorStop(1, "rgba(99, 102, 241, 0)");
-                ctx.beginPath();
-                ctx.strokeStyle = gradient;
-                ctx.lineWidth = this.size;
-                ctx.moveTo(this.x, this.y);
-                ctx.lineTo(this.x + this.len, this.y - this.len); 
-                ctx.stroke();
-            }
+        const methods = siteConfig.payment_methods && siteConfig.payment_methods.length > 0 ? siteConfig.payment_methods : DEFAULT_PAYMENT_METHODS;
+        const selectedMethod = methods.find(m => m.id === methodId);
+        if(!selectedMethod || !selectedMethod.link) return showToast("Payment link error.", "error");
+
+        const overlay = document.getElementById('processing-overlay');
+        const msgEl = document.getElementById('process-message');
+        
+        overlay.style.display = 'flex';
+        msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-alarm-warning-fill" style="color:var(--soft-black);"></i></div> Please ensure payment amount is correct. You may enter either a deposit or full payment amount. Kindly screenshot payment for proof.`;
+
+        let existingClose = document.getElementById('temp-close-ov');
+        if(existingClose) existingClose.remove();
+        const tempClose = document.createElement('button');
+        tempClose.id = 'temp-close-ov'; tempClose.className = 'btn btn-glass'; tempClose.innerText = "Close"; tempClose.style.marginTop = "20px";
+        tempClose.onclick = () => { overlay.style.display = 'none'; };
+        overlay.appendChild(tempClose);
+
+        setTimeout(() => { window.open(selectedMethod.link, '_blank'); },500);
+    }
+
+    function openTermsModal() {
+        document.getElementById('termsModal').classList.add("open");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeTermsModal() {
+        document.getElementById('termsModal').classList.remove("open");
+        document.body.style.overflow = "auto";
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('termsModal');
+        if (event.target == modal) closeTermsModal();
+    }
+
+    function submitOrder() {
+        const termsCheck = document.getElementById('terms-check');
+        const paymentCheck = document.getElementById('payment-confirm-check');
+        
+        if(!termsCheck.checked) {
+            showGlassModal("Agreement Required", "Please agree to Terms & Conditions to proceed with your order.", "warning", "I Agree", () => {
+                document.getElementById('terms-check').checked = true;
+            });
+            return;
+        }
+        
+        if(!paymentCheck.checked) {
+            showGlassModal("Payment Confirmation", "Please confirm that you have made payment by ticking checkbox.", "warning");
+            return;
         }
 
-        for(let i=0; i<5; i++) { meteors.push(new Meteor()); }
+        if(!state.domainNameValid) {
+            if(state.domainType === 'sub') {
+                showToast("Please fill in your Subdomain Name (e.g. yourname).", "error");
+                document.getElementById('subdomain-text').focus();
+            } else {
+                showToast("Please fill in your Custom Domain Name (e.g. www.example.com).", "error");
+                document.getElementById('custom-domain-text').focus();
+            }
+            return;
+        }
 
-        function animate() {
-            const homeSection = document.getElementById('home');
-            if(!homeSection || !homeSection.classList.contains('active')) { return; }
-            ctx.clearRect(0,0, 1200, 1200); 
+        if(!state.packageType) return showToast("Please select a package first.", "error");
+        
+        if(!state.paymentMethodId) {
+            return showToast("Please select and proceed payment to place an order.", "error");
+        }
 
-            // Draw Stars (Slate tint for light bg)
-            ctx.fillStyle = "rgba(99, 102, 241, 0.2)"; 
-            for(let i=0; i<50; i++) {
-                const sx = (Math.sin(i * 132 + 1) * 43758.5453) % 1200;
-                const sy = (Math.cos(i * 53 + 1) * 43758.5453) % 1200;
-                const finalX = sx < 0 ? -sx : sx;
-                const finalY = sy < 0 ? -sy : sy;
-                ctx.beginPath();
-                ctx.arc(finalX, finalY, Math.random() * 1.5, 0, Math.PI *2);
+        const name = document.getElementById('co-name').value;
+        const phone = document.getElementById('co-phone').value;
+        const email = document.getElementById('co-email').value;
+        const company = document.getElementById('co-company').value;
+        if(!name || !phone || !email) return showToast("Please enter Name, Phone, and Email.", "error");
+
+        let existingClose = document.getElementById('temp-close-ov');
+        if(existingClose) existingClose.remove();
+        const tempClose = document.createElement('button');
+        tempClose.id = 'temp-close-ov'; 
+        tempClose.className = 'btn btn-glass'; 
+        tempClose.innerText = "Close"; 
+        tempClose.style.marginTop = "20px";
+        tempClose.onclick = () => { overlay.style.display = 'none'; };
+        const overlay = document.getElementById('processing-overlay');
+        const msgEl = document.getElementById('process-message');
+        overlay.appendChild(tempClose);
+        
+        overlay.style.display = 'flex';
+        msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Order...`;
+
+        const pkgName = document.getElementById('summary-pkg-name').innerText;
+        const domain = document.getElementById('summary-domain').innerText;
+        const total = document.getElementById('summary-final-total').innerText;
+        const paymentLabel = document.getElementById('payment-method-select').options[document.getElementById('payment-method-select').selectedIndex].text;
+
+        const orderData = {
+            userId: auth.currentUser ? auth.currentUser.uid : null,
+            name: name, phone: phone, email: email, company: company,
+            package: pkgName,
+            domainType: state.domainType,
+            domainName: state.domainName,
+            domainPrice: state.domainPrice,
+            packagePrice: state.packagePrice,
+            setupFee: state.setupFee,
+            maintenancePrice: state.maintenancePrice,
+            total: total,
+            discountCode: state.discountCode || null,
+            paymentMethod: paymentLabel,
+            billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
+            status: 'Pending',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        db.collection("orders").add(orderData).then(() => {
+            showToast("Order Submitted Successfully!", "success");
+            const voucherText = state.discountCode ? state.discountCode : "None";
+            const whatsappMessage = `Hi Admin Team,\nI have just placed a new order. Please find my details below:\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nVoucher: ${voucherText}\nPlan: ${pkgName} (${state.isOneTime ? 'One-Time' : 'Monthly'})\nDomain: ${domain}\nTotal: ${total}\nPayment: ${paymentLabel}\n\nKindly let me know if any additional information is required.\nThank you.`;
+            setTimeout(() => {
+                window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
+                navigateTo('/thank-you');
+            }, 2000);
+        }).catch((error) => {
+            console.error("Order Error:", error);
+            showToast("Failed to submit order. Please contact support.", "error");
+            msgEl.innerText = "Error submitting order.";
+            tempClose.style.display = 'inline-block';
+        });
+    }
+
+    // ==========================================
+    // WEBSITE IDEA SUBMISSION
+    // ==========================================
+    function handleWebsiteIdeaSubmit(event) {
+        event.preventDefault(); 
+        
+        const form = document.getElementById('website-idea-form');
+        const name = document.getElementById('idea-name').value;
+        const phone = document.getElementById('idea-phone').value;
+        const email = document.getElementById('idea-email').value;
+        const company = document.getElementById('idea-company').value;
+        const type = document.getElementById('idea-type').value;
+        const message = document.getElementById('idea-message').value;
+        const references = document.getElementById('idea-references').value;
+
+        if(!name || !phone || !email || !message) {
+            showToast("Please fill in Name, Phone, Email and Description.", "error");
+            return;
+        }
+
+        const btn = document.getElementById('btn-submit-idea');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Saving...';
+
+        const requestData = {
+            name: name, phone: phone, email: email, company: company || '', type: type || 'New Website',
+            details: message, references: references || '', status: 'Pending',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            userId: auth.currentUser ? auth.currentUser.uid : null, source: 'Website Description Form'
+        };
+
+        if(db) {
+            db.collection("customer_requests").add(requestData)
+                .then(() => {
+                    form.reset();
+                    const successModal = document.getElementById('idea-success-modal');
+                    if(successModal) {
+                        successModal.style.display = 'flex';
+                        requestAnimationFrame(() => { successModal.classList.add('active'); });
+                    }
+                })
+                .catch((error) => {
+                    console.error("Firebase Save Error:", error);
+                    showToast("Failed to save idea. Please try again.", "error");
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                });
+        } else {
+            showToast("Database connection error.", "error");
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    }
+
+    // ==========================================
+    // CONTACT PAGE FORM SUBMISSION
+    // ==========================================
+    function handleContactSubmit(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('contact-name').value;
+        const email = document.getElementById('contact-email').value;
+        const message = document.getElementById('contact-message').value;
+
+        if(!name || !email || !message) {
+            showToast("Please fill in all fields.", "error");
+            return;
+        }
+
+        // Visual feedback on button
+        const btn = e.target.querySelector('button');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
+
+        // Prepare data for Firestore
+        const data = {
+            name: name, 
+            email: email, 
+            message: message, 
+            type: 'Contact Inquiry', 
+            status: 'Pending',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            userId: auth.currentUser ? auth.currentUser.uid : null, 
+            source: 'Contact Page Form'
+        };
+
+        if(db) {
+            db.collection("customer_requests").add(data)
+                .then(() => {
+                    // SUCCESS
+                    showToast("Thank you for your interest!", "success");
+                    e.target.reset();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    showToast("Failed to send message. Please try again.", "error");
+                })
+                .finally(() => {
+                    // Reset button state
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                });
+        } else {
+            showToast("System offline. Please try again later.", "error");
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    }
+
+    function loadHomePortfolio() {
+        if(!db) return;
+        const container = document.getElementById('home-portfolio-grid');
+        db.collection("clients_portfolio").where("status", "==", true).limit(3).onSnapshot((snapshot) => {
+            container.innerHTML = ''; 
+            if (snapshot.empty) {
+                container.innerHTML = '<div class="text-center" style="grid-column:1/-1;">No portfolio items.</div>';
+                return;
+            }
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const html = `
+                    <div class="portfolio-item">
+                        <div class="portfolio-img-wrapper">
+                            <img src="${data.img}" alt="${data.name}">
+                        </div>
+                        <div class="portfolio-info">
+                            <h4>${data.name}</h4>
+                            <p>${data.desc || 'View our work'}</p>
+                        </div>
+                    </div>`;
+                container.innerHTML += html;
+            });
+        });
+    }
+
+    // ==========================================
+    // EARTH + METEOR BACKGROUND ANIMATION
+    // ==========================================
+    const canvas = document.getElementById('globe-canvas');
+    const ctx = canvas.getContext('2d');
+    let dots = [];
+    let meteors = [];
+    const DOT_COUNT_DESKTOP = 700; 
+    const DOT_COUNT_MOBILE = 350;  
+    let DOT_COUNT = window.innerWidth < 768 ? DOT_COUNT_MOBILE : DOT_COUNT_DESKTOP;
+    const GLOBE_RADIUS = 380; 
+    let rotation = 0;
+    let animationId;
+
+    function initDots() {
+        dots = [];
+        for(let i=0; i<DOT_COUNT; i++) {
+            const phi = Math.acos(-1 + (2 * i) / DOT_COUNT);
+            const theta = Math.sqrt(DOT_COUNT * Math.PI) * phi;
+            dots.push({ x: GLOBE_RADIUS * Math.cos(theta) * Math.sin(phi), y: GLOBE_RADIUS * Math.sin(theta) * Math.sin(phi), z: GLOBE_RADIUS * Math.cos(phi) });
+        }
+    }
+
+    class Meteor {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * 1200;
+            this.y = -100; 
+            this.len = Math.random() * 80 + 20;
+            this.speed = Math.random() * 5 + 5;
+            this.size = Math.random() * 2 + 0.5;
+            this.active = false;
+        }
+        spawn() {
+            this.reset();
+            this.active = true;
+            this.x = 800 + Math.random() * 400; 
+            this.y = -50 - Math.random() * 100;
+        }
+        update() {
+            if(!this.active) return;
+            this.x -= this.speed * 1.5; 
+            this.y += this.speed; 
+            if(this.y > 800 || this.x < -200) { this.active = false; }
+        }
+        draw() {
+            if(!this.active) return;
+            const gradient = ctx.createLinearGradient(this.x, this.y, this.x + this.len, this.y - this.len);
+            gradient.addColorStop(0, "rgba(99, 102, 241, 0.8)"); // Indigo meteor
+            gradient.addColorStop(1, "rgba(99, 102, 241, 0)");
+            ctx.beginPath();
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = this.size;
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x + this.len, this.y - this.len); 
+            ctx.stroke();
+        }
+    }
+
+    for(let i=0; i<5; i++) { meteors.push(new Meteor()); }
+
+    function animate() {
+        const homeSection = document.getElementById('home');
+        if(!homeSection || !homeSection.classList.contains('active')) { return; }
+        ctx.clearRect(0,0, 1200, 1200); 
+
+        // Draw Stars (Slate tint for light bg)
+        ctx.fillStyle = "rgba(99, 102, 241, 0.2)"; 
+        for(let i=0; i<50; i++) {
+            const sx = (Math.sin(i * 132 + 1) * 43758.5453) % 1200;
+            const sy = (Math.cos(i * 53 + 1) * 43758.5453) % 1200;
+            const finalX = sx < 0 ? -sx : sx;
+            const finalY = sy < 0 ? -sy : sy;
+            ctx.beginPath();
+            ctx.arc(finalX, finalY, Math.random() * 1.5, 0, Math.PI *2);
+            ctx.fill();
+        }
+
+        if(Math.random() < 0.02) { 
+            const inactiveMeteor = meteors.find(m => !m.active);
+            if(inactiveMeteor) inactiveMeteor.spawn();
+        }
+        meteors.forEach(m => { m.update(); m.draw(); });
+
+        rotation +=0.002;
+        dots.forEach(dot => {
+            const rotX = dot.x * Math.cos(rotation) - dot.z * Math.sin(rotation);
+            const rotZ = dot.z * Math.cos(rotation) + dot.x * Math.sin(rotation);
+            const alpha = (rotZ + GLOBE_RADIUS) / (2 * GLOBE_RADIUS);
+            if(alpha > 0) {
+                const scale = 800 / (800 + rotZ); 
+                const x = 600 + rotX * scale; const y = 600 + dot.y * scale;
+                ctx.beginPath(); ctx.arc(x, y, 1.5 * scale, 0, Math.PI *2);
+                ctx.fillStyle = `rgba(99, 102, 241, ${alpha})`; 
                 ctx.fill();
             }
+        });
+        animationId = requestAnimationFrame(animate);
+    }
 
-            if(Math.random() < 0.02) { 
-                const inactiveMeteor = meteors.find(m => !m.active);
-                if(inactiveMeteor) inactiveMeteor.spawn();
-            }
-            meteors.forEach(m => { m.update(); m.draw(); });
+    function startGlobeAnimation() {
+        if (animationId) cancelAnimationFrame(animationId);
+        animate();
+    }
 
-            rotation +=0.002;
-            dots.forEach(dot => {
-                const rotX = dot.x * Math.cos(rotation) - dot.z * Math.sin(rotation);
-                const rotZ = dot.z * Math.cos(rotation) + dot.x * Math.sin(rotation);
-                const alpha = (rotZ + GLOBE_RADIUS) / (2 * GLOBE_RADIUS);
-                if(alpha > 0) {
-                    const scale = 800 / (800 + rotZ); 
-                    const x = 600 + rotX * scale; const y = 600 + dot.y * scale;
-                    ctx.beginPath(); ctx.arc(x, y, 1.5 * scale, 0, Math.PI *2);
-                    ctx.fillStyle = `rgba(99, 102, 241, ${alpha})`; 
-                    ctx.fill();
-                }
-            });
-            animationId = requestAnimationFrame(animate);
-        }
-
-        function startGlobeAnimation() {
-            if (animationId) cancelAnimationFrame(animationId);
-            animate();
-        }
-
-        window.addEventListener('resize', () => {
+    window.addEventListener('resize', () => {
                      const newCount = window.innerWidth < 768 ? DOT_COUNT_MOBILE : DOT_COUNT_DESKTOP;
                      if(newCount !== DOT_COUNT) {
                          DOT_COUNT = newCount;
@@ -4489,19 +4512,19 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                      }
                 });
 
-        initDots();
-        animate();
+    initDots();
+    animate();
 
-        window.addEventListener('scroll', () => {
-            const header = document.getElementById('mainHeader');
-            if(window.scrollY > 50) header.classList.add('scrolled');
-            else header.classList.remove('scrolled');
-        });
+    window.addEventListener('scroll', () => {
+        const header = document.getElementById('mainHeader');
+        if(window.scrollY > 50) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
+    });
 
-        initializeDatabase();
-    </script>
-    
-    <!-- UPDATED CHAT WIDGET SCRIPT -->
+    initializeDatabase();
+</script>
+
+<!-- UPDATED CHAT WIDGET SCRIPT -->
 <script
   src="https://app.livechatai.com/embed.js"
   data-id="cmlas1njr0001jj04hi5ygd18"
