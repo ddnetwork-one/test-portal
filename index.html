@@ -2686,30 +2686,35 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 oneTime: 249, 
                 setupFee: 100, 
                 monthly: 39,
+                yearly: 450, // Added to prevent crash (though One-Time is default)
                 desc: "1 Static Landing Page. Mobile Responsive. Basic SEO." 
             },
             frontend: { 
                 setupFee: 200, 
                 oneTime: 1399,
                 monthly: 99,
+                yearly: 1199, // Added to prevent crash
                 desc: "Up to 5 Pages. Animations & Interactive UI. WhatsApp Integration." 
             },
             bundle: { 
                 setupFee: 700, 
                 oneTime: 3499,
                 monthly: 249,
+                yearly: 2999, // Added to prevent crash
                 desc: "Front-End Website + Internal Portal + Advanced Analytics." 
             },
             ai: { 
                 setupFee: 400, 
                 oneTime: 2499,
                 monthly: 149,
+                yearly: 1799, // Added to prevent crash
                 desc: "All Front-End Website Features + AI Chatbot + Lead Auto-Response." 
             },
             portal: { 
                 setupFee: 700, 
                 oneTime: 3999,
                 monthly: 279,
+                yearly: 3299, // Added to prevent crash
                 desc: "Multi-User Portal, Database, Dashboards, Business Process Integration." 
             }
         };
@@ -3740,24 +3745,30 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             let setupFee = 0;
 
             if(PRICING_DATA[type]) {
+                // --- CORRECTED LOGIC ---
                 if (state.isOneTime) {
+                    // HTML One-Time Purchase
                     basePrice = PRICING_DATA[type].oneTime;
                     desc = "One-time purchase. No support.";
+                    setupFee = 0; // No setup fee for One-Time
                 } else {
-                    basePrice = billingCycle === 'monthly' ? PRICING_DATA[type].monthly : PRICING_DATA[type].yearly;
+                    // Subscription Mode (Monthly)
+                    basePrice = PRICING_DATA[type].monthly;
                     setupFee = PRICING_DATA[type].setupFee;
                     desc = PRICING_DATA[type].desc;
                 }
             }
+            
             state.packagePrice = basePrice;
             state.setupFee = setupFee;
 
             document.getElementById('summary-pkg-desc').innerText = desc;
+            
             let priceHTML = '';
             if (state.isOneTime) {
                 priceHTML = `<div style="text-align:right; font-weight:700; color:var(--soft-black);">Price: RM ${basePrice}</div>`;
             } else if (type === 'ai' || type === 'portal') {
-                priceHTML = `<div style="padding:10px; background:white; border-radius:8px; color:var(--text-secondary); text-align:center;">${billingCycle === 'monthly' ? 'Monthly' : 'Yearly'} Quote: RM ${basePrice}</div>`;
+                priceHTML = `<div style="padding:10px; background:white; border-radius:8px; color:var(--text-secondary); text-align:center;">Monthly Quote: RM ${basePrice}</div>`;
             } else {
                 priceHTML = `<div style="text-align:right; font-weight:700; color:var(--soft-black);">Price: RM ${basePrice} (${billingCycle})</div>`;
             }
