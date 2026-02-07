@@ -155,9 +155,6 @@
         .nav-item:hover { background: #f0f9ff; color: var(--primary-dark); }
         .nav-item:hover i { color: var(--primary-dark); }
         .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; border-left: 4px solid var(--primary); border-radius: 0 12px 12px 0; padding-left: 12px; }
-        .nav-item.help-item { margin-top: auto; color: var(--secondary); }
-        .nav-item.help-item i { color: var(--secondary); }
-        .nav-item.help-item:hover { background: #f0fdfa; color: var(--secondary-dark); }
         .sidebar-footer { padding: 16px; border-top: 1px solid #f1f5f9; }
         .user-pill { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 12px; background: #f8fafc; cursor: pointer; border: 1px solid transparent; transition: var(--transition); }
         .user-pill:hover { border-color: var(--border-light); background: white; }
@@ -210,6 +207,7 @@
 
         .btn-sm { padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border-light); background: white; color: var(--text-main); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: var(--transition); }
         .btn-sm:hover { background: #f8fafc; border-color: #cbd5e1; transform: translateY(-1px); }
+        .btn-sm:active { transform: translateY(0); }
         .btn-bill { background: var(--primary); color: white; border: none; }
         .btn-bill:hover { background: var(--primary-dark); }
         .btn-delete { color: var(--danger); border-color: #fee2e2; background: #fff; }
@@ -271,7 +269,7 @@
         .paid-stamp.visible { opacity: 0.9; }
         .receipt-actions { margin-top: 30px; padding-bottom: 60px; display: flex; justify-content: space-between; align-items: center; }
 
-        /* --- PRINT STYLES --- */
+        /* --- PRINT STYLES (UPDATED FOR CLINIC DETAILS) --- */
         @media print {
             body { background: white; height: auto; overflow: visible; display: block; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .sidebar, header, .mobile-menu-btn, .no-print, .view-section:not(#view-bill-detail) { display: none !important; }
@@ -283,6 +281,12 @@
             .receipt-paper { box-shadow: none; border: none; margin: 0; padding: 30px 40px; max-width: 100%; width: 100%; page-break-inside: avoid; border-top: 8px solid var(--primary); }
             .receipt-input { border: none !important; padding: 0 !important; width: auto; display: inline; background: transparent !important; }
             .paid-stamp { -webkit-print-color-adjust: exact; print-color-adjust: exact; opacity: 0.8; border-color: var(--success) !important; color: var(--success) !important; }
+            
+            /* Force Clinic Details to be visible and legible */
+            .rp-header, .rp-brand, .rp-brand-info { display: block !important; visibility: visible !important; width: 100%; page-break-inside: avoid; }
+            .rp-brand-info p { color: #000 !important; font-size: 12px; } /* Black text for better print contrast */
+            .rp-brand-info h1 { color: #000 !important; } /* Black text for header */
+            .rp-logo { display: block !important; }
             
             @page { size: A4 portrait; margin: 10mm; }
         }
@@ -304,8 +308,8 @@
         .sales-summary { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--primary) 0%, #0369a1 100%); color: white; padding: 30px; border-radius: 20px; box-shadow: var(--shadow-md); }
         .sales-big-number { font-size: 2.5rem; font-weight: 800; line-height: 1; }
 
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e293b; color: white; padding: 14px 28px; border-radius: 30px; transition: 0.4s; z-index: 200; box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.9rem; width: max-content; max-width: 90%; }
-        #toast.show { transform: translateX(-50%) translateY(0); }
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e293b; color: white; padding: 14px 28px; border-radius: 30px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200; box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 0.9rem; width: max-content; max-width: 90%; pointer-events: none; opacity: 0; }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         
         .view-section { display: none; }
         .view-section.active { display: block; }
@@ -345,13 +349,6 @@
         .slot-btn:hover:not(.booked):not(.blocked) { border-color: var(--primary); color: var(--primary); }
         .slot-btn.blocked { border-color: #fca5a5; color: #ef4444; background: #fee2e2; }
         .slot-btn.booked { border-color: var(--primary); background: var(--info-bg); color: var(--primary-dark); cursor: not-allowed; }
-
-        .support-options { display: flex; gap: 15px; margin-bottom: 20px; }
-        .support-card { flex: 1; border: 2px solid var(--border-light); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: var(--transition); }
-        .support-card:hover, .support-card.active { border-color: var(--primary); background: var(--primary-light); }
-        .support-card i { font-size: 2rem; color: var(--primary); margin-bottom: 10px; }
-        .support-form-group { margin-bottom: 15px; display: none; }
-        .support-form-group.active { display: block; animation: fadeIn 0.3s; }
 
         /* --- RESPONSIVE --- */
         @media (max-width: 1024px) {
@@ -400,7 +397,6 @@
             .table-header { flex-direction: column; align-items: flex-start; }
             .table-header-actions { flex-direction: column; align-items: stretch; width: 100%; }
             .search-container { max-width: 100%; }
-            .support-options { flex-direction: column; }
         }
     </style>
 </head>
@@ -446,7 +442,6 @@
             <li class="nav-item" onclick="navigateTo('patients')"><i class="fa-solid fa-user-doctor"></i> Patients</li>
             <li class="nav-item" onclick="navigateTo('services')"><i class="fa-solid fa-notes-medical"></i> Services</li>
             <li class="nav-item" onclick="navigateTo('slots')"><i class="fa-regular fa-clock"></i> Slot Management</li>
-            <li class="nav-item help-item" onclick="openSupport()"><i class="fa-solid fa-circle-question"></i> Need Help?</li>
         </ul>
         <div class="sidebar-footer">
             <div class="user-pill" onclick="openProfile()">
@@ -568,6 +563,7 @@
                                     <input type="date" id="billing-end" class="form-input" style="padding: 10px;" onchange="renderBilling()">
                                 </div>
                             </div>
+                            <!-- FUNCTIONAL BUTTON FIXED -->
                             <button class="btn-primary" style="width:auto; white-space:nowrap; padding: 10px 20px;" onclick="exportBillingData()"><i class="fa-solid fa-download"></i> Download CSV</button>
                         </div>
                     </div>
@@ -732,6 +728,7 @@
                                 <input type="date" id="export-end" class="form-input" style="padding: 10px;">
                             </div>
                         </div>
+                        <!-- FUNCTIONAL BUTTON FIXED -->
                         <button class="btn-primary" style="width:auto; white-space:nowrap; padding: 10px 20px;" onclick="exportData()"><i class="fa-solid fa-download"></i> Download CSV</button>
                     </div>
                 </div>
@@ -1037,7 +1034,7 @@
                     <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-muted);">Phone</span><span style="font-weight:600;" id="hist-p-phone">-</span></div>
                 </div>
 
-                <!-- Manual History Entry Section -->
+                <!-- Manual History Entry Section (NEW FEATURE) -->
                 <div style="margin-bottom:20px; border-top:1px dashed #e2e8f0; padding-top:15px;">
                     <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary);"><i class="fa-solid fa-clock-rotate-left"></i> Add Past Visit (Manual Entry)</h4>
                     <div style="display:grid; gap:10px;">
@@ -1180,62 +1177,22 @@
         </div>
     </div>
 
-    <!-- 10. SUPPORT MODAL -->
-    <div class="modal-overlay" id="supportModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Need Help?</h3>
-                <button onclick="closeModal('supportModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="support-options">
-                    <div class="support-card active" onclick="toggleSupportTab('ticket')">
-                        <i class="fa-solid fa-ticket"></i>
-                        <h4>Submit Ticket</h4>
-                    </div>
-                    <div class="support-card" onclick="toggleSupportTab('wa')">
-                        <i class="fa-brands fa-whatsapp" style="color: var(--wa-color);"></i>
-                        <h4>Contact IT</h4>
-                    </div>
-                </div>
-
-                <div id="support-ticket" class="support-form-group active">
-                    <div style="margin-bottom:15px;">
-                        <label style="font-size:0.8rem; font-weight:700;">Issue Type</label>
-                        <select id="support-issue-type" class="form-input" required>
-                            <option value="Login Problem">Login Problem</option>
-                            <option value="Appointment Error">Appointment Error</option>
-                            <option value="Billing Issue">Billing Issue</option>
-                            <option value="Feature Request">Feature Request</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div style="margin-bottom:15px;">
-                        <label style="font-size:0.8rem; font-weight:700;">Description</label>
-                        <textarea id="support-desc" class="form-input" rows="4" required placeholder="Describe your issue..."></textarea>
-                    </div>
-                    <input type="hidden" id="support-user-name">
-                    
-                    <button class="btn-primary" id="supportSubmitBtn" onclick="sendTicketToWA()">
-                        <i class="fa-brands fa-whatsapp"></i> Send via WhatsApp
-                    </button>
-                </div>
-
-                <div id="support-wa" class="support-form-group" style="text-align: center;">
-                    <p style="margin-bottom: 20px; color: var(--text-muted);">Chat directly with DDNetwork IT Support for immediate assistance.</p>
-                    <a href="https://wa.me/60123456789" target="_blank" class="btn-sm" style="background: var(--wa-color); color: white; font-size: 1.1rem; padding: 15px 30px; display: inline-flex;">
-                        <i class="fa-brands fa-whatsapp" style="font-size: 1.4rem; margin-right: 10px;"></i> Chat on WhatsApp
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- TOAST -->
     <div id="toast">
         <i class="fa-solid fa-circle-check" style="color:#4ade80;"></i> 
         <span id="toastMsg">Action Successful</span>
     </div>
+    
+    <!-- OPENWIDGET SCRIPT -->
+    <script>
+      window.__ow = window.__ow || {};
+      window.__ow.organizationId = "5f28e53d-8b59-4e4b-881a-befc6c4b6d45";
+      window.__ow.integration_name = "manual_settings";
+      window.__ow.product_name = "openwidget";   
+      ;(function(n,t,c){function i(n){return e._h?e._h.apply(null,n):e._q.push(n)}var e={_q:[],_h:null,_v:"2.0",on:function(){i(["on",c.call(arguments)])},once:function(){i(["once",c.call(arguments)])},off:function(){i(["off",c.call(arguments)])},get:function(){if(!e._h)throw new Error("[OpenWidget] You can't use getters before load.");return i(["get",c.call(arguments)])},call:function(){i(["call",c.call(arguments)])},init:function(){var n=t.createElement("script");n.async=!0,n.type="text/javascript",n.src="https://cdn.openwidget.com/openwidget.js",t.head.appendChild(n)}};!n.__ow.asyncInit&&e.init(),n.OpenWidget=n.OpenWidget||e}(window,document,[].slice))
+    </script>
+    <noscript>You need to <a href="https://www.openwidget.com/enable-javascript" rel="noopener nofollow">enable JavaScript</a> to use communication tool powered by <a href="https://www.openwidget.com/" rel="noopener nofollow" target="_blank">OpenWidget</a></noscript>
+    <!-- End of OpenWidget code -->
 
     <script>
         // --- SUPABASE CONFIGURATION ---
@@ -1290,7 +1247,6 @@
 
         // --- SMART ID GENERATOR ---
         async function generateSmartId(table, prefix) {
-            // Fetch last ID based on the new table name
             const { data, error } = await db
                 .from(table)
                 .select('id')
@@ -1300,7 +1256,6 @@
             
             let nextNum = 1;
             if (data && data.id) {
-                // Extract number from ID (e.g., "APT-0005" -> 5)
                 const parts = data.id.split('-');
                 const lastNum = parseInt(parts[parts.length - 1]);
                 if (!isNaN(lastNum)) {
@@ -1308,7 +1263,6 @@
                 }
             }
             
-            // Pad with zeros (e.g., 1 -> 0001)
             const numStr = String(nextNum).padStart(4, '0');
             return `${prefix}-${numStr}`;
         }
@@ -1318,7 +1272,6 @@
             const [year, month, day] = dateStr.split('-');
             const prefix = `KPA-${year}${month}-`;
 
-            // 1. Find the latest invoice for this month
             const { data, error } = await db
                 .from('klinikazam_appointments')
                 .select('invoice_id')
@@ -1330,7 +1283,6 @@
             let nextNum = 1;
             
             if (data && data.invoice_id) {
-                // Format is KPA-YYYYMM-0001
                 const parts = data.invoice_id.split('-');
                 const lastNum = parseInt(parts[2]);
                 if (!isNaN(lastNum)) {
@@ -1475,8 +1427,6 @@
             document.getElementById('profile-role').innerText = user.role;
             document.getElementById('profile-u').innerText = user.username;
             document.getElementById('profile-avatar').innerText = user.initials || user.name.substring(0,2).toUpperCase();
-            
-            document.getElementById('support-user-name').value = `${user.name} (${user.role})`;
         }
 
         function toggleMobileMenu() {
@@ -1536,7 +1486,6 @@
                 const sId = a.items && a.items[0] ? a.items[0].id : null;
                 const sName = sId ? (services.find(s => s.id === sId)?.name || "Service") : "Unknown";
                 
-                // FIXED: Added quotes around a.id
                 tbody.innerHTML += `
                 <tr>
                     <td style="font-weight:700;">${a.time}</td>
@@ -1588,7 +1537,6 @@
                 const pPhone = p ? p.phone : '-';
                 const sName = a.items ? a.items.map(i => services.find(s=>s.id===i.id)?.name).join(', ') : "Unknown";
                 
-                // FIXED: Added quotes around a.id
                 tBody.innerHTML += `
                 <tr>
                     <td>${formatDateDisplay(a.date)}</td>
@@ -1614,7 +1562,6 @@
                 const pName = p ? p.name : 'Unknown';
                 const sName = a.items ? a.items.map(i => services.find(s=>s.id===i.id)?.name).join(', ') : "Unknown";
                 const invDisplay = a.invoice_id || `INV-${a.id}`;
-                // FIXED: Added quotes around a.id
                 hBody.innerHTML += `
                 <tr>
                     <td>${formatDateDisplay(a.date)}</td>
@@ -1635,7 +1582,6 @@
                 const p = patients.find(p => p.id === a.patient_id);
                 const pName = p ? p.name : 'Unknown';
                 const sName = a.items ? a.items.map(i => services.find(s=>s.id===i.id)?.name).join(', ') : "Unknown";
-                // FIXED: Added quotes around a.id
                 cBody.innerHTML += `<tr><td>${formatDateDisplay(a.date)}</td><td style="font-weight:600; color:var(--danger);">${a.time}</td><td>${pName}</td><td>${sName}</td><td><button class="btn-sm btn-delete" onclick="requestDelete('appointment', '${a.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
@@ -1691,7 +1637,6 @@
                     }).join(', ');
                     
                     let apptTotal = a.items.reduce((sum, i) => sum + (i.price * i.qty), 0);
-                    // FIXED: Added quotes around a.id
                     tbody.innerHTML += `
                     <tr>
                         <td><span class="invoice-link" onclick="viewBillDetail('${a.id}')">${displayId}</span></td>
@@ -1709,6 +1654,54 @@
             }
         }
 
+        // --- CSV EXPORT LOGIC ---
+        function exportData() {
+            const start = document.getElementById('export-start').value;
+            const end = document.getElementById('export-end').value;
+            
+            let data = appointments.filter(a => 
+                a.status === 'Completed' && 
+                a.date >= start && 
+                a.date <= end
+            ).map(a => {
+                const p = patients.find(pt => pt.id === a.patient_id);
+                return {
+                    Date: a.date,
+                    Time: a.time,
+                    Patient: p ? p.name : 'Unknown',
+                    Phone: p ? p.phone : '-',
+                    Invoice: a.invoice_id || '-',
+                    Total: a.items.reduce((sum, i) => sum + (i.price * i.qty), 0)
+                };
+            });
+
+            if(data.length === 0) {
+                showToast("No data to export.");
+                return;
+            }
+
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + Object.keys(data[0]).join(",") + "\n" 
+                + data.map(e => Object.values(e).join(",")).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `report_${start}_to_${end}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Report Downloaded");
+        }
+
+        function exportBillingData() {
+            const start = document.getElementById('billing-start').value;
+            const end = document.getElementById('billing-end').value;
+            
+            // Same logic as exportData, can be customized if needed
+            exportData();
+        }
+
         // --- RECEIPT VIEW ---
         async function viewBillDetail(id) {
             const a = appointments.find(x => x.id === id);
@@ -1717,7 +1710,6 @@
             currentBillAppt = a;
             const p = patients.find(pt => pt.id === a.patient_id);
 
-            // If appointment is completed but has no invoice ID (migration or error), generate one
             if (!a.invoice_id && a.status === 'Completed') {
                 const newId = await generateInvoiceId(a.date);
                 const { error } = await db.from('klinikazam_appointments').update({ invoice_id: newId }).eq('id', a.id);
@@ -1960,7 +1952,6 @@
                     filtered.forEach(p => {
                         const li = document.createElement('li');
                         li.innerHTML = `<div>${p.name}</div><span class="sub-text">${p.phone || 'No Phone'}</span>`;
-                        // FIXED: Added quotes
                         li.onclick = () => selectPatient(p);
                         list.appendChild(li);
                     });
@@ -2043,7 +2034,6 @@
 
                 let existing = patients.find(p => p.phone === phone);
                 if(!existing) {
-                    // SMART ID GENERATION
                     const smartId = await generateSmartId('klinikazam_patients', 'PAT');
                     const newPat = { id: smartId, name, phone, ic: ic || '-' };
                     const { data, error } = await db.from('klinikazam_patients').insert([newPat]).select();
@@ -2060,7 +2050,6 @@
             }
 
             if(patientId) {
-                // SMART ID GENERATION
                 const smartId = await generateSmartId('klinikazam_appointments', 'APT');
                 const newAppt = {
                     id: smartId,
@@ -2161,7 +2150,7 @@
         }
 
         async function saveApptEdit() {
-            const id = document.getElementById('edit-appt-id').value; // Use string ID
+            const id = document.getElementById('edit-appt-id').value; 
             const dateVal = document.getElementById('edit-appt-date').value;
             const timeVal = document.getElementById('edit-appt-time').value;
             
@@ -2236,7 +2225,6 @@
         }
 
         async function saveAndPrintInvoice() {
-            // Generate Invoice ID if missing
             if(!currentBillAppt.invoice_id) {
                 currentBillAppt.invoice_id = await generateInvoiceId(currentBillAppt.date);
             }
@@ -2268,7 +2256,6 @@
                 return;
             }
 
-            // Generate new Invoice ID
             const invId = await generateInvoiceId(a.date);
             
             const { error } = await db.from('klinikazam_appointments').update({
@@ -2307,7 +2294,6 @@
 
             filtered.forEach(p => {
                 const count = visitCounts[p.id] || 0;
-                // FIXED: Added quotes around p.id
                 tbody.innerHTML += `
                 <tr>
                     <td style="font-weight:600;">${p.name}</td>
@@ -2353,7 +2339,6 @@
                 const res = await db.from('klinikazam_patients').update({ name, phone, ic }).eq('id', id);
                 error = res.error;
             } else {
-                // SMART ID GENERATION
                 id = await generateSmartId('klinikazam_patients', 'PAT');
                 const newPat = { id, name, phone, ic: ic || '-' };
                 const res = await db.from('klinikazam_patients').insert([newPat]);
@@ -2378,6 +2363,9 @@
             document.getElementById('hist-p-id').innerText = p.id;
             document.getElementById('hist-p-phone').innerText = p.phone;
             
+            // Set default date to today
+            document.getElementById('hist-date').value = todayStr;
+
             // Populate History List
             const history = appointments.filter(a => a.patient_id === patientId && a.status === 'Completed').sort((a,b) => new Date(b.date) - new Date(a.date));
             const tbody = document.getElementById('historyListBody');
@@ -2406,8 +2394,10 @@
                 return;
             }
 
-            // SMART ID GENERATION
             const smartId = await generateSmartId('klinikazam_appointments', 'APT');
+            // Create a manual invoice ID based on date to separate from normal flow
+            const manualInvId = `OLD-${date.replace(/-/g,'')}`;
+
             const newAppt = {
                 id: smartId,
                 patient_id: historyPatientId,
@@ -2416,15 +2406,14 @@
                 items: [{ id: sId, qty: qty, price: price }],
                 status: 'Completed',
                 payment_method: 'CASH',
-                invoice_id: `OLD-${date.replace(/-/g,'')}`
+                invoice_id: manualInvId
             };
 
             const { error } = await db.from('klinikazam_appointments').insert([newAppt]);
             if(!error) {
                 showToast("Old data added successfully");
-                // Refresh the list in the modal
                 openHistory(historyPatientId);
-                await refreshData(); // Update global counts
+                await refreshData();
             } else {
                 showToast("Error saving history");
             }
@@ -2443,7 +2432,6 @@
             );
 
             filtered.forEach(s => {
-                // FIXED: Added quotes around s.id
                 tbody.innerHTML += `<tr><td style="font-weight:600;">${s.name}</td><td><span class="badge badge-info">${s.role}</span></td><td>${s.id}</td><td><button class="btn-sm" onclick="openEditStaff('${s.id}')"><i class="fa-solid fa-pen"></i></button> <button class="btn-sm btn-delete" onclick="requestDelete('staff', '${s.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
@@ -2476,7 +2464,6 @@
                 const res = await db.from('klinikazam_staff').update({ name, role, username: u }).eq('id', id);
                 error = res.error;
             } else {
-                // SMART ID GENERATION
                 id = await generateSmartId('klinikazam_staff', 'STF');
                 const newStaff = { id, name, role, username: u, password: '1234', initials: name.substring(0,2).toUpperCase() };
                 const res = await db.from('klinikazam_staff').insert([newStaff]);
@@ -2496,7 +2483,6 @@
             const tbody = document.querySelector('#services-table tbody');
             tbody.innerHTML = '';
             services.forEach(s => {
-                // FIXED: Added quotes around s.id (Though Service IDs are Ints, quoting makes it safe for all types)
                 tbody.innerHTML += `<tr><td>${s.name}</td><td style="font-weight:700;">RM ${s.price}</td><td><button class="btn-sm" onclick="openEditService('${s.id}')"><i class="fa-solid fa-pen"></i></button> <button class="btn-sm btn-delete" onclick="requestDelete('service', '${s.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
             });
         }
@@ -2712,42 +2698,22 @@ Sila hadir 5–10 minit lebih awal...`;
             }
         }
 
-        function openSupport() {
-            toggleMobileMenu(); 
-            showModal('supportModal');
+        function openProfile() {
+            showModal('profileModal');
         }
-
-        function toggleSupportTab(tab) {
-            const cards = document.querySelectorAll('.support-card');
-            const groups = document.querySelectorAll('.support-form-group');
-            cards.forEach(c => c.classList.remove('active'));
-            groups.forEach(g => g.classList.remove('active'));
-            if(tab === 'ticket') {
-                cards[0].classList.add('active');
-                document.getElementById('support-ticket').classList.add('active');
+        
+        function toggleCancelledTable() {
+            const container = document.getElementById('cancelled-container');
+            const btn = document.getElementById('toggleCancelledBtn');
+            if(container.style.display === 'none') {
+                container.style.display = 'block';
+                btn.innerText = "Hide Cancelled";
             } else {
-                cards[1].classList.add('active');
-                document.getElementById('support-wa').classList.add('active');
+                container.style.display = 'none';
+                btn.innerText = "Show Cancelled";
             }
         }
-
-        function sendTicketToWA() {
-            const issueType = document.getElementById('support-issue-type').value;
-            const description = document.getElementById('support-desc').value;
-            const user = document.getElementById('support-user-name').value; 
-            const phone = "60123456789"; 
-
-            if(!issueType || !description) {
-                showToast("Please fill in all fields.");
-                return;
-            }
-
-            const message = `*SUPPORT TICKET* --------------------------- *Requested By:* ${user} *Issue Type:* ${issueType} *Description:* ${description} --------------------------- _Generated from Klinik Azam Portal_`;
-            const encodedMsg = encodeURIComponent(message);
-            const url = `https://wa.me/${phone}?text=${encodedMsg}`;
-            window.open(url, '_blank');
-            showToast("Opening WhatsApp...");
-        }
+        
     </script>
 </body>
 </html>
