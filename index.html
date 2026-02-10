@@ -1075,7 +1075,23 @@
         .idea-success-title { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; }
         .idea-success-msg { color: var(--text-secondary); font-size: 1rem; line-height: 1.6; margin-bottom: 2rem; }
 
-        /* --- RESPONSIVE (General) --- */
+        /* --- CHECKOUT IMPROVEMENTS --- */
+        /* Payment Section Animation */
+        #payment-section-reveal {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out;
+            margin-top: 1rem;
+            border-top: 1px dashed var(--border-glass);
+        }
+        #payment-section-reveal.active {
+            max-height: 500px; /* Arbitrary height to fit button */
+            opacity: 1;
+            padding-top: 1.5rem;
+        }
+
+        /* Responsive (General) */
         @media(max-width: 991px) {
             h1 { font-size: 2.2rem !important; } h2 { font-size: 1.5rem !important; } body { font-size: 0.95rem !important; } 
             #globe-canvas { transform: translate(-50%, -50%) scale(0.5); opacity: 0.6; }
@@ -2248,16 +2264,16 @@
             </div>
         </section>
 
-        <!-- === PAGE: CHECKOUT === -->
+        <!-- === PAGE: CHECKOUT (UPDATED LAYOUT) === -->
         <section id="buynow" class="page-section">
             <div class="text-center" style="margin-bottom: 2rem;">
-                <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Finalize Your Order</h2>
-                <p style="color: var(--text-secondary);">Secure your package and finalize details.</p>
+                <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Secure Checkout</h2>
+                <p style="color: var(--text-secondary);">Finalize your order and start your project.</p>
             </div>
 
             <div class="profile-details-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem;">
                 
-                <!-- LEFT COLUMN -->
+                <!-- LEFT COLUMN: Summary -->
                 <div class="glass-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-glass);">
                         <h3 style="font-size: 1rem; color: var(--text-main);">Order Summary</h3>
@@ -2382,32 +2398,28 @@
 
         <div style="border: 0; border-top: 1px solid var(--border-glass); margin: 2rem 0;"></div>
 
-        <div class="form-group" style="background: rgba(255,255,255,0.8); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-glass);">
-            <label class="form-label" style="text-align: center; color: var(--soft-black); margin-bottom: 1.5rem; font-size: 0.9rem;">Payment Method</label>
-            <p style="text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 2rem;">Razorpay Secure Payment Gateway</p>
-            
-            <!-- REMOVED DATABASE PAYMENT METHODS - DIRECT BUTTON LOGIC -->
-            <!-- Removed: <select id="payment-method-select">...</div> -->
-            
-            <!-- DIRECT BUTTON LOGIC -->
-            <button type="button" id="init-razorpay-btn" class="btn btn-glass" style="width: 100%; margin-bottom: 1rem;" onclick="initiateRazorpayFlow()">
-                <span style="margin-right: 8px;">Step 1</span> Proceed to Payment
-            </button>
-            
+        <div style="background: rgba(255,255,255,0.8); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-glass);">
+            <label style="display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; line-height: 1.5rem;" onclick="openTermsModal()">
+                <input type="checkbox" id="terms-check" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--soft-black); margin-top: 2rem;">
+                <span style="color: var(--text-secondary);">
+                    I have read and agreed to <span class="auth-link" onclick="openTermsModal()">Terms & Conditions</span>.
+                </span>
+            </label>
+        </div>
+        
+        <!-- IMPROVED PROCEED BUTTON & PAYMENT REVEAL -->
+        <button type="button" id="btn-proceed-to-payment" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 1rem; font-size: 1rem;" onclick="revealPaymentSection()">
+            Proceed to Payment
+        </button>
+
+        <div id="payment-section-reveal">
+            <p style="text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Razorpay Secure Payment Gateway
+            </p>
             <!-- Container for Razorpay Injection -->
             <div id="razorpay-button-container" style="min-height: 50px;"></div>
         </div>
 
-        <label style="display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; line-height: 1.5rem;" onclick="openTermsModal()">
-            <input type="checkbox" id="terms-check" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--soft-black); margin-top: 2rem;">
-            <span style="color: var(--text-secondary);">
-                I have read and agreed to <span class="auth-link" onclick="openTermsModal()">Terms & Conditions</span>.
-            </span>
-        </label>
-        
-        <!-- Submit Order is now handled by Razorpay completion, or manual submission if needed -->
-        <!-- Removed 'Payment Method' select/dropdown code -->
-        <!-- Removed 'Place Order' button checkbox logic -->
     </form>
 </div>
 
@@ -2793,7 +2805,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     });
 
     // ==========================================
-    // SEO TITLES CONFIGURATION
+    // SEO TITLES CONFIGURATION (UPDATED FOR NEW ROUTES)
     // ==========================================
     const PAGE_TITLES = {
         '/': 'DDNetwork by DD Cloud Network',
@@ -2816,7 +2828,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         '/terms': 'Terms & Conditions',
         '/faq': 'Frequently Asked Questions',
         '/privacy': 'Privacy Policy - DDNetwork',
-        '/custom-quote': 'Custom Quote Request'
+        '/custom-quote': 'Custom Quote Request',
+        // New Dynamic Routes for specific packages
+        '/front-end/checkout-page': 'Checkout - Front-End Website',
+        '/bundle/checkout-page': 'Checkout - Front-End + Portal'
     };
 
     function updatePageTitle(path) {
@@ -2932,7 +2947,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     let PRICING_DATA = {
         html: { 
             oneTime:249, 
-            monthly: null, // REMOVED MONTHLY
+            monthly: null, 
             setupFee: 0, 
             desc: "1 Static Landing Page. Mobile Responsive. Basic SEO." 
         },
@@ -2949,15 +2964,15 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             desc: "Full website & internal management." 
         },
         ai: { 
-            oneTime: null, // Custom Quote
-            monthly: null, // Custom Quote
-            setupFee: null, // Custom Quote
+            oneTime: null, 
+            monthly: null, 
+            setupFee: null, 
             desc: "Advanced automation & chatbots." 
         },
         portal: { 
-            oneTime: null, // Custom Quote
-            monthly: null, // Custom Quote
-            setupFee: null, // Custom Quote
+            oneTime: null, 
+            monthly: null, 
+            setupFee: null, 
             desc: "Internal portal for existing sites." 
         }
     };
@@ -3055,7 +3070,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     }
 
     // ==========================================
-    // FRONTEND ROUTING
+    // FRONTEND ROUTING (UPDATED FOR DYNAMIC URLS)
     // ==========================================
     const routes = {
         '/': 'home', 
@@ -3078,8 +3093,19 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         '/terms': 'terms',
         '/faq': 'faq',
         '/privacy': 'privacy',
-        '/custom-quote': 'custom-quote' // Added route for custom quote
+        '/custom-quote': 'custom-quote'
     };
+
+    // Dynamic route matcher to handle /front-end/checkout-page
+    function matchRoute(path) {
+        // Check exact routes first
+        if (routes[path]) return routes[path];
+        // Check dynamic routes
+        if (path.startsWith('/front-end/checkout-page')) return 'buynow';
+        if (path.startsWith('/bundle/checkout-page')) return 'buynow';
+        // Default
+        return 'home';
+    }
 
     function routeLink(event, path) {
         event.preventDefault();
@@ -3087,7 +3113,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     }
 
     function navigateTo(path) {
-        const sectionId = routes[path];
+        const sectionId = matchRoute(path);
         if (!sectionId) return;
         
         // Update URL without reloading
@@ -3101,19 +3127,21 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
 
     window.addEventListener('popstate', (event) => {
         if (event.state && event.state.path) {
-            performTransition(routes[event.state.path]);
+            const target = matchRoute(event.state.path);
+            performTransition(target);
             updatePageTitle(event.state.path);
         }
         else {
             const path = window.location.pathname;
-            performTransition(routes[path] || 'home');
+            const target = matchRoute(path) || 'home'; 
+            performTransition(target);
             updatePageTitle(path);
         }
     });
 
     function handleInitialRoute() {
         const path = window.location.pathname;
-        const target = routes[path] || 'home'; 
+        const target = matchRoute(path) || 'home'; 
         performTransition(target, true);
         updatePageTitle(path);
     }
@@ -3240,7 +3268,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             console.log("Config not found, creating default...");
             await configRef.set({ maintenance_active: false, payment_methods: [] });
         }
-        // No longer initializing payment_methods in DB as requested
     }
 
     function listenToConfig() {
@@ -3250,7 +3277,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 const data = doc.data();
                 if(data.maintenance_active) document.getElementById('maintenance-overlay').classList.add('active');
                 else document.getElementById('maintenance-overlay').classList.remove('active');
-                // No longer using DB for prices as requested
             }
         });
     }
@@ -3301,7 +3327,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         packageType: null,
         packagePrice: 0, 
         setupFee: 0,
-        domainPrice: 0, // Set to 0 for DDNet
+        domainPrice: 0, 
         maintenancePrice: 0,
         discountRate: 0,
         discountFixed: 0,
@@ -3868,6 +3894,22 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         element.classList.toggle('active');
     }
 
+    // ==========================================
+    // UPDATED CHECKOUT & PACKAGE LOGIC
+    // ==========================================
+
+    // Razorpay Button IDs mapping
+    const RAZORPAY_IDS = {
+        'html-monthly': 'pl_SENduiJS84XcqL', 
+        'html-onetime': 'pl_SENduiJS84XcqL', 
+        
+        'frontend-monthly': 'pl_SENHGZR8bh1mTr',
+        'frontend-onetime': 'pl_SENnrNuEIyntLN',
+        
+        'bundle-monthly': 'pl_SENSCJsnYWuh4r',
+        'bundle-onetime': 'pl_SENpCvxRWxddfN'
+    };
+
     function attemptSelectPackage(name, type) {
         if (typeof auth === 'undefined' || auth === null) { showToast("Authentication system initializing...", "error"); return; }
         
@@ -3881,22 +3923,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         if (auth.currentUser) { selectPackage(name, type); } 
         else { showToast("Please login or sign up to make a purchase.", "error"); setTimeout(() => { navigateTo('/login'); }, 1500); }
     }
-
-    // ==========================================
-    // RAZORPAY & PAYMENT LOGIC (UPDATED - NO POPUP)
-    // ==========================================
-    
-    // Razorpay Button IDs mapping
-    const RAZORPAY_IDS = {
-        'html-monthly': 'pl_SENduiJS84XcqL', // Basic One Time (mapped to monthly key logic in selectPackage or just fixed)
-        'html-onetime': 'pl_SENduiJS84XcqL', 
-        
-        'frontend-monthly': 'pl_SENHGZR8bh1mTr',
-        'frontend-onetime': 'pl_SENnrNuEIyntLN',
-        
-        'bundle-monthly': 'pl_SENSCJsnYWuh4r',
-        'bundle-onetime': 'pl_SENpCvxRWxddfN'
-    };
 
     function selectPackage(name, type) {
         state.packageType = type;
@@ -3914,7 +3940,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         let setupFee = 0;
 
         if(PRICING_DATA[type]) {
-            // HTML is forced one-time
             if(type === 'html') {
                 basePrice = PRICING_DATA[type].oneTime;
                 desc = "One-time purchase. No support.";
@@ -3944,6 +3969,12 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         }
         priceArea.innerHTML = priceHTML;
 
+        // UPDATE 1: Dynamic URL Routing
+        // If Frontend selected, go to /front-end/checkout-page. If Bundle, go to /bundle/checkout-page
+        let targetRoute = '/order'; // Default
+        if (type === 'frontend') targetRoute = '/front-end/checkout-page';
+        if (type === 'bundle') targetRoute = '/bundle/checkout-page';
+
         state.domainType = 'sub'; 
         state.domainName = ''; 
         state.domainNameValid = false; 
@@ -3954,11 +3985,17 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         state.discountRate = 0; state.discountFixed = 0; state.discountType = 'percent'; state.discountCode = ''; state.paymentMethodId = null; 
         document.getElementById('terms-check').checked = false;
         
+        // Hide payment section on re-selection
+        document.getElementById('payment-section-reveal').classList.remove('active');
+        document.getElementById('razorpay-button-container').innerHTML = '';
+        document.getElementById('btn-proceed-to-payment').style.display = 'block';
+        document.getElementById('btn-proceed-to-payment').innerText = 'Proceed to Payment';
+
         resetPaymentCheckbox();
 
         if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
         else { document.getElementById('auto-fill-label').style.display = 'none'; hideVoucherCard(); }
-        updateSummaryText(); updateUI(); navigateTo('/order');
+        updateSummaryText(); updateUI(); navigateTo(targetRoute);
     }
 
     // Prepare Quote Form
@@ -3966,11 +4003,8 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         document.getElementById('quote-package').value = packageName;
         if(auth && auth.currentUser) {
             const user = auth.currentUser;
-            // Basic fill
             document.getElementById('quote-name').value = user.displayName || "";
             document.getElementById('quote-email').value = user.email || "";
-            
-            // Fetch full data
             db.collection("users").doc(user.uid).get().then(doc => {
                 if(doc.exists) {
                     const d = doc.data();
@@ -3983,7 +4017,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
 
     function handleQuoteSubmit(e) {
         e.preventDefault();
-        // Similar to helpdesk/ticket submission
         const name = document.getElementById('quote-name').value;
         const phone = document.getElementById('quote-phone').value;
         const email = document.getElementById('quote-email').value;
@@ -4038,11 +4071,11 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         if(type === 'sub') {
             document.getElementById('input-subdomain').style.display = 'block';
             document.getElementById('input-custom').style.display = 'none';
-            state.domainPrice = 0; // Free first year
+            state.domainPrice = 0; 
         } else {
             document.getElementById('input-subdomain').style.display = 'none';
             document.getElementById('input-custom').style.display = 'block';
-            state.domainPrice = 0; // No charge for bringing own
+            state.domainPrice = 0; 
         }
         updateSummaryText(); updateTotal();
     }
@@ -4176,13 +4209,15 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     }
 
     function resetPaymentCheckbox() {
-        // Removed Modal Logic
+        // Placeholder for any extra checkbox logic
     }
 
     // ==========================================
-    // DIRECT RAZORPAY INJECTION (NO POPUP)
+    // IMPROVED CHECKOUT BUTTON & RAZORPAY
     // ==========================================
-    function initiateRazorpayFlow() {
+    
+    // New function to handle "Proceed to Payment" click
+    function revealPaymentSection() {
         const termsCheck = document.getElementById('terms-check');
         
         // 1. Validate Package
@@ -4209,7 +4244,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             return;
         }
 
-        // 4. Determine Razorpay ID based on Package + Cycle
+        // 4. Determine Razorpay ID
         let razorpayId = '';
         const key = `${state.packageType}-${state.isOneTime ? 'onetime' : 'monthly'}`;
         // HTML package is forced onetime
@@ -4221,32 +4256,35 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             return;
         }
 
-        // 5. INJECT RAZORPAY SCRIPT DIRECTLY
-        const container = document.getElementById('razorpay-button-container');
-        container.innerHTML = ''; // Clear previous
+        // 5. Reveal Button Animation
+        const btn = document.getElementById('btn-proceed-to-payment');
+        const container = document.getElementById('payment-section-reveal');
+        
+        btn.style.display = 'none'; // Hide the Proceed button
+        container.classList.add('active'); // Reveal the payment section with animation
+
+        // 6. INJECT RAZORPAY SCRIPT
+        const scriptContainer = document.getElementById('razorpay-button-container');
+        scriptContainer.innerHTML = ''; // Clear previous
         
         const script = document.createElement('script');
         script.src = "https://checkout.razorpay.com/v1/payment-button.js";
         script.setAttribute('data-payment_button_id', razorpayId);
         script.async = true;
         script.onload = () => {
-            showToast("Payment button loaded successfully.", "success");
+            showToast("Payment gateway loaded successfully.", "success");
         };
         script.onerror = () => {
              showToast("Could not load payment gateway. Try refreshing.", "warning");
         };
         
-        container.appendChild(script);
+        scriptContainer.appendChild(script);
     }
 
     // ==========================================
     // PAYMENT & ORDER SUBMISSION
     // ==========================================
     
-    // Updated triggerPayment is handled by initiateRazorpayFlow
-    // The "Place Order" button will be revealed manually by user if Razorpay flow fails or they want manual entry, 
-    // but in this Razorpay integration, usually the payment handles the completion.
-    // We will simulate "Place Order" completion after "I have made payment" check.
     function openTermsModal() {
         document.getElementById('termsModal').classList.add("open");
         document.body.style.overflow = "hidden";
@@ -4264,11 +4302,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
 
     function submitOrder() {
         const termsCheck = document.getElementById('terms-check');
-        // Removed double confirm check, reliance on Razorpay flow logic
-        // Note: Razorpay does not return callback easily in this simple script format without webhooks, 
-        // so we usually rely on the user manually confirming payment.
-        // Since we are injecting the button directly, the user clicks that to pay.
-        // After they pay, we assume success. If they click "Place Order" button, we send the order.
         
         if(!termsCheck.checked) {
             showGlassModal("Agreement Required", "Please agree to Terms & Conditions to proceed.", "warning", "I Agree", () => {
@@ -4277,7 +4310,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             return;
         }
         
-        // Allow Custom Quotes to be submitted without payment proof (or manual admin approval)
         if(state.packageType !== 'ai' && state.packageType !== 'portal') {
              if(!state.domainNameValid) return showToast("Please enter a valid domain.", "error");
         }
