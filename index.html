@@ -1347,14 +1347,14 @@
                 <div class="container" style="overflow: hidden;">
                     <!-- Row 1 Left -->
                     <div class="marquee-row" id="trust-marquee-row-1">
-                        <div class="trust-item"><i class="ri-check-double-line"></i> Trusted by 100+ Clients</div>
+                        <div class="trust-item"><i class="ri-check-double-line"></i> Trusted by 10+ Clients</div>
                         <div class="trust-item"><i class="ri-global-line"></i> Global Standard Hosting</div>
                         <div class="trust-item"><i class="ri-rocket-line"></i> Fast Delivery Guaranteed</div>
                         <div class="trust-item"><i class="ri-shield-check-line"></i> Secure Payment Gateway</div>
                         <div class="trust-item"><i class="ri-customer-service-2-line"></i> 24/7 Technical Support</div>
                         <div class="trust-item"><i class="ri-star-s-fill"></i> 5-Star Rated Services</div>
                         <!-- Duplicate for smooth loop -->
-                        <div class="trust-item"><i class="ri-check-double-line"></i> Trusted by 100+ Clients</div>
+                        <div class="trust-item"><i class="ri-check-double-line"></i> Trusted by 10+ Clients</div>
                         <div class="trust-item"><i class="ri-global-line"></i> Global Standard Hosting</div>
                         <div class="trust-item"><i class="ri-rocket-line"></i> Fast Delivery Guaranteed</div>
                         <div class="trust-item"><i class="ri-shield-check-line"></i> Secure Payment Gateway</div>
@@ -2407,7 +2407,7 @@
                                 <option value="" disabled selected>Loading Payment Methods...</option>
                             </select>
                             
-                            <button type="button" class="btn btn-glass" style="width: 100%; margin-bottom: 1rem; margin-top: 1rem;" onclick="triggerPayment()"><span style="margin-right: 8px;">Step 1</span> Proceed to Payment</button>
+                            <button type="button" class="btn btn-glass" style="width: 100%; margin-bottom: 1rem; margin-top: 1rem;" onclick="triggerRazorpayPayment()"><span style="margin-right: 8px;">Step 1</span> Proceed to Payment</button>
                             
                             <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">
                                 <input type="checkbox" id="terms-check" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--soft-black);">
@@ -2994,7 +2994,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 if(featHtmlNoSupport) featHtmlNoSupport.classList.add('hidden');
                 if(featHtmlCharge) featHtmlCharge.classList.add('hidden');
             }
-        }
+                    }
 
         // --- OTHER PACKAGES (Iterate through keys) ---
         const keys = ['frontend', 'bundle', 'ai', 'portal'];
@@ -3161,7 +3161,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         { id: 'fpx', name: 'Online Banking (FPX)', link: 'https://toyyibpay.com', active: true } 
     ];
 
-    let siteConfig = { maintenance_active: false, payment_methods: [], packageDetails: {} };
+    let siteConfig = { maintenance_active: false, payment_methods: [], packageDetails: {}, razorpay: null };
     let currentUserRole = 'user'; 
     
     try {
@@ -3235,6 +3235,22 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         }
     }
 
+    // ADDED: Fetch Razorpay Keys from Firestore
+    function listenToRazorpayConfig() {
+        if(!db) return;
+        db.collection("razor_payment").doc("curlec_settings")
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    siteConfig.razorpay = doc.data();
+                    console.log("Razorpay Keys Loaded");
+                } else {
+                    console.log("No Razorpay config found in 'razor_payment' collection");
+                }
+            }, (error) => {
+                console.error("Error listening to Razorpay config:", error);
+            });
+    }
+
     function listenToConfig() {
         if(!db) return;
         db.collection("config").doc("site_settings").onSnapshot((doc) => {
@@ -3290,6 +3306,15 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 hasActiveMethods = true;
             }
         });
+        // Add Razorpay Option if config exists
+        if(siteConfig.razorpay && siteConfig.razorpay.key_id) {
+            const razorpayOption = document.createElement('option');
+            razorpayOption.value = 'razorpay_curlec';
+            razorpayOption.innerText = 'Credit / Debit Card (Razorpay)';
+            select.appendChild(razorpayOption);
+            hasActiveMethods = true;
+        }
+        
         if(currentSelection) select.value = currentSelection;
         if (!hasActiveMethods) select.innerHTML = '<option value="" disabled selected>No Payment Methods Available</option>';
     }
@@ -3333,6 +3358,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             snapshot.forEach(doc => PROMO_CODES[doc.id] = doc.data().discount);
         });
         listenToPaymentMethods();
+        listenToRazorpayConfig(); // NEW: Listen for Razorpay keys
         listenToConfig();
         loadPortfolio();
     }
@@ -3365,7 +3391,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     let reviewsCache = []; 
 
     const DUMMY_REVIEWS = [
-        { rating: 5, userName: 'PNE Arena Enterprise', comment: 'Excellent service! The team was very professional and the delivery was faster than expected.', timestamp: null },
+        { rating: 5, userName: 'PNE Arena Enterprise', comment: 'Excellent service! The team was very professional and delivery was faster than expected.', timestamp: null },
     ];
 
     function setupStarRating() {
@@ -4207,66 +4233,27 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     }
 
     // ==========================================
-    // PAYMENT & ORDER SUBMISSION
+    // PAYMENT & ORDER SUBMISSION (RAZORPAY INTEGRATION)
     // ==========================================
-    function triggerPayment() {
+    
+    // Function to Dynamically Load Razorpay Script
+    function loadRazorpayScript(callback) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = callback;
+        document.body.appendChild(script);
+    }
+
+    function triggerRazorpayPayment() {
         if(!state.packageType) return showToast("Please select a package first.", "error");
-        const select = document.getElementById('payment-method-select');
-        const methodId = select.value;
-
-        if(!methodId) {
-            showGlassModal("Payment Method Required", "Please select a payment method from dropdown list before proceeding.", "warning", "Select Method");
-            return;
-        }
-
-        const methods = siteConfig.payment_methods && siteConfig.payment_methods.length > 0 ? siteConfig.payment_methods : DEFAULT_PAYMENT_METHODS;
-        const selectedMethod = methods.find(m => m.id === methodId);
-        if(!selectedMethod || !selectedMethod.link) return showToast("Payment link error.", "error");
-
-        const overlay = document.getElementById('processing-overlay');
-        const msgEl = document.getElementById('process-message');
         
-        overlay.style.display = 'flex';
-        msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-alarm-warning-fill" style="color:var(--soft-black);"></i></div> Please ensure payment amount is correct. You may enter either a deposit or full payment amount. Kindly screenshot payment for proof.`;
-
-        let existingClose = document.getElementById('temp-close-ov');
-        if(existingClose) existingClose.remove();
-        const tempClose = document.createElement('button');
-        tempClose.id = 'temp-close-ov'; tempClose.className = 'btn btn-glass'; tempClose.innerText = "Close"; tempClose.style.marginTop = "20px";
-        tempClose.onclick = () => { overlay.style.display = 'none'; };
-        overlay.appendChild(tempClose);
-
-        setTimeout(() => { window.open(selectedMethod.link, '_blank'); },500);
-    }
-
-    function openTermsModal() {
-        document.getElementById('termsModal').classList.add("open");
-        document.body.style.overflow = "hidden";
-    }
-
-    function closeTermsModal() {
-        document.getElementById('termsModal').classList.remove("open");
-        document.body.style.overflow = "auto";
-    }
-
-    window.onclick = function(event) {
-        const modal = document.getElementById('termsModal');
-        if (event.target == modal) closeTermsModal();
-    }
-
-    function submitOrder() {
+        // Validation
         const termsCheck = document.getElementById('terms-check');
-        const paymentCheck = document.getElementById('payment-confirm-check');
-        
         if(!termsCheck.checked) {
-            showGlassModal("Agreement Required", "Please agree to Terms & Conditions to proceed with your order.", "warning", "I Agree", () => {
+            showGlassModal("Agreement Required", "Please agree to Terms & Conditions to proceed.", "warning", "I Agree", () => {
                 document.getElementById('terms-check').checked = true;
             });
-            return;
-        }
-        
-        if(!paymentCheck.checked) {
-            showGlassModal("Payment Confirmation", "Please confirm that you have made payment by ticking checkbox.", "warning");
             return;
         }
 
@@ -4281,32 +4268,109 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             return;
         }
 
-        if(!state.packageType) return showToast("Please select a package first.", "error");
-        
-        if(!state.paymentMethodId) {
-            return showToast("Please select and proceed payment to place an order.", "error");
+        const select = document.getElementById('payment-method-select');
+        const methodId = select.value;
+        const selectedMethod = siteConfig.payment_methods.find(m => m.id === methodId);
+
+        // Razorpay Logic
+        if(methodId === 'razorpay_curlec') {
+            if(!siteConfig.razorpay || !siteConfig.razorpay.key_id) {
+                return showToast("Payment configuration not found. Please contact support.", "error");
+            }
+
+            // Ensure Razorpay script is loaded
+            if(!window.Razorpay) {
+                showToast("Loading Secure Payment...", "info");
+                loadRazorpayScript(triggerRazorpayPayment);
+                return;
+            }
+
+            // Prepare Order Data for Razorpay
+            const totalAmount = parseFloat(document.getElementById('summary-final-total').innerText.replace('RM ', ''));
+            const amountInPaisa = Math.round(totalAmount * 100); // Convert RM to smallest currency unit (assuming 100 cents per RM, adjust if needed)
+            
+            const options = {
+                "key": siteConfig.razorpay.key_id,
+                "amount": amountInPaisa, 
+                "currency": "MYR",
+                "name": "DDNetwork One",
+                "description": `Order for ${state.packageType}`,
+                "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
+                "handler": function (response) {
+                    // SUCCESS CALLBACK
+                    // response.razorpay_payment_id is the ID
+                    console.log("Razorpay Success:", response);
+                    
+                    // Create Order in Firestore
+                    createOrderInFirestore(response.razorpay_payment_id, 'Paid');
+                },
+                "prefill": {
+                    "name": document.getElementById('co-name').value,
+                    "email": document.getElementById('co-email').value,
+                    "contact": document.getElementById('co-phone').value
+                },
+                "theme": {
+                    "color": "#1e293b"
+                },
+                "modal": {
+                    "ondismiss": function(){
+                        console.log('Checkout form closed');
+                        // User closed the modal without paying
+                        showToast("Payment cancelled or failed.", "warning");
+                    }
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } 
+        // Fallback to Manual Payment (ToyyibPay/TNG)
+        else if (selectedMethod && selectedMethod.link) {
+            const overlay = document.getElementById('processing-overlay');
+            const msgEl = document.getElementById('process-message');
+            
+            overlay.style.display = 'flex';
+            msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-alarm-warning-fill" style="color:var(--soft-black);"></i></div> Please ensure payment amount is correct. You may enter either a deposit or full payment amount. Kindly screenshot payment for proof.`;
+
+            let existingClose = document.getElementById('temp-close-ov');
+            if(existingClose) existingClose.remove();
+            const tempClose = document.createElement('button');
+            tempClose.id = 'temp-close-ov'; 
+            tempClose.className = 'btn btn-glass'; 
+            tempClose.innerText = "Close"; 
+            tempClose.style.marginTop = "20px";
+            tempClose.onclick = () => { overlay.style.display = 'none'; };
+            overlay.appendChild(tempClose);
+
+            setTimeout(() => { window.open(selectedMethod.link, '_blank'); },500);
         }
+        else {
+            showGlassModal("Payment Method Required", "Please select a payment method.", "warning");
+        }
+    }
+
+    // Helper to create order after successful Razorpay payment
+    function createOrderInFirestore(paymentId, status) {
+        const overlay = document.getElementById('processing-overlay');
+        const msgEl = document.getElementById('process-message');
+        
+        // Remove temp close button if exists
+        const tempClose = document.getElementById('temp-close-ov');
+        if(tempClose) tempClose.remove();
+
+        overlay.style.display = 'flex';
+        msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Verifying Payment & Placing Order...`;
 
         const name = document.getElementById('co-name').value;
         const phone = document.getElementById('co-phone').value;
         const email = document.getElementById('co-email').value;
         const company = document.getElementById('co-company').value;
-        if(!name || !phone || !email) return showToast("Please enter Name, Phone, and Email.", "error");
-
-        let existingClose = document.getElementById('temp-close-ov');
-        if(existingClose) existingClose.remove();
-        const tempClose = document.createElement('button');
-        tempClose.id = 'temp-close-ov'; 
-        tempClose.className = 'btn btn-glass'; 
-        tempClose.innerText = "Close"; 
-        tempClose.style.marginTop = "20px";
-        tempClose.onclick = () => { overlay.style.display = 'none'; };
-        const overlay = document.getElementById('processing-overlay');
-        const msgEl = document.getElementById('process-message');
-        overlay.appendChild(tempClose);
         
-        overlay.style.display = 'flex';
-        msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Order...`;
+        if(!name || !phone || !email) {
+            showToast("Missing details.", "error");
+            overlay.style.display = 'none';
+            return; // Stop
+        }
 
         const pkgName = document.getElementById('summary-pkg-name').innerText;
         const domain = document.getElementById('summary-domain').innerText;
@@ -4326,15 +4390,18 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             total: total,
             discountCode: state.discountCode || null,
             paymentMethod: paymentLabel,
+            paymentRef: paymentId || 'Manual',
             billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
-            status: 'Pending',
+            status: status,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         db.collection("orders").add(orderData).then(() => {
-            showToast("Order Submitted Successfully!", "success");
+            overlay.style.display = 'none';
+            showToast("Order Placed Successfully!", "success");
             const voucherText = state.discountCode ? state.discountCode : "None";
             const whatsappMessage = `Hi Admin Team,\nI have just placed a new order. Please find my details below:\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nVoucher: ${voucherText}\nPlan: ${pkgName} (${state.isOneTime ? 'One-Time' : 'Monthly'})\nDomain: ${domain}\nTotal: ${total}\nPayment: ${paymentLabel}\n\nKindly let me know if any additional information is required.\nThank you.`;
+            
             setTimeout(() => {
                 window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
                 navigateTo('/thank-you');
@@ -4343,8 +4410,27 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             console.error("Order Error:", error);
             showToast("Failed to submit order. Please contact support.", "error");
             msgEl.innerText = "Error submitting order.";
-            tempClose.style.display = 'inline-block';
+            // Re-add close button
+            const tempClose = document.createElement('button');
+            tempClose.id = 'temp-close-ov'; tempClose.className = 'btn btn-glass'; tempClose.innerText = "Close"; 
+            tempClose.style.marginTop = "20px"; tempClose.onclick = () => { overlay.style.display = 'none'; };
+            overlay.appendChild(tempClose);
         });
+    }
+
+    // Original submitOrder function for manual confirmation flow (if needed, though Razorpay handles it mostly)
+    function submitOrder() {
+        // If user clicks "Place Order" manually, we verify they actually paid
+        // However, for Razorpay, the order is created in the callback.
+        // This button is mostly for the Manual Payment flow where user pays externally.
+        
+        const paymentCheck = document.getElementById('payment-confirm-check');
+        if(!paymentCheck.checked) {
+            showGlassModal("Payment Confirmation", "Please confirm that you have made payment.", "warning");
+            return;
+        }
+        
+        createOrderInFirestore(null, 'Pending'); // Manual orders are Pending
     }
 
     // ==========================================
