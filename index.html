@@ -1081,6 +1081,28 @@
         .idea-success-title { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem; }
         .idea-success-msg { color: var(--text-secondary); font-size: 1rem; line-height: 1.6; margin-bottom: 2rem; }
 
+        /* --- DONE PAYMENT PAGE STYLES --- */
+        .done-payment-wrapper {
+            max-width: 600px;
+            margin: 2rem auto;
+            text-align: center;
+        }
+        .payment-loader {
+            width: 80px; height: 80px;
+            border: 5px solid #e2e8f0;
+            border-top: 5px solid var(--soft-black);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 2rem;
+        }
+        .manual-confirmation-box {
+            background: white;
+            border: 2px dashed var(--soft-black);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-top: 2rem;
+        }
+
         /* --- RESPONSIVE (General) --- */
         @media(max-width: 991px) {
             h1 { font-size: 2.2rem !important; } h2 { font-size: 1.5rem !important; } body { font-size: 0.95rem !important; } 
@@ -2456,6 +2478,37 @@
             </div>
         </section>
 
+        <!-- === PAGE: DONE PAYMENT (NEW) === -->
+        <section id="payment-done" class="page-section">
+            <div class="done-payment-wrapper">
+                <div class="glass-card">
+                    <div id="payment-loading-view">
+                        <div class="payment-loader"></div>
+                        <h2 style="margin-bottom: 1rem;">Processing Payment...</h2>
+                        <p style="color: var(--text-secondary);">Please wait while we redirect you to the payment gateway.</p>
+                    </div>
+
+                    <div id="payment-manual-view" class="hidden">
+                        <i class="ri-checkbox-circle-fill" style="font-size: 5rem; color: var(--accent-success); margin-bottom: 1.5rem;"></i>
+                        <h2 style="margin-bottom: 0.5rem;">Redirected to Razorpay</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                            You have been redirected to the secure payment page. If you have completed the payment there, please click the button below to finalize your order.
+                        </p>
+                        
+                        <div class="manual-confirmation-box">
+                            <h3 style="margin-bottom: 1rem;">Have you made payment?</h3>
+                            <p style="margin-bottom: 2rem; font-size: 0.9rem; color: var(--text-secondary);">
+                                Please click "Confirm Payment" only after you have successfully paid at Razorpay. This will submit your order to our system.
+                            </p>
+                            <button class="btn btn-primary" style="width: 100%; font-size: 1.2rem; padding: 1.2rem;" onclick="confirmPaymentFromRedirect()">
+                                I have made payment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- === PAGE: AI/PORTAL QUOTE FORM (NEW) === -->
         <section id="quote-form-page" class="page-section">
             <div class="auth-container" style="max-width: 800px;">
@@ -2879,7 +2932,8 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         '/about-company': 'About Company',
         '/terms': 'Terms & Conditions',
         '/faq': 'Frequently Asked Questions',
-        '/privacy': 'Privacy Policy - DDNetwork'
+        '/privacy': 'Privacy Policy - DDNetwork',
+        '/payment-done': 'Payment Confirmation - DDNetwork'
     };
 
     function updatePageTitle(path) {
@@ -3195,7 +3249,8 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         '/terms': 'terms',
         '/faq': 'faq',
         '/privacy': 'privacy',
-        '/quote-form': 'quote-form-page' // New route for quote
+        '/quote-form': 'quote-form-page',
+        '/payment-done': 'payment-done' // Added route
     };
 
     function routeLink(event, path) {
@@ -3270,6 +3325,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                     loadHomePortfolio();
                 }
                 if(targetSectionId === 'clients') loadPortfolio();
+                if(targetSectionId === 'payment-done') {
+                    // Handle the logic for the payment done page
+                    checkPaymentReturn();
+                }
             }
         }, isInstant ? 0 : 100);
     }
@@ -4245,11 +4304,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     }
 
     // ==========================================
-    // RAZORPAY INTEGRATION LOGIC
+    // RAZORPAY INTEGRATION LOGIC (UPDATED FOR REDIRECT)
     // ==========================================
     function initiateRazorpayPayment() {
         // 1. Validation
-        // UPDATE 2: TERMS AND CONDITIONS RE-READ
         const termsCheck = document.getElementById('terms-check');
         if(!termsCheck.checked) {
             showGlassModal("Action Required", "Please agree to Terms & Conditions to proceed with your order.", "warning", "I Agree", () => {
@@ -4275,13 +4333,35 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         const company = document.getElementById('co-company').value;
         if(!name || !phone || !email) return showToast("Please enter Name, Phone, and Email.", "error");
 
-        // 2. Calculate Final Amount for Payment (based on Mode)
-        // Note: Razorpay requires amount in subunits (cents for MYR)
+        // 2. Calculate Final Amount for Payment
         const totalText = document.getElementById('summary-final-total').innerText;
         const amountNumeric = parseFloat(totalText.replace('RM ', ''));
         const amountInSubunits = Math.round(amountNumeric * 100); // Convert to cents
 
-        // 3. Configure Razorpay Options
+        // 3. Save Pending Order Data to LocalStorage
+        const pendingOrder = {
+            userId: auth.currentUser ? auth.currentUser.uid : null,
+            name: name, phone: phone, email: email, company: company,
+            package: document.getElementById('summary-pkg-name').innerText,
+            domainType: state.domainType,
+            domainName: state.domainName,
+            domainPrice: state.domainPrice,
+            packagePrice: state.packagePrice,
+            setupFee: state.setupFee,
+            maintenancePrice: state.maintenancePrice,
+            total: `RM ${amountNumeric}`, 
+            discountCode: state.discountCode || null,
+            paymentMethod: 'Razorpay (Curlec)',
+            paymentMode: state.paymentMode, // 'full' or 'deposit'
+            billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
+            status: 'Pending', // Initial status
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Save to localStorage so the 'payment-done' page can retrieve it
+        localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+
+        // 4. Configure Razorpay Options
         const options = {
             "key": RAZORPAY_KEY_ID, 
             "amount": amountInSubunits, 
@@ -4289,10 +4369,15 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             "name": "DDNetwork One",
             "description": document.getElementById('summary-pkg-name').innerText + (state.paymentMode === 'deposit' ? " (Deposit)" : ""),
             "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
-            "handler": function (response){
-                // 4. Success Handler
-                finalizeOrder(response, amountNumeric);
-            },
+            
+            // KEY CHANGES FOR REDIRECT FLOW:
+            "modal": { "ondismiss": function(){ console.log('Checkout form closed'); } },
+            
+            // Instead of a handler function here, we rely on redirect:true
+            // We will navigate to the 'payment-done' page to handle the final submission
+            "redirect": true,
+            
+            "callback_url": window.location.origin + "/payment-done", // URL to return to after payment
             "prefill": {
                 "name": name,
                 "email": email,
@@ -4306,11 +4391,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             },
             "theme": {
                 "color": "#1e293b" // --soft-black
-            },
-            "modal": {
-                "ondismiss": function(){
-                    console.log('Checkout form closed');
-                }
             }
         };
 
@@ -4318,60 +4398,97 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         try {
             const rzp1 = new Razorpay(options);
             rzp1.open();
+            
+            // Navigate to the 'Done Payment' page immediately after opening Razorpay
+            // This acts as the waiting room
+            navigateTo('/payment-done');
         } catch (error) {
             console.error("Razorpay Error:", error);
             showToast("Payment Gateway Error. Please contact support.", "error");
         }
     }
 
-    function finalizeOrder(paymentResponse, paidAmount) {
-        // Show processing overlay
+    // ==========================================
+    // PAYMENT DONE PAGE LOGIC
+    // ==========================================
+    function checkPaymentReturn() {
+        const loadingView = document.getElementById('payment-loading-view');
+        const manualView = document.getElementById('payment-manual-view');
+        
+        // Show loader initially
+        loadingView.classList.remove('hidden');
+        manualView.classList.add('hidden');
+
+        // Get Payment ID from URL if Razorpay appended it
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentId = urlParams.get('razorpay_payment_id');
+
+        // Give a small delay to simulate "Checking Payment Status..."
+        setTimeout(() => {
+            loadingView.classList.add('hidden');
+            manualView.classList.remove('hidden');
+
+            // If Razorpay appended the ID to the URL, we know payment happened on their end
+            if (paymentId) {
+                // Automatically trigger the confirmation if ID exists
+                confirmPaymentFromRedirect(paymentId);
+            }
+        }, 2000);
+    }
+
+    function confirmPaymentFromRedirect(paymentIdParam) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentId = paymentIdParam || urlParams.get('razorpay_payment_id');
+
+        if(!paymentId) {
+            showToast("No Payment ID found. Please ensure you completed the payment.", "warning");
+            return;
+        }
+
         const overlay = document.getElementById('processing-overlay');
         const msgEl = document.getElementById('process-message');
         overlay.style.display = 'flex';
-        msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Order...`;
+        msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Verifying Payment...`;
 
-        const name = document.getElementById('co-name').value;
-        const phone = document.getElementById('co-phone').value;
-        const email = document.getElementById('co-email').value;
-        const company = document.getElementById('co-company').value;
-        const pkgName = document.getElementById('summary-pkg-name').innerText;
-        const domain = document.getElementById('summary-domain').innerText;
+        // Retrieve the pending order data
+        const pendingOrderStr = localStorage.getItem('pendingOrder');
+        if(!pendingOrderStr) {
+            msgEl.innerText = "Order data missing. Please contact support.";
+            return;
+        }
 
-        const orderData = {
-            userId: auth.currentUser ? auth.currentUser.uid : null,
-            name: name, phone: phone, email: email, company: company,
-            package: pkgName,
-            domainType: state.domainType,
-            domainName: state.domainName,
-            domainPrice: state.domainPrice,
-            packagePrice: state.packagePrice,
-            setupFee: state.setupFee,
-            maintenancePrice: state.maintenancePrice,
-            total: `RM ${paidAmount}`, // Use actual amount paid
-            discountCode: state.discountCode || null,
-            paymentMethod: 'Razorpay (Curlec)',
-            paymentId: paymentResponse.razorpay_payment_id,
-            paymentMode: state.paymentMode, // Save 'full' or 'deposit'
-            billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
-            status: 'Paid', // Auto-set to Paid because Razorpay returned success
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        db.collection("orders").add(orderData).then(() => {
-            showToast("Order Submitted Successfully!", "success");
-            const voucherText = state.discountCode ? state.discountCode : "None";
-            const paymentText = state.paymentMode === 'deposit' ? "(Deposit Paid)" : "(Full Paid)";
-            const whatsappMessage = `Hi Admin Team,\nI have successfully placed a new order via Razorpay.\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nVoucher: ${voucherText}\nPlan: ${pkgName} (${state.isOneTime ? 'One-Time' : 'Monthly'}) ${paymentText}\nDomain: ${domain}\nTotal: RM ${paidAmount}\nPayment ID: ${paymentResponse.razorpay_payment_id}\n\nThank you.`;
-            setTimeout(() => {
-                window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
-                navigateTo('/thank-you');
-            }, 2000);
-        }).catch((error) => {
-            console.error("Order Error:", error);
-            showToast("Failed to submit order. Please contact support.", "error");
-            msgEl.innerText = "Error submitting order. Please screenshot your payment ID and contact support.";
-        });
+        const orderData = JSON.parse(pendingOrderStr);
+        
+        // Update status to Paid and add Payment ID
+        orderData.status = 'Paid';
+        orderData.paymentId = paymentId;
+        // Remove serverTimestamp as it's not valid JSON
+        delete orderData.timestamp; 
+        
+        // Submit to Firebase
+        if(db) {
+            db.collection("orders").add({
+                ...orderData,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                localStorage.removeItem('pendingOrder'); // Clear local storage
+                showToast("Order Submitted Successfully!", "success");
+                
+                // WhatsApp Notification
+                const voucherText = orderData.discountCode ? `Voucher: ${orderData.discountCode}` : "None";
+                const paymentText = orderData.paymentMode === 'deposit' ? "(Deposit Paid)" : "(Full Paid)";
+                const whatsappMessage = `Hi Admin Team,\nI have successfully placed a new order via Razorpay.\n\nName: ${orderData.name}\nPhone: ${orderData.phone}\nEmail: ${orderData.email}\nVoucher: ${voucherText}\nPlan: ${orderData.package} (${orderData.billingCycle}) ${paymentText}\nDomain: ${orderData.domainName}\nTotal: ${orderData.total}\nPayment ID: ${paymentId}\n\nThank you.`;
+                
+                setTimeout(() => {
+                    window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
+                    navigateTo('/thank-you');
+                }, 1000);
+            }).catch((error) => {
+                console.error("Order Error:", error);
+                msgEl.innerText = "Error submitting order. Please screenshot your payment ID and contact support.";
+                showToast("Failed to submit order. Please contact support.", "error");
+            });
+        }
     }
 
     // ==========================================
