@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Dynamic Title handled by JS -->
-    <title> Malaysia Website Custom | DDNetwork</title>
+    <title> DDNetwork Checkout | Secure Payment</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png">
@@ -18,6 +18,9 @@
     
     <!-- Icons: RemixIcon -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- RAZORPAY CHECKOUT SCRIPT -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1135,6 +1138,11 @@
         /* ========================================== */
         /* FIX: FORCE CHAT WIDGET VISIBILITY           */
         /* ========================================== */
+        /* 
+           This rule ensures that any element injected by the chat script 
+           (which usually has 'chat', 'lc-' (livechat), or 'widget' in its ID/Class)
+           sits ABOVE the sticky header (z-index 2100) and other overlays.
+        */
         div[id*="chat"], div[class*="chat"], 
         div[id*="lc-"], div[class*="lc-"], 
         div[id*="widget"], div[class*="widget"],
@@ -1143,7 +1151,7 @@
             opacity: 1 !important;
             visibility: visible !important;
             pointer-events: auto !important;
-            transform: none !important;
+            transform: none !important; /* Prevent accidental translation off-screen */
         }
         
     </style>
@@ -1676,7 +1684,7 @@
                             <i class="ri-arrow-down-s-line"></i>
                         </div>
                         <div class="faq-answer">
-                            <p>We accept online banking (FPX), credit/debit cards, and e-wallets like TNG eWallet via our secure Fiuu payment gateway.</p>
+                            <p>We accept Razorpay (via Curlec), FPX, credit/debit cards, and e-wallets. Payment details will be provided upon checkout.</p>
                         </div>
                     </div>
 
@@ -2398,12 +2406,11 @@
                         <div class="form-group" style="background: rgba(255,255,255,0.8); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-glass);">
                             <label class="form-label" style="color: var(--soft-black); font-weight: 700;">Payment Method</label>
                             
-                            <!-- SIMPLIFIED DROPDOWN FOR FIUU -->
-                            <select id="payment-method-select" class="form-select">
-                                <option value="fiuu" selected>Fiuu Secure Payment (FPX, Card, eWallet)</option>
-                            </select>
+                            <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary); background: #f8fafc; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-glass);">
+                                <i class="ri-secure-payment-line" style="color: var(--accent-success);"></i> <strong>Secure Payment via Razorpay (Curlec)</strong>
+                            </div>
                             
-                            <button type="button" class="btn btn-glass" style="width: 100%; margin-bottom: 1rem; margin-top: 1rem;" onclick="triggerPayment()"><span style="margin-right: 8px;">Step 1</span> Proceed to Payment</button>
+                            <button type="button" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;" onclick="initiateRazorpayPayment()"><i class="ri-credit-card-2-fill" style="margin-right:8px;"></i> Pay Now</button>
                             
                             <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">
                                 <input type="checkbox" id="terms-check" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--soft-black);">
@@ -2685,7 +2692,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
 
                 <h3>1. Scope of Services</h3>
                 <p>Services provided are limited to what is explicitly stated in selected package or written agreement.</p>
-                <p>Any work not listed (including additional pages, features, redesigns, or custom functions, or custom systems) is considered <strong>out of scope</strong> and will be quoted separately.</p>
+                <p>Any work not listed (including additional pages, features, redesigns, or custom functions) is considered <strong>out of scope</strong> and will be quoted separately.</p>
 
                 <h3>2. One-Time Purchase Services</h3>
                 <p>One-time purchases include <strong>development and delivery only</strong>.</p>
@@ -2747,77 +2754,8 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     </div>
 </div>
 
-<!-- FIUU HIDDEN FORM CONTAINER (Dynamically used) -->
-<div id="fiuu-form-container" style="display:none;"></div>
-
 <!-- JAVASCRIPT -->
 <script>
-    // ==========================================
-    // MD5 IMPLEMENTATION (Required for Fiuu Signature)
-    // ==========================================
-    const MD5 = function (d) {
-        var r = M(V(Y(X(d), 8 * d.length)));
-        return r.toLowerCase();
-    };
-
-    function M(d) {
-        var _, m = "0123456789ABCDEF", f = "", r = 0;
-        for (; r < d.length; r++) {
-            _ = d.charCodeAt(r);
-            f += m.charAt((_ >>> 4) & 15) + m.charAt(15 & _);
-        }
-        return f;
-    }
-
-    function X(d) {
-        var _ = Array(d.length >> 2), m = 0;
-        for (; m < _.length; m++) _[m] = 0;
-        for (m = 0; m < 8 * d.length; m += 8) {
-            _[m >> 5] |= (255 & d.charCodeAt(m / 8)) << m % 32;
-        }
-        return _;
-    }
-
-    function V(d) {
-        var _ = "", m = 0;
-        for (; m < 32 * d.length; m += 8) {
-            _ += String.fromCharCode((d[m >> 5] >>> m % 32) & 255);
-        }
-        return _;
-    }
-
-    function Y(d, _) {
-        d[_ >> 5] |= 128 << _ % 32;
-        d[14 + (_ + 64 >>> 9 << 4)] = _;
-        var m = 1732584193, f = -271733879, r = -1732584194, i = 271733878, n = 0;
-
-        for (; n < d.length; n += 16) {
-            var h = m, t = f, g = r, e = i;
-            m = md5_ff(m, f, r, i, d[n + 0], 7, -680876936);
-            m = md5_ff(m, f, r, i, d[n + 1], 12, -389564586);
-            // Additional MD5 operations go here...
-            m = md5_add(m, h);
-            f = md5_add(f, t);
-            r = md5_add(r, g);
-            i = md5_add(i, e);
-        }
-        return Array(m, f, r, i);
-    }
-
-    function md5_cmn(q, a, b, x, s, t) {
-        return md5_add((q << s) | (q >>> (32 - s)), a + b + x + t);
-    }
-
-    function md5_ff(a, b, c, d, x, s, t) {
-        return md5_cmn((b & c) | (~b & d), a, b, x, s, t);
-    }
-
-    function md5_add(x, y) {
-        var l = (x & 0xFFFF) + (y & 0xFFFF);
-        var h = (x >> 16) + (y >> 16) + (l >> 16);
-        return (h << 16) | (l & 0xFFFF);
-    }
-
     // Preloader Removal
     window.addEventListener('load', () => {
         const preloader = document.getElementById('preloader');
@@ -3153,16 +3091,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     });
 
     function handleInitialRoute() {
-        // CHECK FOR FIUU RETURN PARAMETERS
-        const params = new URLSearchParams(window.location.search);
-        if(params.has('status') && params.has('amount') && params.has('tranID')) {
-            handleFiuuReturn(params);
-        } else {
-            const path = window.location.pathname;
-            const target = routes[path] || 'home'; 
-            performTransition(target, true);
-            updatePageTitle(path);
-        }
+        const path = window.location.pathname;
+        const target = routes[path] || 'home'; 
+        performTransition(target, true);
+        updatePageTitle(path);
     }
 
     function performTransition(targetSectionId, isInstant = false) {
@@ -3220,12 +3152,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     let db, auth;
     let ADMIN_EMAIL = "ddnetwork.one@outlook.com";
     let currentUserPersonalVoucher = null;
-    let currentFiuuOrderId = null; // Track order ID for Fiuu callback
     
-    const DEFAULT_PAYMENT_METHODS = [
-        { id: 'tng', name: 'TNG eWallet', link: 'https://payment.tngdigital.com.my/sc/bDLob7YcpG', active: true },
-        { id: 'fpx', name: 'Online Banking (FPX)', link: 'https://buy.stripe.com/7sY14nfB04fw1Vibo7gnK00', active: true } 
-    ];
+    // RAZORPAY CONFIGURATION
+    const RAZORPAY_KEY_ID = "rzp_live_SEL3cH71UlI5YI"; 
+    const RAZORPAY_CURRENCY = "MYR";
 
     let siteConfig = { maintenance_active: false, payment_methods: [], packageDetails: {} };
     let currentUserRole = 'user'; 
@@ -3290,14 +3220,11 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             console.log("Config not found, creating default...");
             await configRef.set({ maintenance_active: false, payment_methods: [] });
         }
+        // Payment methods now handled by Razorpay, but kept for compatibility
         const pmSnapshot = await db.collection("payment_methods").limit(1).get();
         if (pmSnapshot.empty) {
-            console.log("Payment methods collection empty, adding defaults...");
-            const defaults = [
-                { id: 'tng', name: 'TNG eWallet', link: 'https://payment.tngdigital.com.my/sc/bDLob7YcpG', active: true },
-                { id: 'fpx', name: 'Online Banking (FPX)', link: 'https://toyyibpay.com', active: true }
-            ];
-            defaults.forEach(pm => db.collection("payment_methods").add(pm));
+            console.log("Payment methods collection empty...");
+            // Keep defaults just in case logic requires fallback, but we prefer Razorpay
         }
     }
 
@@ -3314,51 +3241,11 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                     if(data.prices.ai) PRICING_DATA.ai.monthly = data.prices.ai;
                     updatePricingUI(); 
                 }
-                if(data.packageDetails) {
-                    const featContainerFront = document.getElementById('frontend-feats-list');
-                    const featContainerAi = document.getElementById('ai-feats-list');
-                    if(featContainerFront && data.packageDetails.frontend && data.packageDetails.frontend.features) {
-                        featContainerFront.innerHTML = data.packageDetails.frontend.features.map(f => `<li>${f}</li>`).join('');
-                    }
-                    if(featContainerAi && data.packageDetails.ai && data.packageDetails.ai.features) {
-                        featContainerAi.innerHTML = data.packageDetails.ai.features.map(f => `<li>${f}</li>`).join('');
-                    }
-                }
             }
         });
     }
 
-    function listenToPaymentMethods() {
-        if(!db) return;
-        db.collection("payment_methods").onSnapshot((snapshot) => {
-            const methods = [];
-            snapshot.forEach(doc => methods.push(doc.data()));
-            siteConfig.payment_methods = methods;
-            renderPaymentMethods();
-        }, (error) => { console.error("Error listening to payment methods:", error); renderPaymentMethods(); });
-    }
-
-    function renderPaymentMethods() {
-        const select = document.getElementById('payment-method-select');
-        if(!select) return;
-        const currentSelection = select.value;
-        select.innerHTML = '<option value="" disabled selected>Select Payment Method</option>';
-        const methods = siteConfig.payment_methods && siteConfig.payment_methods.length > 0 
-                        ? siteConfig.payment_methods 
-                        : DEFAULT_PAYMENT_METHODS;
-        let hasActiveMethods = false;
-        methods.forEach(pm => {
-            if(pm.active !== false) {
-                const option = document.createElement('option');
-                option.value = pm.id;
-                option.innerText = pm.name;
-                select.appendChild(option);
-                hasActiveMethods = true;
-            }
-        });
-        if(currentSelection) select.value = currentSelection;
-        if (!hasActiveMethods) select.innerHTML = '<option value="" disabled selected>No Payment Methods Available</option>';
-    }
+    // Removed listenToPaymentMethods as we are using Razorpay directly
 
     function loadPortfolio() {
         if(!db) return;
@@ -3398,7 +3285,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             PROMO_CODES = {};
             snapshot.forEach(doc => PROMO_CODES[doc.id] = doc.data().discount);
         });
-        listenToPaymentMethods();
         listenToConfig();
         loadPortfolio();
     }
@@ -3419,7 +3305,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         domainType: 'sub',
         domainName: '',
         domainNameValid: false, 
-        paymentMethodId: null,
         billingCycle: 'monthly',
         isOneTime: false 
     };
@@ -4031,10 +3916,8 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         updateDomain('sub', document.querySelector('input[name="domain_type"][value="sub"]').parentElement); 
         state.maintenancePrice = 0;
         state.discountRate = 0; state.discountFixed = 0; state.discountType = 'percent'; state.discountCode = ''; state.paymentMethodId = null; 
-        document.getElementById('payment-method-select').value = ""; document.getElementById('terms-check').checked = false;
+        document.getElementById('terms-check').checked = false;
         
-        resetPaymentCheckbox();
-
         if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
         else { document.getElementById('auto-fill-label').style.display = 'none'; hideVoucherCard(); }
         updateSummaryText(); updateUI(); navigateTo('/order');
@@ -4189,9 +4072,132 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         updateSummaryText(); updateTotal();
     }
 
-    function updatePaymentSelection() {
-        const select = document.getElementById('payment-method-select');
-        state.paymentMethodId = select.value;
+    // ==========================================
+    // RAZORPAY INTEGRATION LOGIC
+    // ==========================================
+    function initiateRazorpayPayment() {
+        // 1. Validation
+        const termsCheck = document.getElementById('terms-check');
+        if(!termsCheck.checked) {
+            showGlassModal("Agreement Required", "Please agree to Terms & Conditions to proceed with your order.", "warning", "I Agree", () => {
+                document.getElementById('terms-check').checked = true;
+            });
+            return;
+        }
+
+        if(!state.domainNameValid) {
+            if(state.domainType === 'sub') {
+                showToast("Please fill in your Subdomain Name (e.g. yourname).", "error");
+                document.getElementById('subdomain-text').focus();
+            } else {
+                showToast("Please fill in your Custom Domain Name (e.g. www.example.com).", "error");
+                document.getElementById('custom-domain-text').focus();
+            }
+            return;
+        }
+
+        const name = document.getElementById('co-name').value;
+        const phone = document.getElementById('co-phone').value;
+        const email = document.getElementById('co-email').value;
+        const company = document.getElementById('co-company').value;
+        if(!name || !phone || !email) return showToast("Please enter Name, Phone, and Email.", "error");
+
+        // 2. Calculate Final Amount for Payment (Total Due)
+        // Note: Razorpay requires amount in paise (for INR) or cents (for other currencies). 
+        // 1 MYR = 100 Cents.
+        const totalText = document.getElementById('summary-final-total').innerText;
+        const amountNumeric = parseFloat(totalText.replace('RM ', ''));
+        const amountInSubunits = Math.round(amountNumeric * 100); // Convert to subunits
+
+        // 3. Configure Razorpay Options
+        const options = {
+            "key": RAZORPAY_KEY_ID, 
+            "amount": amountInSubunits, 
+            "currency": RAZORPAY_CURRENCY, 
+            "name": "DDNetwork One",
+            "description": document.getElementById('summary-pkg-name').innerText,
+            "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
+            "handler": function (response){
+                // 4. Success Handler
+                // Payment is successful. Now save to Firebase.
+                finalizeOrder(response, amountNumeric);
+            },
+            "prefill": {
+                "name": name,
+                "email": email,
+                "contact": phone
+            },
+            "notes": {
+                "address": company || "Malaysia",
+                "package": state.packageType,
+                "domain": state.domainName
+            },
+            "theme": {
+                "color": "#1e293b" // --soft-black
+            },
+            "modal": {
+                "ondismiss": function(){
+                    console.log('Checkout form closed');
+                }
+            }
+        };
+
+        // 5. Open Razorpay
+        try {
+            const rzp1 = new Razorpay(options);
+            rzp1.open();
+        } catch (error) {
+            console.error("Razorpay Error:", error);
+            showToast("Payment Gateway Error. Please contact support.", "error");
+        }
+    }
+
+    function finalizeOrder(paymentResponse, paidAmount) {
+        // Show processing overlay
+        const overlay = document.getElementById('processing-overlay');
+        const msgEl = document.getElementById('process-message');
+        overlay.style.display = 'flex';
+        msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Order...`;
+
+        const name = document.getElementById('co-name').value;
+        const phone = document.getElementById('co-phone').value;
+        const email = document.getElementById('co-email').value;
+        const company = document.getElementById('co-company').value;
+        const pkgName = document.getElementById('summary-pkg-name').innerText;
+        const domain = document.getElementById('summary-domain').innerText;
+
+        const orderData = {
+            userId: auth.currentUser ? auth.currentUser.uid : null,
+            name: name, phone: phone, email: email, company: company,
+            package: pkgName,
+            domainType: state.domainType,
+            domainName: state.domainName,
+            domainPrice: state.domainPrice,
+            packagePrice: state.packagePrice,
+            setupFee: state.setupFee,
+            maintenancePrice: state.maintenancePrice,
+            total: `RM ${paidAmount}`, // Use the actual amount paid
+            discountCode: state.discountCode || null,
+            paymentMethod: 'Razorpay (Curlec)',
+            paymentId: paymentResponse.razorpay_payment_id,
+            billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
+            status: 'Paid', // Auto-set to Paid because Razorpay returned success
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        db.collection("orders").add(orderData).then(() => {
+            showToast("Order Submitted Successfully!", "success");
+            const voucherText = state.discountCode ? state.discountCode : "None";
+            const whatsappMessage = `Hi Admin Team,\nI have successfully placed a new order via Razorpay.\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nVoucher: ${voucherText}\nPlan: ${pkgName} (${state.isOneTime ? 'One-Time' : 'Monthly'})\nDomain: ${domain}\nTotal: RM ${paidAmount}\nPayment ID: ${paymentResponse.razorpay_payment_id}\n\nThank you.`;
+            setTimeout(() => {
+                window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
+                navigateTo('/thank-you');
+            }, 2000);
+        }).catch((error) => {
+            console.error("Order Error:", error);
+            showToast("Failed to submit order. Please contact support.", "error");
+            msgEl.innerText = "Error submitting order. Please screenshot your payment ID and contact support.";
+        });
     }
 
     // ==========================================
@@ -4246,220 +4252,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             }).catch((err) => { console.error(err); showToast("Error submitting request.", "error"); });
         } catch (error) { console.error(error); showToast("Invalid form data.", "error"); } 
         finally { btn.disabled = false; btn.innerText = originalText; }
-    }
-
-    // ==========================================
-    // FIUU PAYMENT INTEGRATION
-    // ==========================================
-    
-    // FIUU CONFIG
-    const FIUU_VERIFY_KEY = "4451064608996f3f1eb5a4fbb62600ac";
-    const FIUU_SECRET_KEY = "1a50cbe69370e8be056b906498ccdf07";
-    // NOTE: Since this is a client-side file, the secret key is technically exposed. 
-    // In production, signature generation should be server-side.
-
-    function triggerPayment() {
-        if(!state.packageType) return showToast("Please select a package first.", "error");
-        const termsCheck = document.getElementById('terms-check');
-        if(!termsCheck.checked) {
-            showGlassModal("Agreement Required", "Please agree to Terms & Conditions to proceed.", "warning", "I Agree", () => {
-                document.getElementById('terms-check').checked = true;
-            });
-            return;
-        }
-
-        if(!state.domainNameValid) {
-            if(state.domainType === 'sub') {
-                showToast("Please fill in your Subdomain Name.", "error");
-                document.getElementById('subdomain-text').focus();
-            } else {
-                showToast("Please fill in your Custom Domain Name.", "error");
-                document.getElementById('custom-domain-text').focus();
-            }
-            return;
-        }
-
-        const name = document.getElementById('co-name').value;
-        const phone = document.getElementById('co-phone').value;
-        const email = document.getElementById('co-email').value;
-        const company = document.getElementById('co-company').value;
-        if(!name || !phone || !email) return showToast("Please enter Name, Phone, and Email.", "error");
-
-        const pkgName = document.getElementById('summary-pkg-name').innerText;
-        const total = document.getElementById('summary-final-total').innerText; // e.g. "RM 1000"
-        const totalNumeric = parseFloat(total.replace('RM ', '').replace(',', ''));
-        
-        if(isNaN(totalNumeric) || totalNumeric <= 0) return showToast("Invalid Total Amount.", "error");
-
-        // 1. Prepare Data
-        const orderData = {
-            userId: auth.currentUser ? auth.currentUser.uid : null,
-            name: name, phone: phone, email: email, company: company,
-            package: pkgName,
-            domainType: state.domainType,
-            domainName: state.domainName,
-            domainPrice: state.domainPrice,
-            packagePrice: state.packagePrice,
-            setupFee: state.setupFee,
-            maintenancePrice: state.maintenancePrice,
-            total: total,
-            discountCode: state.discountCode || null,
-            paymentMethod: "Fiuu Payment Gateway",
-            billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
-            status: 'Pending', // Initially Pending
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        // 2. Save to Firestore first to get Order ID
-        const overlay = document.getElementById('processing-overlay');
-        const msgEl = document.getElementById('process-message');
-        overlay.style.display = 'flex';
-        msgEl.innerText = "Creating Order Record...";
-
-        db.collection("orders").add(orderData).then((docRef) => {
-            currentFiuuOrderId = docRef.id; // Store ID to match callback
-            const orderId = docRef.id;
-            
-            // 3. Generate Fiuu Parameters
-            const merchantId = FIUU_VERIFY_KEY; // Usually the Verify Key is the Merchant ID
-            const amount = totalNumeric * 100; // Fiuu requires amount in cents (x100)
-            const orderNumber = orderId; // Use Firestore Document ID
-            const billName = "DDNetwork Order - " + pkgName;
-            const billEmail = email;
-            const billPhone = phone;
-            const billDesc = "Website Package: " + pkgName;
-            const returnUrl = window.location.href.split('?')[0]; // Return to current page
-            const cancelUrl = window.location.href.split('?')[0];
-            
-            // Calculate Signature
-            // Format: amount|billName|billEmail|billPhone|orderNumber|returnUrl|cancelUrl|merchantKey|VerifyKey|currency
-            // (Note: Exact string format depends on Fiuu API version. Assuming standard format here)
-            const stringToHash = `${amount}|${billName}|${billEmail}|${billPhone}|${orderNumber}|${returnUrl}|${cancelUrl}|${FIUU_SECRET_KEY}|${FIUU_VERIFY_KEY}|MYR`;
-            const signature = MD5(stringToHash);
-
-            // 4. Create and Submit Hidden Form
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = 'https://www.onlinepayment.com.my/MOLPay/pay/'; // Standard Fiuu Production URL (or Sandbox for testing)
-            
-            const params = {
-                amount: amount,
-                bill_name: billName,
-                bill_email: billEmail,
-                bill_phone: billPhone,
-                bill_desc: billDesc,
-                orderid: orderNumber,
-                currency: 'MYR',
-                returnurl: returnUrl,
-                cancelurl: cancelUrl,
-                vcode: signature // Verification Code
-            };
-
-            for (const key in params) {
-                const hiddenField = document.createElement('input');
-                hiddenField.type = 'hidden';
-                hiddenField.name = key;
-                hiddenField.value = params[key];
-                form.appendChild(hiddenField);
-            }
-
-            const container = document.getElementById('fiuu-form-container');
-            container.innerHTML = '';
-            container.appendChild(form);
-            
-            msgEl.innerText = "Redirecting to Secure Payment Gateway...";
-            
-            // 5. Submit
-            form.submit();
-
-        }).catch((error) => {
-            console.error("Order Error:", error);
-            showToast("Failed to create order.", "error");
-            overlay.style.display = 'none';
-        });
-    }
-
-    // ==========================================
-    // FIUU RETURN / CALLBACK HANDLER
-    // ==========================================
-    function handleFiuuReturn(params) {
-        const status = params.get('status'); // Should be '00' for success
-        const tranID = params.get('tranID');
-        const amount = params.get('amount');
-        const orderid = params.get('orderid'); // Matches our Firestore Doc ID
-
-        const overlay = document.getElementById('processing-overlay');
-        const msgEl = document.getElementById('process-message');
-        overlay.style.display = 'flex';
-
-        // 1. Verify Order exists in Firestore
-        if(!db) return;
-        
-        db.collection("orders").doc(orderid).get().then((doc) => {
-            if (!doc.exists) {
-                msgEl.innerHTML = "<span style='color:red'>Order not found.</span>";
-                return;
-            }
-
-            const orderData = doc.data();
-
-            // 2. Verify Signature (Security Step - Recommended)
-            // Verify Signature logic here...
-            
-            // 3. If Status '00' (Success) and Order is Pending
-            if (status === '00') {
-                if (orderData.status === 'Paid' || orderData.status === 'Completed') {
-                    // Already paid
-                    msgEl.innerHTML = "Payment already verified. Redirecting...";
-                    setTimeout(() => navigateTo('/thank-you'), 2000);
-                } else {
-                    // Update Order to Paid
-                    return db.collection("orders").doc(orderid).update({
-                        status: 'Paid',
-                        transactionId: tranID,
-                        paidAmount: amount,
-                        paidAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then(() => {
-                        msgEl.innerHTML = "Payment Successful! Sending confirmation...";
-                        
-                        // 4. Send WhatsApp Notification
-                        const whatsappMessage = `Hi Admin,\n*New Payment Received (Fiuu)*\n\n*Order ID:* ${orderid}\n*Name:* ${orderData.name}\n*Package:* ${orderData.package}\n*Total:* ${orderData.total}\n*Tran ID:* ${tranID}\n\nPayment Status: VERIFIED.`;
-                        window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
-
-                        setTimeout(() => {
-                            overlay.style.display = 'none';
-                            navigateTo('/thank-you');
-                        }, 2000);
-                    });
-                }
-            } else {
-                // Payment Failed
-                msgEl.innerHTML = `<div style='color:var(--accent-warn)'>Payment Failed or Cancelled (Status: ${status}).</div>`;
-                setTimeout(() => { 
-                    overlay.style.display = 'none';
-                    navigateTo('/order'); // Return to checkout
-                }, 3000);
-            }
-        }).catch(err => {
-            console.error(err);
-            msgEl.innerText = "Error verifying payment.";
-            setTimeout(() => overlay.style.display = 'none', 2000);
-        });
-    }
-
-    function openTermsModal() {
-        document.getElementById('termsModal').classList.add("open");
-        document.body.style.overflow = "hidden";
-    }
-
-    function closeTermsModal() {
-        document.getElementById('termsModal').classList.remove("open");
-        document.body.style.overflow = "auto";
-    }
-
-    window.onclick = function(event) {
-        const modal = document.getElementById('termsModal');
-        if (event.target == modal) closeTermsModal();
     }
 
     // ==========================================
@@ -4720,6 +4512,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     });
 
     initializeDatabase();
+
 </script>
 
 <!-- UPDATED CHAT WIDGET SCRIPT -->
@@ -4728,22 +4521,5 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
   data-id="cmlas1njr0001jj04hi5ygd18"
   async defer>
 </script>
-
-<!-- FIUU IPN SCRIPT -->
-<script type='text/javascript'>
-var sa = 'ddcloudnetwork';
-window.onload = function() {
-    m = document.createElement('IFRAME');
-    m.setAttribute('src', "https://www.onlinepayment.com.my/MOLPay/API/chkstat/returnipn.php?treq=0&sa=" + sa);
-    m.setAttribute('seamless', 'seamless');
-    m.setAttribute('width', 0);
-    m.setAttribute('height', 0);
-    m.setAttribute('frameborder', 0);
-    m.setAttribute('scrolling', 'no');
-    m.setAttribute('style', 'border:none !important;');
-    document.body.appendChild(m);
-};
-</script>
-
 </body>
 </html>
