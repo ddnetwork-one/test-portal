@@ -834,6 +834,21 @@
             animation: spin 1s linear infinite; margin-bottom: 2rem;
         }
         .process-text { font-size: 1.25rem; color: var(--text-main); max-width: 600px; line-height: 1.6; }
+        /* New style for the processing note */
+        .process-note {
+            margin-top: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            color: #0369a1;
+            font-size: 0.95rem;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
 
         /* --- MAINTENANCE --- */
         #maintenance-overlay {
@@ -1355,6 +1370,11 @@
     <div id="processing-overlay">
         <div class="process-spinner"></div>
         <div id="process-message" class="process-text">Initializing...</div>
+        <!-- IMPROVED PROCESSING NOTE -->
+        <div class="process-note">
+            <i class="ri-refresh-line" style="font-size: 1.2rem;"></i>
+            <span><strong>Note:</strong> Refresh this page if payment is completed.</span>
+        </div>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -4320,10 +4340,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             "redirect": false, 
             "callback": function(response){
                 // This function is triggered only when payment is SUCCESSFUL on Razorpay side
-                // We rely on user clicking the manual button to finalize, but 
+                // We rely on user clicking manual button to finalize, but 
                 // if for some reason Razorpay closes automatically with success:
                 console.log("Payment Successful ID:", response.razorpay_payment_id);
-                // We don't auto-submit here to follow the "Manual Confirmation" flow requested
+                // We don't auto-submit here to follow "Manual Confirmation" flow requested
             },
             "modal": {
                 "ondismiss": function(){
@@ -4385,7 +4405,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         // 3. UPDATE VOUCHER STATUS IF APPLIED
         let voucherUpdatePromise = Promise.resolve();
         if (orderData.discountCode && auth.currentUser && auth.currentUser.uid) {
-            // We assume if a discount code is present, it matches the user's personal voucher
+            // We assume if a discount code is present, it matches user's personal voucher
             // (If it were a generic promo, we wouldn't touch the user object)
             voucherUpdatePromise = db.collection("users").doc(auth.currentUser.uid).update({
                 "personalVoucher.status": "redeemed"
@@ -4397,7 +4417,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 }
             }).catch(err => {
                 console.error("Failed to update voucher status", err);
-                // We don't block the order, but log it
+                // We don't block the order, but we log it
             });
         }
 
@@ -4430,7 +4450,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             localStorage.removeItem('pendingOrder'); // Clear storage
             showToast("Order Submitted Successfully!", "success");
             
-            // WhatsApp Notification (Updated to include Admin Note if relevant)
+            // UPDATE: REMOVED WHATSAPP REDIRECT TO AVOID MOBILE BLOCKING
+            // The logic below is commented out or removed as per "no need whatsapp redirect" request.
+            
+            /* 
             const voucherText = orderData.discountCode ? `Voucher: ${orderData.discountCode}` : "None";
             const paymentText = orderData.paymentMode === 'deposit' ? "(Deposit Paid)" : "(Full Paid)";
             const whatsappMessage = `Hi Admin Team,\nI have successfully placed a new order via Razorpay.\n\nName: ${orderData.name}\nPhone: ${orderData.phone}\nEmail: ${orderData.email}\nVoucher: ${voucherText}\nPlan: ${orderData.package} (${orderData.billingCycle}) ${paymentText}\nDomain: ${orderData.domainName}\nTotal: ${orderData.total}\n\nThank you.`;
@@ -4439,6 +4462,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
                 navigateTo('/thank-you');
             }, 1000);
+            */
+
+            // Direct navigation since no redirect is happening
+            navigateTo('/thank-you');
         }).catch((error) => {
             console.error("Order Error:", error);
             msgEl.innerText = "Error submitting order. Please screenshot your details and contact support.";
@@ -4491,6 +4518,8 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 showToast("Request Submitted Successfully!", "success");
                 e.target.reset();
                 handleUpdateTypeChange('content', document.querySelector('input[value="content"]').parentElement);
+                
+                // WhatsApp Notification is still active for Requests
                 let waMsg = `Hi Admin,\n*New Customer Request*\n\n*Name:* ${name}\n*Phone:* ${phone}\n*Type:* ${type}`;
                 if(type === 'upgrade') waMsg += `\nFrom: ${requestData.currentPlan} To: ${requestData.newPlan}`;
                 if(requestData.details) waMsg += `\n*Details:* ${requestData.details}`;
@@ -4597,7 +4626,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             db.collection("customer_requests").add(requestData)
                 .then(() => {
                     showToast("Saved successfully.", "success");
-                    // 2. Redirect to WhatsApp with details
+                    // 2. Redirect to WhatsApp with details (Still active for Quotes)
                     const waMsg = `Hi Admin, I am interested in a quote for *${pkg}*\n\n*Name:* ${name}\n*Phone:* ${phone}\n*Email:* ${email}\n*Company:* ${company}\n\n*Requirements:*\n${message}`;
                     const url = `https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(waMsg)}`;
                     window.open(url, '_blank');
