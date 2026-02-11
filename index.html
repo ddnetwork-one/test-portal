@@ -4188,77 +4188,41 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         updateTotal();
     }
 
-    // ==========================================
-    // PAYMENT CALCULATION & DOMAIN LOGIC (FIXED)
-    // ==========================================
-    
-    function updateDomain(type, element) {
-        state.domainType = type;
-        if(element) {
-            const options = element.parentElement.querySelectorAll('.radio-option');
-            options.forEach(opt => opt.classList.remove('selected'));
-            element.classList.add('selected');
-        }
-        
-        if(type === 'sub') {
-            // Show Subdomain Input
-            document.getElementById('input-subdomain').style.display = 'block';
-            document.getElementById('input-custom').style.display = 'none';
-            
-            // LOGIC FIX: Set Domain Price to 0 (Free for 1st Year)
-            state.domainPrice = 0; 
-            
-        } else {
-            // Show Custom Domain Input
-            document.getElementById('input-subdomain').style.display = 'none';
-            document.getElementById('input-custom').style.display = 'block';
-            
-            // LOGIC: Custom domain price (if applicable) or 0
-            state.domainPrice = 0; 
-        }
-        updateSummaryText(); 
-        updateTotal(); // Recalculate immediately
-    }
-
     function updateTotal() {
-        // 1. Calculate Subtotal (Package + Setup + Domain + Maintenance)
-        // state.domainPrice is now 0 for subdomain (Free)
-        let subtotal = state.packagePrice + state.setupFee + state.maintenancePrice + state.domainPrice;
+        // Calculate Subtotal (Setup + Monthly + Domain + Maint)
+        let subtotal = state.packagePrice + state.setupFee + state.maintenancePrice;
+        if(state.domainType === 'sub') subtotal += state.domainPrice;
         
-        // 2. Calculate Discount
+        // Calculate Discount
         let discountAmt = 0;
         if(state.discountType === 'fixed') discountAmt = state.discountFixed;
         else discountAmt = subtotal * state.discountRate;
         
         const finalTotal = Math.max(0, Math.round(subtotal - discountAmt));
 
-        // 3. Determine Payment Amount (Full vs Deposit)
+        // Determine Payment Amount based on Mode
         let paymentDue = finalTotal;
         if(state.paymentMode === 'deposit') {
             paymentDue = Math.round(finalTotal * 0.5);
         }
 
-        // 4. Update UI
-        
-        // Update Main Total
+        // Update UI
         document.getElementById('summary-final-total').innerText = `RM ${paymentDue}`;
-        
-        // Update Recurring Price
         document.getElementById('summary-recurring').innerText = `RM ${state.packagePrice} / ${state.isOneTime ? 'one-time' : 'month'}`;
-        
-        // Update Setup Fee
         document.getElementById('summary-setup').innerText = state.setupFee > 0 ? `RM ${state.setupFee}` : 'RM 0';
-        
-        // Update Domain Line (Visual Feedback)
-        if (state.domainType === 'sub') {
-            // Visually show it's free in the summary, even though price is 0
-            document.getElementById('summary-domain').innerText = 'FREE (1st Year)';
-        } else {
-            document.getElementById('summary-domain').innerText = 'User Provided';
-        }
-        
-        // Update Deposit Note
         document.getElementById('deposit-note').innerText = `Deposit Required (50%): RM ${paymentDue}`;
+    }
+
+    function updateUI() {
+        document.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
+        const subOpt = document.querySelector('input[name="domain_type"][value="sub"]').parentElement;
+        const noneOpt = document.querySelector('input[name="maint"][value="none"]').parentElement;
+        if(subOpt) subOpt.classList.add('selected');
+        if(noneOpt) noneOpt.classList.add('selected');
+        updateSummaryText(); updateTotal();
+        
+        // Ensure Pay Full is active by default
+        setPaymentMode('full');
     }
 
     // ==========================================
