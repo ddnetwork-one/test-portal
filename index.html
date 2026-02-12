@@ -1096,6 +1096,45 @@
             margin-bottom: 1rem;
         }
 
+        /* ========================================== */
+        /* LOGIN WARP EFFECT STYLES                   */
+        /* ========================================== */
+        #warp-transition-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--soft-black); /* Using site's dark variable */
+            z-index: 999999; 
+            display: none; 
+            justify-content: center; 
+            align-items: center;
+            opacity: 0; 
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        #warp-transition-overlay.active {
+            display: flex;
+            opacity: 1;
+            pointer-events: all;
+        }
+        #warp-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .warp-flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            transition: opacity 0.2s ease;
+        }
+        
         /* --- RESPONSIVE (General) --- */
         @media(max-width: 991px) {
             h1 { font-size: 2.2rem !important; } h2 { font-size: 1.5rem !important; } body { font-size: 0.95rem !important; } 
@@ -1338,6 +1377,21 @@
             <i class="ri-refresh-line" style="font-size: 1.2rem;"></i>
             <span><strong>Note:</strong> Refresh this page if payment is completed.</span>
         </div>
+    </div>
+
+    <!-- LOGIN WARP TRANSITION OVERLAY -->
+    <div id="warp-transition-overlay">
+        <canvas id="warp-canvas"></canvas>
+        <div class="warp-flash" id="warp-flash"></div>
+        
+        <!-- Audio Elements -->
+        <audio id="warpSound" preload="auto">
+             <!-- <source src="warp.mp3" type="audio/mpeg"> --> 
+             <!-- User needs to provide mp3 file -->
+        </audio>
+        <audio id="impactSound" preload="auto">
+             <!-- <source src="impact.mp3" type="audio/mpeg"> -->
+        </audio>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -2660,173 +2714,185 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                                         </select>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Additional Notes</label>
-                                    <textarea id="req-desc-upgrade" class="form-input" rows="3"></textarea>
-                                </div>
-                            </div>
-                            <div id="field-renew" class="hidden">
-                                <div class="form-group">
-                                    <label class="form-label">Plan to Renew</label>
-                                    <select id="req-renew-plan" class="form-select">
+                                <div class="form-group"> 
+                                                                        <label class="form-label">Desired Plan</label>
+                                    <select id="req-new-plan" class="form-select">
                                         <option value="Basic HTML Website">Basic HTML Website</option>
                                         <option value="Front-End Website">Front-End Website</option>
                                         <option value="AI Powered Website">AI Powered Website</option>
-                                        <option value="Maintenance Only">Maintenance Only</option>
+                                        <option value="Front-End + Portal">Front-End + Portal</option>
+                                        <option value="Portal Standalone">Portal Standalone</option>
                                     </select>
                                 </div>
                             </div>
-                            <div id="field-remove" class="hidden">
-                                <div class="form-group" style="background: #fef2f2; padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
-                                    <label class="form-label" style="color: #ef4444;">What to Remove?</label>
-                                    <textarea id="req-desc-remove" class="form-input" rows="3"></textarea>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">Additional Notes</label>
+                                <textarea id="req-desc-upgrade" class="form-input" rows="3"></textarea>
                             </div>
                         </div>
-
-                        <button type="submit" id="btn-submit-request" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Request</button>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-<!-- FOOTER -->
-    <footer>
-        <div class="container">
-                        <div class="footer-grid">
-                
-                <div class="footer-col footer-brand">
-                    <a href="/" onclick="routeLink(event, '/')" style="cursor: pointer;">
-                        <span class="company-name">DDNetwork<span style="color:var(--text-tertiary)">One</span></span>
-                    </a>
-                    <p>
-                        Designed in Malaysia.<br> Built for the world.
-                    </p>
-                </div>
-
-                <div class="footer-col">
-                    <h4>Support</h4>
-                    <ul class="footer-links">
-                        <li><a href="#" onclick="navigateTo('/helpdesk')">Contact Support</a></li>
-                        <li><a href="#" onclick="navigateTo('/reviews')">Customer Reviews</a></li>
-                        <li><a href="#" onclick="navigateTo('/updates')">Customer Updates</a></li>
-                        <li><a href="#" onclick="navigateTo('/terms')">Terms & Conditions</a></li>
-                        <li><a href="#" onclick="navigateTo('/privacy')">Privacy Policy</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-col">
-                    <h4>Contact</h4>
-                    <div class="footer-contact-item">
-                        <i class="ri-mail-send-fill"></i>
-                        <span>sales@ddnet.my</span>
+                        <div id="field-renew" class="hidden">
+                            <div class="form-group">
+                                <label class="form-label">Plan to Renew</label>
+                                <select id="req-renew-plan" class="form-select">
+                                    <option value="Basic HTML Website">Basic HTML Website</option>
+                                    <option value="Front-End Website">Front-End Website</option>
+                                    <option value="AI Powered Website">AI Powered Website</option>
+                                    <option value="Maintenance Only">Maintenance Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="field-remove" class="hidden">
+                            <div class="form-group" style="background: #fef2f2; padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                <label class="form-label" style="color: #ef4444;">What to Remove?</label>
+                                <textarea id="req-desc-remove" class="form-input" rows="3"></textarea>
+                            </div>
+                        </div>
                     </div>
-                    <div class="footer-contact-item">
-                        <i class="ri-whatsapp-line"></i>
-                        <span>Not yet Available</span>
-                    </div>
-                </div>
 
-            </div>
-
-            <div class="footer-bottom">
-                <p class="copyright">&copy; 2025–2026 DD Cloud Network · DDNetwork One · Reg. No. 202603040752 (MA0342542-K)</p>
-                
-                <div class="mac-dock">
-                    <a href="https://www.linkedin.com/in/muhammad-danial-danish-217bb82ba/" target="_blank" class="dock-icon"><i class="ri-linkedin-fill"></i></a>
-                    <a href="https://www.instagram.com/ddnet.my/" target="_blank" class="dock-icon"><i class="ri-instagram-line"></i></a>
-                    <a href="https://tiktok.com/@danialddanish/" target="_blank" class="dock-icon"><i class="ri-tiktok-fill"></i></a>
-                    <a href="https://x.com" target="_blank" class="dock-icon"><i class="ri-twitter-x-fill"></i></a>
-                </div>
+                    <button type="submit" id="btn-submit-request" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Request</button>
+                </form>
             </div>
         </div>
-    </footer>
+    </section>
 
-    <!-- UPDATED TERMS MODAL (KEPT FOR CHECKOUT USE) -->
-    <div id="termsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeTermsModal()">&times;</span>
-            <h2>Terms & Conditions</h2>
-            <div class="modal-text">
-                <p style="text-align:center; margin-bottom:2rem;">By accessing, engaging, or using any services provided by <strong>DDNetwork One</strong>, you acknowledge that you have read, understood, and agreed to be legally bound by these Terms & Conditions.</p>
+</main>
 
-                <h3>Hosting Terms</h3>
-                <p>Hosting is provided based on customer’s own custom domain. For new customers, a free ddnet.my subdomain is included for the first year only. After the free period, renewal of the ddnet.my subdomain is chargeable at RM 55 per year.</p>
-                <p>Monthly subscription plans include hosting, server management, basic security updates, uptime monitoring, and technical support. One-time purchase plans include website development and deployment only. Ongoing maintenance, support, backups, updates, and content changes are not included and will be charged separately upon request. DDNetwork reserves the right to suspend hosting services in cases of non-payment, abuse, or violation of acceptable use policies.</p>
+<!-- FOOTER -->
+<footer>
+    <div class="container">
+        <div class="footer-grid">
+            
+            <div class="footer-col footer-brand">
+                <a href="/" onclick="routeLink(event, '/')" style="cursor: pointer;">
+                    <span class="company-name">DDNetwork<span style="color:var(--text-tertiary)">One</span></span>
+                </a>
+                <p>
+                    Designed in Malaysia.<br> Built for the world.
+                </p>
+            </div>
 
-                <h3>1. Scope of Services</h3>
-                <p>Services provided are limited to what is explicitly stated in selected package or written agreement.</p>
-                <p>Any work not listed (including additional pages, features, redesigns, or custom functions) is considered <strong>out of scope</strong> and will be quoted separately.</p>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="navigateTo('/helpdesk')">Contact Support</a></li>
+                    <li><a href="#" onclick="navigateTo('/reviews')">Customer Reviews</a></li>
+                    <li><a href="#" onclick="navigateTo('/updates')">Customer Updates</a></li>
+                    <li><a href="#" onclick="navigateTo('/terms')">Terms & Conditions</a></li>
+                    <li><a href="#" onclick="navigateTo('/privacy')">Privacy Policy</a></li>
+                </ul>
+            </div>
 
-                <h3>2. One-Time Purchase Services</h3>
-                <p>One-time purchases include <strong>development and delivery only</strong>.</p>
-                <p>Updates, content changes, bug fixes, maintenance, and ongoing support are <strong>not included</strong>.</p>
-                <p>Any future changes will be charged separately.</p>
+            <div class="footer-col">
+                <h4>Contact</h4>
+                <div class="footer-contact-item">
+                    <i class="ri-mail-send-fill"></i>
+                    <span>sales@ddnet.my</span>
+                </div>
+                <div class="footer-contact-item">
+                    <i class="ri-whatsapp-line"></i>
+                    <span>Not yet Available</span>
+                </div>
+            </div>
 
-                <h3>3. Subscription Services (Monthly)</h3>
-                <p>Subscription plans cover <strong>maintenance, monitoring, and technical support</strong> within agreed scope.</p>
-                <p>Subscriptions do <strong>not</strong> include major redesigns, new features, or scope expansion.</p>
-                <p>Requests beyond original scope will require an additional quotation.</p>
+        </div>
 
-                <h3>4. Setup Fees</h3>
-                <p>Setup fees are <strong>one-time, non-refundable</strong> payments.</p>
-                <p>Setup fees cover initial development, configuration, integrations, testing, and deployment.</p>
-                <p>Work will only begin after setup fee has been fully paid.</p>
-
-                <h3>5. Payments & Billing</h3>
-                <p>All prices are stated in <strong>RM (MYR)</strong> unless otherwise specified.</p>
-                <p>Monthly plans are billed in advance on a recurring basis.</p>
-                <p>Late payments may result in suspension of services until payment is received.</p>
-
-                <h3>6. Revisions & Changes</h3>
-                <p>Minor revisions may be provided at DDNetwork One’s discretion.</p>
-                <p>Repeated revisions, content rewrites, or design changes are not included unless stated.</p>
-                <p>Additional changes will be billed separately.</p>
-
-                <h3>7. Client Responsibilities</h3>
-                <p>Clients are responsible for providing accurate content, images, and information.</p>
-                <p>Delays caused by missing content or approvals may affect delivery timelines.</p>
-                <p>DDNetwork One is not responsible for issues caused by third-party services or client-provided materials.</p>
-
-                <h3>8. Delivery Timeline</h3>
-                <p>Estimated timelines are provided as guidelines only.</p>
-                <p>Delays caused by client-side feedback, content submission, or external dependencies are not responsibility of DDNetwork One.</p>
-
-                <h3>9. Intellectual Property</h3>
-                <p>Ownership of final website or system is transferred to client only after full payment is received.</p>
-                <p>DDNetwork One retains right to showcase completed projects for portfolio and promotional purposes unless otherwise agreed in writing.</p>
-
-                <h3>10. Termination</h3>
-                <p>DDNetwork One reserves right to terminate services if payments are overdue, terms are violated, or abusive behavior occurs.</p>
-                <p>No refunds will be issued for work already completed.</p>
-
-                <h3>11. Refund Policy</h3>
-                <p>All payments made are <strong>non-refundable</strong>, unless otherwise stated in writing.</p>
-                <p>Setup fees and completed work are strictly non-refundable.</p>
-
-                <h3>12. Limitation of Liability</h3>
-                <p>DDNetwork One shall not be held liable for loss of data, revenue, or business arising from use or inability to use services.</p>
-                <p>Clients are advised to maintain their own backups and business continuity plans.</p>
-
-                <h3>13. Changes to Terms</h3>
-                <p>DDNetwork One reserves right to update or modify these Terms & Conditions at any time.</p>
-                <p>Continued use of services constitutes acceptance of updated terms.</p>
-
-                <p style="margin-top: 3rem; font-weight: 700; text-align:center;">&copy; 2025–2026 DD Cloud Network · DDNetwork · Reg. No. 202603040752 (MA0342542-K)</p>
+        <div class="footer-bottom">
+            <p class="copyright">&copy; 2025–2026 DD Cloud Network · DDNetwork One · Reg. No. 202603040752 (MA0342542-K)</p>
+            
+            <div class="mac-dock">
+                <a href="https://www.linkedin.com/in/muhammad-danial-danish-217bb82ba/" target="_blank" class="dock-icon"><i class="ri-linkedin-fill"></i></a>
+                <a href="https://www.instagram.com/ddnet.my/" target="_blank" class="dock-icon"><i class="ri-instagram-line"></i></a>
+                <a href="https://tiktok.com/@danialddanish/" target="_blank" class="dock-icon"><i class="ri-tiktok-fill"></i></a>
+                <a href="https://x.com" target="_blank" class="dock-icon"><i class="ri-twitter-x-fill"></i></a>
             </div>
         </div>
     </div>
+</footer>
 
-    <!-- CHAT WIDGET SCRIPT -->
-    <script
-      src="https://app.livechatai.com/embed.js"
-      data-id="cmlas1njr0001jj04hi5ygd18"
-      async defer>
-    </script>
+<!-- UPDATED TERMS MODAL (KEPT FOR CHECKOUT USE) -->
+<div id="termsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeTermsModal()">&times;</span>
+        <h2>Terms & Conditions</h2>
+        <div class="modal-text">
+            <p style="text-align:center; margin-bottom:2rem;">By accessing, engaging, or using any services provided by <strong>DDNetwork One</strong>, you acknowledge that you have read, understood, and agreed to be legally bound by these Terms & Conditions.</p>
+
+            <h3>Hosting Terms</h3>
+            <p>Hosting is provided based on customer’s own custom domain. For new customers, a free ddnet.my subdomain is included for the first year only. After the free period, renewal of the ddnet.my subdomain is chargeable at RM 55 per year.</p>
+            <p>Monthly subscription plans include hosting, server management, basic security updates, uptime monitoring, and technical support. One-time purchase plans include website development and deployment only. Ongoing maintenance, support, backups, updates, and content changes are not included and will be charged separately upon request. DDNetwork reserves the right to suspend hosting services in cases of non-payment, abuse, or violation of acceptable use policies.</p>
+
+            <h3>1. Scope of Services</h3>
+            <p>Services provided are limited to what is explicitly stated in selected package or written agreement.</p>
+            <p>Any work not listed (including additional pages, features, redesigns, or custom functions) is considered <strong>out of scope</strong> and will be quoted separately.</p>
+
+            <h3>2. One-Time Purchase Services</h3>
+            <p>One-time purchases include <strong>development and delivery only</strong>.</p>
+            <p>Updates, content changes, bug fixes, maintenance, and ongoing support are <strong>not included</strong>.</p>
+            <p>Any future changes will be charged separately.</p>
+
+            <h3>3. Subscription Services (Monthly)</h3>
+            <p>Subscription plans cover <strong>maintenance, monitoring, and technical support</strong> within agreed scope.</p>
+            <p>Subscriptions do <strong>not</strong> include major redesigns, new features, or scope expansion.</p>
+            <p>Requests beyond original scope will require an additional quotation.</p>
+
+            <h3>4. Setup Fees</h3>
+            <p>Setup fees are <strong>one-time, non-refundable</strong> payments.</p>
+            <p>Setup fees cover initial development, configuration, integrations, testing, and deployment.</p>
+            <p>Work will only begin after setup fee has been fully paid.</p>
+
+            <h3>5. Payments & Billing</h3>
+            <p>All prices are stated in <strong>RM (MYR)</strong> unless otherwise specified.</p>
+            <p>Monthly plans are billed in advance on a recurring basis.</p>
+            <p>Late payments may result in suspension of services until payment is received.</p>
+
+            <h3>6. Revisions & Changes</h3>
+            <p>Minor revisions may be provided at DDNetwork One’s discretion.</p>
+            <p>Repeated revisions, content rewrites, or design changes are not included unless stated.</p>
+            <p>Additional changes will be billed separately.</p>
+
+            <h3>7. Client Responsibilities</h3>
+            <p>Clients are responsible for providing accurate content, images, and information.</p>
+            <p>Delays caused by missing content or approvals may affect delivery timelines.</p>
+            <p>DDNetwork One is not responsible for issues caused by third-party services or client-provided materials.</p>
+
+            <h3>8. Delivery Timeline</h3>
+            <p>Estimated timelines are provided as guidelines only.</p>
+            <p>Delays caused by client-side feedback, content submission, or external dependencies are not responsibility of DDNetwork One.</p>
+
+            <h3>9. Intellectual Property</h3>
+            <p>Ownership of final website or system is transferred to client only after full payment is received.</p>
+            <p>DDNetwork One retains right to showcase completed projects for portfolio and promotional purposes unless otherwise agreed in writing.</p>
+
+            <h3>10. Termination</h3>
+            <p>DDNetwork One reserves right to terminate services if payments are overdue, terms are violated, or abusive behavior occurs.</p>
+            <p>No refunds will be issued for work already completed.</p>
+
+            <h3>11. Refund Policy</h3>
+            <p>All payments made are <strong>non-refundable</strong>, unless otherwise stated in writing.</p>
+            <p>Setup fees and completed work are strictly non-refundable.</p>
+
+            <h3>12. Limitation of Liability</h3>
+            <p>DDNetwork One shall not be held liable for loss of data, revenue, or business arising from use or inability to use services.</p>
+            <p>Clients are advised to maintain their own backups and business continuity plans.</p>
+
+            <h3>13. Changes to Terms</h3>
+            <p>DDNetwork One reserves right to update or modify these Terms & Conditions at any time.</p>
+            <p>Continued use of services constitutes acceptance of updated terms.</p>
+
+            <p style="margin-top: 3rem; font-weight: 700; text-align:center;">&copy; 2025–2026 DD Cloud Network · DDNetwork · Reg. No. 202603040752 (MA0342542-K)</p>
+        </div>
+    </div>
+</div>
+
+<!-- CHAT WIDGET SCRIPT -->
+<script
+  src="https://app.livechatai.com/embed.js"
+  data-id="cmlas1njr0001jj04hi5ygd18"
+  async defer>
+</script>
 </body>
 </html>
+
 
 <!-- JAVASCRIPT -->
 <script>
@@ -3443,6 +3509,140 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     // AUTH & USER DATA
     // ==========================================
     
+    // --- NEW: HYPERPACE LOGIN ANIMATION LOGIC ---
+    let warpAnimationId = null;
+    const warpCanvas = document.getElementById('warp-canvas');
+    const warpCtx = warpCanvas ? warpCanvas.getContext('2d') : null;
+    let warpStars = [];
+    let warpSpeed = 0;
+    let isWarping = false;
+
+    function initWarpStars() {
+        if(!warpCanvas) return;
+        warpCanvas.width = window.innerWidth;
+        warpCanvas.height = window.innerHeight;
+        warpStars = [];
+        for(let i=0; i<800; i++){
+            warpStars.push({
+                x: (Math.random()-0.5)*warpCanvas.width,
+                y: (Math.random()-0.5)*warpCanvas.height,
+                z: Math.random()*warpCanvas.width
+            });
+        }
+    }
+
+    function animateWarp() {
+        if(!warpCtx) return;
+        
+        // Center coordinates
+        const cx = warpCanvas.width / 2;
+        const cy = warpCanvas.height / 2;
+
+        // Clear with soft black background (matching theme)
+        warpCtx.fillStyle = "#1e293b"; 
+        warpCtx.fillRect(0, 0, warpCanvas.width, warpCanvas.height);
+
+        // Draw stars
+        for(let star of warpStars){
+            star.z -= warpSpeed;
+
+            if(star.z <= 0){
+                star.z = warpCanvas.width;
+                star.x = (Math.random()-0.5)*warpCanvas.width;
+                star.y = (Math.random()-0.5)*warpCanvas.height;
+            }
+
+            let k = 128.0 / star.z;
+            let px = star.x * k + cx;
+            let py = star.y * k + cy;
+
+            // Size based on depth
+            let size = (1 - star.z/warpCanvas.width) * 3.5;
+            
+            // White stars with slight blue tint matching the theme
+            warpCtx.fillStyle = "white"; 
+            warpCtx.fillRect(px, py, size, size);
+
+            // Draw trails when warping
+            if(isWarping && warpSpeed > 5){
+                let trailLength = Math.min(50, warpSpeed * 2);
+                const gradient = warpCtx.createLinearGradient(px, py, px - star.x*0.03, py - star.y*0.03);
+                gradient.addColorStop(0, "rgba(255,255,255,0.8)"); 
+                gradient.addColorStop(1, "rgba(99, 102, 241, 0)"); // Indigo trail
+                
+                warpCtx.strokeStyle = gradient;
+                warpCtx.lineWidth = size * 0.8;
+                warpCtx.beginPath();
+                warpCtx.moveTo(px, py);
+                warpCtx.lineTo(px - star.x*0.05, py - star.y*0.05);
+                warpCtx.stroke();
+            }
+        }
+
+        warpAnimationId = requestAnimationFrame(animateWarp);
+    }
+
+    function triggerLoginSuccessAnimation(onCompleteCallback) {
+        const overlay = document.getElementById('warp-transition-overlay');
+        const flash = document.getElementById('warp-flash');
+        
+        if(!overlay) {
+            if(onCompleteCallback) onCompleteCallback();
+            return;
+        }
+
+        // Reset state
+        warpSpeed = 0;
+        isWarping = false;
+        initWarpStars();
+        
+        // Start Animation Loop
+        if(warpAnimationId) cancelAnimationFrame(warpAnimationId);
+        animateWarp();
+
+        // Activate Overlay
+        overlay.classList.add('active');
+
+        // Play Sound (Optional - user needs files)
+        try {
+            const warpSound = document.getElementById('warpSound');
+            if(warpSound) { warpSound.currentTime = 0; warpSound.play(); }
+        } catch(e){}
+
+        // Start Warp
+        isWarping = true;
+        let accelerate = setInterval(()=>{
+            warpSpeed += 2.5;
+            if(warpSpeed >= 60){
+                clearInterval(accelerate);
+                
+                // Trigger Flash
+                flash.style.opacity = "1";
+                
+                // Stop Warp Sound, Play Impact
+                try {
+                    const warpSound = document.getElementById('warpSound');
+                    const impactSound = document.getElementById('impactSound');
+                    if(warpSound) warpSound.pause();
+                    if(impactSound) { impactSound.currentTime = 0; impactSound.play(); }
+                } catch(e){}
+
+                setTimeout(()=>{
+                    flash.style.opacity = "0";
+                    overlay.classList.remove('active');
+                    
+                    // Stop Animation
+                    if(warpAnimationId) cancelAnimationFrame(warpAnimationId);
+                    warpAnimationId = null;
+                    isWarping = false;
+
+                    // Execute Callback
+                    if(onCompleteCallback) onCompleteCallback();
+                }, 800);
+            }
+        }, 30);
+    }
+
     function handleGoogleAuth() {
         if(!auth) return showGlassModal("Error", "Auth not initialized", "error");
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -3456,8 +3656,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                     });
                 }
             }).then(() => {
-                showGlassModal("Success", "Login Successful!", "success");
-                navigateTo('/');
+                // Trigger Animation then redirect
+                triggerLoginSuccessAnimation(() => {
+                    navigateTo('/');
+                });
             });
         }).catch((error) => {
             console.error(error);
@@ -3606,8 +3808,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         const password = document.getElementById('login-password').value;
         if(!auth) return showGlassModal("Error", "Firebase not configured", "error");
         auth.signInWithEmailAndPassword(email, password).then(() => {
-            showGlassModal("Success", "Login Successful!", "success");
-            navigateTo('/');
+            // Trigger Warp Animation then navigate
+            triggerLoginSuccessAnimation(() => {
+                navigateTo('/');
+            });
         }).catch((error) => showGlassModal("Error", error.message, "error"));
     }
 
@@ -3621,8 +3825,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
             return db.collection("users").doc(userCredential.user.uid).set({ name: name, phone: phone, email: email, role: 'user', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         }).then(() => {
-            showGlassModal("Success", "Account Created!", "success");
-            navigateTo('/');
+            // Trigger Warp Animation then navigate
+            triggerLoginSuccessAnimation(() => {
+                navigateTo('/');
+            });
         }).catch((error) => showGlassModal("Error", error.message, "error"));
     }
 
@@ -4437,7 +4643,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     }
 
     initializeDatabase();
-
 </script>
 
 <!-- UPDATED CHAT WIDGET SCRIPT -->
@@ -4445,6 +4650,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
   src="https://app.livechatai.com/embed.js"
   data-id="cmlas1njr0001jj04hi5ygd18"
   async defer>
+
 </script>
 </body>
 </html>
