@@ -3586,6 +3586,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 return "No account found with this email address.";
             case 'auth/wrong-password':
                 return "Incorrect password. Please try again.";
+            case 'auth/invalid-login-credentials':
+                return "Invalid email or password. Please try again.";
+            case 'auth/invalid-credential':
+                return "The provided credentials are invalid.";
             case 'auth/email-already-in-use':
                 return "This email is already registered. Please login.";
             case 'auth/weak-password':
@@ -3596,8 +3600,13 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 return "Access temporarily disabled due to many failed attempts. Reset password or try later.";
             case 'auth/user-disabled':
                 return "This account has been disabled. Contact support.";
+            case 'auth/popup-closed-by-user':
+                return "Sign-in process was cancelled.";
+            case 'auth/network-request-failed':
+                return "Network error. Please check your connection.";
             default:
-                return error.message;
+                // CHANGED: This now hides the technical "Firebase" text completely
+                return "An unexpected error occurred. Please try again.";
         }
     }
 
@@ -3619,8 +3628,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 });
             });
         }).catch((error) => {
-            console.error(error);
-            showGlassModal("Error", "Google Login Failed: " + error.message, "error");
+            console.error(error); // Log technical error for debugging in console only
+            // CHANGED: Use the friendly error handler instead of error.message
+            const friendlyMsg = getFirebaseErrorMessage(error);
+            showGlassModal("Error", friendlyMsg, "error");
         });
     }
 
