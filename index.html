@@ -1134,6 +1134,33 @@
             z-index: 10;
             transition: opacity 0.2s ease;
         }
+                #warp-welcome-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10; /* Above the canvas */
+            color: white;
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 800;
+            text-align: center;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.8s ease;
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.8), 0 0 40px rgba(0,0,0,0.5);
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 90%;
+        }
+        #warp-welcome-text span {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 400;
+            opacity: 0.8;
+            margin-top: 10px;
+            text-transform: none;
+        }
         
         /* --- RESPONSIVE (General) --- */
         @media(max-width: 991px) {
@@ -1405,14 +1432,12 @@
         <canvas id="warp-canvas"></canvas>
         <div class="warp-flash" id="warp-flash"></div>
         
+        <!-- NEW: Add this line -->
+        <div id="warp-welcome-text"></div>
+        
         <!-- Audio Elements -->
-        <audio id="warpSound" preload="auto">
-             <!-- <source src="warp.mp3" type="audio/mpeg"> --> 
-             <!-- User needs to provide mp3 file -->
-        </audio>
-        <audio id="impactSound" preload="auto">
-             <!-- <source src="impact.mp3" type="audio/mpeg"> -->
-        </audio>
+        <audio id="warpSound" preload="auto"></audio>
+        <audio id="impactSound" preload="auto"></audio>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -3505,15 +3530,20 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         warpAnimationId = requestAnimationFrame(animateWarp);
     }
 
-    function triggerLoginSuccessAnimation(onCompleteCallback) {
+    function triggerLoginSuccessAnimation(onCompleteCallback, userName) {
         const overlay = document.getElementById('warp-transition-overlay');
         const flash = document.getElementById('warp-flash');
+        const welcomeText = document.getElementById('warp-welcome-text');
         
         if(!overlay) {
             if(onCompleteCallback) onCompleteCallback();
             return;
         }
 
+        // Set the text content
+        const displayName = userName || 'Traveler';
+        welcomeText.innerHTML = `Welcome <span>${displayName}</span>`;
+        
         warpSpeed = 0;
         isWarping = false;
         initWarpStars();
@@ -3527,23 +3557,26 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             if(warpSound) { warpSound.currentTime = 0; warpSound.play(); }
         } catch(e){}
 
-        // Sequence for 5-second effect
         isWarping = true;
         
         // 1. Accelerate (0s - 2s)
         let accelerate = setInterval(()=>{
-            warpSpeed += 3; // Speed increment
-            if(warpSpeed >= 80){ // Max speed cap
+            warpSpeed += 3; 
+            if (warpSpeed >= 80){
                 clearInterval(accelerate);
             }
         }, 30);
-
-        // 2. Hold Speed (2s - 4s) - No action needed, speed stays high
         
-        // 3. Flash & Decelerate (4s - 5s)
+        // 2. Show Welcome Text (at 1.5s)
+        setTimeout(() => {
+            welcomeText.style.opacity = "1";
+        }, 1500);
+        
+        // 3. Flash & Decelerate (at 4s)
         setTimeout(() => {
             // Trigger Flash
             flash.style.opacity = "1";
+            welcomeText.style.opacity = "0"; // Hide text
             
             // Stop Sound, Play Impact
             try {
@@ -3553,20 +3586,19 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                 if(impactSound) { impactSound.currentTime = 0; impactSound.play(); }
             } catch(e){}
 
-            clearInterval(accelerate); // Stop acceleration loop if not finished
+            clearInterval(accelerate);
             
-            // Quick Decelerate
             let decelerate = setInterval(() => {
                 warpSpeed -= 10;
-                if(warpSpeed <= 0) {
+                if (warpSpeed <= 0) {
                     warpSpeed = 0;
                     clearInterval(decelerate);
                 }
             }, 20);
 
-        }, 4000); // Start flash at 4s
+        }, 4000); 
 
-        // 4. End (5s)
+        // 4. End (at 5s)
         setTimeout(()=>{
             flash.style.opacity = "0";
             overlay.classList.remove('active');
@@ -3576,7 +3608,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             isWarping = false;
 
             if(onCompleteCallback) onCompleteCallback();
-        }, 5000); // Total duration 5s
+        }, 5000); 
     }
 
     // --- Friendly Error Messages ---
@@ -3605,7 +3637,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             case 'auth/network-request-failed':
                 return "Network error. Please check your connection.";
             default:
-                // CHANGED: This now hides the technical "Firebase" text completely
                 return "An unexpected error occurred. Please try again.";
         }
     }
@@ -3623,13 +3654,14 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                     });
                 }
             }).then(() => {
+                // Pass name to animation
+                const name = user.displayName || user.email.split('@')[0];
                 triggerLoginSuccessAnimation(() => {
                     navigateTo('/');
-                });
+                }, name);
             });
         }).catch((error) => {
-            console.error(error); // Log technical error for debugging in console only
-            // CHANGED: Use the friendly error handler instead of error.message
+            console.error(error);
             const friendlyMsg = getFirebaseErrorMessage(error);
             showGlassModal("Error", friendlyMsg, "error");
         });
@@ -3777,9 +3809,12 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         if(!auth) return showGlassModal("Error", "Firebase not configured", "error");
         
         auth.signInWithEmailAndPassword(email, password).then(() => {
+            const user = auth.currentUser;
+            // Fallback to email prefix if no display name exists yet
+            const name = user.displayName || user.email.split('@')[0];
             triggerLoginSuccessAnimation(() => {
                 navigateTo('/');
-            });
+            }, name);
         }).catch((error) => {
             const friendlyMsg = getFirebaseErrorMessage(error);
             showGlassModal("Login Failed", friendlyMsg, "error");
@@ -3797,9 +3832,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
             return db.collection("users").doc(userCredential.user.uid).set({ name: name, phone: phone, email: email, role: 'user', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         }).then(() => {
+            // Use the name entered in the form
             triggerLoginSuccessAnimation(() => {
                 navigateTo('/');
-            });
+            }, name);
         }).catch((error) => {
             const friendlyMsg = getFirebaseErrorMessage(error);
             showGlassModal("Signup Failed", friendlyMsg, "error");
