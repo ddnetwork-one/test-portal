@@ -15,11 +15,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Font: Homemade Apple (For Handwriting Animation) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap" rel="stylesheet">
-    
     <!-- Icons: RemixIcon -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
@@ -68,7 +63,6 @@
             
             /* Typography */
             --font-display: 'Inter', sans-serif; 
-            --font-handwriting: 'Homemade Apple', cursive;
             --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
             --header-height: 80px;
@@ -683,83 +677,127 @@
             color: var(--accent-success);
         }
 
-        /* --- NOTIFICATION MODAL (ANIMATED UPDATE) --- */
+        /* --- NOTIFICATION MODAL (UPDATED: FULL SCREEN ANIMATION) --- */
         #glass-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6); /* Darker for focus */
-            backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, 0.6); 
+            backdrop-filter: blur(12px);
             z-index: 100001; display: none; justify-content: center; align-items: center;
             opacity: 0; transition: opacity 0.3s ease;
         }
         #glass-modal-overlay.active { display: flex; opacity: 1; }
         
-        .glass-modal-content {
-            width: 90%; max-width: 400px; text-align: center;
-            background: transparent; /* Remove solid bg for animated look */
-            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            padding: 0; border-radius: 0; border: none; box-shadow: none;
+        /* New Animated Content Container */
+        .animated-notification-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            animation: fadeInScale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #glass-modal-overlay.active .glass-modal-content { transform: scale(1); }
 
-        /* ANIMATED ICON CONTAINER */
-        .glass-modal-icon {
-            width: 100px; height: 100px;
-            margin: 0 auto 2rem;
-            display: flex; align-items: center; justify-content: center;
+        @keyframes fadeInScale {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Icon Animations */
+        .notif-icon-wrapper {
+            width: 120px; height: 120px;
+            margin-bottom: 2rem;
             position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        /* Success Checkmark Animation */
+        .checkmark-circle {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            stroke: white;
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: 500;
+            stroke-dashoffset: 500;
+            animation: strokeDraw 1s ease-out forwards, fillGreen 0.5s ease-out 0.5s forwards;
+        }
+        .checkmark-check {
+            stroke: white;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: strokeDraw 0.5s ease-out 0.8s forwards;
         }
 
-        /* SUCCESS ANIMATION (TICK) */
-        .success-anim-svg circle {
-            fill: none; stroke: var(--accent-success); stroke-width: 4;
-            stroke-dasharray: 300; stroke-dashoffset: 300;
-            animation: draw-circle 1s forwards infinite;
+        @keyframes strokeDraw { to { stroke-dashoffset: 0; } }
+        @keyframes fillGreen { to { fill: var(--accent-success); stroke: var(--accent-success); } }
+
+        /* Error/Wrong Animation */
+        .error-circle {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            stroke: white;
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: 500;
+            stroke-dashoffset: 500;
+            animation: strokeDraw 1s ease-out forwards, fillRed 0.5s ease-out 0.5s forwards;
         }
-        .success-anim-svg path {
-            fill: none; stroke: var(--accent-success); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round;
-            stroke-dasharray: 100; stroke-dashoffset: 100;
-            animation: draw-check 1s forwards infinite;
+        .error-x { 
+            stroke: white; stroke-width: 6; stroke-linecap: round;
+            stroke-dasharray: 50; stroke-dashoffset: 50; fill: none;
+            animation: strokeDraw 0.3s ease-out 0.8s forwards;
         }
-        /* Looping breathing effect after draw */
-        .glass-modal-icon.success::after {
-            content:''; position: absolute; width: 100%; height: 100%;
-            border-radius: 50%; border: 2px solid var(--accent-success);
-            opacity: 0; animation: pulse-ring 2s infinite; animation-delay: 0.5s;
+        .error-x.left { animation-delay: 0.8s; }
+        .error-x.right { animation-delay: 1s; }
+        
+        /* Shake Animation for Error */
+        .shake-wrapper {
+            animation: shake 0.6s ease-in-out 1.2s; /* Shake after X drawn */
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
         }
 
-        /* ERROR ANIMATION (CROSS) */
-        .error-anim-svg circle {
-            fill: none; stroke: var(--accent-danger); stroke-width: 4;
-            stroke-dasharray: 300; stroke-dashoffset: 300;
-            animation: draw-circle 1s forwards infinite;
+        @keyframes fillRed { to { fill: var(--accent-danger); stroke: var(--accent-danger); } }
+
+        /* Warning Pulsing */
+        .warning-pulse {
+            font-size: 6rem;
+            color: var(--accent-warn);
+            animation: pulseWarning 1.5s infinite ease-in-out;
         }
-        .error-anim-svg path {
-            fill: none; stroke: var(--accent-danger); stroke-width: 6; stroke-linecap: round;
-            stroke-dasharray: 100; stroke-dashoffset: 100;
-            animation: draw-cross 1s forwards infinite;
-        }
-        .glass-modal-icon.error::after {
-            content:''; position: absolute; width: 100%; height: 100%;
-            border-radius: 50%; border: 2px solid var(--accent-danger);
-            opacity: 0; animation: pulse-ring-red 2s infinite; animation-delay: 0.5s;
+        @keyframes pulseWarning {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
         }
 
-        /* KEYFRAMES FOR MODAL */
-        @keyframes draw-circle { to { stroke-dashoffset: 0; } }
-        @keyframes draw-check { 0% { stroke-dashoffset: 100; opacity:0; } 50% { stroke-dashoffset: 0; opacity:1; } 80% { opacity:1; } 100% { opacity:0; } }
-        @keyframes draw-cross { 0% { stroke-dashoffset: 100; opacity:0; } 50% { stroke-dashoffset: 0; opacity:1; } 80% { opacity:1; } 100% { opacity:0; } }
-        @keyframes pulse-ring { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
-        @keyframes pulse-ring-red { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
-
-        .glass-modal-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text-main); opacity: 0; animation: fade-up 0.5s 0.5s forwards; }
-        .glass-modal-desc { color: var(--text-secondary); font-size:1rem; margin-bottom: 2rem; line-height: 1.6; opacity: 0; animation: fade-up 0.5s 0.6s forwards; }
-        .glass-modal-btn {
-            width: 100%; padding: 1rem; border-radius: 12px; background: var(--soft-black); color: white;
-            font-weight: 700; text-transform: uppercase; border: none; cursor: pointer; transition: 0.3s; opacity: 0; animation: fade-up 0.5s 0.7s forwards;
+        .notif-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: -0.02em; }
+        .notif-desc { font-size: 1.1rem; opacity: 0.9; max-width: 400px; line-height: 1.5; margin-bottom: 2rem; }
+        
+        .notif-btn {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.8rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(5px);
         }
-        .glass-modal-btn:hover { background: var(--soft-black-hover); }
-        @keyframes fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
+        .notif-btn:hover { background: white; color: var(--soft-black); border-color: white; }
+        
+        /* Special Colors for Overlay Background */
+        #glass-modal-overlay.success-bg { background: rgba(16, 185, 129, 0.9); }
+        #glass-modal-overlay.error-bg { background: rgba(239, 68, 68, 0.9); }
+        #glass-modal-overlay.warning-bg { background: rgba(245, 158, 11, 0.9); }
 
         /* --- IMPROVED TOAST NOTIFICATIONS (HIDDEN AS PER REQUEST) --- */
         .toast-container { 
@@ -1186,144 +1224,93 @@
             z-index: 10;
             transition: opacity 0.2s ease;
         }
-        #warp-welcome-text {
+                #warp-welcome-text {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 10; /* Above the canvas */
             color: white;
-            font-family: var(--font-handwriting); /* Handwriting Font */
-            font-size: 3.5rem;
-            font-weight: 400;
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 800;
             text-align: center;
             opacity: 0; /* Hidden by default */
-            transition: opacity 1s ease;
+            transition: opacity 0.8s ease;
             text-shadow: 0 0 20px rgba(99, 102, 241, 0.8), 0 0 40px rgba(0,0,0,0.5);
             pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             width: 90%;
-            white-space: nowrap;
-            overflow: hidden;
-            border-right: 2px solid rgba(255, 255, 255, 0.75);
-            margin: 0 auto;
         }
-        
-        /* Cursor blinking for handwriting effect */
-        .typing-cursor {
-            display: inline-block;
-            width: 2px;
-            height: 1em;
-            background-color: white;
-            animation: blink 0.75s step-end infinite;
-            vertical-align: middle;
-        }
-        @keyframes blink { from, to { border-color: transparent } 50% { border-color: white; } }
-
         #warp-welcome-text span {
             display: block;
-            font-family: var(--font-display); /* Standard font for subtitle */
             font-size: 1.2rem;
-            font-weight: 700;
+            font-weight: 400;
             opacity: 0.8;
             margin-top: 10px;
             text-transform: none;
-            letter-spacing: 1px;
-            white-space: normal;
         }
         
-        /* --- RESPONSIVE (General) --- */
+        /* ========================================== */
+        /* MOBILE RESPONSIVE (COMPACT MODE)           */
+        /* ========================================== */
         @media(max-width: 991px) {
-            h1 { font-size: 2.2rem !important; } h2 { font-size: 1.5rem !important; } body { font-size: 0.95rem !important; } 
+            /* Base Scaling */
+            body { font-size: 0.9rem; line-height: 1.5; }
+            h1 { font-size: 2rem !important; } h2 { font-size: 1.4rem !important; } h3 { font-size: 1.2rem !important; } h4 { font-size: 1rem !important; }
+            
+            /* Structure */
             #globe-canvas { transform: translate(-50%, -50%) scale(0.5); opacity: 0.6; }
-            .page-section { padding-top: 120px !important; padding-bottom: 40px !important; }
-            .btn { padding: 0.8rem 1.5rem !important; font-size: 0.8rem !important; min-height: 48px; }
+            .page-section { padding-top: 100px !important; padding-bottom: 30px !important; }
+            main, footer { width: 100%; margin: 0; }
+            .container { width: 94%; }
             
-            /* UPDATE 3: Mobile View Width (100% View) */
-            main, footer, header {
-                width: 100% !important;
-                max-width: 100% !important;
-                left: 0 !important;
-                transform: none !important;
-            }
-
-            /* Smaller Elements for Mobile */
-            .glass-card {
-                padding: 1.5rem !important; /* Tighter padding */
-                border-radius: 16px !important;
-            }
-            
+            /* Header */
             header {
-                top: 0;
-                border-radius: 0;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+                width: 94% !important; left: 50% !important; transform: translateX(-50%) !important;
+                top: 10px; border-radius: 16px; padding: 0 1rem; height: 60px;
             }
+            header.scrolled { width: 100% !important; top: 0; border-radius: 0; }
+            .company-name { font-size: 0.95rem; }
+            .logo-img { height: 28px; }
             
-            header.scrolled {
-                top: 0;
-                border-radius: 0;
-            }
+            /* Components Scaling */
+            .btn { padding: 0.7rem 1.5rem !important; font-size: 0.75rem !important; min-height: 44px; border-radius: 50px; }
+            .glass-card { padding: 1.5rem !important; border-radius: 16px !important; }
+            .form-group { margin-bottom: 1rem !important; }
+            .form-label { font-size: 0.7rem !important; margin-bottom: 0.4rem !important; }
+            .form-input, .form-select, textarea { padding: 0.7rem !important; font-size: 0.9rem !important; border-radius: 8px; min-height: 40px; }
+            .radio-option { padding: 0.7rem !important; min-height: auto; }
             
-            .form-group { margin-bottom: 1.2rem !important; }
+            /* Hero */
+            .hero { padding: 0 10px; min-height: 80vh; }
+            .hero h1 { font-size: 2.2rem !important; margin-bottom: 1rem; }
+            .hero p { font-size: 0.95rem; margin-bottom: 2rem; }
+            
+            /* Pricing Cards Mobile */
+            .pkg-icon { width: 40px; height: 40px; font-size: 1.2rem; margin-bottom: 0.5rem; }
+            .pkg-title { font-size: 1rem; margin-bottom: 0.2rem; }
+            .pkg-desc { font-size: 0.75rem; margin-bottom: 0.5rem; min-height: auto; }
+            .pkg-price { font-size: 1.8rem; }
+            .pkg-features li { font-size: 0.8rem; margin-bottom: 0.3rem; padding-left: 18px; }
+            .setup-fee-tag { font-size: 0.65rem; padding: 2px 6px; margin-bottom: 0.2rem; }
+            .bundle-tag { font-size: 0.6rem; padding: 3px 8px; top: 8px; right: 8px; }
+
+            /* Tables */
+            .history-table { font-size: 0.8rem; }
+            .history-table th, .history-table td { padding: 0.7rem; }
+            
+            /* Footer */
             footer { padding: 3rem 0 1.5rem; }
-            .footer-grid { grid-template-columns: 1fr; gap: 2.5rem; text-align: center; }
+            .footer-grid { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
             .footer-brand { align-items: center; display: flex; flex-direction: column; }
             .footer-contact-item { justify-content: center; }
             .footer-bottom { flex-direction: column; gap: 1.5rem; }
             .mac-dock { display: none; }
-            .toast-container { top: auto; bottom: 100px; right: 20px; left: 20px; }
-            
-            /* Home Mobile Adjustments */
-            .home-section { padding: 3rem 0; }
-            .service-card, .feature-item, .lead-form-card { padding: 1.5rem; }
-            .marquee-section { padding: 1rem 0; }
-            
-            /* Form Inputs Smaller on Mobile */
-            .form-input, .form-select, textarea { padding: 0.8rem !important; font-size: 0.9rem !important; min-height: 44px; }
-            .form-label { font-size: 0.75rem !important; margin-bottom: 0.4rem; }
         }
 
-        @media(max-width: 600px) {
-            .container { width: 94%; }
-            #services .glass-card { padding: 1.5rem !important; }
-            .pkg-icon { width: 50px; height: 50px; font-size: 1.2rem; margin-bottom: 0.8rem; }
-            .pkg-title { font-size: 1.2rem; margin-bottom: 0.2rem; }
-            .pkg-desc { font-size: 0.8rem; margin-bottom: 0.8rem; min-height: auto; }
-            .pkg-price { font-size: 2rem; margin-bottom: 0.2rem; }
-            .pkg-period { font-size: 0.8rem; }
-            .pkg-features li { font-size: 0.8rem; margin-bottom: 0.4rem; padding-left: 20px; }
-            .setup-fee-tag { font-size: 0.7rem; padding: 2px; margin-bottom: 0.3rem; }
-            .bundle-tag { font-size: 0.6rem; padding: 3px 8px; top: 10px; right: 10px; }
-            
-            #services > div, #buynow .profile-details-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-            
-            .btn { font-size: 0.75rem !important; padding: 0.7rem 1.2rem !important; border-radius: 50px; }
-            .auth-container { padding-top: 0 !important; max-width: 100% !important; }
-            .glass-card { padding: 1.2rem !important; border-radius: 16px !important; } /* Even tighter for small mobile */
-            h1 { font-size: 2rem !important; line-height: 1.1 !important; }
-            h2 { font-size: 1.4rem !important; margin-bottom: 0.5rem; }
-            h3 { font-size: 1.2rem !important; }
-            .hero { padding: 0 10px; }
-            .hero-content { width: 100%; }
-            .profile-details-grid { grid-template-columns: 1fr; gap: 1rem; }
-            
-            /* Review specific mobile tweaks */
-            .review-card { padding: 1.2rem; }
-            .review-header { gap: 0.8rem; }
-            .review-avatar { width: 35px; height: 35px; font-size: 0.9rem; }
-
-            /* Warp Text Adjustments */
-            #warp-welcome-text { font-size: 2.5rem; }
-            #warp-welcome-text span { font-size: 0.9rem; }
-        }
-
-        /* ========================================== */
-        /* FIX: FORCE CHAT WIDGET VISIBILITY           */
-        /* ========================================== */
-        /* 
-           This rule ensures that any element injected by the chat script 
-           (which usually has 'chat', 'lc-' (livechat), or 'widget' in its ID/Class)
-           sits ABOVE the sticky header (z-index 2100) and other overlays.
-        */
+        /* Fix: Force Chat Widget Visibility */
         div[id*="chat"], div[class*="chat"], 
         div[id*="lc-"], div[class*="lc-"], 
         div[id*="widget"], div[class*="widget"],
@@ -1332,7 +1319,7 @@
             opacity: 1 !important;
             visibility: visible !important;
             pointer-events: auto !important;
-            transform: none !important; /* Prevent accidental translation off-screen */
+            transform: none !important;
         }
         
     </style>
@@ -1351,16 +1338,13 @@
         </div>
     </div>
 
-    <!-- GENERAL GLASSMORPHIC NOTIFICATION MODAL -->
+    <!-- GENERAL ANIMATED NOTIFICATION OVERLAY -->
     <div id="glass-modal-overlay">
-        <div class="glass-card glass-modal-content">
-            <!-- DYNAMIC ICON CONTAINER -->
-            <div id="glass-modal-icon-container" class="glass-modal-icon warning">
-                <!-- Content injected via JS -->
-            </div>
-            <h3 id="glass-modal-title" class="glass-modal-title">Action Required</h3>
-            <p id="glass-modal-desc" class="glass-modal-desc">Please complete required steps to proceed.</p>
-            <button id="glass-modal-btn" class="glass-modal-btn primary">Okay</button>
+        <div class="animated-notification-container">
+            <!-- SVGs injected by JS -->
+            <h3 id="glass-modal-title" class="notif-title"></h3>
+            <p id="glass-modal-desc" class="notif-desc"></p>
+            <button id="glass-modal-btn" class="notif-btn">Okay</button>
         </div>
     </div>
 
@@ -1386,13 +1370,13 @@
         <div class="spinner"></div>
     </div>
 
-    <!-- Toast Container (Hidden via CSS as requested) -->
+    <!-- Toast Container (Hidden via CSS) -->
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- Mobile Drawer Overlay -->
     <div id="mobileDrawerOverlay" class="mobile-drawer-overlay" onclick="toggleDrawer()"></div>
 
-    <!-- Header (Sticky + About Us + Solutions Dropdowns) -->
+    <!-- Header -->
     <header id="mainHeader">
         <a href="/" onclick="routeLink(event, '/')" class="logo-wrapper">
             <img src="https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png" alt="DDNetwork Logo" class="logo-img">
@@ -1401,8 +1385,6 @@
         
         <nav class="nav-desktop">
             <a href="/" onclick="routeLink(event, '/')" class="nav-link-item">Home</a>
-            
-            <!-- SOLUTIONS DROPDOWN -->
             <div class="nav-link-item">
                 Solutions <i class="ri-arrow-down-s-line"></i>
                 <ul class="dropdown">
@@ -1412,8 +1394,6 @@
                     <li><a href="/helpdesk" onclick="routeLink(event, '/helpdesk')"><i class="ri-customer-service-2-fill"></i> Helpdesk</a></li>
                 </ul>
             </div>
-
-            <!-- ABOUT US DROPDOWN -->
             <div class="nav-link-item">
                 About Us <i class="ri-arrow-down-s-line"></i>
                 <ul class="dropdown">
@@ -1424,14 +1404,10 @@
                     <li><a href="/founder-danialdanish" onclick="routeLink(event, '/founder-danialdanish')"><i class="ri-user-star-fill"></i> Founder</a></li>
                 </ul>
             </div>
-
             <a href="https://careers.ddnet.my" target="_blank" class="nav-link-item">Careers</a>
             <a href="/updates" onclick="routeLink(event, '/updates')" class="nav-link-item">Updates</a>
             <a href="/terms" onclick="routeLink(event, '/terms')" class="nav-link-item">Terms</a>
-            
-            <div class="auth-buttons" id="desktopAuthLinks">
-                <!-- Injected via JS -->
-            </div>
+            <div class="auth-buttons" id="desktopAuthLinks"></div>
         </nav>
 
         <div class="mobile-toggle" onclick="toggleDrawer()">
@@ -1439,22 +1415,12 @@
         </div>
     </header>
 
-    <!-- PROFESSIONAL MOBILE DRAWER (FULL SCREEN & ACCORDION) -->
+    <!-- MOBILE DRAWER -->
     <div class="mobile-drawer" id="mobileDrawer">
         <ul class="mobile-nav-list">
-            <!-- Home -->
+            <li class="mobile-nav-item"><a href="/" onclick="routeLink(event, '/'); toggleDrawer()" class="mobile-nav-link"><i class="ri-home-4-fill"></i> Home</a></li>
             <li class="mobile-nav-item">
-                <a href="/" onclick="routeLink(event, '/'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; text-transform: uppercase;">
-                    <i class="ri-home-4-fill" style="margin-right: 15px;"></i> Home
-                </a>
-            </li>
-
-            <!-- Solutions Dropdown -->
-            <li class="mobile-nav-item">
-                <div class="mobile-nav-link mobile-nav-header" onclick="toggleMobileSub(this)">
-                    <span>Solutions</span>
-                    <i class="ri-arrow-down-s-line"></i>
-                </div>
+                <div class="mobile-nav-link mobile-nav-header" onclick="toggleMobileSub(this)"><span>Solutions</span><i class="ri-arrow-down-s-line"></i></div>
                 <ul class="mobile-submenu">
                     <li><a href="/pricing" onclick="routeLink(event, '/pricing'); toggleDrawer()"><i class="ri-price-tag-3-fill"></i> Pricing</a></li>
                     <li><a href="/reviews" onclick="routeLink(event, '/reviews'); toggleDrawer()"><i class="ri-star-smile-fill"></i> Reviews</a></li>
@@ -1462,13 +1428,8 @@
                     <li><a href="/helpdesk" onclick="routeLink(event, '/helpdesk'); toggleDrawer()"><i class="ri-customer-service-2-fill"></i> Helpdesk</a></li>
                 </ul>
             </li>
-
-            <!-- About Us Dropdown -->
             <li class="mobile-nav-item">
-                <div class="mobile-nav-link mobile-nav-header" onclick="toggleMobileSub(this)">
-                    <span>About Us</span>
-                    <i class="ri-arrow-down-s-line"></i>
-                </div>
+                <div class="mobile-nav-link mobile-nav-header" onclick="toggleMobileSub(this)"><span>About Us</span><i class="ri-arrow-down-s-line"></i></div>
                 <ul class="mobile-submenu">
                     <li><a href="/about-company" onclick="routeLink(event, '/about-company'); toggleDrawer()"><i class="ri-building-4-fill"></i> About Company</a></li>
                     <li><a href="/faq" onclick="routeLink(event, '/faq'); toggleDrawer()"><i class="ri-question-answer-fill"></i> FAQ</a></li>
@@ -1477,23 +1438,9 @@
                     <li><a href="/founder-danialdanish" onclick="routeLink(event, '/founder-danialdanish'); toggleDrawer()"><i class="ri-user-star-fill"></i> Founder</a></li>
                 </ul>
             </li>
-
-            <li class="mobile-nav-item">
-                <a href="https://careers.ddnet.my" target="_blank" class="mobile-nav-link" style="justify-content: flex-start; text-transform: uppercase;">
-                    <i class="ri-briefcase-4-fill" style="margin-right: 15px;"></i> Careers
-                </a>
-            </li>
-
-            <li class="mobile-nav-item">
-                <a href="/updates" onclick="routeLink(event, '/updates'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; text-transform: uppercase;">
-                    <i class="ri-refresh-line" style="margin-right: 15px;"></i> Updates
-                </a>
-            </li>
-
-            <!-- Auth Links Section -->
-            <div id="mobileAuthLinksContainer" class="mobile-auth-section">
-                <!-- Injected via JS -->
-            </div>
+            <li class="mobile-nav-item"><a href="https://careers.ddnet.my" target="_blank" onclick="toggleDrawer()" class="mobile-nav-link"><i class="ri-briefcase-4-fill"></i> Careers</a></li>
+            <li class="mobile-nav-item"><a href="/updates" onclick="routeLink(event, '/updates'); toggleDrawer()" class="mobile-nav-link"><i class="ri-refresh-line"></i> Updates</a></li>
+            <div id="mobileAuthLinksContainer" class="mobile-auth-section"></div>
         </ul>
     </div>
 
@@ -1501,23 +1448,14 @@
     <div id="processing-overlay">
         <div class="process-spinner"></div>
         <div id="process-message" class="process-text">Initializing...</div>
-        <!-- IMPROVED PROCESSING NOTE -->
-        <div class="process-note">
-            <i class="ri-refresh-line" style="font-size: 1.2rem;"></i>
-            <span><strong>Note:</strong> Refresh this page if payment is completed.</span>
-        </div>
+        <div class="process-note"><i class="ri-refresh-line"></i> <span><strong>Note:</strong> Refresh this page if payment is completed.</span></div>
     </div>
 
     <!-- LOGIN WARP TRANSITION OVERLAY -->
     <div id="warp-transition-overlay">
         <canvas id="warp-canvas"></canvas>
         <div class="warp-flash" id="warp-flash"></div>
-        
-        <div id="warp-welcome-text">
-            <!-- Content Injected via JS -->
-        </div>
-        
-        <!-- Audio Elements -->
+        <div id="warp-welcome-text"></div>
         <audio id="warpSound" preload="auto"></audio>
         <audio id="impactSound" preload="auto"></audio>
     </div>
@@ -1525,15 +1463,12 @@
     <!-- MAIN CONTENT -->
     <main class="container">
 
-        <!-- === PAGE: HOME (UPDATED) === -->
+        <!-- PAGE: HOME -->
         <section id="home" class="page-section active">
             <div class="hero">
                 <canvas id="globe-canvas" width="1200" height="1200"></canvas>
-                
                 <div class="hero-content">
-                    <div style="display:inline-block; padding: 6px 16px; background: rgba(255,255,255,0.5); border-radius: 30px; border: 1px solid rgba(255,255,255,0.8); margin-bottom:1.5rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; color: var(--soft-black); text-transform: uppercase;">
-                        Malaysia 🇲🇾 #1 Web Solutions
-                    </div>
+                    <div style="display:inline-block; padding: 6px 16px; background: rgba(255,255,255,0.5); border-radius: 30px; border: 1px solid rgba(255,255,255,0.8); margin-bottom:1.5rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; color: var(--soft-black); text-transform: uppercase;">Malaysia 🇲🇾 #1 Web Solutions</div>
                     <h1>Custom Websites for<br>Malaysian Businesses</h1>
                     <p>Designed in Malaysia. Built for the world.</p>
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
@@ -1544,10 +1479,8 @@
                 </div>
             </div>
 
-            <!-- UPDATE 2: Trust & Completed Projects Marquee -->
             <div class="marquee-section">
                 <div class="container" style="overflow: hidden;">
-                    <!-- Row 1 Left -->
                     <div class="marquee-row" id="trust-marquee-row-1">
                         <div class="trust-item"><i class="ri-check-double-line"></i> Trusted by 10+ Clients</div>
                         <div class="trust-item"><i class="ri-global-line"></i> Global Standard Hosting</div>
@@ -1555,7 +1488,6 @@
                         <div class="trust-item"><i class="ri-shield-check-line"></i> Secure Payment Gateway</div>
                         <div class="trust-item"><i class="ri-customer-service-2-line"></i> 24/7 Technical Support</div>
                         <div class="trust-item"><i class="ri-star-s-fill"></i> 5-Star Rated Services</div>
-                        <!-- Duplicate for smooth loop -->
                         <div class="trust-item"><i class="ri-check-double-line"></i> Trusted by 10+ Clients</div>
                         <div class="trust-item"><i class="ri-global-line"></i> Global Standard Hosting</div>
                         <div class="trust-item"><i class="ri-rocket-line"></i> Fast Delivery Guaranteed</div>
@@ -1566,13 +1498,9 @@
                 </div>
             </div>
 
-            <!-- UPDATE 3: Service Highlights -->
             <div class="home-section">
                 <div class="container">
-                    <div class="section-header">
-                        <h2>Our Solutions</h2>
-                        <p>From simple landing pages to complex AI-powered systems, we have a package for every stage of your business growth.</p>
-                    </div>
+                    <div class="section-header"><h2>Our Solutions</h2><p>From simple landing pages to complex AI-powered systems, we have a package for every stage of your business growth.</p></div>
                     <div class="services-grid">
                         <div class="service-card">
                             <div class="service-icon"><i class="ri-layout-4-line"></i></div>
@@ -1596,629 +1524,276 @@
                 </div>
             </div>
 
-            <!-- UPDATE 4: Why Choose Us -->
             <div class="home-section" style="background: rgba(255,255,255,0.4);">
                 <div class="container">
-                    <div class="section-header">
-                        <h2>Why Choose Us?</h2>
-                        <p>We combine technical expertise with a deep understanding of the local market.</p>
-                    </div>
+                    <div class="section-header"><h2>Why Choose Us?</h2><p>We combine technical expertise with a deep understanding of the local market.</p></div>
                     <div class="features-grid">
-                        <div class="feature-item">
-                            <div class="feature-icon"><i class="ri-rocket-2-fill"></i></div>
-                            <h4>Fast Delivery</h4>
-                            <p style="font-size:0.85rem; color:var(--text-secondary);">We value your time with efficient turnaround.</p>
-                        </div>
-                        <div class="feature-item">
-                            <div class="feature-icon"><i class="ri-smartphone-line"></i></div>
-                            <h4>Mobile-First</h4>
-                            <p style="font-size:0.85rem; color:var(--text-secondary);">Perfectly responsive on all devices.</p>
-                        </div>
-                        <div class="feature-item">
-                            <div class="feature-icon"><i class="ri-bar-chart-box-line"></i></div>
-                            <h4>SEO & Analytics</h4>
-                            <p style="font-size:0.85rem; color:var(--text-secondary);">Built-in tools to help you rank higher.</p>
-                        </div>
-                        <div class="feature-item">
-                            <div class="feature-icon"><i class="ri-robot-2-line"></i></div>
-                            <h4>AI Integration</h4>
-                            <p style="font-size:0.85rem; color:var(--text-secondary);">Future-proof your business with AI.</p>
-                        </div>
+                        <div class="feature-item"><div class="feature-icon"><i class="ri-rocket-2-fill"></i></div><h4>Fast Delivery</h4><p style="font-size:0.85rem; color:var(--text-secondary);">We value your time with efficient turnaround.</p></div>
+                        <div class="feature-item"><div class="feature-icon"><i class="ri-smartphone-line"></i></div><h4>Mobile-First</h4><p style="font-size:0.85rem; color:var(--text-secondary);">Perfectly responsive on all devices.</p></div>
+                        <div class="feature-item"><div class="feature-icon"><i class="ri-bar-chart-box-line"></i></div><h4>SEO & Analytics</h4><p style="font-size:0.85rem; color:var(--text-secondary);">Built-in tools to help you rank higher.</p></div>
+                        <div class="feature-item"><div class="feature-icon"><i class="ri-robot-2-line"></i></div><h4>AI Integration</h4><p style="font-size:0.85rem; color:var(--text-secondary);">Future-proof your business with AI.</p></div>
                     </div>
                 </div>
             </div>
 
-            <!-- UPDATE 5: Portfolio Preview -->
             <div class="home-section">
                 <div class="container">
-                    <div class="section-header">
-                        <h2>Recent Work</h2>
-                        <p>Check out some of our latest completed projects.</p>
-                    </div>
-                    <div id="home-portfolio-grid" class="portfolio-grid">
-                        <!-- Populated by JS -->
-                        <div class="text-center" style="grid-column: 1/-1; color: var(--text-tertiary);">Loading portfolio...</div>
-                    </div>
-                    <div class="text-center" style="margin-top: 2rem;">
-                        <button class="btn btn-primary" onclick="navigateTo('/clients')">View All Projects</button>
-                    </div>
+                    <div class="section-header"><h2>Recent Work</h2><p>Check out some of our latest completed projects.</p></div>
+                    <div id="home-portfolio-grid" class="portfolio-grid"><div class="text-center" style="grid-column: 1/-1; color: var(--text-tertiary);">Loading portfolio...</div></div>
+                    <div class="text-center" style="margin-top: 2rem;"><button class="btn btn-primary" onclick="navigateTo('/clients')">View All Projects</button></div>
                 </div>
             </div>
 
-            <!-- UPDATE 7: Contact / Lead Form -->
             <div class="home-lead-section">
                 <div class="container">
                     <div class="lead-form-card glass-card">
-                        <div class="text-center" style="margin-bottom: 2rem;">
-                            <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Get In Touch</h2>
-                            <p style="color: var(--text-secondary);">Have a custom project in mind? Send us a direct message.</p>
-                        </div>
-                        
+                        <div class="text-center" style="margin-bottom: 2rem;"><h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Get In Touch</h2><p style="color: var(--text-secondary);">Have a custom project in mind? Send us a direct message.</p></div>
                         <form onsubmit="handleHomeLeadSubmit(event)">
-                            <div class="form-group">
-                                <label class="form-label">Name</label>
-                                <input type="text" id="lead-name" class="form-input" placeholder="Your Name" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input type="email" id="lead-email" class="form-input" placeholder="hello@example.com" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Message</label>
-                                <textarea id="lead-message" class="form-input" rows="4" placeholder="Tell us about your project..." required></textarea>
-                            </div>
+                            <div class="form-group"><label class="form-label">Name</label><input type="text" id="lead-name" class="form-input" placeholder="Your Name" required></div>
+                            <div class="form-group"><label class="form-label">Email</label><input type="email" id="lead-email" class="form-input" placeholder="hello@example.com" required></div>
+                            <div class="form-group"><label class="form-label">Message</label><textarea id="lead-message" class="form-input" rows="4" placeholder="Tell us about your project..." required></textarea></div>
                             <button class="btn btn-primary" style="width: 100%;">Send Message</button>
                         </form>
-                        <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem; text-align: center;">
-                            <p style="color: var(--text-main); font-weight: 700; margin-bottom: 0.5rem;">Email Us</p>
-                            <a href="mailto:sales@ddnet.my" style="color: var(--soft-black); font-size: 1.2rem;">sales@ddnet.my</a>
-                        </div>
+                        <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem; text-align: center;"><p style="color: var(--text-main); font-weight: 700; margin-bottom: 0.5rem;">Email Us</p><a href="mailto:sales@ddnet.my" style="color: var(--soft-black); font-size: 1.2rem;">sales@ddnet.my</a></div>
                     </div>
                 </div>
             </div>
-
         </section>
 
-        <!-- === PAGE: REVIEWS (UPDATED) === -->
+        <!-- PAGE: REVIEWS -->
         <section id="reviews" class="page-section">
-            <div class="text-center" style="margin-bottom: 2rem;">
-                <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Customer Reviews</h2>
-                <p style="color: var(--text-secondary); font-size: 0.9rem;">See what our clients say about us.</p>
-            </div>
-
-            <!-- UPDATE 1: Form on Top -->
+            <div class="text-center" style="margin-bottom: 2rem;"><h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Customer Reviews</h2><p style="color: var(--text-secondary); font-size: 0.9rem;">See what our clients say about us.</p></div>
             <div class="auth-container" style="margin-top: 0;">
                 <div class="glass-card" style="max-width: 700px;">
                     <h3 style="text-align: center; margin-bottom: 1rem; font-size: 1.2rem;">Write a Review</h3>
-                    <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.9rem;">
-                        Login required to submit a review.
-                    </p>
-                    
+                    <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.9rem;">Login required to submit a review.</p>
                     <form id="review-form" onsubmit="handleReviewSubmit(event)">
                         <div class="form-group">
                             <label class="form-label">Your Rating</label>
                             <div class="review-input-wrapper" id="star-input-container">
-                                <i class="ri-star-fill star-icon" data-val="1"></i>
-                                <i class="ri-star-fill star-icon" data-val="2"></i>
-                                <i class="ri-star-fill star-icon" data-val="3"></i>
-                                <i class="ri-star-fill star-icon" data-val="4"></i>
-                                <i class="ri-star-fill star-icon" data-val="5"></i>
+                                <i class="ri-star-fill star-icon" data-val="1"></i><i class="ri-star-fill star-icon" data-val="2"></i><i class="ri-star-fill star-icon" data-val="3"></i><i class="ri-star-fill star-icon" data-val="4"></i><i class="ri-star-fill star-icon" data-val="5"></i>
                             </div>
                             <input type="hidden" id="rating-value" required>
                             <div id="rating-error" style="color: var(--accent-warn); font-size: 0.8rem; margin-top: 5px; display: none;">Please select a rating.</div>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Your Comment</label>
-                            <textarea id="review-comment" class="form-input" rows="4" placeholder="Share your experience with DDNetwork One..." required></textarea>
-                        </div>
-
+                        <div class="form-group"><label class="form-label">Your Comment</label><textarea id="review-comment" class="form-input" rows="4" placeholder="Share your experience with DDNetwork One..." required></textarea></div>
                         <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Review</button>
                     </form>
                 </div>
             </div>
-
-            <!-- UPDATE 1: Review Marquee (2 Row) -->
             <div style="margin-top: 4rem; overflow: hidden; position: relative; width: 100%;">
-                <div class="marquee-row" id="reviews-marquee-row-1">
-                    <!-- Populated by JS with Dummies -->
-                </div>
-                <div class="marquee-row reverse" id="reviews-marquee-row-2" style="margin-top: 1rem;">
-                    <!-- Populated by JS with Dummies -->
-                </div>
+                <div class="marquee-row" id="reviews-marquee-row-1"></div>
+                <div class="marquee-row reverse" id="reviews-marquee-row-2" style="margin-top: 1rem;"></div>
             </div>
-
-            <!-- UPDATE 1: View All Reviews Button -->
-            <div class="text-center" style="margin-top: 2rem;">
-                <button class="btn btn-primary" onclick="toggleFullReviews()">View All Reviews</button>
-            </div>
-
-            <div id="reviews-list" class="reviews-grid hidden">
-                <!-- Full List injected via JS -->
-            </div>
+            <div class="text-center" style="margin-top: 2rem;"><button class="btn btn-primary" onclick="toggleFullReviews()">View All Reviews</button></div>
+            <div id="reviews-list" class="reviews-grid hidden"></div>
         </section>
 
-        <!-- === PAGE: PRIVACY POLICY (NEW) === -->
+        <!-- PAGE: PRIVACY -->
         <section id="privacy" class="page-section">
             <div class="glass-card privacy-content">
                 <h2 class="text-center">Privacy Policy for DDNetwork</h2>
                 <p class="text-center" style="margin-bottom: 3rem;"><strong>Effective Date:</strong> 6 February 2026</p>
-
                 <p>DDNetwork (“we”, “our”, “us”) respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, store, and share data when you use our website (<strong>https://www.ddnet.my/</strong>) and our application <strong>ddnetwork-database</strong>.</p>
-
                 <h3>1. Data We Collect</h3>
                 <p>When you use our services, we may access the following Google user data:</p>
-                <ul>
-                    <li><strong>Basic Profile Information:</strong> Name, email address, profile picture</li>
-                    <li><strong>Google Contacts (if applicable):</strong> To display or process information within the app</li>
-                    <li><strong>Other Data:</strong> Any additional Google services requested by the app (if applicable)</li>
-                </ul>
+                <ul><li><strong>Basic Profile Information:</strong> Name, email address, profile picture</li><li><strong>Google Contacts (if applicable):</strong> To display or process information within the app</li><li><strong>Other Data:</strong> Any additional Google services requested by the app (if applicable)</li></ul>
                 <p>We do <strong>not</strong> access data beyond what is needed to provide services of our app.</p>
-
                 <h3>2. How We Use Your Data</h3>
                 <p>We use your Google data only to provide, operate, and improve our application:</p>
-                <ul>
-                    <li>To personalize your experience in <strong>ddnetwork-database</strong></li>
-                    <li>To enable app features that require Google data</li>
-                    <li>To communicate with you about your account or updates</li>
-                </ul>
+                <ul><li>To personalize your experience in <strong>ddnetwork-database</strong></li><li>To enable app features that require Google data</li><li>To communicate with you about your account or updates</li></ul>
                 <p>We do <strong>not sell, rent, or trade</strong> your Google data to third parties.</p>
-
                 <h3>3. Data Storage and Security</h3>
-                <ul>
-                    <li>All collected data is stored securely on our servers or authorized cloud services.</li>
-                    <li>We implement appropriate technical and organizational measures to protect your data against unauthorized access, disclosure, alteration, or destruction.</li>
-                    <li>Access to your data is limited to authorized personnel only.</li>
-                </ul>
-
+                <ul><li>All collected data is stored securely on our servers or authorized cloud services.</li><li>We implement appropriate technical and organizational measures to protect your data against unauthorized access, disclosure, alteration, or destruction.</li><li>Access to your data is limited to authorized personnel only.</li></ul>
                 <h3>4. Data Sharing</h3>
-                <ul>
-                    <li>We do not share your Google data with third parties except where required by law or to comply with Google API policies.</li>
-                    <li>Any third-party services integrated with the app (e.g., analytics or hosting providers) only receive the minimal data necessary to provide their service.</li>
-                </ul>
-
+                <ul><li>We do not share your Google data with third parties except where required by law or to comply with Google API policies.</li><li>Any third-party services integrated with the app (e.g., analytics or hosting providers) only receive the minimal data necessary to provide their service.</li></ul>
                 <h3>5. Your Rights</h3>
-                <ul>
-                    <li>You can request access to data we have collected about you.</li>
-                    <li>You can request correction or deletion of your data by contacting us at details below.</li>
-                </ul>
-
+                <ul><li>You can request access to data we have collected about you.</li><li>You can request correction or deletion of your data by contacting us at details below.</li></ul>
                 <h3>6. Changes to This Policy</h3>
                 <p>We may update this Privacy Policy from time to time. We will notify you of any significant changes and update the <strong>effective date</strong> above.</p>
-
                 <h3>7. Contact Us</h3>
                 <p>If you have any questions about this Privacy Policy or your data, please contact us:</p>
-                <p>
-                    <strong>Email:</strong> <a href="mailto:support@ddnet.my">support@ddnet.my</a><br>
-                    <strong>Website:</strong> <a href="https://www.ddnet.my" target="_blank">https://www.ddnet.my</a>
-                </p>
+                <p><strong>Email:</strong> <a href="mailto:support@ddnet.my">support@ddnet.my</a><br><strong>Website:</strong> <a href="https://www.ddnet.my" target="_blank">https://www.ddnet.my</a></p>
             </div>
         </section>
 
-        <!-- === PAGE: ABOUT COMPANY (NEW - PROFESSIONAL REWRITE) === -->
+        <!-- PAGE: ABOUT COMPANY -->
         <section id="about-company" class="page-section">
             <div class="container about-section-wrapper">
-                
                 <div class="about-hero">
                     <h1 class="text-center">Simplicity in Digital</h1>
-                    <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 3rem;">
-                        We build digital tools that are clean, fast, and easy to use.
-                    </p>
+                    <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 3rem;">We build digital tools that are clean, fast, and easy to use.</p>
                 </div>
-
                 <div class="about-narrative">
-                    <p style="margin-bottom: 2rem;">
-                        <strong>DD Cloud Network</strong> is a registered digital agency based in Malaysia. We provide professional website design and cloud services to help businesses grow.
-                    </p>
-                    
-                    <p style="margin-bottom: 2rem;">
-                        We operate <strong>DDNetwork</strong> as a specialized sub-brand focused on delivering modern web solutions. While DD Cloud Network handles the broader scope of digital services, DDNetwork focuses specifically on creating high-quality websites.
-                    </p>
-
-                    <p style="margin-bottom: 2rem;">
-                        Our approach is simple. We prioritize <strong>speed</strong>, <strong>clean design</strong>, and <strong>smart functionality</strong>. We cut through the noise to deliver exactly what you need.
-                    </p>
-                    
-                    <p style="margin-bottom: 3rem;">
-                        Founded by <strong>Danial Danish</strong>, our team partners with startups, local businesses, and individuals to turn ideas into reality.
-                    </p>
-
+                    <p style="margin-bottom: 2rem;"><strong>DD Cloud Network</strong> is a registered digital agency based in Malaysia. We provide professional website design and cloud services to help businesses grow.</p>
+                    <p style="margin-bottom: 2rem;">We operate <strong>DDNetwork</strong> as a specialized sub-brand focused on delivering modern web solutions. While DD Cloud Network handles the broader scope of digital services, DDNetwork focuses specifically on creating high-quality websites.</p>
+                    <p style="margin-bottom: 2rem;">Our approach is simple. We prioritize <strong>speed</strong>, <strong>clean design</strong>, and <strong>smart functionality</strong>. We cut through the noise to deliver exactly what you need.</p>
+                    <p style="margin-bottom: 3rem;">Founded by <strong>Danial Danish</strong>, our team partners with startups, local businesses, and individuals to turn ideas into reality.</p>
                     <div class="glass-card founder-card">
                         <i class="ri-eye-2-line" style="font-size: 2rem; color: var(--soft-black); margin-bottom: 1rem; display:block;"></i>
                         <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Our Vision</h3>
-                        <p style="color: var(--text-secondary); margin: 0;">
-                            To build a digital ecosystem where technology serves people, not the other way around.
-                        </p>
+                        <p style="color: var(--text-secondary); margin: 0;">To build a digital ecosystem where technology serves people, not the other way around.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: FAQ (NEW) === -->
+        <!-- PAGE: FAQ -->
         <section id="faq" class="page-section">
             <div class="container">
-                <div class="text-center" style="margin-bottom: 3rem;">
-                    <h1>Frequently Asked Questions</h1>
-                    <p style="color: var(--text-secondary);">Everything you need to know about our services.</p>
-                </div>
-
+                <div class="text-center" style="margin-bottom: 3rem;"><h1>Frequently Asked Questions</h1><p style="color: var(--text-secondary);">Everything you need to know about our services.</p></div>
                 <div class="faq-container">
-                    <!-- FAQ Item 1 -->
-                    <div class="faq-item">
-                        <div class="faq-question" onclick="toggleFaq(this)">
-                            <span>How long does it take to build a website?</span>
-                            <i class="ri-arrow-down-s-line"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>For a simple HTML static website, delivery typically takes 3-5 working days. For more complex interactive websites or AI integration, it usually takes between 2 to 4 weeks depending on the scope of features and content readiness.</p>
-                        </div>
-                    </div>
-
-                    <!-- FAQ Item 2 -->
-                    <div class="faq-item">
-                        <div class="faq-question" onclick="toggleFaq(this)">
-                            <span>Do I need to pay for hosting and domain?</span>
-                            <i class="ri-arrow-down-s-line"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>Yes, all websites require a domain name (e.g., .com) and hosting. We offer free hosting for the first year with selected packages. Domain costs vary depending on the extension (.com, .my, .net).</p>
-                        </div>
-                    </div>
-
-                    <!-- FAQ Item 3 -->
-                    <div class="faq-item">
-                        <div class="faq-question" onclick="toggleFaq(this)">
-                            <span>Can I update the website content myself?</span>
-                            <i class="ri-arrow-down-s-line"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>For our Internal Portal and Database solutions, yes, you will have a dashboard to manage content. For static HTML or front-end websites, minor updates might require our assistance, though we can integrate a CMS upon request.</p>
-                        </div>
-                    </div>
-
-                    <!-- FAQ Item 4 -->
-                    <div class="faq-item">
-                        <div class="faq-question" onclick="toggleFaq(this)">
-                            <span>What payment methods do you accept?</span>
-                            <i class="ri-arrow-down-s-line"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>We accept Razorpay (via Curlec), FPX, credit/debit cards, and e-wallets. Payment details will be provided upon checkout.</p>
-                        </div>
-                    </div>
-
-                    <!-- FAQ Item 5 -->
-                    <div class="faq-item">
-                        <div class="faq-question" onclick="toggleFaq(this)">
-                            <span>Do you provide SEO services?</span>
-                            <i class="ri-arrow-down-s-line"></i>
-                        </div>
-                        <div class="faq-answer">
-                            <p>Basic SEO (Meta tags, sitemap, robots.txt) is included in all our packages. For advanced SEO ranking campaigns, please contact us for a custom quote.</p>
-                        </div>
-                    </div>
+                    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>How long does it take to build a website?</span><i class="ri-arrow-down-s-line"></i></div><div class="faq-answer"><p>For a simple HTML static website, delivery typically takes 3-5 working days. For more complex interactive websites or AI integration, it usually takes between 2 to 4 weeks depending on the scope of features and content readiness.</p></div></div>
+                    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>Do I need to pay for hosting and domain?</span><i class="ri-arrow-down-s-line"></i></div><div class="faq-answer"><p>Yes, all websites require a domain name (e.g., .com) and hosting. We offer free hosting for the first year with selected packages. Domain costs vary depending on the extension (.com, .my, .net).</p></div></div>
+                    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>Can I update the website content myself?</span><i class="ri-arrow-down-s-line"></i></div><div class="faq-answer"><p>For our Internal Portal and Database solutions, yes, you will have a dashboard to manage content. For static HTML or front-end websites, minor updates might require our assistance, though we can integrate a CMS upon request.</p></div></div>
+                    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>What payment methods do you accept?</span><i class="ri-arrow-down-s-line"></i></div><div class="faq-answer"><p>We accept Razorpay (via Curlec), FPX, credit/debit cards, and e-wallets. Payment details will be provided upon checkout.</p></div></div>
+                    <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)"><span>Do you provide SEO services?</span><i class="ri-arrow-down-s-line"></i></div><div class="faq-answer"><p>Basic SEO (Meta tags, sitemap, robots.txt) is included in all our packages. For advanced SEO ranking campaigns, please contact us for a custom quote.</p></div></div>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: TERMS (NEW - DEDICATED PAGE) === -->
+        <!-- PAGE: TERMS -->
         <section id="terms" class="page-section">
             <div class="container">
                 <div class="glass-card terms-content">
                     <h2 class="text-center">Terms & Conditions</h2>
                     <p class="text-center" style="margin-bottom: 2rem;">By accessing, engaging, or using any services provided by <strong>DDNetwork One</strong>, you acknowledge that you have read, understood, and agreed to be legally bound by these Terms & Conditions.</p>
-
                     <h3>Hosting Terms</h3>
                     <p>Hosting is provided based on customer’s own custom domain. For new customers, a free ddnet.my subdomain is included for the first year only. After the free period, renewal of the ddnet.my subdomain is chargeable at RM 55 per year.</p>
-                    <p>Monthly subscription plans include hosting, server management, basic security updates, uptime monitoring, and technical support. One-time purchase plans include website development and deployment only. Ongoing maintenance, support, backups, updates, and content changes are not included and will be charged separately upon request. DDNetwork reserves the right to suspend hosting services in cases of non-payment, abuse, or violation of acceptable use policies.
-
-                    <h3>1. Scope of Services</h3>
-                    <p>Services provided are limited to what is explicitly stated in selected package or written agreement.</p>
-                    <p>Any work not listed (including additional pages, features, redesigns, or custom functions) is considered <strong>out of scope</strong> and will be quoted separately.</p>
-
-                    <h3>2. One-Time Purchase Services</h3>
-                    <p>One-time purchases include <strong>development and delivery only</strong>.</p>
-                    <p>Updates, content changes, bug fixes, maintenance, and ongoing support are <strong>not included</strong>.</p>
-                    <p>Any future changes will be charged separately.</p>
-
-                    <h3>3. Subscription Services (Monthly)</h3>
-                    <p>Subscription plans cover <strong>maintenance, monitoring, and technical support</strong> within agreed scope.</p>
-                    <p>Subscriptions do <strong>not</strong> include major redesigns, new features, or scope expansion.</p>
-                    <p>Requests beyond original scope will require an additional quotation.</p>
-
-                    <h3>4. Setup Fees</h3>
-                    <p>Setup fees are <strong>one-time, non-refundable</strong> payments.</p>
-                    <p>Setup fees cover initial development, configuration, integrations, testing, and deployment.</p>
-                    <p>Work will only begin after setup fee has been fully paid.</p>
-
-                    <h3>5. Payments & Billing</h3>
-                    <p>All prices are stated in <strong>RM (MYR)</strong> unless otherwise specified.</p>
-                    <p>Monthly plans are billed in advance on a recurring basis.</p>
-                    <p>Late payments may result in suspension of services until payment is received.</p>
-
-                    <h3>6. Revisions & Changes</h3>
-                    <p>Minor revisions may be provided at DDNetwork One’s discretion.</p>
-                    <p>Repeated revisions, content rewrites, or design changes are not included unless stated.</p>
-                    <p>Additional changes will be billed separately.</p>
-
-                    <h3>7. Client Responsibilities</h3>
-                    <p>Clients are responsible for providing accurate content, images, and information.</p>
-                    <p>Delays caused by missing content or approvals may affect delivery timelines.</p>
-                    <p>DDNetwork One is not responsible for issues caused by third-party services or client-provided materials.</p>
-
-                    <h3>8. Delivery Timeline</h3>
-                    <p>Estimated timelines are provided as guidelines only.</p>
-                    <p>Delays caused by client-side feedback, content submission, or external dependencies are not responsibility of DDNetwork One.</p>
-
-                    <h3>9. Intellectual Property</h3>
-                    <p>Ownership of final website or system is transferred to client only after full payment is received.</p>
-                    <p>DDNetwork One retains right to showcase completed projects for portfolio and promotional purposes unless otherwise agreed in writing.</p>
-
-                    <h3>10. Termination</h3>
-                    <p>DDNetwork One reserves right to terminate services if payments are overdue, terms are violated, or abusive behavior occurs.</p>
-                    <p>No refunds will be issued for work already completed.</p>
-
-                    <h3>11. Refund Policy</h3>
-                    <p>All payments made are <strong>non-refundable</strong>, unless otherwise stated in writing.</p>
-                    <p>Setup fees and completed work are strictly non-refundable.</p>
-
-                    <h3>12. Limitation of Liability</h3>
-                    <p>DDNetwork One shall not be held liable for loss of data, revenue, or business arising from use or inability to use services.</p>
-                    <p>Clients are advised to maintain their own backups and business continuity plans.</p>
-
-                    <h3>13. Changes to Terms</h3>
-                    <p>DDNetwork One reserves right to update or modify these Terms & Conditions at any time.</p>
-                    <p>Continued use of services constitutes acceptance of updated terms.</p>
-                    
+                    <p>Monthly subscription plans include hosting, server management, basic security updates, uptime monitoring, and technical support. One-time purchase plans include website development and deployment only. Ongoing maintenance, support, backups, updates, and content changes are not included and will be charged separately upon request. DDNetwork reserves the right to suspend hosting services in cases of non-payment, abuse, or violation of acceptable use policies.</p>
+                    <h3>1. Scope of Services</h3><p>Services provided are limited to what is explicitly stated in selected package or written agreement.</p><p>Any work not listed (including additional pages, features, redesigns, or custom functions) is considered <strong>out of scope</strong> and will be quoted separately.</p>
+                    <h3>2. One-Time Purchase Services</h3><p>One-time purchases include <strong>development and delivery only</strong>.</p><p>Updates, content changes, bug fixes, maintenance, and ongoing support are <strong>not included</strong>.</p><p>Any future changes will be charged separately.</p>
+                    <h3>3. Subscription Services (Monthly)</h3><p>Subscription plans cover <strong>maintenance, monitoring, and technical support</strong> within agreed scope.</p><p>Subscriptions do <strong>not</strong> include major redesigns, new features, or scope expansion.</p><p>Requests beyond original scope will require an additional quotation.</p>
+                    <h3>4. Setup Fees</h3><p>Setup fees are <strong>one-time, non-refundable</strong> payments.</p><p>Setup fees cover initial development, configuration, integrations, testing, and deployment.</p><p>Work will only begin after setup fee has been fully paid.</p>
+                    <h3>5. Payments & Billing</h3><p>All prices are stated in <strong>RM (MYR)</strong> unless otherwise specified.</p><p>Monthly plans are billed in advance on a recurring basis.</p><p>Late payments may result in suspension of services until payment is received.</p>
+                    <h3>6. Revisions & Changes</h3><p>Minor revisions may be provided at DDNetwork One’s discretion.</p><p>Repeated revisions, content rewrites, or design changes are not included unless stated.</p><p>Additional changes will be billed separately.</p>
+                    <h3>7. Client Responsibilities</h3><p>Clients are responsible for providing accurate content, images, and information.</p><p>Delays caused by missing content or approvals may affect delivery timelines.</p><p>DDNetwork One is not responsible for issues caused by third-party services or client-provided materials.</p>
+                    <h3>8. Delivery Timeline</h3><p>Estimated timelines are provided as guidelines only.</p><p>Delays caused by client-side feedback, content submission, or external dependencies are not responsibility of DDNetwork One.</p>
+                    <h3>9. Intellectual Property</h3><p>Ownership of final website or system is transferred to client only after full payment is received.</p><p>DDNetwork One retains right to showcase completed projects for portfolio and promotional purposes unless otherwise agreed in writing.</p>
+                    <h3>10. Termination</h3><p>DDNetwork One reserves right to terminate services if payments are overdue, terms are violated, or abusive behavior occurs.</p><p>No refunds will be issued for work already completed.</p>
+                    <h3>11. Refund Policy</h3><p>All payments made are <strong>non-refundable</strong>, unless otherwise stated in writing.</p><p>Setup fees and completed work are strictly non-refundable.</p>
+                    <h3>12. Limitation of Liability</h3><p>DDNetwork One shall not be held liable for loss of data, revenue, or business arising from use or inability to use services.</p><p>Clients are advised to maintain their own backups and business continuity plans.</p>
+                    <h3>13. Changes to Terms</h3><p>DDNetwork One reserves right to update or modify these Terms & Conditions at any time.</p><p>Continued use of services constitutes acceptance of updated terms.</p>
                     <p style="margin-top: 3rem; font-weight: 700; text-align:center;">&copy; DDNetwork One. All rights reserved.</p>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: PROFILE === -->
+        <!-- PAGE: PROFILE -->
         <section id="profile" class="page-section">
             <div class="auth-container" style="max-width: 900px;">
                 <div class="glass-card auth-card">
                     <i class="ri-user-settings-fill" style="font-size: 3rem; color: var(--soft-black); margin-bottom: 1rem;"></i>
                     <h2>My Profile</h2>
                     <p>View and update your personal details.</p>
-                    
                     <form onsubmit="handleProfileUpdate(event)">
                         <div class="profile-details-grid">
-                            <div class="form-group">
-                                <label class="form-label">Full Name</label>
-                                <input type="text" id="prof-name" class="form-input" placeholder="Loading..." required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Email Address</label>
-                                <input type="email" id="prof-email" class="form-input" placeholder="Loading..." readonly>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Phone Number</label>
-                                <input type="tel" id="prof-phone" class="form-input" placeholder="Loading..." required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Company Name <span style="font-weight:400; font-size: 0.7em; color:var(--text-tertiary);">(Optional)</span></label>
-                                <input type="text" id="prof-company" class="form-input" placeholder="e.g. Acme Corp">
-                            </div>
+                            <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="prof-name" class="form-input" placeholder="Loading..." required></div>
+                            <div class="form-group"><label class="form-label">Email Address</label><input type="email" id="prof-email" class="form-input" placeholder="Loading..." readonly></div>
+                            <div class="form-group"><label class="form-label">Phone Number</label><input type="tel" id="prof-phone" class="form-input" placeholder="Loading..." required></div>
+                            <div class="form-group"><label class="form-label">Company Name <span style="font-weight:400; font-size: 0.7em; color:var(--text-tertiary);">(Optional)</span></label><input type="text" id="prof-company" class="form-input" placeholder="e.g. Acme Corp"></div>
                         </div>
                         <button type="submit" class="btn btn-primary" style="width: 100%;">Update Profile</button>
                     </form>
-                    
                     <div id="profile-voucher-section" style="display: none; margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 2rem;">
                         <div class="glass-card" style="padding: 1.5rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:0; border-color: rgba(30, 41, 59, 0.2);">
                             <div class="voucher-info">
                                 <h4 id="profile-voucher-title" style="color:var(--text-main); font-size:1rem;">You have a Gift Voucher!</h4>
                                 <p id="profile-voucher-text" style="color:var(--soft-black); font-weight:700; font-size:0.9rem;">Code: -</p>
                             </div>
-                            <div id="profile-voucher-action">
-                                <button type="button" class="btn btn-danger" style="width: auto; padding: 0.6rem 1.2rem;" onclick="deletePersonalVoucher()">Delete</button>
-                            </div>
+                            <div id="profile-voucher-action"><button type="button" class="btn btn-danger" style="width: auto; padding: 0.6rem 1.2rem;" onclick="deletePersonalVoucher()">Delete</button></div>
                         </div>
                     </div>
-
                     <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
-                        <button type="button" class="btn btn-glass" style="width: 100%;" onclick="navigateTo('/profile-website-describe')">
-                            <i class="ri-edit-2-fill" style="margin-right:8px;"></i> Describe Your Website Ideas
-                        </button>
+                        <button type="button" class="btn btn-glass" style="width: 100%;" onclick="navigateTo('/profile-website-describe')"><i class="ri-edit-2-fill" style="margin-right:8px;"></i> Describe Your Website Ideas</button>
                     </div>
-
                     <div id="profile-history-section" style="display: none; margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 2rem; text-align: left;">
                         <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-main);">Purchase History</h3>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Track your previous orders and status. Syncs automatically.</p>
                         <div class="history-table-container">
-                            <table class="history-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Package</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="order-history-body">
-                                    <!-- Orders injected here via JS -->
-                                </tbody>
-                            </table>
+                            <table class="history-table"><thead><tr><th>Date</th><th>Package</th><th>Total</th><th>Status</th></tr></thead><tbody id="order-history-body"></tbody></table>
                             <div id="no-orders-msg" class="text-center hidden" style="padding: 2rem; color: var(--text-tertiary);">No orders found.</div>
                         </div>
                     </div>
-
                     <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
-                         <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="handleProfileReset()">
-                             <i class="ri-lock-password-fill" style="margin-right: 8px;"></i> Reset Password
-                         </button>
+                         <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="handleProfileReset()"><i class="ri-lock-password-fill" style="margin-right: 8px;"></i> Reset Password</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: WEBSITE DESCRIPTION (UPDATED) === -->
+        <!-- PAGE: WEBSITE DESCRIPTION -->
         <section id="profile-website-describe" class="page-section">
             <div class="auth-container" style="max-width: 800px;">
                 <div class="glass-card auth-card" style="text-align: left;">
-                    <div style="text-align: center; margin-bottom: 2rem;">
-                        <i class="ri-lightbulb-flash-fill" style="font-size: 3rem; color: #6366f1; margin-bottom: 1rem;"></i>
-                        <h2>Describe Your Website</h2>
-                        <p>Tell us your vision! We'll review your ideas and get back to you.</p>
-                    </div>
-
+                    <div style="text-align: center; margin-bottom: 2rem;"><i class="ri-lightbulb-flash-fill" style="font-size: 3rem; color: #6366f1; margin-bottom: 1rem;"></i><h2>Describe Your Website</h2><p>Tell us your vision! We'll review your ideas and get back to you.</p></div>
                     <form id="website-idea-form" onsubmit="handleWebsiteIdeaSubmit(event)">
-                        
-                        <div class="form-group">
-                            <label class="form-label">Your Name</label>
-                            <input type="text" id="idea-name" class="form-input" placeholder="e.g. Ali Bin Abu" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Phone Number</label>
-                            <input type="tel" id="idea-phone" class="form-input" placeholder="e.g. 0123456789" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" id="idea-email" class="form-input" placeholder="hello@example.com" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Company Name <span style="font-weight:400; font-size: 0.7em; color:var(--text-tertiary);">(Optional)</span></label>
-                            <input type="text" id="idea-company" class="form-input" placeholder="e.g. Acme Corp">
-                        </div>
-
-                        <!-- UPDATE: Source Question -->
-                        <div class="form-group">
-                            <label class="form-label">Where did you hear about us?</label>
-                            <select id="idea-source" class="form-select" required>
-                                <option value="" disabled selected>Select an option...</option>
-                                <option value="TikTok">TikTok</option>
-                                <option value="Facebook">Facebook</option>
-                                <option value="Instagram">Instagram</option>
-                                <option value="YouTube">YouTube</option>
-                                <option value="Google">Google</option>
-                                <option value="ChatGPT">ChatGPT</option>
-                                <option value="Grok">Grok</option>
-                                <option value="Referral">Referral</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Project Type</label>
-                            <select id="idea-type" class="form-select" required>
-                                <option value="" disabled selected>What are you looking for?</option>
-                                <option value="New Website">New Website</option>
-                                <option value="Redesign Existing Website">Redesign Existing Website</option>
-                                <option value="Internal Portal / System">Internal Portal / System</option>
-                                <option value="AI Integration">AI Integration</option>
-                                <option value="Other">Other / Not Sure</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Describe Your Idea</label>
-                            <textarea id="idea-message" class="form-input" rows="6" placeholder="Tell us about your business, target audience, features you need, or any specific design ideas..." required></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Reference Sites (Optional)</label>
-                            <input type="text" id="idea-references" class="form-input" placeholder="Paste links of sites you like...">
-                        </div>
-
+                        <div class="form-group"><label class="form-label">Your Name</label><input type="text" id="idea-name" class="form-input" placeholder="e.g. Ali Bin Abu" required></div>
+                        <div class="form-group"><label class="form-label">Phone Number</label><input type="tel" id="idea-phone" class="form-input" placeholder="e.g. 0123456789" required></div>
+                        <div class="form-group"><label class="form-label">Email Address</label><input type="email" id="idea-email" class="form-input" placeholder="hello@example.com" required></div>
+                        <div class="form-group"><label class="form-label">Company Name <span style="font-weight:400; font-size: 0.7em; color:var(--text-tertiary);">(Optional)</span></label><input type="text" id="idea-company" class="form-input" placeholder="e.g. Acme Corp"></div>
+                        <div class="form-group"><label class="form-label">Where did you hear about us?</label><select id="idea-source" class="form-select" required><option value="" disabled selected>Select an option...</option><option value="TikTok">TikTok</option><option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="YouTube">YouTube</option><option value="Google">Google</option><option value="ChatGPT">ChatGPT</option><option value="Grok">Grok</option><option value="Referral">Referral</option><option value="Other">Other</option></select></div>
+                        <div class="form-group"><label class="form-label">Project Type</label><select id="idea-type" class="form-select" required><option value="" disabled selected>What are you looking for?</option><option value="New Website">New Website</option><option value="Redesign Existing Website">Redesign Existing Website</option><option value="Internal Portal / System">Internal Portal / System</option><option value="AI Integration">AI Integration</option><option value="Other">Other / Not Sure</option></select></div>
+                        <div class="form-group"><label class="form-label">Describe Your Idea</label><textarea id="idea-message" class="form-input" rows="6" placeholder="Tell us about your business, target audience, features you need, or any specific design ideas..." required></textarea></div>
+                        <div class="form-group"><label class="form-label">Reference Sites (Optional)</label><input type="text" id="idea-references" class="form-input" placeholder="Paste links of sites you like..."></div>
                         <button type="submit" id="btn-submit-idea" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Idea</button>
                     </form>
-
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: LOGIN === -->
+        <!-- PAGE: LOGIN -->
         <section id="login" class="page-section">
             <div class="auth-container">
                 <div class="glass-card auth-card">
                     <i class="ri-user-3-fill" style="font-size: 3rem; color: var(--soft-black); margin-bottom: 1rem;"></i>
                     <h2>Welcome Back</h2>
                     <p>Login to manage your orders.</p>
-                    
                     <form onsubmit="handleLogin(event)">
-                        <div class="form-group">
-                            <label class="form-label">Email</label>
-                            <input type="email" id="login-email" class="form-input" placeholder="hello@example.com" required>
-                        </div>
+                        <div class="form-group"><label class="form-label">Email</label><input type="email" id="login-email" class="form-input" placeholder="hello@example.com" required></div>
                         <div class="form-group">
                             <label class="form-label">Password</label>
                             <input type="password" id="login-password" class="form-input" placeholder="Required" required>
-                            <div style="text-align: right; margin-top: 5px;">
-                                <span class="auth-link" style="font-size: 0.8rem;" onclick="navigateTo('/forgot-password')">Forgot Password?</span>
-                            </div>
+                            <div style="text-align: right; margin-top: 5px;"><span class="auth-link" style="font-size: 0.8rem;" onclick="navigateTo('/forgot-password')">Forgot Password?</span></div>
                         </div>
                         <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
                     </form>
-                    
-                    <div style="margin: 1.5rem 0; display: flex; align-items: center; gap: 10px;">
-                        <div style="height: 1px; background: var(--border-glass); flex: 1;"></div>
-                        <span style="color: var(--text-tertiary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Or</span>
-                        <div style="height: 1px; background: var(--border-glass); flex: 1;"></div>
-                    </div>
-
-                    <button type="button" class="btn btn-google" style="width: 100%;" onclick="handleGoogleAuth()">
-                        <i class="ri-google-fill"></i> Continue with Google
-                    </button>
-                    
-                    <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
-                        Don't have an account? <span class="auth-link" onclick="navigateTo('/signup')">Sign Up</span>
-                    </div>
+                    <div style="margin: 1.5rem 0; display: flex; align-items: center; gap: 10px;"><div style="height: 1px; background: var(--border-glass); flex: 1;"></div><span style="color: var(--text-tertiary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Or</span><div style="height: 1px; background: var(--border-glass); flex: 1;"></div></div>
+                    <button type="button" class="btn btn-google" style="width: 100%;" onclick="handleGoogleAuth()"><i class="ri-google-fill"></i> Continue with Google</button>
+                    <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">Don't have an account? <span class="auth-link" onclick="navigateTo('/signup')">Sign Up</span></div>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: FORGOT PASSWORD === -->
+        <!-- PAGE: FORGOT PASSWORD -->
         <section id="forgot-password" class="page-section">
             <div class="auth-container">
                 <div class="glass-card auth-card">
                     <i class="ri-lock-password-fill" style="font-size: 3rem; color: var(--accent-warn); margin-bottom: 1rem;"></i>
                     <h2>Reset Password</h2>
                     <p>Enter your email to receive a reset link.</p>
-                    
                     <form onsubmit="handleForgotPassword(event)">
-                        <div class="form-group">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" id="reset-email" class="form-input" placeholder="hello@example.com" required>
-                        </div>
+                        <div class="form-group"><label class="form-label">Email Address</label><input type="email" id="reset-email" class="form-input" placeholder="hello@example.com" required></div>
                         <button type="submit" class="btn btn-primary" style="width: 100%;">Send Reset Link</button>
                     </form>
-                    
-                    <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
-                        Remember your password? <span class="auth-link" onclick="navigateTo('/login')">Back to Login</span>
-                    </div>
+                    <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">Remember your password? <span class="auth-link" onclick="navigateTo('/login')">Back to Login</span></div>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: SIGNUP (UPDATED WITH PASSWORD VALIDATION) === -->
+        <!-- PAGE: SIGNUP -->
         <section id="signup" class="page-section">
             <div class="auth-container">
                 <div class="glass-card auth-card">
                     <h2>Create Account</h2>
                     <p>Join us to track your projects.</p>
-                    
                     <form onsubmit="handleSignup(event)">
-                        <div class="form-group">
-                            <label class="form-label">Full Name</label>
-                            <input type="text" id="signup-name" class="form-input" placeholder="e.g. Nurul Nabila" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Phone Number</label>
-                            <input type="tel" id="signup-phone" class="form-input" placeholder="0123456789" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Email</label>
-                            <input type="email" id="signup-email" class="form-input" placeholder="hello@example.com" required>
-                        </div>
+                        <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="signup-name" class="form-input" placeholder="e.g. Nurul Nabila" required></div>
+                        <div class="form-group"><label class="form-label">Phone Number</label><input type="tel" id="signup-phone" class="form-input" placeholder="0123456789" required></div>
+                        <div class="form-group"><label class="form-label">Email</label><input type="email" id="signup-email" class="form-input" placeholder="hello@example.com" required></div>
                         <div class="form-group">
                             <label class="form-label">Password</label>
                             <input type="password" id="signup-password" class="form-input" placeholder="Create a password" required minlength="6" oninput="checkPasswordStrength()">
-                            
-                            <!-- PASSWORD REQUIREMENTS LIST -->
                             <div class="password-requirements">
                                 <span id="req-upper" class="req-item"><i class="ri-close-circle-line"></i> Uppercase</span>
                                 <span id="req-lower" class="req-item"><i class="ri-close-circle-line"></i> Lowercase</span>
@@ -2228,133 +1803,71 @@
                         </div>
                         <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
                     </form>
-
-                    <div style="margin: 1.5rem 0; display: flex; align-items: center; gap: 10px;">
-                        <div style="height: 1px; background: var(--border-glass); flex: 1;"></div>
-                        <span style="color: var(--text-tertiary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Or</span>
-                        <div style="height: 1px; background: var(--border-glass); flex: 1;"></div>
-                    </div>
-
-                    <button type="button" class="btn btn-google" style="width: 100%;" onclick="handleGoogleAuth()">
-                        <i class="ri-google-fill"></i> Sign up with Google
-                    </button>
-                    
-                    <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">
-                        Already have an account? <span class="auth-link" onclick="navigateTo('/login')">Login</span>
-                    </div>
+                    <div style="margin: 1.5rem 0; display: flex; align-items: center; gap: 10px;"><div style="height: 1px; background: var(--border-glass); flex: 1;"></div><span style="color: var(--text-tertiary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Or</span><div style="height: 1px; background: var(--border-glass); flex: 1;"></div></div>
+                    <button type="button" class="btn btn-google" style="width: 100%;" onclick="handleGoogleAuth()"><i class="ri-google-fill"></i> Sign up with Google</button>
+                    <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary);">Already have an account? <span class="auth-link" onclick="navigateTo('/login')">Login</span></div>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: HELPDESK === -->
+        <!-- PAGE: HELPDESK -->
         <section id="helpdesk" class="page-section">
             <div class="auth-container">
                 <div class="glass-card auth-card">
                     <i class="ri-customer-service-2-fill" style="font-size: 3rem; color: var(--soft-black); margin-bottom: 1rem;"></i>
                     <h2>Helpdesk</h2>
                     <p>Submit a support ticket. We'll get back to you ASAP.</p>
-                    
                     <form onsubmit="handleTicketSubmit(event)">
                         <div class="profile-details-grid">
-                            <div class="form-group">
-                                <label class="form-label">Full Name</label>
-                                <input type="text" id="ticket-name" class="form-input" placeholder="e.g. Nurul Nabila" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Email Address</label>
-                                <input type="email" id="ticket-email" class="form-input" placeholder="hello@example.com" required>
-                            </div>
+                            <div class="form-group"><label class="form-label">Full Name</label><input type="text" id="ticket-name" class="form-input" placeholder="e.g. Nurul Nabila" required></div>
+                            <div class="form-group"><label class="form-label">Email Address</label><input type="email" id="ticket-email" class="form-input" placeholder="hello@example.com" required></div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Issue Type</label>
-                            <select id="ticket-type" class="form-select" required>
-                                <option value="" disabled selected>Select an issue</option>
-                                <option value="Cannot login">Cannot login</option>
-                                <option value="Cannot change password">Cannot change password</option>
-                                <option value="Forgot password">Forgot password</option>
-                                <option value="Payment issue">Payment issue</option>
-                                <option value="Website not loading">Website not loading</option>
-                                <option value="Form not submitting">Form not submitting</option>
-                                <option value="Update price / content">Update price / content</option>
-                                <option value="Other issue">Other issue</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Message / Description</label>
-                            <textarea id="ticket-message" class="form-input" placeholder="Describe your issue in detail..." required rows="5"></textarea>
-                        </div>
-
+                        <div class="form-group"><label class="form-label">Issue Type</label><select id="ticket-type" class="form-select" required><option value="" disabled selected>Select an issue</option><option value="Cannot login">Cannot login</option><option value="Cannot change password">Cannot change password</option><option value="Forgot password">Forgot password</option><option value="Payment issue">Payment issue</option><option value="Website not loading">Website not loading</option><option value="Form not submitting">Form not submitting</option><option value="Update price / content">Update price / content</option><option value="Other issue">Other issue</option></select></div>
+                        <div class="form-group"><label class="form-label">Message / Description</label><textarea id="ticket-message" class="form-input" placeholder="Describe your issue in detail..." required rows="5"></textarea></div>
                         <button type="submit" id="btn-submit-ticket" class="btn btn-primary" style="width: 100%;">Submit Ticket</button>
-                        
                         <div id="case-id-display" style="display:none; margin-top:1.5rem; padding:1.5rem; border:1px dashed var(--accent-success); background:#ecfdf5; border-radius:12px; text-align:center;">
                              <div style="font-size:0.85rem; color:var(--soft-black); font-weight:700; margin-bottom:0.5rem;">TICKET SUBMITTED</div>
                              <div id="display-case-id" style="font-size:1.5rem; font-weight:800; color:var(--text-main); margin-bottom:1rem; font-family:monospace;">#Ticket-0000</div>
                              <button class="btn btn-glass" style="padding:0.5rem 1rem; font-size:0.8rem;" onclick="copyTicketId()">Copy ID</button>
                         </div>
                     </form>
-
                     <div class="ticket-history-container" style="margin-top:2rem; border-top:1px solid var(--border-glass); padding-top:2rem;">
                         <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-main);">Check Ticket Status</h3>
                         <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Enter your unique Case ID to view ticket details.</p>
-                        
                         <div class="profile-details-grid">
                             <input type="text" id="history-search-id" class="form-input" placeholder="Enter Case ID (e.g. #Ticket-0001)">
                             <button type="button" class="btn btn-secondary" onclick="fetchTicketHistory()">Search</button>
                         </div>
-
-                        <div id="ticket-list" class="ticket-list" style="margin-top:1rem; display:flex; flex-direction:column; gap:1rem;">
-                            <!-- Ticket will be injected here -->
-                        </div>
+                        <div id="ticket-list" class="ticket-list" style="margin-top:1rem; display:flex; flex-direction:column; gap:1rem;"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: SERVICES / PRICING === -->
+        <!-- PAGE: SERVICES / PRICING -->
         <section id="services" class="page-section">
             <div style="padding-bottom: 4rem;">
                 <div class="text-center" style="margin-bottom: 3rem;">
                     <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Pricing Packages</h2>
                     <p style="color: var(--text-secondary); font-size: 0.9rem;">Transparent pricing. Choose plan that fits your needs.</p>
-                    
-                    <!-- PRICING TOGGLE -->
                     <div class="pricing-toggle-container">
                         <span id="label-monthly" class="toggle-label" onclick="setBilling('monthly')">Monthly</span>
-                        <label class="switch">
-                            <input type="checkbox" id="billing-toggle" onchange="toggleBilling()">
-                            <span class="slider"></span>
-                        </label>
+                        <label class="switch"><input type="checkbox" id="billing-toggle" onchange="toggleBilling()"><span class="slider"></span></label>
                         <span id="label-onetime" class="toggle-label" onclick="setBilling('onetime')">One-Time</span>
                     </div>
                 </div>
-
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                    
                     <!-- Package 1: Basic HTML Website -->
                     <div class="glass-card" style="text-align: center; display:flex; flex-direction:column;">
                         <div class="pkg-header">
                             <div class="pkg-icon"><i class="ri-file-list-3-fill"></i></div>
                             <h3 class="pkg-title">Basic HTML Website</h3>
                             <p class="pkg-desc">1 Static Landing Page.</p>
-                            
-                            <div class="price-display-area">
-                                <span id="price-html" class="pkg-price">RM 249</span>
-                                <span id="period-html" class="pkg-period">/one-time</span>
-                            </div>
-                            
-                            <!-- Dynamic Setup Fee Display for Subscription Mode -->
+                            <div class="price-display-area"><span id="price-html" class="pkg-price">RM 249</span><span id="period-html" class="pkg-period">/one-time</span></div>
                             <div id="html-setup-display" class="setup-fee-tag hidden">Setup Fee: RM 100</div>
                         </div>
-
                         <ul class="pkg-features">
-                            <li>1 Static Landing Page</li>
-                            <li>Mobile Responsive Design</li>
-                            <li>Basic SEO Tags</li>
-                            <li>Contact Form</li>
-                            <li>Hosting based on your custom domain</li>
-                            <!-- UPDATE 1: FREE DOMAIN LOGIC -->
+                            <li>1 Static Landing Page</li><li>Mobile Responsive Design</li><li>Basic SEO Tags</li><li>Contact Form</li><li>Hosting based on your custom domain</li>
                             <li>Free ddnet.my subdomain for 1 year (new customer)</li>
                             <li id="html-feat-sub" class="hidden">Maintenance and security updates included</li>
                             <li id="html-feat-content" class="hidden">Minor content changes included</li>
@@ -2363,7 +1876,6 @@
                         </ul>
                         <button class="btn btn-glass" style="width: 100%;" onclick="attemptSelectPackage('Basic HTML Website', 'html')">Select</button>
                     </div>
-
                     <!-- Package 2: Front-End Website -->
                     <div class="glass-card" style="text-align: center; display:flex; flex-direction:column; border-color:rgba(30, 41, 59, 0.2);">
                         <div class="bundle-tag">Most Popular</div>
@@ -2371,22 +1883,11 @@
                             <div class="pkg-icon" style="background:var(--soft-black); color:white; border:none;"><i class="ri-layout-masonry-fill"></i></div>
                             <h3 class="pkg-title">Front-End Website</h3>
                             <p class="pkg-desc">Up to 5 Pages.</p>
-                            
                             <div class="setup-fee-tag" id="frontend-setup-display">Setup Fee: RM 200</div>
-                            <div class="price-display-area">
-                                <span id="price-frontend" class="pkg-price">RM 99</span>
-                                <span id="period-frontend" class="pkg-period">/month</span>
-                            </div>
+                            <div class="price-display-area"><span id="price-frontend" class="pkg-price">RM 99</span><span id="period-frontend" class="pkg-period">/month</span></div>
                         </div>
-
                         <ul class="pkg-features">
-                            <li>Up to 5 Pages</li>
-                            <li>Animations & Interactive UI</li>
-                            <li>Contact Forms</li>
-                            <li>WhatsApp Integration</li>
-                            <li>Basic SEO Setup</li>
-                            <li>Hosting based on your custom domain</li>
-                            <!-- UPDATE 1: FREE DOMAIN LOGIC -->
+                            <li>Up to 5 Pages</li><li>Animations & Interactive UI</li><li>Contact Forms</li><li>WhatsApp Integration</li><li>Basic SEO Setup</li><li>Hosting based on your custom domain</li>
                             <li>Free ddnet.my subdomain for 1 year (new customer)</li>
                             <li id="frontend-feat-maint" class="hidden">Maintenance and security updates included</li>
                             <li id="frontend-feat-content" class="hidden">Content changes included (fair use)</li>
@@ -2395,30 +1896,19 @@
                         </ul>
                         <button class="btn btn-primary" style="width: 100%;" onclick="attemptSelectPackage('Front-End Website', 'frontend')">Select Front-End</button>
                     </div>
-
-                    <!-- Package 3: Front-End + Portal (Bundle) -->
+                    <!-- Package 3: Front-End + Portal -->
                     <div class="glass-card" style="text-align: center; display:flex; flex-direction:column; border-color:rgba(139, 92, 246, 0.3);">
                         <div class="bundle-tag" style="background: linear-gradient(45deg, #6366f1, #a855f7);">Best Value</div>
                         <div class="pkg-header">
                             <div class="pkg-icon" style="background: linear-gradient(135deg, #6366f1, #a855f7); border:none; color:white;"><i class="ri-database-2-fill"></i></div>
                             <h3 class="pkg-title">Front-End + Portal</h3>
                             <p class="pkg-desc">Full website & internal management.</p>
-                            
                             <div class="setup-fee-tag" id="bundle-setup-display">Setup Fee: RM 700</div>
-                            <div class="price-display-area">
-                                <span id="price-bundle" class="pkg-price">RM 249</span>
-                                <span id="period-bundle" class="pkg-period">/month</span>
-                            </div>
+                            <div class="price-display-area"><span id="price-bundle" class="pkg-price">RM 249</span><span id="period-bundle" class="pkg-period">/month</span></div>
                         </div>
-
                         <ul class="pkg-features">
                             <li style="color:var(--soft-black); font-weight:700;">Everything in Front-End Website</li>
-                            <li>Multi-User Internal Portal Access</li>
-                            <li>Website Integration and Database Management</li>
-                            <li>Advanced Analytics</li>
-                            <li>Custom Dashboards</li>
-                            <li>Hosting based on your custom domain</li>
-                            <!-- UPDATE 1: FREE DOMAIN LOGIC -->
+                            <li>Multi-User Internal Portal Access</li><li>Website Integration and Database Management</li><li>Advanced Analytics</li><li>Custom Dashboards</li><li>Hosting based on your custom domain</li>
                             <li>Free ddnet.my subdomain for 1 year (new customer)</li>
                             <li id="bundle-feat-maint" class="hidden">Maintenance and priority support included</li>
                             <li id="bundle-feat-content" class="hidden">Content changes included (fair use)</li>
@@ -2427,28 +1917,18 @@
                         </ul>
                         <button class="btn btn-glass" style="width: 100%; background: linear-gradient(45deg, #6366f1, #a855f7); border-color: transparent; color: white;" onclick="attemptSelectPackage('Front-End + Portal', 'bundle')">Select Bundle</button>
                     </div>
-
-                    <!-- Package 4: AI Powered (Quote Only) -->
+                    <!-- Package 4: AI Powered -->
                     <div class="glass-card" style="text-align: center; display:flex; flex-direction:column; border-color:rgba(245, 158, 11, 0.3);">
                         <div class="pkg-header">
                             <div class="pkg-icon"><i class="ri-brain-fill"></i></div>
                             <h3 class="pkg-title">AI Powered Website</h3>
                             <p class="pkg-desc">Advanced automation & chatbots.</p>
-                            
                             <div class="setup-fee-tag" id="ai-setup-display">Setup Fee: RM 400</div>
-                            <div class="price-display-area">
-                                <span id="price-ai" class="pkg-price">RM 149</span>
-                                <span id="period-ai" class="pkg-period">/month</span>
-                            </div>
+                            <div class="price-display-area"><span id="price-ai" class="pkg-price">RM 149</span><span id="period-ai" class="pkg-period">/month</span></div>
                         </div>
-
                         <ul class="pkg-features">
                              <li style="color:var(--soft-black); font-weight:700;">All Front-End Website Features</li>
-                            <li>AI Chatbot Integration</li>
-                            <li>Lead Auto-Response</li>
-                            <li>Smart Analytics</li>
-                            <li>Hosting based on your custom domain</li>
-                            <!-- UPDATE 1: FREE DOMAIN LOGIC -->
+                            <li>AI Chatbot Integration</li><li>Lead Auto-Response</li><li>Smart Analytics</li><li>Hosting based on your custom domain</li>
                             <li>Free ddnet.my subdomain for 1 year (new customer)</li>
                             <li id="ai-feat-maint" class="hidden">Maintenance and AI tuning included</li>
                             <li id="ai-feat-content" class="hidden">Content changes included (fair use)</li>
@@ -2457,28 +1937,17 @@
                         </ul>
                         <button class="btn btn-glass" style="width: 100%;" onclick="openQuoteForm('AI Powered Website')">Request Quote</button>
                     </div>
-
-                    <!-- Package 5: Portal Standalone (Quote Only) -->
+                    <!-- Package 5: Portal Standalone -->
                     <div class="glass-card" style="text-align: center; display:flex; flex-direction:column;">
                         <div class="pkg-header">
                             <div class="pkg-icon"><i class="ri-server-fill"></i></div>
                             <h3 class="pkg-title">Portal Standalone</h3>
                             <p class="pkg-desc">Internal portal for existing sites.</p>
-                            
                             <div class="setup-fee-tag" id="portal-setup-display">Setup Fee: RM 700</div>
-                            <div class="price-display-area">
-                                <span id="price-portal" class="pkg-price">RM 279</span>
-                                <span id="period-portal" class="pkg-period">/month</span>
-                            </div>
+                            <div class="price-display-area"><span id="price-portal" class="pkg-price">RM 279</span><span id="period-portal" class="pkg-period">/month</span></div>
                         </div>
-
                         <ul class="pkg-features">
-                            <li>Multi-User Internal Portal Access</li>
-                            <li>Website Integration & Database Management</li>
-                            <li>Advanced Analytics & Custom Dashboards</li>
-                            <li>Business Process Integration</li>
-                            <li>Hosting based on your custom domain</li>
-                            <!-- UPDATE 1: FREE DOMAIN LOGIC -->
+                            <li>Multi-User Internal Portal Access</li><li>Website Integration & Database Management</li><li>Advanced Analytics & Custom Dashboards</li><li>Business Process Integration</li><li>Hosting based on your custom domain</li>
                             <li>Free ddnet.my subdomain for 1 year (new customer)</li>
                             <li id="portal-feat-maint" class="hidden">Maintenance and monitoring included</li>
                             <li id="portal-feat-content" class="hidden">Content changes included (fair use)</li>
@@ -2488,83 +1957,41 @@
                         </ul>
                         <button class="btn btn-glass" style="width: 100%;" onclick="openQuoteForm('Portal Standalone')">Request Quote</button>
                     </div>
-
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: CHECKOUT (UPDATED) === -->
+        <!-- PAGE: CHECKOUT -->
         <section id="buynow" class="page-section">
-            <div class="text-center" style="margin-bottom: 2rem;">
-                <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Finalize Your Order</h2>
-                <p style="color: var(--text-secondary);">Secure your package and finalize details.</p>
-            </div>
-
+            <div class="text-center" style="margin-bottom: 2rem;"><h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Finalize Your Order</h2><p style="color: var(--text-secondary);">Secure your package and finalize details.</p></div>
             <div class="profile-details-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem;">
-                
                 <!-- LEFT COLUMN -->
                 <div class="glass-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-glass);">
-                        <h3 style="font-size: 1rem; color: var(--text-main);">Order Summary</h3>
-                        <span class="auth-link" style="font-size:0.85rem;" onclick="navigateTo('/pricing')">Change Package</span>
-                    </div>
-
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-glass);"><h3 style="font-size: 1rem; color: var(--text-main);">Order Summary</h3><span class="auth-link" style="font-size:0.85rem;" onclick="navigateTo('/pricing')">Change Package</span></div>
                     <div style="background: rgba(241, 245, 249, 0.5); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(30, 41, 59, 0.1); margin-bottom: 1.5rem;">
                         <h4 id="summary-pkg-name" style="color: var(--soft-black); margin-bottom: 0.5rem;">Select a Package</h4>
                         <p id="summary-pkg-desc" style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Please select a package from Services page.</p>
                         <div id="dynamic-price-area"></div>
                     </div>
-
                     <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 2rem;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.95rem;">
-                            <span style="color: var(--text-secondary);">Setup Fee (One-time):</span>
-                            <span id="summary-setup" style="color: var(--accent-warn); font-weight: 600;">RM 0</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:0.95rem;">
-                            <span style="color: var(--text-secondary);">Recurring Price:</span>
-                            <span id="summary-recurring" style="color: var(--text-main); font-weight: 600;">RM 0</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:0.95rem;">
-                            <span style="color: var(--text-secondary);">Domain:</span>
-                            <!-- UPDATE 1: DYNAMIC DOMAIN PRICING DISPLAY -->
-                            <span id="summary-domain" style="color: var(--text-main); font-weight: 600;">RM 0</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:0.95rem;">
-                            <span style="color: var(--text-secondary);">Maintenance:</span>
-                            <span id="summary-maintenance" style="color: var(--text-main); font-weight: 600;">None</span>
-                        </div>
-                        <div id="row-discount" style="display:none; justify-content:space-between; font-size:0.95rem; color: var(--accent-success);">
-                            <span style="display:flex; align-items:center;">
-                                Discount: <strong id="summary-promo-code" style="margin: 0 5px;"></strong>
-                                <i class="ri-close-circle-fill" style="margin-left:5px; cursor:pointer;" onclick="removeVoucher()"></i>
-                            </span>
-                            <span id="summary-discount-val">-RM 0</span>
-                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.95rem;"><span style="color: var(--text-secondary);">Setup Fee (One-time):</span><span id="summary-setup" style="color: var(--accent-warn); font-weight: 600;">RM 0</span></div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.95rem;"><span style="color: var(--text-secondary);">Recurring Price:</span><span id="summary-recurring" style="color: var(--text-main); font-weight: 600;">RM 0</span></div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.95rem;"><span style="color: var(--text-secondary);">Domain:</span><span id="summary-domain" style="color: var(--text-main); font-weight: 600;">RM 0</span></div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.95rem;"><span style="color: var(--text-secondary);">Maintenance:</span><span id="summary-maintenance" style="color: var(--text-main); font-weight: 600;">None</span></div>
+                        <div id="row-discount" style="display:none; justify-content:space-between; font-size:0.95rem; color: var(--accent-success);"><span style="display:flex; align-items:center;">Discount: <strong id="summary-promo-code" style="margin: 0 5px;"></strong><i class="ri-close-circle-fill" style="margin-left:5px; cursor:pointer;" onclick="removeVoucher()"></i></span><span id="summary-discount-val">-RM 0</span></div>
                     </div>
-
-                    <!-- TOTAL AMOUNT DISPLAY -->
-                    <div style="display:flex; justify-content:space-between; font-size: 1.5rem; font-weight: 800; color: var(--text-main); border-top: 1px solid var(--border-glass); padding-top: 20px; margin-top: 20px;">
-                        <span>Total Due</span>
-                        <span id="summary-final-total" style="color: var(--soft-black);">RM 0</span>
-                    </div>
-                    
-                    <!-- Deposit Note -->
+                    <div style="display:flex; justify-content:space-between; font-size: 1.5rem; font-weight: 800; color: var(--text-main); border-top: 1px solid var(--border-glass); padding-top: 20px; margin-top: 20px;"><span>Total Due</span><span id="summary-final-total" style="color: var(--soft-black);">RM 0</span></div>
                     <div id="deposit-note-container" style="margin-top: 10px; text-align: right;">
-                        <div id="deposit-note" style="font-size: 0.8rem; color: var(--accent-warn); margin-bottom: 5px; font-weight: 600; display:none;">
-                            Deposit Required (50%): RM 0
-                        </div>
-                        <!-- Payment Option Buttons -->
+                        <div id="deposit-note" style="font-size: 0.8rem; color: var(--accent-warn); margin-bottom: 5px; font-weight: 600; display:none;">Deposit Required (50%): RM 0</div>
                         <div class="payment-options" style="display: flex; gap: 10px; justify-content: flex-end;">
                             <button type="button" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;" id="btn-pay-full" onclick="setPaymentMode('full')">Pay Full</button>
                             <button type="button" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8rem;" id="btn-pay-deposit" onclick="setPaymentMode('deposit')">Pay Deposit</button>
                         </div>
                     </div>
                 </div>
-
                 <!-- RIGHT COLUMN -->
                 <div class="glass-card">
                     <h3 style="margin-bottom: 2rem; color: var(--text-main);">Configuration</h3>
-                    
                     <form id="checkoutForm" onsubmit="return false;">
                         <div class="form-group">
                             <label class="form-label">Personal Details <span id="auto-fill-label" style="font-size: 0.7rem; color: var(--soft-black); display: none;">(Auto-filled)</span></label>
@@ -2575,178 +2002,97 @@
                                 <input type="text" id="co-company" class="form-input" placeholder="Company Name (Optional)">
                             </div>
                         </div>
-
                         <div id="checkout-voucher-section" style="display: none; margin-bottom: 2rem;">
                             <div class="glass-card" style="padding: 1rem; margin-bottom:0; display:flex; justify-content:space-between; align-items:center; border-color: rgba(30, 41, 59, 0.2);">
-                                <div class="voucher-info">
-                                    <h4 id="checkout-voucher-title" style="color:var(--text-main); font-size:0.9rem; margin-bottom:2px;">Gift Voucher Available</h4>
-                                    <p id="checkout-voucher-text" style="color:var(--soft-black); font-weight:700; font-size:0.8rem;">-</p>
-                                </div>
+                                <div class="voucher-info"><h4 id="checkout-voucher-title" style="color:var(--text-main); font-size:0.9rem; margin-bottom:2px;">Gift Voucher Available</h4><p id="checkout-voucher-text" style="color:var(--soft-black); font-weight:700; font-size:0.8rem;">-</p></div>
                                 <button type="button" id="btn-apply-voucher" class="btn btn-primary" style="width: auto; padding: 0.6rem 1.5rem;" onclick="applyPersonalVoucher()">Apply</button>
                             </div>
                         </div>
-
                         <div class="form-group">
                             <label class="form-label">Domain Choice</label>
                             <div class="radio-group">
-                                <!-- UPDATE 1: FREE DOMAIN OPTION -->
-                                <div class="radio-option selected" onclick="updateDomain('sub', this)">
-                                    <input type="radio" name="domain_type" value="sub" checked> 
-                                    <span style="font-size: 0.95rem; color: var(--text-main);">DDNetwork Subdomain (Free 1st Year)</span>
-                                </div>
-                                <div class="radio-option" onclick="updateDomain('custom', this)">
-                                    <input type="radio" name="domain_type" value="custom"> 
-                                    <span style="font-size: 0.95rem; color: var(--text-main);">I have my own domain</span>
-                                </div>
+                                <div class="radio-option selected" onclick="updateDomain('sub', this)"><input type="radio" name="domain_type" value="sub" checked> <span style="font-size: 0.95rem; color: var(--text-main);">DDNetwork Subdomain (Free 1st Year)</span></div>
+                                <div class="radio-option" onclick="updateDomain('custom', this)"><input type="radio" name="domain_type" value="custom"> <span style="font-size: 0.95rem; color: var(--text-main);">I have my own domain</span></div>
                             </div>
-                            
-                            <div id="input-subdomain" style="margin-top: 10px;">
-                                <input type="text" id="subdomain-text" class="form-input" placeholder="yourname" oninput="updateSummaryText()">
-                                <span style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 5px; display: block;">URL: <span id="url-preview" style="color: var(--soft-black); font-weight: 700;">.ddnet.my</span></span>
-                            </div>
-                            
-                            <div id="input-custom" style="display: none; margin-top: 10px;">
-                                <input type="text" id="custom-domain-text" class="form-input" placeholder="www.example.com" oninput="updateSummaryText()">
-                            </div>
+                            <div id="input-subdomain" style="margin-top: 10px;"><input type="text" id="subdomain-text" class="form-input" placeholder="yourname" oninput="updateSummaryText()"><span style="font-size: 0.8rem; color: var(--text-tertiary); margin-top: 5px; display: block;">URL: <span id="url-preview" style="color: var(--soft-black); font-weight: 700;">.ddnet.my</span></span></div>
+                            <div id="input-custom" style="display: none; margin-top: 10px;"><input type="text" id="custom-domain-text" class="form-input" placeholder="www.example.com" oninput="updateSummaryText()"></div>
                         </div>
-
                         <div class="form-group">
                             <label class="form-label">Maintenance Plan (Optional)</label>
                             <div class="radio-group">
-                                <div class="radio-option selected" onclick="updateMaintenance('none', this)">
-                                    <input type="radio" name="maint" value="none" checked> None
-                                </div>
-                                <div class="radio-option" onclick="updateMaintenance('basic', this)">
-                                    <input type="radio" name="maint" value="basic"> Basic (+RM 50/mo)
-                                </div>
-                                <div class="radio-option" onclick="updateMaintenance('business', this)">
-                                    <input type="radio" name="maint" value="business"> Business (+RM 100/mo)
-                                </div>
+                                <div class="radio-option selected" onclick="updateMaintenance('none', this)"><input type="radio" name="maint" value="none" checked> None</div>
+                                <div class="radio-option" onclick="updateMaintenance('basic', this)"><input type="radio" name="maint" value="basic"> Basic (+RM 50/mo)</div>
+                                <div class="radio-option" onclick="updateMaintenance('business', this)"><input type="radio" name="maint" value="business"> Business (+RM 100/mo)</div>
                             </div>
                         </div>
-
                         <div class="form-group" style="margin-top: 2rem;">
                             <label class="form-label">Promo Code (Optional)</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="promo-input" class="form-input" placeholder="e.g. PROMO10%" style="text-transform: uppercase;">
-                                <button type="button" class="btn btn-glass" onclick="applyPromo()" style="padding: 0 1.5rem; min-width: 70px;">Apply</button>
-                            </div>
+                            <div style="display: flex; gap: 10px;"><input type="text" id="promo-input" class="form-input" placeholder="e.g. PROMO10%" style="text-transform: uppercase;"><button type="button" class="btn btn-glass" onclick="applyPromo()" style="padding: 0 1.5rem; min-width: 70px;">Apply</button></div>
                             <p style="font-size: 0.7rem; color: var(--text-tertiary); margin-top: 5px;">*Promo codes are for logged-in users only.</p>
                         </div>
-
                         <div style="border: 0; border-top: 1px solid var(--border-glass); margin: 2rem 0;"></div>
-
-                        <!-- UPDATE 2: TERMS AND CONDITIONS CHECKBOX -->
                         <div class="form-group" style="background: rgba(255,255,255,0.8); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-glass);">
                             <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; font-size: 0.9rem; line-height: 1.5;">
                                 <input type="checkbox" id="terms-check" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--soft-black);">
-                                <span style="color: var(--text-secondary);">
-                                    I have read and agreed to <span class="auth-link" onclick="openTermsModal()">Terms & Conditions</span>.
-                                </span>
+                                <span style="color: var(--text-secondary);">I have read and agreed to <span class="auth-link" onclick="openTermsModal()">Terms & Conditions</span>.</span>
                             </label>
                         </div>
-
-                        <div class="form-group" style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary); background: #f8fafc; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-glass);">
-                            <i class="ri-secure-payment-line" style="color: var(--accent-success);"></i> <strong>Secure Payment via Razorpay (Curlec)</strong>
-                        </div>
-
-                        <!-- UPDATED PAY BUTTONS -->
-                        <div id="checkout-actions">
-                            <button type="button" id="btn-pay-now" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;" onclick="initiateRazorpayPayment()"><i class="ri-credit-card-2-fill" style="margin-right:8px;"></i> Pay Now</button>
-                        </div>
-
-                        <!-- NEW MANUAL CONFIRMATION SECTION -->
+                        <div class="form-group" style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary); background: #f8fafc; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-glass);"><i class="ri-secure-payment-line" style="color: var(--accent-success);"></i> <strong>Secure Payment via Razorpay (Curlec)</strong></div>
+                        <div id="checkout-actions"><button type="button" id="btn-pay-now" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;" onclick="initiateRazorpayPayment()"><i class="ri-credit-card-2-fill" style="margin-right:8px;"></i> Pay Now</button></div>
                         <div id="manual-confirm-section">
                             <i class="ri-checkbox-circle-fill manual-confirm-icon"></i>
                             <h3 style="margin-bottom: 0.5rem; color: var(--soft-black);">Payment Window Opened</h3>
-                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
-                                Please complete your payment in the Razorpay window. Once done, click the button below to finalize your order.
-                            </p>
-                            <button type="button" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;" onclick="handleManualConfirmation()">
-                                I have made payment
-                            </button>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Please complete your payment in the Razorpay window. Once done, click the button below to finalize your order.</p>
+                            <button type="button" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;" onclick="handleManualConfirmation()">I have made payment</button>
                         </div>
                     </form>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: THANK YOU === -->
+        <!-- PAGE: THANK YOU -->
         <section id="thank-you" class="page-section">
             <div class="auth-container">
                 <div class="glass-card auth-card">
-                    <div style="width: 80px; height: 80px; background: #ecfdf5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
-                        <i class="ri-check-line" style="font-size: 3rem; color: var(--accent-success);"></i>
-                    </div>
+                    <div style="width: 80px; height: 80px; background: #ecfdf5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;"><i class="ri-check-line" style="font-size: 3rem; color: var(--accent-success);"></i></div>
                     <h2 style="margin-bottom: 1rem;">Order Placed Successfully!</h2>
-                    <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 2rem; line-height: 1.6;">
-                        Thank you for choosing DDNetwork One. We have received your order and payment details.<br>
-                        Our team will review your order and contact you via WhatsApp/Email within 24 hours.
-                    </p>
-                    
-                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="navigateTo('/')">Return Home</button>
-                        <button class="btn btn-glass" onclick="navigateTo('/profile')">My Profile</button>
-                    </div>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 2rem; line-height: 1.6;">Thank you for choosing DDNetwork One. We have received your order and payment details.<br>Our team will review your order and contact you via WhatsApp/Email within 24 hours.</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;"><button class="btn btn-primary" onclick="navigateTo('/')">Return Home</button><button class="btn btn-glass" onclick="navigateTo('/profile')">My Profile</button></div>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: CLIENTS === -->
+        <!-- PAGE: CLIENTS -->
         <section id="clients" class="page-section">
-            <div class="text-center" style="margin-bottom: 3rem;">
-                <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Portfolio</h2>
-                <p style="color: var(--text-secondary);">Trusted by forward-thinking businesses.</p>
-            </div>
-            <div id="portfolio-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-                <div class="text-center" style="grid-column: 1/-1; color: var(--text-tertiary);">Loading portfolio...</div>
-            </div>
+            <div class="text-center" style="margin-bottom: 3rem;"><h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Portfolio</h2><p style="color: var(--text-secondary);">Trusted by forward-thinking businesses.</p></div>
+            <div id="portfolio-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;"><div class="text-center" style="grid-column: 1/-1; color: var(--text-tertiary);">Loading portfolio...</div></div>
         </section>
 
-        <!-- === PAGE: CONTACT === -->
+        <!-- PAGE: CONTACT -->
         <section id="contact" class="page-section">
             <div class="container" style="max-width: 800px;">
                 <div class="glass-card auth-card">
                     <i class="ri-mail-send-fill" style="font-size: 3rem; color: var(--soft-black); margin-bottom: 1rem;"></i>
                     <h2 style="margin-bottom: 1rem;">Get In Touch</h2>
                     <p style="color: var(--text-secondary); margin-bottom: 2rem;">Have a custom project in mind? Send us a direct message.</p>
-                    
-                    <!-- Added onsubmit="handleContactSubmit(event)" and IDs to inputs -->
                     <form style="text-align: left;" onsubmit="handleContactSubmit(event)">
-                        <div class="form-group">
-                            <label class="form-label">Name</label>
-                            <input type="text" id="contact-name" class="form-input" placeholder="Your Name">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Email</label>
-                            <input type="email" id="contact-email" class="form-input" placeholder="hello@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Message</label>
-                            <textarea id="contact-message" rows="4" class="form-input" placeholder="Tell us about your project..."></textarea>
-                        </div>
+                        <div class="form-group"><label class="form-label">Name</label><input type="text" id="contact-name" class="form-input" placeholder="Your Name"></div>
+                        <div class="form-group"><label class="form-label">Email</label><input type="email" id="contact-email" class="form-input" placeholder="hello@example.com"></div>
+                        <div class="form-group"><label class="form-label">Message</label><textarea id="contact-message" rows="4" class="form-input" placeholder="Tell us about your project..."></textarea></div>
                         <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
                     </form>
-                    
-                    <div style="margin-top: 3rem; border-top: 1px solid var(--border-glass); padding-top: 2rem;">
-                        <p style="color: var(--text-main); font-weight: 700; margin-bottom: 0.5rem;">Email Us</p>
-                        <a href="mailto:sales@ddnet.my" style="color: var(--soft-black); font-size: 1.2rem;">sales@ddnet.my</a>
-                    </div>
+                    <div style="margin-top: 3rem; border-top: 1px solid var(--border-glass); padding-top: 2rem;"><p style="color: var(--text-main); font-weight: 700; margin-bottom: 0.5rem;">Email Us</p><a href="mailto:sales@ddnet.my" style="color: var(--soft-black); font-size: 1.2rem;">sales@ddnet.my</a></div>
                 </div>
             </div>
         </section>
 
-        <!-- === PAGE: FOUNDER === -->
+        <!-- PAGE: FOUNDER -->
         <section id="founder" class="page-section">
             <div class="glass-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1.5rem;">
                 <img src="https://raw.githubusercontent.com/ddnetwork-ent/DDN-One/refs/heads/main/DD.JPG" alt="Danial Danish" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid white; margin-bottom: 1.5rem;">
                 <h2 style="margin-bottom: 0.5rem;">Danial Danish</h2>
                 <p style="color: var(--soft-black); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 1.5rem;">Founder & Lead Developer</p>
-                <p style="color: var(--text-secondary); max-width: 600px; line-height: 1.7; margin-bottom: 1.5rem;">
-                    "My journey began with a curiosity for code. What started as late-night experiments grew into DD Cloud Network, a company built on simplicity, speed, and thoughtful digital design.
-<br><br>
-Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local businesses build a strong, modern presence in the digital world."
-                </p>
+                <p style="color: var(--text-secondary); max-width: 600px; line-height: 1.7; margin-bottom: 1.5rem;">"My journey began with a curiosity for code. What started as late-night experiments grew into DD Cloud Network, a company built on simplicity, speed, and thoughtful digital design.<br><br>Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local businesses build a strong, modern presence in the digital world."</p>
                 <div style="display: flex; gap: 1rem;">
                     <a href="https://www.linkedin.com/in/muhammad-danial-danish-217bb82ba/" style="width: 40px; height: 40px; background: var(--bg-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; border:1px solid var(--border-glass);"><i class="ri-linkedin-fill"></i></a>
                     <a href="https://www.instagram.com/danialddanish/" style="width: 40px; height: 40px; background: var(--bg-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; border:1px solid var(--border-glass);"><i class="ri-instagram-line"></i></a>
@@ -2754,18 +2100,12 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             </div>
         </section>
 
-        <!-- === PAGE: UPDATES === -->
+        <!-- PAGE: UPDATES -->
         <section id="updates" class="page-section">
             <div class="auth-container" style="max-width: 800px;">
                 <div class="glass-card auth-card" style="text-align: left;">
-                    <div style="text-align: center; margin-bottom: 2rem;">
-                        <i class="ri-edit-circle-fill" style="font-size: 3rem; color: var(--soft-black); margin-bottom: 1rem;"></i>
-                        <h2>Customer Requests</h2>
-                        <p>Need to update content, upgrade, renew, or remove features? Submit your request here.</p>
-                    </div>
-
+                    <div style="text-align: center; margin-bottom: 2rem;"><i class="ri-edit-circle-fill" style="font-size: 3rem; color: var(--soft-black); margin-bottom: 1rem;"></i><h2>Customer Requests</h2><p>Need to update content, upgrade, renew, or remove features? Submit your request here.</p></div>
                     <form onsubmit="handleRequestSubmit(event)">
-                        
                         <div class="form-group">
                             <label class="form-label">Personal Details</label>
                             <div class="profile-details-grid">
@@ -2773,101 +2113,36 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                                 <input type="tel" id="req-phone" class="form-input" placeholder="Phone Number" required>
                             </div>
                         </div>
-
                         <div class="form-group">
                             <label class="form-label">Request Type</label>
                             <div class="radio-group">
-                                <div class="radio-option" onclick="handleUpdateTypeChange('content', this)">
-                                    <input type="radio" name="req_type" value="content" checked>
-                                    <div>
-                                        <div style="font-weight: 700; color: var(--text-main);">Update Content</div>
-                                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Change text, images, or add new info.</div>
-                                    </div>
-                                </div>
-                                <div class="radio-option" onclick="handleUpdateTypeChange('upgrade', this)">
-                                    <input type="radio" name="req_type" value="upgrade">
-                                    <div>
-                                        <div style="font-weight: 700; color: var(--text-main);">Upgrade Plan</div>
-                                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Move to a higher tier package.</div>
-                                    </div>
-                                </div>
-                                <div class="radio-option" onclick="handleUpdateTypeChange('renew', this)">
-                                    <input type="radio" name="req_type" value="renew">
-                                    <div>
-                                        <div style="font-weight: 700; color: var(--text-main);">Renew Plan</div>
-                                                                                <div style="font-size: 0.8rem; color: var(--text-secondary);">Extend your current subscription.</div>
-                                    </div>
-                                </div>
-                                <div class="radio-option" onclick="handleUpdateTypeChange('remove', this)">
-                                    <input type="radio" name="req_type" value="remove">
-                                    <div>
-                                        <div style="font-weight: 700; color: var(--text-main);">Remove Content</div>
-                                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Delete specific pages or features.</div>
-                                    </div>
-                                </div>
+                                <div class="radio-option" onclick="handleUpdateTypeChange('content', this)"><input type="radio" name="req_type" value="content" checked><div><div style="font-weight: 700; color: var(--text-main);">Update Content</div><div style="font-size: 0.8rem; color: var(--text-secondary);">Change text, images, or add new info.</div></div></div>
+                                <div class="radio-option" onclick="handleUpdateTypeChange('upgrade', this)"><input type="radio" name="req_type" value="upgrade"><div><div style="font-weight: 700; color: var(--text-main);">Upgrade Plan</div><div style="font-size: 0.8rem; color: var(--text-secondary);">Move to a higher tier package.</div></div></div>
+                                <div class="radio-option" onclick="handleUpdateTypeChange('renew', this)"><input type="radio" name="req_type" value="renew"><div><div style="font-weight: 700; color: var(--text-main);">Renew Plan</div><div style="font-size: 0.8rem; color: var(--text-secondary);">Extend your current subscription.</div></div></div>
+                                <div class="radio-option" onclick="handleUpdateTypeChange('remove', this)"><input type="radio" name="req_type" value="remove"><div><div style="font-weight: 700; color: var(--text-main);">Remove Content</div><div style="font-size: 0.8rem; color: var(--text-secondary);">Delete specific pages or features.</div></div></div>
                             </div>
                         </div>
-
-                        <!-- DYNAMIC FIELDS -->
                         <div id="dynamic-fields-container">
                             <div id="field-content">
-                                <div class="form-group">
-                                    <label class="form-label">Describe Changes</label>
-                                    <textarea id="req-desc-content" class="form-input" rows="4" placeholder="e.g. Change phone number..."></textarea>
-                                </div>
-                                <div style="padding: 1rem; background: rgba(241, 245, 249, 0.5); border: 1px dashed var(--soft-black); border-radius: 8px; color: var(--soft-black); font-size: 0.85rem; line-height: 1.5;">
-                                    <i class="ri-whatsapp-line"></i> <strong>Important:</strong> Please send any images or files via WhatsApp after submitting.
-                                </div>
+                                <div class="form-group"><label class="form-label">Describe Changes</label><textarea id="req-desc-content" class="form-input" rows="4" placeholder="e.g. Change phone number..."></textarea></div>
+                                <div style="padding: 1rem; background: rgba(241, 245, 249, 0.5); border: 1px dashed var(--soft-black); border-radius: 8px; color: var(--soft-black); font-size: 0.85rem; line-height: 1.5;"><i class="ri-whatsapp-line"></i> <strong>Important:</strong> Please send any images or files via WhatsApp after submitting.</div>
                             </div>
                             <div id="field-upgrade" class="hidden">
                                 <div class="profile-details-grid">
-                                    <div class="form-group">
-                                        <label class="form-label">Current Plan</label>
-                                        <select id="req-current-plan" class="form-select">
-                                            <option     value="Basic HTML Website">Basic HTML Website</option>
-                                            <option value="Front-End Website">Front-End Website</option>
-                                            <option value="AI Powered Website">AI Powered Website</option>
-                                            <option value="Front-End + Portal">Front-End + Portal</option>
-                                            <option value="Portal Standalone">Portal Standalone</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Desired Plan</label>
-                                        <select id="req-new-plan" class="form-select">
-                                            <option value="Basic HTML Website">Basic HTML Website</option>
-                                            <option value="Front-End Website">Front-End Website</option>
-                                            <option value="AI Powered Website">AI Powered Website</option>
-                                            <option value="Front-End + Portal">Front-End + Portal</option>
-                                            <option value="Portal Standalone">Portal Standalone</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group"> 
-                                        <label class="form-label">Additional Notes</label>
-                                        <textarea id="req-desc-upgrade" class="form-input" rows="3"></textarea>
-                                    </div>
+                                    <div class="form-group"><label class="form-label">Current Plan</label><select id="req-current-plan" class="form-select"><option value="Basic HTML Website">Basic HTML Website</option><option value="Front-End Website">Front-End Website</option><option value="AI Powered Website">AI Powered Website</option><option value="Front-End + Portal">Front-End + Portal</option><option value="Portal Standalone">Portal Standalone</option></select></div>
+                                    <div class="form-group"><label class="form-label">Desired Plan</label><select id="req-new-plan" class="form-select"><option value="Basic HTML Website">Basic HTML Website</option><option value="Front-End Website">Front-End Website</option><option value="AI Powered Website">AI Powered Website</option><option value="Front-End + Portal">Front-End + Portal</option><option value="Portal Standalone">Portal Standalone</option></select></div>
                                 </div>
-                                <div id="field-renew" class="hidden">
-                                    <div class="form-group">
-                                        <label class="form-label">Plan to Renew</label>
-                                        <select id="req-renew-plan" class="form-select">
-                                            <option value="Basic HTML Website">Basic HTML Website</option>
-                                            <option value="Front-End Website">Front-End Website</option>
-                                            <option value="AI Powered Website">AI Powered Website</option>
-                                            <option value="Maintenance Only">Maintenance Only</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div id="field-remove" class="hidden">
-                                    <div class="form-group" style="background: #fef2f2; padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
-                                        <label class="form-label" style="color: #ef4444;">What to Remove?</label>
-                                        <textarea id="req-desc-remove" class="form-input" rows="3"></textarea>
-                                    </div>
-                                </div>
+                                <div class="form-group"><label class="form-label">Additional Notes</label><textarea id="req-desc-upgrade" class="form-input" rows="3"></textarea></div>
                             </div>
-
-                            <button type="submit" id="btn-submit-request" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Request</button>
-                        </form>
-                    </div>
+                            <div id="field-renew" class="hidden">
+                                <div class="form-group"><label class="form-label">Plan to Renew</label><select id="req-renew-plan" class="form-select"><option value="Basic HTML Website">Basic HTML Website</option><option value="Front-End Website">Front-End Website</option><option value="AI Powered Website">AI Powered Website</option><option value="Maintenance Only">Maintenance Only</option></select></div>
+                            </div>
+                            <div id="field-remove" class="hidden">
+                                <div class="form-group" style="background: #fef2f2; padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);"><label class="form-label" style="color: #ef4444;">What to Remove?</label><textarea id="req-desc-remove" class="form-input" rows="3"></textarea></div>
+                            </div>
+                        </div>
+                        <button type="submit" id="btn-submit-request" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Request</button>
+                    </form>
                 </div>
             </div>
         </section>
@@ -2878,16 +2153,10 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     <footer>
         <div class="container">
             <div class="footer-grid">
-                
                 <div class="footer-col footer-brand">
-                    <a href="/" onclick="routeLink(event, '/')" style="cursor: pointer;">
-                        <span class="company-name">DDNetwork<span style="color:var(--text-tertiary)">One</span></span>
-                    </a>
-                    <p>
-                        Designed in Malaysia.<br> Built for the world.
-                    </p>
+                    <a href="/" onclick="routeLink(event, '/')" style="cursor: pointer;"><span class="company-name">DDNetwork<span style="color:var(--text-tertiary)">One</span></span></a>
+                    <p>Designed in Malaysia.<br> Built for the world.</p>
                 </div>
-
                 <div class="footer-col">
                     <h4>Support</h4>
                     <ul class="footer-links">
@@ -2898,24 +2167,14 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                         <li><a href="#" onclick="navigateTo('/privacy')">Privacy Policy</a></li>
                     </ul>
                 </div>
-
                 <div class="footer-col">
                     <h4>Contact</h4>
-                    <div class="footer-contact-item">
-                        <i class="ri-mail-send-fill"></i>
-                        <span>sales@ddnet.my</span>
-                    </div>
-                    <div class="footer-contact-item">
-                        <i class="ri-whatsapp-line"></i>
-                        <span>Not yet Available</span>
-                    </div>
+                    <div class="footer-contact-item"><i class="ri-mail-send-fill"></i><span>sales@ddnet.my</span></div>
+                    <div class="footer-contact-item"><i class="ri-whatsapp-line"></i><span>Not yet Available</span></div>
                 </div>
-
             </div>
-
             <div class="footer-bottom">
                 <p class="copyright">&copy; 2025–2026 DD Cloud Network · DDNetwork One · Reg. No. 202603040752 (MA0342542-K)</p>
-                
                 <div class="mac-dock">
                     <a href="https://www.linkedin.com/in/muhammad-danial-danish-217bb82ba/" target="_blank" class="dock-icon"><i class="ri-linkedin-fill"></i></a>
                     <a href="https://www.instagram.com/ddnet.my/" target="_blank" class="dock-icon"><i class="ri-instagram-line"></i></a>
@@ -2926,40 +2185,26 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         </div>
     </footer>
 
-    <!-- UPDATED TERMS MODAL (KEPT FOR CHECKOUT USE) -->
+    <!-- TERMS MODAL -->
     <div id="termsModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeTermsModal()">&times;</span>
             <h2>Terms & Conditions</h2>
             <div class="modal-text">
                 <p style="text-align:center; margin-bottom:2rem;">By accessing, engaging, or using any services provided by <strong>DDNetwork One</strong>, you acknowledge that you have read, understood, and agreed to be legally bound by these Terms & Conditions.</p>
-
-                <h3>Hosting Terms</h3>
-                <p>Hosting is provided based on customer’s own custom domain. For new customers, a free ddnet.my subdomain is included for the first year only. After the free period, renewal of the ddnet.my subdomain is chargeable at RM 55 per year.</p>
+                <h3>Hosting Terms</h3><p>Hosting is provided based on customer’s own custom domain. For new customers, a free ddnet.my subdomain is included for the first year only. After the free period, renewal of the ddnet.my subdomain is chargeable at RM 55 per year.</p>
                 <p>Monthly subscription plans include hosting, server management, basic security updates, uptime monitoring, and technical support. One-time purchase plans include website development and deployment only. Ongoing maintenance, support, backups, updates, and content changes are not included and will be charged separately upon request. DDNetwork reserves the right to suspend hosting services in cases of non-payment, abuse, or violation of acceptable use policies.</p>
-
-                <h3>1. Scope of Services</h3>
-                <p>Services provided are limited to what is explicitly stated in selected package or written agreement.</p>
-                <p>Any work not listed (including additional pages, features, redesigns, or custom functions) is considered <strong>out of scope</strong> and will be quoted separately.</p>
-
-                <h3>11. Refund Policy</h3>
-                <p>All payments made are <strong>non-refundable</strong>, unless otherwise stated in writing.</p>
-                <p>Setup fees and completed work are strictly non-refundable.</p>
-                
+                <h3>1. Scope of Services</h3><p>Services provided are limited to what is explicitly stated in selected package or written agreement.</p><p>Any work not listed (including additional pages, features, redesigns, or custom functions) is considered <strong>out of scope</strong> and will be quoted separately.</p>
+                <h3>11. Refund Policy</h3><p>All payments made are <strong>non-refundable</strong>, unless otherwise stated in writing.</p><p>Setup fees and completed work are strictly non-refundable.</p>
                 <p style="margin-top: 3rem; font-weight: 700; text-align:center;">&copy; 2025–2026 DD Cloud Network · DDNetwork</p>
             </div>
         </div>
     </div>
 
     <!-- CHAT WIDGET SCRIPT -->
-    <script
-      src="https://app.livechatai.com/embed.js"
-      data-id="cmlas1njr0001jj04hi5ygd18"
-      async defer>
-    </script>
+    <script src="https://app.livechatai.com/embed.js" data-id="cmlas1njr0001jj04hi5ygd18" async defer></script>
 </body>
 </html>
-
 
 <!-- JAVASCRIPT -->
 <script>
@@ -3002,12 +2247,12 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     }
 
     // ==========================================
-    // UPDATED NOTIFICATION SYSTEM (ANIMATED SVG)
+    // UPDATED NOTIFICATION SYSTEM (ANIMATED OVERLAY)
     // ==========================================
     
     function showToast(message, type = 'info') {
         let title = "Notice";
-        let btnText = "Okay";
+        let btnText = "Dismiss";
         if (type === 'success') title = "Success";
         if (type === 'error') title = "Error";
         if (type === 'warning') title = "Warning";
@@ -3018,45 +2263,57 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     const modalOverlay = document.getElementById('glass-modal-overlay');
     const modalTitle = document.getElementById('glass-modal-title');
     const modalDesc = document.getElementById('glass-modal-desc');
-    const modalIconContainer = document.getElementById('glass-modal-icon-container');
     const modalBtn = document.getElementById('glass-modal-btn');
+    const modalContainer = document.querySelector('.animated-notification-container');
 
-    function showGlassModal(title, message, type = 'warning', btnText = 'Okay', btnCallback = null) {
+    function showGlassModal(title, message, type = 'warning', btnText = 'Dismiss', btnCallback = null) {
         modalTitle.innerText = title;
         modalDesc.innerText = message;
         
-        modalIconContainer.className = 'glass-modal-icon'; // Reset classes
-        modalIconContainer.innerHTML = ''; // Clear previous
+        // Reset classes
+        modalOverlay.classList.remove('success-bg', 'error-bg', 'warning-bg');
+        
+        // Generate SVG Content
+        let iconHTML = '';
+        if (type === 'success') {
+            modalOverlay.classList.add('success-bg');
+            iconHTML = `
+                <div class="notif-icon-wrapper">
+                    <svg class="checkmark-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45"/>
+                        <path class="checkmark-check" d="M30 50 L45 65 L70 35"/>
+                    </svg>
+                </div>`;
+        } else if (type === 'error') {
+            modalOverlay.classList.add('error-bg');
+            iconHTML = `
+                <div class="notif-icon-wrapper shake-wrapper">
+                    <svg class="error-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45"/>
+                        <path class="error-x left" d="M35 35 L65 65"/>
+                        <path class="error-x right" d="M65 35 L35 65"/>
+                    </svg>
+                </div>`;
+        } else {
+            modalOverlay.classList.add('warning-bg');
+            iconHTML = `<div class="warning-pulse"><i class="ri-information-line"></i></div>`;
+        }
 
-        // Inject Animated SVG based on type
-        if (type === 'success') { 
-            modalIconContainer.classList.add('success'); 
-            modalIconContainer.innerHTML = `
-                <svg class="success-anim-svg" width="100" height="100" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45"></circle>
-                    <path d="M30 50 L45 65 L70 35"></path>
-                </svg>`;
-        } 
-        else if (type === 'error') { 
-            modalIconContainer.classList.add('error'); 
-            modalIconContainer.innerHTML = `
-                <svg class="error-anim-svg" width="100" height="100" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45"></circle>
-                    <path d="M35 35 L65 65 M65 35 L35 65"></path>
-                </svg>`;
-        }
-        else {
-            // Fallback for warning/info (Standard static icon or simple SVG)
-            modalIconContainer.classList.add('warning'); 
-            modalIconContainer.innerHTML = '<i class="ri-error-warning-line" style="font-size:3rem; color:var(--accent-warn);"></i>'; 
-        }
+        // Insert SVG before title
+        modalContainer.insertAdjacentHTML('afterbegin', iconHTML);
 
         modalBtn.innerText = btnText;
         modalBtn.onclick = () => {
             modalOverlay.classList.remove('active');
-            setTimeout(() => { modalOverlay.style.display = 'none'; }, 300);
+            setTimeout(() => { 
+                modalOverlay.style.display = 'none'; 
+                // Clean up generated SVG for next use
+                const wrapper = modalContainer.querySelector('.notif-icon-wrapper, .warning-pulse');
+                if(wrapper) wrapper.remove();
+            }, 300);
             if (btnCallback) btnCallback();
         };
+        
         modalOverlay.style.display = 'flex';
         requestAnimationFrame(() => { modalOverlay.classList.add('active'); });
     }
@@ -3071,41 +2328,17 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         const reqNum = document.getElementById('req-num');
         const reqLen = document.getElementById('req-len');
 
-        // Check Uppercase
-        if (/[A-Z]/.test(password)) {
-            reqUpper.classList.add('valid');
-            reqUpper.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Uppercase';
-        } else {
-            reqUpper.classList.remove('valid');
-            reqUpper.innerHTML = '<i class="ri-close-circle-line"></i> Uppercase';
-        }
+        if (/[A-Z]/.test(password)) { reqUpper.classList.add('valid'); reqUpper.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Uppercase'; } 
+        else { reqUpper.classList.remove('valid'); reqUpper.innerHTML = '<i class="ri-close-circle-line"></i> Uppercase'; }
 
-        // Check Lowercase
-        if (/[a-z]/.test(password)) {
-            reqLower.classList.add('valid');
-            reqLower.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Lowercase';
-        } else {
-            reqLower.classList.remove('valid');
-            reqLower.innerHTML = '<i class="ri-close-circle-line"></i> Lowercase';
-        }
+        if (/[a-z]/.test(password)) { reqLower.classList.add('valid'); reqLower.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Lowercase'; } 
+        else { reqLower.classList.remove('valid'); reqLower.innerHTML = '<i class="ri-close-circle-line"></i> Lowercase'; }
 
-        // Check Number
-        if (/[0-9]/.test(password)) {
-            reqNum.classList.add('valid');
-            reqNum.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Number';
-        } else {
-            reqNum.classList.remove('valid');
-            reqNum.innerHTML = '<i class="ri-close-circle-line"></i> Number';
-        }
+        if (/[0-9]/.test(password)) { reqNum.classList.add('valid'); reqNum.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Number'; } 
+        else { reqNum.classList.remove('valid'); reqNum.innerHTML = '<i class="ri-close-circle-line"></i> Number'; }
 
-        // Check Length
-        if (password.length >= 6) {
-            reqLen.classList.add('valid');
-            reqLen.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Min 6 chars';
-        } else {
-            reqLen.classList.remove('valid');
-            reqLen.innerHTML = '<i class="ri-close-circle-line"></i> Min 6 chars';
-        }
+        if (password.length >= 6) { reqLen.classList.add('valid'); reqLen.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Min 6 chars'; } 
+        else { reqLen.classList.remove('valid'); reqLen.innerHTML = '<i class="ri-close-circle-line"></i> Min 6 chars'; }
     }
 
     // ==========================================
@@ -3114,10 +2347,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     function closeIdeaSuccessModal() {
         const modal = document.getElementById('idea-success-modal');
         modal.classList.remove('active');
-        setTimeout(() => {
-            modal.style.display = 'none';
-            navigateTo('/'); 
-        }, 300);
+        setTimeout(() => { modal.style.display = 'none'; navigateTo('/'); }, 300);
     }
 
     // ==========================================
@@ -3126,13 +2356,9 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     function toggleFaq(element) {
         const item = element.parentElement;
         const answer = item.querySelector('.faq-answer');
-        
         item.classList.toggle('active');
-        if (item.classList.contains('active')) {
-            answer.style.maxHeight = (answer.scrollHeight + 50) + "px";
-        } else {
-            answer.style.maxHeight = null;
-        }
+        if (item.classList.contains('active')) { answer.style.maxHeight = (answer.scrollHeight + 50) + "px"; } 
+        else { answer.style.maxHeight = null; }
     }
 
     // ==========================================
@@ -3151,8 +2377,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     function setBilling(cycle) {
         billingCycle = cycle;
         const toggle = document.getElementById('billing-toggle');
-        if(cycle === 'onetime') toggle.checked = true;
-        else toggle.checked = false;
+        if(cycle === 'onetime') toggle.checked = true; else toggle.checked = false;
         updatePricingUI();
         if(state.domainType === 'sub') updateDomain('sub', document.querySelector('input[name="domain_type"][value="sub"]').parentElement);
     }
@@ -3167,21 +2392,14 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     function updatePricingUI() {
         const labelMonthly = document.getElementById('label-monthly');
         const labelOnetime = document.getElementById('label-onetime');
-        
-        if(billingCycle === 'monthly') {
-            labelMonthly.classList.add('active');
-            labelOnetime.classList.remove('active');
-        } else {
-            labelMonthly.classList.remove('active');
-            labelOnetime.classList.add('active');
-        }
+        if(billingCycle === 'monthly') { labelMonthly.classList.add('active'); labelOnetime.classList.remove('active'); } 
+        else { labelMonthly.classList.remove('active'); labelOnetime.classList.add('active'); }
 
         const keys = ['html', 'frontend', 'bundle', 'ai', 'portal'];
         keys.forEach(key => {
             const priceEl = document.getElementById(`price-${key}`);
             const periodEl = document.getElementById(`period-${key}`);
             const setupEl = document.getElementById(`${key}-setup-display`);
-            
             const featMaint = document.getElementById(`${key}-feat-maint`);
             const featContent = document.getElementById(`${key}-feat-content`);
             const featNoSupport = document.getElementById(`${key}-feat-no-support`);
@@ -3192,17 +2410,14 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
                     priceEl.innerText = `RM ${PRICING_DATA[key].oneTime}`;
                     periodEl.innerText = '/one-time';
                     if(setupEl) setupEl.classList.add('hidden');
-                    
                     if(featMaint) featMaint.classList.add('hidden');
                     if(featContent) featContent.classList.add('hidden');
                     if(featNoSupport) featNoSupport.classList.remove('hidden');
                     if(featContentCharge) featContentCharge.classList.remove('hidden');
-
                 } else {
                     priceEl.innerText = `RM ${PRICING_DATA[key].monthly}`;
                     periodEl.innerText = '/month';
                     if(setupEl) setupEl.classList.remove('hidden');
-
                     if(featMaint) featMaint.classList.remove('hidden');
                     if(featContent) featContent.classList.remove('hidden');
                     if(featNoSupport) featNoSupport.classList.add('hidden');
@@ -3213,7 +2428,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     }
 
     // ==========================================
-    // FRONTEND ROUTING (UPDATED TRANSITIONS)
+    // FRONTEND ROUTING
     // ==========================================
     const routes = {
         '/': 'home', '/home': 'home', '/pricing': 'services', '/reviews': 'reviews', '/order': 'buynow', '/clients': 'clients',
@@ -3223,15 +2438,11 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         '/about-company': 'about-company', '/terms': 'terms', '/faq': 'faq', '/privacy': 'privacy'
     };
 
-    function routeLink(event, path) {
-        event.preventDefault();
-        navigateTo(path);
-    }
+    function routeLink(event, path) { event.preventDefault(); navigateTo(path); }
 
     function navigateTo(path) {
         const sectionId = routes[path];
         if (!sectionId) return;
-        
         window.history.pushState({ path: path }, "", path);
         updatePageTitle(path);
         performTransition(sectionId);
@@ -3563,30 +2774,13 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     // AUTH & USER DATA
     // ==========================================
     
-    // --- HYPERPACE LOGIN ANIMATION LOGIC (HANDWRITING UPDATE) ---
+    // --- HYPERPACE LOGIN ANIMATION LOGIC (SMOOTH 5 SECONDS) ---
     let warpAnimationId = null;
     const warpCanvas = document.getElementById('warp-canvas');
     const warpCtx = warpCanvas ? warpCanvas.getContext('2d') : null;
     let warpStars = [];
     let warpSpeed = 0;
     let isWarping = false;
-
-    function typeWriterEffect(element, text, speed = 100) {
-        element.innerHTML = '<span class="typing-cursor"></span>'; // Start with cursor
-        let i = 0;
-        function type() {
-            if (i < text.length) {
-                // Remove cursor, add char, add cursor back
-                element.innerHTML = text.substring(0, i + 1) + '<span class="typing-cursor"></span>';
-                i++;
-                setTimeout(type, speed);
-            } else {
-                // Done typing, keep blinking cursor
-                element.innerHTML = text + '<span class="typing-cursor"></span>';
-            }
-        }
-        type();
-    }
 
     function initWarpStars() {
         if(!warpCanvas) return;
@@ -3648,9 +2842,9 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             return;
         }
 
-        // Set content
+        // Set the text content
         const displayName = userName || 'Traveler';
-        const htmlContent = `<span>Welcome ${displayName}</span>`;
+        welcomeText.innerHTML = `Welcome <span>${displayName}</span>`;
         
         warpSpeed = 0;
         isWarping = false;
@@ -3675,14 +2869,8 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
             }
         }, 30);
         
-        // 2. Typewriter Text & Zoom Flash (at 1.5s - 3s)
+        // 2. Show Welcome Text (at 1.5s)
         setTimeout(() => {
-            // Clear and start typing
-            welcomeText.innerHTML = ''; 
-            // Split the string into Name part
-            const namePart = displayName;
-            typeWriterEffect(welcomeText, `Welcome ${namePart}`, 80); // Speed 80ms
-            
             welcomeText.style.opacity = "1";
         }, 1500);
         
@@ -3690,7 +2878,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         setTimeout(() => {
             // Trigger Flash
             flash.style.opacity = "1";
-            welcomeText.style.opacity = "0"; // Hide text for flash
+            welcomeText.style.opacity = "0"; // Hide text
             
             // Stop Sound, Play Impact
             try {
@@ -3728,30 +2916,18 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
     // --- Friendly Error Messages ---
     function getFirebaseErrorMessage(error) {
         switch (error.code) {
-            case 'auth/user-not-found':
-                return "No account found with this email address.";
-            case 'auth/wrong-password':
-                return "Incorrect password. Please try again.";
-            case 'auth/invalid-login-credentials':
-                return "Invalid email or password. Please try again.";
-            case 'auth/invalid-credential':
-                return "The provided credentials are invalid.";
-            case 'auth/email-already-in-use':
-                return "This email is already registered. Please login.";
-            case 'auth/weak-password':
-                return "Password should be at least 6 characters.";
-            case 'auth/invalid-email':
-                return "Please enter a valid email address.";
-            case 'auth/too-many-requests':
-                return "Access temporarily disabled due to many failed attempts. Reset password or try later.";
-            case 'auth/user-disabled':
-                return "This account has been disabled. Contact support.";
-            case 'auth/popup-closed-by-user':
-                return "Sign-in process was cancelled.";
-            case 'auth/network-request-failed':
-                return "Network error. Please check your connection.";
-            default:
-                return "An unexpected error occurred. Please try again.";
+            case 'auth/user-not-found': return "No account found with this email address.";
+            case 'auth/wrong-password': return "Incorrect password. Please try again.";
+            case 'auth/invalid-login-credentials': return "Invalid email or password. Please try again.";
+            case 'auth/invalid-credential': return "The provided credentials are invalid.";
+            case 'auth/email-already-in-use': return "This email is already registered. Please login.";
+            case 'auth/weak-password': return "Password should be at least 6 characters.";
+            case 'auth/invalid-email': return "Please enter a valid email address.";
+            case 'auth/too-many-requests': return "Access temporarily disabled due to many failed attempts. Reset password or try later.";
+            case 'auth/user-disabled': return "This account has been disabled. Contact support.";
+            case 'auth/popup-closed-by-user': return "Sign-in process was cancelled.";
+            case 'auth/network-request-failed': return "Network error. Please check your connection.";
+            default: return "An unexpected error occurred. Please try again.";
         }
     }
 
@@ -3924,7 +3100,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         
         auth.signInWithEmailAndPassword(email, password).then(() => {
             const user = auth.currentUser;
-            // Fallback to email prefix if no display name exists yet
             const name = user.displayName || user.email.split('@')[0];
             triggerLoginSuccessAnimation(() => {
                 navigateTo('/');
@@ -3946,7 +3121,6 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
             return db.collection("users").doc(userCredential.user.uid).set({ name: name, phone: phone, email: email, role: 'user', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         }).then(() => {
-            // Use name entered in form
             triggerLoginSuccessAnimation(() => {
                 navigateTo('/');
             }, name);
@@ -4008,7 +3182,7 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         if(!auth || !auth.currentUser) return;
         document.getElementById('reset-email').value = auth.currentUser.email;
         navigateTo('/forgot-password');
-        showGlassModal("Info", "Email pre-filled. Please check spam folder.", "info");
+        showGlassModal("Info", "Email pre-filled. Please check spam folder.", "warning");
     }
 
     function handleForgotPassword(e) {
@@ -4761,22 +3935,13 @@ Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local
         else header.classList.remove('scrolled');
     });
 
-    function openTermsModal() {
-        document.getElementById('termsModal').classList.add('open');
-    }
-    function closeTermsModal() {
-        document.getElementById('termsModal').classList.remove('open');
-    }
+    function openTermsModal() { document.getElementById('termsModal').classList.add('open'); }
+    function closeTermsModal() { document.getElementById('termsModal').classList.remove('open'); }
 
     initializeDatabase();
     
 </script>
 <!-- UPDATED CHAT WIDGET SCRIPT -->
-<script
-  src="https://app.livechatai.com/embed.js"
-  data-id="cmlas1njr0001jj04hi5ygd18"
-  async defer>
-
-</script>
+<script src="https://app.livechatai.com/embed.js" data-id="cmlas1njr0001jj04hi5ygd18" async defer></script>
 </body>
 </html>
