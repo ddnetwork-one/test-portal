@@ -592,6 +592,11 @@
             transform: translateY(-2px); 
             box-shadow: 0 10px 25px rgba(30, 41, 59, 0.3); 
         }
+        .btn-primary:disabled {
+            background: var(--text-tertiary);
+            cursor: not-allowed;
+            transform: none;
+        }
 
         .btn-glass { background: rgba(255,255,255,0.7); color: var(--text-main); border: 1px solid var(--border-glass); }
         .btn-glass:hover { background: white; border-color: var(--soft-black); color: var(--soft-black); transform: translateY(-2px); }
@@ -629,6 +634,11 @@
             background: rgba(255, 255, 255, 0.5); border: 1px solid var(--border-glass);
             color: var(--text-main); border-radius: 12px; font-size: 1rem; 
             min-height: 48px; transition: 0.3s; appearance: none;
+        }
+        /* Added error state for inputs */
+        .form-input.error, .form-select.error, textarea.error {
+            border-color: var(--accent-danger);
+            background: rgba(239, 68, 68, 0.05);
         }
         .form-input:focus, .form-select:focus, textarea:focus {
             background: white; border-color: var(--soft-black);
@@ -1189,13 +1199,27 @@
             text-align: center;
             animation: fadeIn 0.5s ease;
         }
+        
+        /* FAILED PAYMENT SECTION STYLES */
+        #payment-failed-section {
+            display: none;
+            margin-top: 2rem;
+            padding: 2rem;
+            background: #fef2f2; /* Light red bg */
+            border: 1px solid var(--accent-danger);
+            border-radius: 16px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .manual-confirm-icon {
+        .manual-confirm-icon, .failed-confirm-icon {
             font-size: 3rem;
-            color: var(--accent-success);
             margin-bottom: 1rem;
         }
+        .manual-confirm-icon { color: var(--accent-success); }
+        .failed-confirm-icon { color: var(--accent-danger); }
 
         /* ========================================== */
         /* LOGIN WARP EFFECT STYLES (BLACK & WHITE)   */
@@ -1864,7 +1888,7 @@
                     <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Pricing Packages</h2>
                     <p style="color: var(--text-secondary); font-size: 0.9rem;">Transparent pricing. Choose plan that fits your needs.</p>
                     <div class="pricing-toggle-container">
-                        <span id="label-monthly" class="toggle-label" onclick="setBilling('monthly')">Monthly</span>
+                        <span id="label-monthly" class="toggle-label active" onclick="setBilling('monthly')">Monthly</span>
                         <label class="switch"><input type="checkbox" id="billing-toggle" onchange="toggleBilling()"><span class="slider"></span></label>
                         <span id="label-onetime" class="toggle-label" onclick="setBilling('onetime')">One-Time</span>
                     </div>
@@ -1876,7 +1900,7 @@
                             <div class="pkg-icon"><i class="ri-file-list-3-fill"></i></div>
                             <h3 class="pkg-title">Basic HTML Website</h3>
                             <p class="pkg-desc">1 Static Landing Page.</p>
-                            <div class="price-display-area"><span id="price-html" class="pkg-price">RM 249</span><span id="period-html" class="pkg-period">/one-time</span></div>
+                            <div class="price-display-area"><span id="price-html" class="pkg-price">RM 39</span><span id="period-html" class="pkg-period">/month</span></div>
                             <div id="html-setup-display" class="setup-fee-tag hidden">Setup Fee: RM 100</div>
                         </div>
                         <ul class="pkg-features">
@@ -2052,12 +2076,26 @@
                         </div>
                         <div class="form-group" style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary); background: #f8fafc; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-glass);"><i class="ri-secure-payment-line" style="color: var(--accent-success);"></i> <strong>Secure Payment via Razorpay (Curlec)</strong></div>
                         <div id="checkout-actions"><button type="button" id="btn-pay-now" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;" onclick="initiateRazorpayPayment()"><i class="ri-credit-card-2-fill" style="margin-right:8px;"></i> Pay Now</button></div>
+                        
+                        <!-- PAYMENT SUCCESS SECTION -->
                         <div id="manual-confirm-section">
                             <i class="ri-checkbox-circle-fill manual-confirm-icon"></i>
                             <h3 style="margin-bottom: 0.5rem; color: var(--soft-black);">Payment Window Opened</h3>
                             <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Please complete your payment in the Razorpay window. Once done, click the button below to finalize your order.</p>
                             <button type="button" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;" onclick="handleManualConfirmation()">I have made payment</button>
                         </div>
+
+                        <!-- PAYMENT FAILED SECTION -->
+                        <div id="payment-failed-section">
+                            <i class="ri-close-circle-fill failed-confirm-icon"></i>
+                            <h3 style="margin-bottom: 0.5rem; color: var(--accent-danger);">Payment Failed or Cancelled</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">The payment process was interrupted or cancelled. You can try again or contact support for assistance.</p>
+                            <div style="display: grid; gap: 10px;">
+                                <button type="button" class="btn btn-primary" style="width: 100%; font-size: 1rem; padding: 1rem;" onclick="initiateRazorpayPayment()"><i class="ri-refresh-line" style="margin-right:8px;"></i> Retry Payment</button>
+                                <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="window.location.href='https://wa.me/60122600969'">Contact Support via WhatsApp</button>
+                            </div>
+                        </div>
+
                     </form>
                 </div>
             </div>
@@ -2387,7 +2425,7 @@
     }
 
     // ==========================================
-    // PRICING DATA & TOGGLE LOGIC
+    // PRICING DATA & TOGGLE LOGIC (FIXED BUG)
     // ==========================================
     let PRICING_DATA = {
         html: { oneTime: 249, monthly: 39, setupFee: 100, desc: "1 Static Landing Page. Mobile Responsive. Basic SEO." },
@@ -2431,6 +2469,7 @@
             const featContentCharge = document.getElementById(`${key}-feat-content-charge`);
 
             if(priceEl && periodEl) {
+                // FIX: Ensure we strictly read from the object based on current billingCycle
                 if (billingCycle === 'onetime') {
                     priceEl.innerText = `RM ${PRICING_DATA[key].oneTime}`;
                     periodEl.innerText = '/one-time';
@@ -3380,8 +3419,10 @@
         state.discountRate = 0; state.discountFixed = 0; state.discountType = 'percent'; state.discountCode = ''; state.paymentMethodId = null; 
         document.getElementById('terms-check').checked = false;
         
+        // Reset UI Sections
         document.getElementById('checkout-actions').style.display = 'block';
         document.getElementById('manual-confirm-section').style.display = 'none';
+        document.getElementById('payment-failed-section').style.display = 'none';
 
         if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
         else { document.getElementById('auto-fill-label').style.display = 'none'; hideVoucherCard(); }
@@ -3619,7 +3660,16 @@
             "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
             "redirect": false, 
             "callback": function(response){ console.log("Payment Successful ID:", response.razorpay_payment_id); },
-            "modal": { "ondismiss": function(){ console.log('Checkout form closed'); } },
+            // IMPROVEMENT: HANDLING PAYMENT FAILED/CANCEL
+            "modal": { 
+                "ondismiss": function(){ 
+                    console.log('Checkout form closed/cancelled by user');
+                    // Show Failed/Cancelled Section
+                    document.getElementById('checkout-actions').style.display = 'none';
+                    document.getElementById('manual-confirm-section').style.display = 'none';
+                    document.getElementById('payment-failed-section').style.display = 'block';
+                }
+            },
             "prefill": { "name": name, "email": email, "contact": phone },
             "notes": { "address": company || "Malaysia", "package": state.packageType, "domain": state.domainName, "payment_mode": state.paymentMode },
             "theme": { "color": "#1e293b" }
@@ -3630,6 +3680,8 @@
             rzp1.open(); 
             document.getElementById('checkout-actions').style.display = 'none';
             document.getElementById('manual-confirm-section').style.display = 'block';
+            // Hide failed section just in case it was shown before
+            document.getElementById('payment-failed-section').style.display = 'none';
         } catch (error) {
             console.error("Razorpay Error:", error);
             showGlassModal("Error", "Payment Gateway Error. Please contact support.", "error");
