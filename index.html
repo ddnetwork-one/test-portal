@@ -705,43 +705,131 @@
             background: white;
             border: 1px solid var(--border-glass);
             padding: 1rem 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 16px; /* Updated for premium feel */
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
             pointer-events: auto;
-            min-width: 300px;
-            max-width: 400px;
+            min-width: 340px;
+            max-width: 420px;
+            overflow: hidden; /* For icon background */
             
-            /* Animation States */
-            transform: translateX(120%);
+            /* Animation States - Elastic Pop */
+            transform: translateX(120%) scale(0.8);
             opacity: 0;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
         }
 
         .toast-item.show {
-            transform: translateX(0);
+            transform: translateX(0) scale(1);
             opacity: 1;
         }
 
+        /* Toast Type Styling */
         .toast-item.toast-success { border-left: 5px solid var(--accent-success); }
-        .toast-item.toast-error { border-left: 5px solid var(--accent-danger); }
-        .toast-item.toast-warning { border-left: 5px solid var(--accent-warn); }
-
-        .toast-icon {
-            font-size: 1.5rem;
-            line-height: 1;
+        .toast-item.toast-error { 
+            border-left: 5px solid var(--accent-danger); 
+            animation: toastErrorShake 0.5s ease-out 0.4s; /* Shake after appearing */
         }
-        .toast-success .toast-icon { color: var(--accent-success); }
-        .toast-error .toast-icon { color: var(--accent-danger); }
-        .toast-warning .toast-icon { color: var(--accent-warn); }
+        .toast-item.toast-warning { border-left: 5px solid var(--accent-warn); }
+        .toast-item.toast-info { border-left: 5px solid var(--text-main); }
+
+        /* Error Shake Animation */
+        @keyframes toastErrorShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        /* Icon Wrapper for SVG */
+        .toast-svg-wrapper {
+            width: 50px; 
+            height: 50px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border-radius: 50%;
+        }
+
+        /* SVG Styles */
+        .toast-svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        /* Success SVG */
+        .toast-svg-circle {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        
+        .toast-success .toast-svg-circle {
+            stroke: var(--accent-success);
+            stroke-dasharray: 500;
+            stroke-dashoffset: 500;
+            animation: strokeDraw 0.6s ease forwards;
+        }
+        
+        .toast-svg-check {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke: white;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: strokeDraw 0.4s ease 0.4s forwards;
+        }
+
+        /* Error SVG */
+        .toast-error .toast-svg-circle {
+            stroke: var(--accent-danger);
+            stroke-dasharray: 500;
+            stroke-dashoffset: 500;
+            animation: strokeDraw 0.6s ease forwards, fillRed 0.3s ease 0.3s forwards;
+        }
+        
+        .toast-svg-x {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            stroke: white;
+        }
+        .toast-svg-x.left { animation: strokeDraw 0.3s ease 0.4s forwards; }
+        .toast-svg-x.right { animation: strokeDraw 0.3s ease 0.5s forwards; }
+
+        /* Warning SVG (Pulse) */
+        .toast-warning .toast-svg-wrapper {
+            background: #fffbeb;
+        }
+        .toast-warning .toast-svg-icon {
+            color: var(--accent-warn);
+            font-size: 2rem;
+            animation: pulseWarning 1.5s infinite ease-in-out;
+        }
+
+        @keyframes strokeDraw { to { stroke-dashoffset: 0; } }
+        @keyframes fillRed { to { fill: var(--accent-danger); } }
+        @keyframes pulseWarning {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
 
         .toast-content {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .toast-title {
-            font-weight: 700;
+            font-weight: 800;
             color: var(--text-main);
             font-size: 0.95rem;
             margin-bottom: 2px;
@@ -749,12 +837,38 @@
         .toast-message {
             font-size: 0.85rem;
             color: var(--text-secondary);
+            line-height: 1.4;
         }
+
+        /* Action Button inside Toast */
+        .toast-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .toast-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            border: none;
+        }
+        .toast-btn-primary {
+            background: var(--soft-black);
+            color: white;
+        }
+        .toast-btn-primary:hover {
+            background: var(--soft-black-hover);
+        }
+
         .toast-close {
             cursor: pointer;
             color: var(--text-tertiary);
             transition: 0.2s;
             padding: 5px;
+            font-size: 1.2rem;
         }
         .toast-close:hover { color: var(--soft-black); }
 
@@ -786,139 +900,6 @@
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-
-        /* --- NOTIFICATION MODAL (CENTERED POPUP) --- */
-        #glass-modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.3); /* Subtle backdrop */
-            backdrop-filter: blur(4px);
-            z-index: 100001; 
-            display: none; 
-            justify-content: center; 
-            align-items: center;
-            opacity: 0; 
-            transition: opacity 0.3s ease;
-        }
-        #glass-modal-overlay.active { display: flex; opacity: 1; }
-        
-        /* Card Container */
-        .animated-notification-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            
-            /* Card Styling */
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2.5rem 3rem;
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.8);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            min-width: 320px;
-            max-width: 450px;
-            
-            /* Animation */
-            animation: popInBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes popInBounce {
-            0% { transform: scale(0.5); opacity: 0; }
-            70% { transform: scale(1.05); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* Icon Animations */
-        .notif-icon-wrapper {
-            width: 80px; height: 80px;
-            margin-bottom: 1.5rem;
-            position: relative;
-            display: flex; align-items: center; justify-content: center;
-        }
-        
-        /* Success Checkmark Animation */
-        .checkmark-circle {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            stroke: var(--accent-success);
-            stroke-width: 4;
-            fill: none;
-            stroke-dasharray: 500;
-            stroke-dashoffset: 500;
-            animation: strokeDraw 1s ease-out forwards, fillGreen 0.5s ease-out 0.5s forwards;
-        }
-        .checkmark-check {
-            stroke: white;
-            stroke-width: 6;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-            stroke-dasharray: 100;
-            stroke-dashoffset: 100;
-            animation: strokeDraw 0.5s ease-out 0.8s forwards;
-            transform-origin: 50% 50%;
-        }
-
-        @keyframes strokeDraw { to { stroke-dashoffset: 0; } }
-        @keyframes fillGreen { to { fill: var(--accent-success); } }
-
-        /* Error/Wrong Animation */
-        .error-circle {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            stroke: var(--accent-danger);
-            stroke-width: 4;
-            fill: none;
-            stroke-dasharray: 500;
-            stroke-dashoffset: 500;
-            animation: strokeDraw 1s ease-out forwards, fillRed 0.5s ease-out 0.5s forwards;
-        }
-        .error-x { 
-            stroke: white; stroke-width: 6; stroke-linecap: round;
-            stroke-dasharray: 50; stroke-dashoffset: 50; fill: none;
-            animation: strokeDraw 0.3s ease-out 0.8s forwards;
-        }
-        .error-x.left { animation-delay: 0.8s; }
-        .error-x.right { animation-delay: 1s; }
-        
-        /* Shake Animation for Error */
-        .shake-wrapper {
-            animation: shake 0.6s ease-in-out 1.2s; /* Shake after X drawn */
-        }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-            20%, 40%, 60%, 80% { transform: translateX(10px); }
-        }
-
-        @keyframes fillRed { to { fill: var(--accent-danger); } }
-
-        /* Warning Pulsing */
-        .warning-pulse {
-            font-size: 4rem;
-            color: var(--accent-warn);
-            animation: pulseWarning 1.5s infinite ease-in-out;
-        }
-        @keyframes pulseWarning {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.7; }
-        }
-
-        .notif-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: -0.02em; color: var(--text-main); }
-        .notif-desc { font-size: 1rem; opacity: 0.8; max-width: 400px; line-height: 1.5; margin-bottom: 2rem; color: var(--text-secondary); }
-        
-        .notif-btn {
-            background: var(--soft-black);
-            border: none;
-            color: white;
-            padding: 0.8rem 2.5rem;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-block; /* hidden by default if auto-close */
-        }
-        .notif-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
 
         /* --- PRICING CARDS --- */
         .pricing-toggle-container { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 3rem; }
@@ -1477,17 +1458,6 @@
             <p>Please check back again shortly.</p>
             <p>"If you facing any issues, kindly email to"</p>
             <p>ddnetwork.one@outlook.com</p>
-        </div>
-    </div>
-
-    <!-- GENERAL ANIMATED NOTIFICATION OVERLAY (CENTERED) -->
-    <div id="glass-modal-overlay">
-        <div class="animated-notification-container">
-            <!-- SVGs injected by JS -->
-            <h3 id="glass-modal-title" class="notif-title"></h3>
-            <p id="glass-modal-desc" class="notif-desc"></p>
-            <!-- Button hidden for auto-close style -->
-            <button id="glass-modal-btn" class="notif-btn" style="display:none;">Okay</button>
         </div>
     </div>
 
@@ -2293,9 +2263,9 @@
                                 <div class="radio-option" onclick="handleUpdateTypeChange('remove', this)"><input type="radio" name="req_type" value="remove"><div><div style="font-weight: 700; color: var(--text-main);">Remove Content</div><div style="font-size: 0.8rem; color: var(--text-secondary);">Delete specific pages or features.</div></div></div>
                             </div>
                         </div>
-                        <div id="dynamic-fields-container">
+                                                <div id="dynamic-fields-container">
                             <div id="field-content">
-                                <div class="form-group"><label class="form-label">Describe Changes</label><textarea id="req-desc-content" class="form-input" rows="4" placeholder="e.g. Change phone number..."></textarea></div>
+                                <div class="form-group"><label class="form-label">Describe Changes</label><textarea id="req-desc-content" class="form-input" rows="4" placeholder="e.g. Change phone number on contact page..."></textarea></div>
                                 <div style="padding: 1rem; background: rgba(241, 245, 249, 0.5); border: 1px dashed var(--soft-black); border-radius: 8px; color: var(--soft-black); font-size: 0.85rem; line-height: 1.5;"><i class="ri-whatsapp-line"></i> <strong>Important:</strong> Please send any images or files via WhatsApp after submitting.</div>
                             </div>
                             <div id="field-upgrade" class="hidden">
@@ -2309,7 +2279,7 @@
                                 <div class="form-group"><label class="form-label">Plan to Renew</label><select id="req-renew-plan" class="form-select"><option value="Basic HTML Website">Basic HTML Website</option><option value="Front-End Website">Front-End Website</option><option value="AI Powered Website">AI Powered Website</option><option value="Maintenance Only">Maintenance Only</option></select></div>
                             </div>
                             <div id="field-remove" class="hidden">
-                                <div class="form-group" style="background: #fef2f2; padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);"><label class="form-label" style="color: #ef4444;">What to Remove?</label><textarea id="req-desc-remove" class="form-input" rows="3"></textarea></div>
+                                <div class="form-group" style="background: #fef2f2; padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);"><label class="form-label" style="color: #ef4444;">What to Remove?</label><textarea id="req-desc-remove" class="form-input" rows="3" placeholder="e.g. Remove the 'Gallery' page..."></textarea></div>
                             </div>
                         </div>
                         <button type="submit" id="btn-submit-request" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Request</button>
@@ -2421,49 +2391,6 @@
     // UPDATED NOTIFICATION SYSTEM (TOP RIGHT TOAST)
     // ==========================================
     
-    function showToast(message, type = 'info') {
-        let title = "Notice";
-        let iconClass = "ri-information-line";
-        
-        if (type === 'success') {
-            title = "Success";
-            iconClass = "ri-checkbox-circle-fill";
-        } else if (type === 'error') {
-            title = "Error";
-            iconClass = "ri-close-circle-fill";
-        } else if (type === 'warning') {
-            title = "Warning";
-            iconClass = "ri-error-warning-fill";
-        }
-        
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast-item toast-${type}`;
-        toast.innerHTML = `
-            <i class="toast-icon ${iconClass}"></i>
-            <div class="toast-content">
-                <div class="toast-title">${title}</div>
-                <div class="toast-message">${message}</div>
-            </div>
-            <i class="ri-close-line toast-close" onclick="this.parentElement.remove()"></i>
-        `;
-        
-        container.appendChild(toast);
-        
-        // Trigger animation
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 10);
-        
-        // Auto remove
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                if(toast.parentElement) toast.remove();
-            }, 500);
-        }, 4000);
-    }
-
     // Function to open Auth Modal (Login/Signup Prompt)
     function showAuthModal() {
         const modal = document.getElementById('auth-modal');
@@ -2475,75 +2402,84 @@
         modal.classList.remove('active');
     }
 
-    const modalOverlay = document.getElementById('glass-modal-overlay');
-    const modalTitle = document.getElementById('glass-modal-title');
-    const modalDesc = document.getElementById('glass-modal-desc');
-    const modalBtn = document.getElementById('glass-modal-btn');
-    const modalContainer = document.querySelector('.animated-notification-container');
-
     function showGlassModal(title, message, type = 'warning', btnText = 'Dismiss', btnCallback = null) {
-        modalTitle.innerText = title;
-        modalDesc.innerText = message;
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast-item toast-${type}`;
         
         // Generate SVG Content
         let iconHTML = '';
         if (type === 'success') {
             iconHTML = `
-                <div class="notif-icon-wrapper">
-                    <svg class="checkmark-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="45"/>
-                        <path class="checkmark-check" d="M30 50 L45 65 L70 35"/>
+                <div class="toast-svg-wrapper">
+                    <svg class="toast-svg" viewBox="0 0 100 100">
+                        <circle class="toast-svg-circle" cx="50" cy="50" r="45"/>
+                        <path class="toast-svg-check" d="M30 50 L45 65 L70 35"/>
                     </svg>
                 </div>`;
         } else if (type === 'error') {
-                        iconHTML = `
-                <div class="notif-icon-wrapper shake-wrapper">
-                    <svg class="error-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="45"/>
-                        <path class="error-x left" d="M35 35 L65 65"/>
-                        <path class="error-x right" d="M65 35 L35 65"/>
+            iconHTML = `
+                <div class="toast-svg-wrapper">
+                    <svg class="toast-svg" viewBox="0 0 100 100">
+                        <circle class="toast-svg-circle" cx="50" cy="50" r="45"/>
+                        <path class="toast-svg-x left" d="M35 35 L65 65"/>
+                        <path class="toast-svg-x right" d="M65 35 L35 65"/>
                     </svg>
                 </div>`;
         } else {
-            // Default / Warning
-            iconHTML = `<div class="warning-pulse"><i class="ri-information-line"></i></div>`;
+            iconHTML = `
+                <div class="toast-svg-wrapper">
+                    <i class="ri-information-line toast-svg-icon"></i>
+                </div>`;
         }
 
-        // Clean up previous icons if any
-        const existingIcon = modalContainer.querySelector('.notif-icon-wrapper, .warning-pulse');
-        if (existingIcon) existingIcon.remove();
+        let actionBtnHTML = '';
+        if (btnText && btnCallback) {
+            actionBtnHTML = `<div class="toast-actions"><button class="toast-btn toast-btn-primary">${btnText}</button></div>`;
+        }
 
-        // Insert new icon before title
-        modalContainer.insertAdjacentHTML('afterbegin', iconHTML);
+        toast.innerHTML = `
+            ${iconHTML}
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+                ${actionBtnHTML}
+            </div>
+            <i class="ri-close-line toast-close"></i>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Trigger animation
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
 
-        // Display Logic
-        modalOverlay.style.display = 'flex';
-        // Trigger reflow for animation
-        void modalOverlay.offsetWidth; 
-        modalOverlay.classList.add('active');
+        // Handle Close
+        const closeBtn = toast.querySelector('.toast-close');
+        const actionBtn = toast.querySelector('.toast-btn-primary');
 
-        // Auto-Close Logic (3 Seconds)
-        clearTimeout(window.modalTimer);
-        window.modalTimer = setTimeout(() => {
-            closeModal();
-        }, 3000);
-
-        // Manual Close Handler
-        modalBtn.onclick = () => {
-            clearTimeout(window.modalTimer);
-                        closeModal();
-            if (btnCallback) btnCallback();
+        const removeToast = () => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if(toast.parentElement) toast.remove();
+            }, 500);
         };
 
-        function closeModal() {
-            modalOverlay.classList.remove('active');
-            setTimeout(() => {
-                modalOverlay.style.display = 'none';
-                // Cleanup SVG
-                const wrapper = modalContainer.querySelector('.notif-icon-wrapper, .warning-pulse');
-                if(wrapper) wrapper.remove();
-            }, 400); // Match CSS transition
+        closeBtn.onclick = removeToast;
+        
+        if (actionBtn && btnCallback) {
+            actionBtn.onclick = () => {
+                removeToast();
+                btnCallback();
+            };
         }
+
+        // Auto remove
+        const autoRemoveTime = (type === 'error' || type === 'warning') ? 6000 : 4000;
+        setTimeout(() => {
+            removeToast();
+        }, autoRemoveTime);
     }
 
     // ==========================================
@@ -2634,7 +2570,6 @@
             const featContentCharge = document.getElementById(`${key}-feat-content-charge`);
 
             if(priceEl && periodEl) {
-                // FIX: Ensure we strictly read from the object based on current billingCycle
                 if (billingCycle === 'onetime') {
                     priceEl.innerText = `RM ${PRICING_DATA[key].oneTime}`;
                     periodEl.innerText = '/one-time';
@@ -3030,7 +2965,6 @@
         const cx = warpCanvas.width / 2;
         const cy = warpCanvas.height / 2;
         
-        // Black Background
         warpCtx.fillStyle = "#000000"; 
         warpCtx.fillRect(0, 0, warpCanvas.width, warpCanvas.height);
 
@@ -3046,12 +2980,10 @@
             let py = star.y * k + cy;
             let size = (1 - star.z/warpCanvas.width) * 3.5;
             
-            // White Stars
             warpCtx.fillStyle = "#ffffff"; 
             warpCtx.fillRect(px, py, size, size);
 
             if(isWarping && warpSpeed > 5){
-                // White Trail
                 const gradient = warpCtx.createLinearGradient(px, py, px - star.x*0.03, py - star.y*0.03);
                 gradient.addColorStop(0, "rgba(255,255,255,0.8)"); 
                 gradient.addColorStop(1, "rgba(255,255,255,0)");
@@ -3089,7 +3021,6 @@
 
         isWarping = true;
         
-        // 1. Accelerate (0s - 2s)
         let accelerate = setInterval(()=>{
             warpSpeed += 3; 
             if (warpSpeed >= 80){
@@ -3097,14 +3028,11 @@
             }
         }, 30);
         
-        // 2. Show Welcome Text (at 1.5s)
         setTimeout(() => {
             welcomeText.style.opacity = "1";
         }, 1500);
         
-        // 3. Flash & Decelerate (at 4s)
         setTimeout(() => {
-            // White Flash
             flash.style.opacity = "1";
             welcomeText.style.opacity = "0"; 
             
@@ -3120,7 +3048,6 @@
 
         }, 4000); 
 
-        // 4. End (at 5s)
         setTimeout(()=>{
             flash.style.opacity = "0";
             overlay.classList.remove('active');
@@ -3534,13 +3461,8 @@
             return;
         }
         if (typeof auth === 'undefined' || auth === null) { showGlassModal("Error", "Authentication system initializing...", "error"); return; }
-        
-        // UPDATED: Show Custom Auth Modal for Guest
-        if (auth.currentUser) { 
-            selectPackage(name, type); 
-        } else { 
-            showAuthModal(); 
-        }
+        if (auth.currentUser) { selectPackage(name, type); } 
+        else { showAuthModal(); }
     }
 
     function selectPackage(name, type) {
@@ -3589,7 +3511,6 @@
         state.discountRate = 0; state.discountFixed = 0; state.discountType = 'percent'; state.discountCode = ''; state.paymentMethodId = null; 
         document.getElementById('terms-check').checked = false;
         
-        // Reset UI Sections
         document.getElementById('checkout-actions').style.display = 'block';
         document.getElementById('manual-confirm-section').style.display = 'none';
         document.getElementById('payment-failed-section').style.display = 'none';
@@ -3829,7 +3750,6 @@
             "description": document.getElementById('summary-pkg-name').innerText + (state.paymentMode === 'deposit' ? " (Deposit)" : ""),
             "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
             "handler": function(response){ 
-                // UPDATED: Auto-submit on success
                 handlePaymentSuccess(response.razorpay_payment_id);
             },
             "modal": { 
@@ -3848,7 +3768,6 @@
         try {
             const rzp1 = new Razorpay(options);
             rzp1.open(); 
-            // Show manual confirmation box as a fallback/visual cue
             document.getElementById('checkout-actions').style.display = 'none';
             document.getElementById('manual-confirm-section').style.display = 'block';
             document.getElementById('payment-failed-section').style.display = 'none';
@@ -3858,19 +3777,17 @@
         }
     }
 
-    // NEW: Dedicated Handler for Auto-Submit
     function handlePaymentSuccess(paymentId) {
         const pendingOrderStr = localStorage.getItem('pendingOrder');
         if(!pendingOrderStr) {
-            showToast("Order data missing. Contact support.", "error");
+            showGlassModal("Error", "Order data missing. Contact support.", "error");
             return;
         }
 
         const orderData = JSON.parse(pendingOrderStr);
         
-        // Add Payment ID to order
         orderData.razorpay_payment_id = paymentId;
-        orderData.status = 'Paid'; // Update status immediately
+        orderData.status = 'Paid'; 
         
         const overlay = document.getElementById('processing-overlay');
         const msgEl = document.getElementById('process-message');
@@ -3894,14 +3811,14 @@
                 domain: orderData.domainName, internalNotes: "",
                 maintenance: orderData.maintenancePrice > 0 ? (orderData.maintenancePrice === 50 ? "Basic" : "Business") : "None",
                 package: orderData.package, paymentMethod: "Razorpay (Curlec)", promo: orderData.discountCode || "",
-                razorpay_payment_id: paymentId, // Store Payment ID
+                razorpay_payment_id: paymentId, 
                 salesRepIds: [], salesTeamIds: [], salesTeamNames: [], status: "Paid",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(), total: orderData.total, userId: orderData.userId || ""
             };
             return db.collection("orders").add(firebaseOrderData);
         }).then(() => {
             localStorage.removeItem('pendingOrder');
-            showToast("Payment Successful!", "success");
+            showGlassModal("Success", "Payment Successful!", "success");
             setTimeout(() => {
                 overlay.style.display = 'none';
                 navigateTo('/thank-you');
@@ -3909,8 +3826,7 @@
         }).catch((error) => {
             console.error("Order Error:", error);
             overlay.style.display = 'none';
-            showToast("Order processing failed. Please contact support.", "error");
-            // Keep the manual confirm section visible as fallback if auto-process fails
+            showGlassModal("Error", "Order processing failed. Please contact support.", "error");
             document.getElementById('manual-confirm-section').style.display = 'block';
         });
     }
@@ -3922,8 +3838,6 @@
             navigateTo('/pricing');
             return;
         }
-        
-        // If manual button is clicked, we assume success but have no ID
         handlePaymentSuccess('MANUAL_CHECK_' + Date.now());
     }
 
