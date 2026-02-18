@@ -604,13 +604,6 @@
         // --- FIX: HIDE AUTH SCREEN IMMEDIATELY TO PREVENT REFRESH FLASH ---
         document.getElementById('auth-screen').classList.add('hidden');
 
-        // --- RAZORPAY CONFIGURATION ---
-        const RAZORPAY_KEY_ID = 'rzp_live_SEL3cH71UlI5YI';
-        // WARNING: Never expose the Key Secret in client-side code in a real production environment.
-        // Use a Cloud Function or Backend proxy for secure API calls.
-        // The integration below will fail without the correct Key Secret.
-        const RAZORPAY_KEY_SECRET = 'YOUR_KEY_SECRET_HERE'; 
-
         // --- 1. COMMISSION CONFIGURATION (By Job Title) ---
         const DEFAULT_COMMISSION_RATES = { 
             "Founder & Managing Director": 0.05, 
@@ -1581,105 +1574,219 @@
             };
         }
 
-        // --- RAZORPAY INVOICE INTEGRATION ---
+        // --- NEW INVOICE GENERATION LOGIC (POPUPS ALLOWED) ---
         async function generateInvoice(orderId) {
-            if (!RAZORPAY_KEY_SECRET || RAZORPAY_KEY_SECRET === 'YOUR_KEY_SECRET_HERE') {
-                return showToast("Razorpay Key Secret is missing in config.", "error");
-            }
-
-            showToast("Generating Invoice...", "info");
-            
             try {
                 const orderDoc = await db.collection("orders").doc(orderId).get();
                 if(!orderDoc.exists) return showToast("Order not found", "error");
                 const d = orderDoc.data();
-
-                // Prepare Data for Razorpay
-                const amountVal = parseFloat(d.total.replace('RM ', '')) || 0;
-                // Razorpay expects amount in smallest unit. For MYR, it's cents (multiply by 100).
-                // Note: Razorpay primarily works with INR. Using MYR might require specific merchant configurations.
-                const amountInCents = Math.round(amountVal * 100);
                 
-                const receiptId = `ord_${orderId.substring(0, 8)}`;
-                const cleanPhone = d.customerPhone ? d.customerPhone.replace(/[^0-9]/g, '') : '';
-
-                const invoicePayload = {
-                    type: 'invoice',
-                    description: `Invoice for ${d.package} (${d.billingCycle || 'One-time'})`,
-                    customer: {
-                        name: d.customerName,
-                        email: d.customerEmail,
-                        contact: cleanPhone
-                    },
-                    line_items: [{
-                        name: d.package,
-                        amount: amountInCents,
-                        currency: "MYR", 
-                        quantity: 1
-                    }],
-                    receipt: receiptId,
-                    sms_notify: 1, // Send SMS
-                    email_notify: 1, // Send Email
-                    currency: "MYR"
-                };
-
-                // API Call
-                const auth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
+                const dateStr = formatDateTime(d.timestamp).split(' ')[0];
+                const orderRef = orderId.substring(0,8).toUpperCase();
+                const total = parseFloat(d.total.replace('RM ', '')).toFixed(2);
                 
-                const response = await fetch('https://api.razorpay.com/v1/invoices', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Basic ${auth}`
-                    },
-                    body: JSON.stringify(invoicePayload)
-                });
+                // INVOICE TEMPLATE
+                const invoiceContent = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                    <meta charset="UTF-8">
+                    <title>Invoice | DD Cloud Network</title>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                    <style>
+                      * { box-sizing: border-box; }
+                      body {
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        background: #f2f2f2;
+                        padding: 20px;
+                        color: #1d1d1f;
+                        margin: 0;
+                        -webkit-print-color-adjust: exact;
+                      }
+                      .receipt {
+                        max-width: 720px;
+                        margin: auto;
+                        background: #ffffff;
+                        padding: 40px;
+                        border-radius: 16px;
+                        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+                      }
+                      .header {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 30px;
+                      }
+                      .brand {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                      }
+                      .brand img { width: 36px; height: auto; }
+                      .brand strong { font-size: 18px; font-weight: 600; }
+                      .invoice-meta {
+                        text-align: right;
+                        font-size: 13px;
+                        color: #6e6e73;
+                      }
+                      .invoice-meta span { display: block; margin-bottom: 2px; }
+                      .section { margin-bottom: 25px; }
+                      .section h4 {
+                        font-size: 12px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.08em;
+                        color: #6e6e73;
+                        margin-bottom: 8px;
+                      }
+                      .section p { margin: 0; font-size: 14px; line-height: 1.5; }
+                      table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 15px;
+                      }
+                      table th {
+                        text-align: left;
+                        font-size: 12px;
+                        color: #6e6e73;
+                        font-weight: 500;
+                        padding-bottom: 8px;
+                        border-bottom: 1px solid #e5e5ea;
+                      }
+                      table td {
+                        padding: 12px 0;
+                        font-size: 13px;
+                        border-bottom: 1px solid #f0f0f0;
+                        vertical-align: top;
+                      }
+                      .amount {
+                        text-align: right;
+                        white-space: nowrap;
+                        font-variant-numeric: tabular-nums;
+                      }
+                      .summary {
+                        margin-top: 25px;
+                        max-width: 100%;
+                        margin-left: auto;
+                      }
+                      .summary div {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 8px;
+                        font-size: 14px;
+                      }
+                      .summary .total {
+                        font-size: 16px;
+                        font-weight: 600;
+                        padding-top: 10px;
+                        border-top: 1px solid #e5e5ea;
+                      }
+                      .footer {
+                        margin-top: 40px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #6e6e73;
+                      }
+                      @media screen and (max-width: 600px) {
+                        body { padding: 0; background: #ffffff; }
+                        .receipt {
+                          max-width: 100%;
+                          padding: 24px;
+                          border-radius: 0;
+                          box-shadow: none;
+                        }
+                        .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+                        .invoice-meta { text-align: left; }
+                        table td { font-size: 12px; padding: 10px 0; }
+                      }
+                      @media print {
+                        body { background: none; padding: 0; -webkit-print-color-adjust: exact; }
+                        .receipt { box-shadow: none; border-radius: 0; padding: 0; margin: 0; max-width: 100%; }
+                        @page { margin: 20px; }
+                      }
+                    </style>
+                    </head>
+                    <body>
 
-                const result = await response.json();
+                    <div class="receipt">
 
-                if (response.ok && result.short_url) {
-                    logActivity(`Generated Razorpay Invoice for Order #${receiptId}`);
-                    
-                    showModal("Invoice Generated", `
-                        <div class="text-center mb-4">
-                            <i class="ri-checkbox-circle-fill" style="font-size: 3rem; color: var(--success);"></i>
-                            <h3 style="margin-top: 10px;">Invoice Sent!</h3>
-                            <p class="text-muted text-sm">SMS and Email have been sent to ${d.customerName}.</p>
+                      <!-- Header -->
+                      <div class="header">
+                        <div class="brand">
+                          <img src="https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png" alt="DDNetwork Logo">
+                          <strong>DD CLOUD NETWORK</strong>
                         </div>
-                        <div class="mb-4">
-                            <label>Invoice Link</label>
-                            <input type="text" readonly value="${result.short_url}" onclick="this.select(); document.execCommand('copy'); showToast('Link Copied', 'success');" style="cursor:pointer;">
-                            <small class="text-muted">Click to copy</small>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <a href="${result.short_url}" target="_blank" class="btn btn-primary"><i class="ri-external-link-line"></i> View / Download PDF</a>
-                            <button class="btn btn-secondary" onclick="sendWAInvoice('${result.short_url}', '${d.customerName}', '${d.customerPhone}')"><i class="ri-whatsapp-line"></i> Share via WhatsApp</button>
-                        </div>
-                    `, `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`);
 
-                } else {
-                    console.error("Razorpay Error:", result);
-                    let errMsg = result.error ? result.error.description : "Unknown Error";
-                    // Fallback to simple print if API fails (e.g. currency not supported)
-                    if (result.error && result.error.code === 'BAD_REQUEST_ERROR') {
-                         showToast("Failed: " + errMsg + " (Try checking Currency support)", "error");
-                    } else {
-                         showToast("Invoice Generation Failed: " + errMsg, "error");
-                    }
-                }
+                        <div class="invoice-meta">
+                          <span><strong>Invoice</strong></span>
+                          <span>INV-${orderRef}</span>
+                          <span>${dateStr}</span>
+                        </div>
+                      </div>
+
+                      <!-- Billing -->
+                      <div class="section">
+                        <h4>Bill To</h4>
+                        <p>
+                          <strong>${d.customerName}</strong><br>
+                          ${d.domain ? d.domain : 'N/A'}<br>
+                          ${d.customerEmail}
+                        </p>
+                      </div>
+
+                      <!-- Items -->
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Description</th>
+                            <th class="amount">Amount (RM)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>${d.package} ${d.billingCycle ? `(${d.billingCycle})` : ''}</td>
+                            <td class="amount">${total}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      <!-- Summary -->
+                      <div class="summary">
+                        <div>
+                          <span>Subtotal</span>
+                          <span>RM ${total}</span>
+                        </div>
+                        <div>
+                          <span>Tax</span>
+                          <span>RM 0.00</span>
+                        </div>
+                        <div class="total">
+                          <span>Total</span>
+                          <span>RM ${total}</span>
+                        </div>
+                      </div>
+
+                      <!-- Footer -->
+                      <div class="footer">
+                        Thank you for choosing DDNetwork. Wishing great success and growth for your brand.<br>
+                        © DDNetworkOne by DD CLOUD NETWORK.
+                      </div>
+
+                    </div>
+
+                    <script>window.onload = function() { setTimeout(() => window.print(), 500); }<\/script>
+                    </body>
+                    </html>
+                `;
+
+                // Open and write directly
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(invoiceContent);
+                printWindow.document.close();
 
             } catch (err) {
                 console.error(err);
-                showToast("Error creating invoice: " + err.message, "error");
+                showToast("Error generating invoice", "error");
             }
-        }
-
-        function sendWAInvoice(link, name, phone) {
-            const cleanPhone = formatWAPhone(phone);
-            if(!cleanPhone) return showToast("Invalid phone number", "error");
-            const msg = `Hi ${name},\n\nHere is your invoice for your recent order with DDNetwork.\n\nLink: ${link}\n\nYou can view and download the PDF from the link above.\n\nThank you!`;
-            const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
-            window.open(url, '_blank');
         }
 
         async function sendPaymentReminder(id) {
@@ -2152,9 +2259,8 @@
                     const isBypass = u.bypassApproval === true;
                     permsHTML += `<div style="margin-top:15px; padding-top:10px; border-top:1px solid #eee;" class="flex items-center gap-2"><label class="toggle-switch"><input type="checkbox" id="e-c-bypass" ${isBypass ? 'checked' : ''}><span class="slider"></span></label><span style="font-size:0.8rem; color:var(--danger); font-weight:700;">BYPASS APPROVAL (Auto-Approve Edits)</span></div>`;
                 }
-                
-                const financeVal = userPerms[PERMISSION_KEYS.FINANCE_TOOLS_ACCESS] === true;
-                permsHTML += `<div style="margin-top:15px; padding-top:10px; border-top:1px solid #eee;" class="flex items-center gap-2"><input type="checkbox" id="e-c-finance-access" ${financeVal ? 'checked' : ''} style="width:auto; margin:0;"><span style="font-size:0.8rem; color:var(--success); font-weight:700;">Finance Tools Access</span></div>`;
+                const hasFinanceAccess = userPerms[PERMISSION_KEYS.FINANCE_TOOLS_ACCESS] === true;
+                permsHTML += `<div style="margin-top:15px; padding-top:10px; border-top:1px solid #eee;" class="flex items-center gap-2"><input type="checkbox" class="perm-toggle" value="${PERMISSION_KEYS.FINANCE_TOOLS_ACCESS}" ${hasFinanceAccess ? 'checked' : ''} style="width:auto; margin:0;"><span style="font-size:0.8rem; color:var(--success); font-weight:700;">Finance Tools Access</span></div>`;
                 
                 const bd = u.bankDetails || {};
                 const bankHTML = `<div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-glass);"><h4 style="font-size:0.9rem; margin-bottom:0.5rem; color:var(--primary);">Bank Details (Finance)</h4><div class="mb-2"><label>Bank Name</label><input id="c-bank-name" value="${bd.bankName||''}"></div><div class="mb-2"><label>Account Holder Name</label><input id="c-bank-holder" value="${bd.accountHolder||''}"></div><div class="mb-2"><label>Account Number</label><input id="c-bank-num" value="${bd.accountNumber||''}"></div></div>`;
@@ -2216,24 +2322,8 @@
             document.querySelectorAll('.perm-toggle').forEach(cb => newPerms[cb.value] = cb.checked);
             const bypassEl = document.getElementById('e-c-bypass');
             const bypassVal = bypassEl ? bypassEl.checked : false;
-            const financeValEl = document.getElementById('e-c-finance-access');
-            const financeVal = financeValEl ? financeValEl.checked : false;
-            newPerms[PERMISSION_KEYS.FINANCE_TOOLS_ACCESS] = financeVal;
-            
             const bankData = { bankName: document.getElementById('c-bank-name').value, accountHolder: document.getElementById('c-bank-holder').value, accountNumber: document.getElementById('c-bank-num').value };
-            
-            let updatePayload = { 
-                crewId: document.getElementById('e-c-id').value, 
-                name: document.getElementById('e-c-name').value, 
-                email: document.getElementById('e-c-email').value, 
-                phone: document.getElementById('e-c-phone').value, 
-                jobTitle: document.getElementById('e-c-job').value, 
-                permissions: newPerms, 
-                bankDetails: bankData, 
-                bypassApproval: bypassVal, 
-                workLocation: document.getElementById('e-c-work-loc').value, 
-                department: document.getElementById('e-c-dept').value 
-            };
+            let updatePayload = { crewId: document.getElementById('e-c-id').value, name: document.getElementById('e-c-name').value, email: document.getElementById('e-c-email').value, phone: document.getElementById('e-c-phone').value, jobTitle: document.getElementById('e-c-job').value, permissions: newPerms, bankDetails: bankData, bypassApproval: bypassVal, workLocation: document.getElementById('e-c-work-loc').value, department: document.getElementById('e-c-dept').value };
             
             const canEditRate = isSuperAdmin() || hasPermission(PERMISSION_KEYS.ADJUST_COMMISSION);
             if (canEditRate) {
@@ -2280,7 +2370,7 @@
                         <td><span class="badge" style="background:${statusBadge}15; color:${statusBadge}">${d.status}</span></td>
                         <td>
                             <button class="btn btn-sm btn-secondary" onclick="viewTicket('${d.id}')">Manage</button>
-                            ${canDelete ? `<button class="btn btn-sm btn-danger" onclick="deleteItem('tickets','${d.id}')"><i class="ri-delete-bin-line"></i></button>` : ''}
+                            ${canDelete ? `<button class="btn btn-sm btn-danger" onclick="deleteItem('ticket','${d.id}')"><i class="ri-delete-bin-line"></i></button>` : ''}
                         </td>
                     </tr>`;
                 }).join('');
@@ -2306,9 +2396,7 @@
             });
         }
         async function saveTicketDetails(id) {
-            const assignId = document.getElementById('tk-assign').value;
-            const assignName = assignId ? document.getElementById('tk-assign').options[document.getElementById('tk-assign').selectedIndex].text : "";
-            const data = { status: document.getElementById('tk-status').value, assignedTo: assignId || null, assignedToName: assignName };
+            const data = { status: document.getElementById('tk-status').value, assignedTo: document.getElementById('tk-assign').value || null, assignedToName: document.getElementById('tk-assign').value ? document.getElementById('tk-assign').options[document.getElementById('tk-assign').selectedIndex].text : "" };
             db.collection("tickets").doc(id).update(data).then(() => { closeModal(); showToast("Ticket Updated", "success"); logActivity(`Updated Ticket #${id}`); });
         }
 
@@ -2391,6 +2479,7 @@
                 if(moveToHistory) {
                     await db.collection("vouchers_history").doc(code).set({ ...vouch, ownerUid: uid, assignedToName: uData.name, status: statusReason, movedAt: firebase.firestore.FieldValue.serverTimestamp() });
                     await db.collection("users").doc(uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() });
+                    console.log(`Moved ${code} to history as ${statusReason}`);
                     movedCount++;
                 }
             }
@@ -2761,7 +2850,7 @@
             db.collection("clients_portfolio").doc(docId).delete().then(() => { showToast("Project deleted", "success"); logActivity(`Deleted portfolio project`); }).catch(err => { showToast("Error deleting: " + err.message, "error"); }); 
         }
 
-        // --- 10. CUSTOMER REQUESTS ---
+        // --- 10. CUSTOMER REQUESTS (UPDATED) ---
         function renderRequests() {
             setPageLoading(true);
             const main = document.getElementById('main');
@@ -2796,7 +2885,7 @@
                     else if(type.includes('Upgrade')) badgeClass = 'badge-upgrade';
                     
                     let actions = `<button class="btn btn-sm btn-secondary" onclick="viewRequestDetails('${d.id}')">View</button>`;
-                    if (canDelete) actions += `<button class="btn btn-sm btn-danger" onclick="deleteItem('customer_requests','${d.id}')"><i class="ri-delete-bin-line"></i></button>`;
+                    if (canDelete) actions += `<button class="btn btn-sm btn-danger" onclick="deleteItem('request','${d.id}')"><i class="ri-delete-bin-line"></i></button>`;
                     
                     return `<tr>
                         <td style="white-space:nowrap;">${formatDateTime(d.timestamp)}</td>
@@ -2811,30 +2900,64 @@
                 }).join('');
             };
         }
+        
+        // --- UPDATED REQUEST DETAILS VIEW ---
         function viewRequestDetails(id) {
             db.collection("customer_requests").doc(id).get().then(doc => {
                 const d = doc.data();
+                
+                // WhatsApp Template Logic
+                const waMsg = `Hi ${d.name},
+
+Thank you for your interest in creating a website for **${d.company || 'your business'}**.
+
+I'd be happy to assist you in building a professional website for your business.
+
+To proceed, may I know:
+
+1. Is the website for online selling (e-commerce) or brand portfolio/showcase?
+2. Do you already have a logo, branding materials, and product/service photos ready?
+3. Do you have any reference websites or design styles that you like?
+
+Once I receive these details, I can propose the best structure and solution tailored to your business.
+
+Looking forward to your reply.
+
+Thank you.`;
+
+                const cleanPhone = formatWAPhone(d.phone);
+                const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMsg)}` : '#';
+                
                 const modalBody = `
                     <div class="req-grid">
+                        <div class="req-field"><label>Full Name</label><div class="req-value font-bold">${d.name}</div></div>
+                        <div class="req-field"><label>Phone Number</label><div class="req-value">
+                            ${cleanPhone ? `<a href="${waLink}" target="_blank" class="btn btn-sm btn-success" style="margin-right:8px;"><i class="ri-whatsapp-line"></i> WhatsApp</a>` : ''}
+                            <span>${d.phone || '-'}</span>
+                        </div></div>
+                        <div class="req-field req-full-width"><label>Email Address</label><div class="req-value"><a href="mailto:${d.email}" style="color:var(--primary);">${d.email}</a></div></div>
                         <div class="req-field req-full-width"><label>Company Name</label><div class="req-value font-bold">${d.company || '-'}</div></div>
-                        <div class="req-field"><label>Request Type</label><div class="req-value"><span class="badge badge-website">${d.type || 'General'}</span></div></div>
-                        <div class="req-field"><label>Source</label><div class="req-value">${d.source || '-'}</div></div>
-                        <div class="req-field"><label>Client Name</label><div class="req-value">${d.name}</div></div>
-                        <div class="req-field"><label>Email</label><div class="req-value"><a href="mailto:${d.email}" style="color:var(--primary);">${d.email}</a></div></div>
-                        <div class="req-field"><label>Phone</label><div class="req-value">${d.phone || '-'}</div></div>
-                        <div class="req-field req-full-width"><label>References / Links</label><div class="req-value">${d.references ? `<a href="${d.references}" target="_blank" class="btn btn-sm btn-info" style="display:inline-flex; align-items:center; gap:5px; margin-right:10px;"><i class="ri-external-link-line"></i> ${d.references}</a>` : '<span class="text-muted">None provided</span>'}</div></div>
-                        <div class="req-field req-full-width"><label>Details / Message</label><textarea readonly rows="5" style="background:#f9fafb; font-family:var(--font-main);">${d.details || 'No details provided.'}</textarea></div>
+                        <div class="req-field req-full-width"><label>How Did You Hear About Us?</label><div class="req-value">${d.source || '-'}</div></div>
+                        <div class="req-field req-full-width"><label>Project Type</label><div class="req-value"><span class="badge badge-website">${d.type || 'General'}</span></div></div>
+                        <div class="req-field req-full-width"><label>What Are You Looking For?</label><div class="req-value">${d.lookingFor || '-'}</div></div>
+                        <div class="req-field req-full-width"><label>Describe Your Idea</label><textarea readonly rows="4" style="background:#f9fafb; font-family:var(--font-main);">${d.details || 'No details provided.'}</textarea></div>
+                        <div class="req-field req-full-width"><label>Reference Websites</label><div class="req-value">
+                            ${d.references ? `<a href="${d.references}" target="_blank" class="btn btn-sm btn-info" style="display:inline-flex; align-items:center; gap:5px;"><i class="ri-external-link-line"></i> View Reference</a>` : '<span class="text-muted">None provided</span>'}
+                        </div></div>
+                        
                         <div class="req-field req-full-width" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border-glass);"><label>Update Status</label><select id="req-status-select"><option value="Pending" ${d.status==='Pending'?'selected':''}>Pending</option><option value="In Progress" ${d.status==='In Progress'?'selected':''}>In Progress</option><option value="Completed" ${d.status==='Completed'?'selected':''}>Completed</option><option value="Rejected" ${d.status==='Rejected'?'selected':''}>Rejected</option></select></div>
                     </div>
                 `;
                 showModal(`Request Details (${d.type || 'General'})`, modalBody, `<button class="btn btn-primary" onclick="updateRequestStatus('${id}', null, true)">Save Status</button>`);
             });
         }
+        
         function updateRequestStatus(id, newStatus = null, fromModal = false) {
             const statusToSet = newStatus || document.getElementById('req-status-select').value;
             const data = { status: statusToSet };
             db.collection("customer_requests").doc(id).update(data).then(() => { if(fromModal) closeModal(); showToast("Request Status Updated", "success"); logActivity(`Updated request status to ${statusToSet}`); }).catch(err => { showToast("Error updating: " + err.message, "error"); });
         }
+        
         function deleteItem(collection, id) {
             if(!hasPermission(PERMISSION_KEYS.DELETE_REQUESTS) && !hasPermission(PERMISSION_KEYS.DELETE_SUPPORT)) return showToast("Access Denied.", "error");
             if(!confirm("Delete this item permanently?")) return;
@@ -3187,7 +3310,7 @@
         }
 
         function notifyVoucherExpiryAdmin(voucherCode, expiryDate, customerName) {
-            const msg = `Hi Admin Team,\n\nA customer’s voucher (${voucherCode}) will expire on ${expiryDate}.\nCustomer: ${customerName}\n\nPlease follow up with them and try to close the sale.\n\nThank you.\n\n> [Auto-generated from DDNet System]`;
+            const msg = `Hi Admin Team,\n\nA customer's voucher (${voucherCode}) will expire on ${expiryDate}.\nCustomer: ${customerName}\n\nPlease follow up with them and try to close the sale.\n\nThank you.\n\n> [Auto-generated from DDNet System]`;
             const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
             const win = window.open(url, '_blank');
             if (!win || win.closed || typeof win.closed == 'undefined') window.location.href = url;
@@ -3196,7 +3319,7 @@
         function notifyVoucherExpiryClient(phone, name, expiryDate) {
             const cleanPhone = phone ? phone.replace(/[^0-9]/g, '').replace(/^0/, '60') : '';
             if(!cleanPhone) return showToast("Client has no valid phone number", "error");
-            const msg = `Hi ${name},\n\nWe noticed your voucher will expire on ${expiryDate}. Don’t miss out—use it soon! If you need any assistance, we’re happy to help.\n\nThank you,\n> [Auto-generated from DDNet System]`;
+            const msg = `Hi ${name},\n\nWe noticed your voucher will expire on ${expiryDate}. Don't miss out—use it soon! If you need any assistance, we're happy to help.\n\nThank you,\n> [Auto-generated from DDNet System]`;
             const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
             const win = window.open(url, '_blank');
             if (!win || win.closed || typeof win.closed == 'undefined') window.location.href = url;
