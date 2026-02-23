@@ -55,21 +55,6 @@
     }
     </script>
 
-    <!-- STRUCTURED DATA: WEBSITE -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "DDNetwork",
-        "url": "https://ddnet.my/",
-        "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://ddnet.my/?search={search_term_string}",
-            "query-input": "required name=search_term_string"
-        }
-    }
-    </script>
-
     <!-- Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -94,24 +79,20 @@
                     },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
-                        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'scale-in': 'scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'marquee': 'marquee 40s linear infinite',
-                        'spin-slow': 'spin 20s linear infinite',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
-                        slideUp: { '0%': { transform: 'translateY(30px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
-                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-                        scaleIn: { '0%': { transform: 'scale(0.9)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
                         marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } }
                     }
                 }
             }
         }
     </script>
+
+    <!-- Leaflet CSS (For Map) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
     <!-- RAZORPAY CHECKOUT SCRIPT -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -128,7 +109,7 @@
         * { scroll-behavior: smooth; }
         body { font-family: 'Inter', sans-serif; background: #ffffff; color: #0f172a; overflow-x: hidden; }
         
-        /* Glassmorphism for light theme */
+        /* Glassmorphism */
         .glass {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
@@ -161,8 +142,18 @@
                 radial-gradient(at 0% 100%, rgba(30, 41, 59, 0.03) 0, transparent 50%);
         }
         
-        .page { display: none; opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
-        .page.active { display: block; opacity: 1; transform: translateY(0); }
+        /* Smooth Page Transition */
+        .page { 
+            display: none; 
+            opacity: 0; 
+            transform: translateY(20px); 
+            transition: opacity 0.4s ease, transform 0.4s ease; 
+        }
+        .page.active { 
+            display: block; 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
         
         .hover-lift { 
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease; 
@@ -218,18 +209,6 @@
             animation: float 10s ease-in-out infinite;
         }
         
-        .loading-bar {
-            height: 3px; background: linear-gradient(90deg, #1e293b, #334155, #6366f1);
-            background-size: 200% 100%;
-            animation: gradient 2s linear infinite;
-        }
-        
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -258,15 +237,6 @@
         .toast-error { border-left: 4px solid #ef4444; }
         .toast-warning { border-left: 4px solid #f59e0b; }
 
-        /* Maintenance overlay */
-        #maintenance-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-            background: #f8fafc; z-index: 99999;
-            display: none; justify-content: center; align-items: center;
-            flex-direction: column;
-        }
-        #maintenance-overlay.active { display: flex; }
-
         /* Processing overlay */
         #processing-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -276,20 +246,6 @@
             flex-direction: column; justify-content: center; align-items: center;
         }
         
-        /* Preloader */
-        #preloader {
-            position: fixed; inset: 0; background: #fff; z-index: 99998;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 0.5s ease;
-        }
-        #preloader.fade-out { opacity: 0; pointer-events: none; }
-        
-        #warp-canvas {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-        }
-
         /* Modal styles */
         .modal-overlay {
             position: fixed; inset: 0;
@@ -332,9 +288,6 @@
         /* Star rating */
         .star-icon { font-size: 1.5rem; color: #cbd5e1; cursor: pointer; transition: color 0.2s; }
         .star-icon.hovered, .star-icon.selected { color: #fbbf24; }
-
-        /* Comparison table */
-        .comparison-row:nth-child(even) { background: rgba(241, 245, 249, 0.5); }
 
         /* Package cards */
         .package-popular {
@@ -421,53 +374,70 @@
             animation-play-state: paused;
         }
         
+        /* Map Styles */
+        #global-map-section .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            background: #fff;
+            border: 1px solid #e0e0e0;
+        }
+        .custom-marker {
+            background: none;
+            border: none;
+        }
+        .pulse-ring {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 184, 148, 0.25);
+            animation: pulse-ring 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .marker-pin {
+            width: 24px;
+            height: 24px;
+            border-radius: 50% 50% 50% 0;
+            background: #00b894;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        .marker-pin::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            margin: 6px 0 0 6px;
+            background: #fff;
+            position: absolute;
+            border-radius: 50%;
+        }
+        @keyframes pulse-ring {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.8); opacity: 0.4; }
+            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+        }
+        
         @media (max-width: 768px) {
             .blob { display: none; }
             .package-popular { transform: scale(1); }
             #globe-canvas { display: none; }
         }
+        
+        @keyframes scaleIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body class="bg-white antialiased">
 
-    <!-- Preloader -->
-    <div id="preloader">
-        <canvas id="warp-canvas"></canvas>
-        <div class="relative z-10 text-center">
-            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center mx-auto mb-6 shadow-2xl animate-pulse">
-                <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNetwork" class="w-10 h-10 object-contain invert">
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800">DDNetwork</h2>
-            <p class="text-slate-500 mt-2">Loading...</p>
-        </div>
-    </div>
-
-    <!-- Loading Indicator -->
-    <div id="page-loader" class="fixed top-0 left-0 w-full z-[100] opacity-0 transition-opacity duration-300">
-        <div class="loading-bar w-full"></div>
-    </div>
-
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Maintenance Overlay -->
-    <div id="maintenance-overlay">
-        <div class="text-center p-8">
-            <i class="ri-tools-line text-6xl text-amber-500 mb-6 animate-pulse"></i>
-            <h2 class="text-3xl font-bold text-slate-800 mb-4">System Maintenance</h2>
-            <p class="text-slate-600 max-w-md">We're currently performing scheduled maintenance. Please check back shortly.</p>
-        </div>
-    </div>
-
-    <!-- Processing Overlay -->
-    <div id="processing-overlay">
-        <div class="w-16 h-16 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin mb-6"></div>
-        <div id="process-message" class="text-xl text-slate-800 font-medium">Processing...</div>
-        <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm max-w-md text-center">
-            <i class="ri-refresh-line mr-2"></i>
-            <strong>Note:</strong> Do not close this page. If stuck, check your email for confirmation.
-        </div>
-    </div>
 
     <!-- Auth Modal -->
     <div id="auth-modal" class="modal-overlay">
@@ -510,6 +480,16 @@
         </div>
     </div>
 
+    <!-- Processing Overlay -->
+    <div id="processing-overlay">
+        <div class="w-16 h-16 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin mb-6"></div>
+        <div id="process-message" class="text-xl text-slate-800 font-medium">Processing...</div>
+        <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm max-w-md text-center">
+            <i class="ri-refresh-line mr-2"></i>
+            <strong>Note:</strong> Do not close this page. If stuck, check your email for confirmation.
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="fixed w-full z-50 glass-strong border-b border-slate-200 transition-all duration-300" id="navbar">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -531,6 +511,7 @@
                 </div>
 
                 <div class="flex items-center gap-4" id="auth-buttons">
+                    <!-- Injected by JS based on auth state -->
                     <button onclick="router.navigate('login')" class="hidden md:block text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Sign In</button>
                     <button onclick="router.navigate('pricing')" class="px-5 py-2.5 rounded-full btn-primary text-white text-sm font-semibold shadow-lg">
                         Get Started
@@ -551,9 +532,8 @@
                 <a href="#reviews" onclick="event.preventDefault(); router.navigate('reviews'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-2 font-medium">Reviews</a>
                 <a href="#about" onclick="event.preventDefault(); router.navigate('about'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-2 font-medium">About</a>
                 <a href="#contact" onclick="event.preventDefault(); router.navigate('contact'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-2 font-medium">Contact</a>
-                <div class="pt-4 border-t border-slate-200 flex flex-col gap-3">
-                    <button onclick="router.navigate('login')" class="w-full py-3 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50">Sign In</button>
-                    <button onclick="router.navigate('pricing')" class="w-full py-3 rounded-lg btn-primary text-white font-medium">Get Started</button>
+                <div id="mobile-auth-buttons" class="pt-4 border-t border-slate-200 flex flex-col gap-3">
+                    <!-- Mobile Auth Buttons Injected Here -->
                 </div>
             </div>
         </div>
@@ -612,7 +592,7 @@
                             </div>
                         </div>
 
-                        <!-- Dashboard Preview -->
+                        <!-- Dashboard Preview (Updated: Removed Revenue Text) -->
                         <div class="relative animate-scale-in hidden lg:block">
                             <div class="absolute -inset-4 bg-gradient-to-r from-indigo-200/50 to-slate-200/50 rounded-3xl blur-2xl"></div>
                             <div class="relative glass rounded-2xl p-2 shadow-2xl">
@@ -638,10 +618,6 @@
                                                         5 Live Sites
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="text-right">
-                                                <div class="text-2xl font-bold text-slate-800">RM 2,450</div>
-                                                <div class="text-xs text-slate-500">Monthly Revenue</div>
                                             </div>
                                         </div>
                                         
@@ -770,6 +746,64 @@
                 </div>
             </div>
 
+            <!-- Portfolio Preview -->
+            <div class="py-24 bg-slate-50">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-16">
+                        <h2 class="text-3xl md:text-5xl font-bold mb-4 text-slate-900">Recent <span class="text-gradient">Work</span></h2>
+                        <p class="text-slate-600 text-lg">Check out some of our latest completed projects.</p>
+                    </div>
+                    <div id="home-portfolio-grid" class="grid md:grid-cols-3 gap-8">
+                        <!-- Dummy Item -->
+                        <div class="group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
+                            <div class="h-56 overflow-hidden bg-slate-200 relative">
+                                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="E-Commerce Project" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6">
+                                <h4 class="font-bold text-slate-900 mb-2 text-lg">E-Commerce Launch</h4>
+                                <p class="text-slate-600 text-sm mb-4">A high-performance online store for a local fashion brand.</p>
+                                <a href="#" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</a>
+                            </div>
+                        </div>
+                        <!-- Dynamic items will be appended here -->
+                    </div>
+                    <div class="text-center mt-12">
+                        <button onclick="router.navigate('portfolio')" class="px-8 py-4 rounded-full btn-primary text-white font-bold">View All Projects</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GLOBAL CLIENT MAP SECTION (NEW) -->
+            <section id="global-map-section" class="py-24 bg-white relative overflow-hidden">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 text-slate-900">Global Client <span class="text-gradient">Reach</span></h2>
+                    <p class="text-xl text-slate-600 max-w-3xl mx-auto mb-12">
+                        Interactive map of live websites – zoom, pan & click pins for details & direct visits.
+                    </p>
+
+                    <div id="map" class="w-full h-[500px] rounded-2xl shadow-lg border border-slate-200 mb-16 z-10 relative"></div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
+                        <div class="text-center">
+                            <div class="text-5xl font-bold text-slate-900 mb-2">142</div>
+                            <div class="text-lg text-slate-600 font-medium">Websites Live</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-5xl font-bold text-slate-900 mb-2">11</div>
+                            <div class="text-lg text-slate-600 font-medium">Active Regions</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-5xl font-bold text-slate-900 mb-2">17</div>
+                            <div class="text-lg text-slate-600 font-medium">Countries Served</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-5xl font-bold text-slate-900 mb-2">6+</div>
+                            <div class="text-lg text-slate-600 font-medium">Years of Excellence</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Why Choose Us -->
             <div class="py-24 bg-slate-50">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -807,22 +841,6 @@
                             <h4 class="text-lg font-bold text-slate-900 mb-2">AI Integration</h4>
                             <p class="text-sm text-slate-600">Future-proof your business with cutting-edge AI.</p>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Portfolio Preview -->
-            <div class="py-24 bg-white">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-16">
-                        <h2 class="text-3xl md:text-5xl font-bold mb-4 text-slate-900">Recent <span class="text-gradient">Work</span></h2>
-                        <p class="text-slate-600 text-lg">Check out some of our latest completed projects.</p>
-                    </div>
-                    <div id="home-portfolio-grid" class="grid md:grid-cols-3 gap-8">
-                        <div class="text-center py-12 text-slate-400">Loading portfolio...</div>
-                    </div>
-                    <div class="text-center mt-12">
-                        <button onclick="router.navigate('portfolio')" class="px-8 py-4 rounded-full btn-primary text-white font-bold">View All Projects</button>
                     </div>
                 </div>
             </div>
@@ -1319,6 +1337,7 @@
                     <!-- Reviews Grid -->
                     <div id="reviews-grid" class="grid md:grid-cols-3 gap-6">
                         <!-- Reviews loaded dynamically -->
+                        <div class="col-span-3 text-center py-12 text-slate-400">Loading reviews...</div>
                     </div>
                 </div>
             </div>
@@ -1335,6 +1354,7 @@
 
                     <div id="portfolio-grid" class="grid md:grid-cols-3 gap-8">
                         <!-- Portfolio items loaded dynamically -->
+                        <div class="col-span-3 text-center py-12 text-slate-400">Loading portfolio...</div>
                     </div>
                 </div>
             </div>
@@ -1524,19 +1544,24 @@
             </div>
         </section>
 
-        <!-- LOGIN PAGE -->
+        <!-- LOGIN PAGE (Redesigned) -->
         <section id="page-login" class="page">
-            <div class="min-h-screen flex items-center justify-center bg-mesh py-12 px-4">
-                <div class="max-w-md w-full">
+            <div class="min-h-screen flex items-center justify-center bg-mesh py-12 px-4 relative overflow-hidden">
+                <div class="absolute inset-0 z-0">
+                    <div class="absolute top-0 left-0 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                    <div class="absolute bottom-0 right-0 w-96 h-96 bg-violet-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+                </div>
+                
+                <div class="max-w-md w-full relative z-10">
                     <div class="text-center mb-8">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center mx-auto mb-4 shadow-lg animate-float">
                             <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNetwork" class="w-8 h-8 object-contain invert">
                         </div>
                         <h2 class="text-3xl font-bold text-slate-900">Welcome Back</h2>
-                        <p class="text-slate-600 mt-2">Sign in to your DDNetwork account</p>
+                        <p class="text-slate-600 mt-2">Sign in to your DDNetwork dashboard</p>
                     </div>
 
-                    <div class="glass rounded-2xl p-8 border border-slate-200 bg-white shadow-xl">
+                    <div class="glass-strong rounded-2xl p-8 border border-slate-200 bg-white shadow-2xl">
                         <form onsubmit="handleLogin(event)" class="space-y-6">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-2">Email Address</label>
@@ -1553,7 +1578,7 @@
                                 </label>
                                 <a href="#" onclick="router.navigate('forgot-password')" class="text-indigo-600 hover:underline">Forgot password?</a>
                             </div>
-                            <button type="submit" class="w-full py-3 rounded-lg btn-primary text-white font-bold shadow-lg">
+                            <button type="submit" class="w-full py-3 rounded-lg btn-primary text-white font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
                                 Sign In
                             </button>
                         </form>
@@ -1575,19 +1600,24 @@
             </div>
         </section>
 
-        <!-- SIGNUP PAGE -->
+        <!-- SIGNUP PAGE (Redesigned) -->
         <section id="page-signup" class="page">
-            <div class="min-h-screen flex items-center justify-center bg-mesh py-12 px-4">
-                <div class="max-w-md w-full">
+            <div class="min-h-screen flex items-center justify-center bg-mesh py-12 px-4 relative overflow-hidden">
+                <div class="absolute inset-0 z-0">
+                    <div class="absolute top-0 right-0 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                    <div class="absolute bottom-0 left-0 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+                </div>
+
+                <div class="max-w-md w-full relative z-10">
                     <div class="text-center mb-8">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center mx-auto mb-4 shadow-lg animate-float">
                             <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNetwork" class="w-8 h-8 object-contain invert">
                         </div>
                         <h2 class="text-3xl font-bold text-slate-900">Create Account</h2>
                         <p class="text-slate-600 mt-2">Join thousands of Malaysian businesses</p>
                     </div>
 
-                    <div class="glass rounded-2xl p-8 border border-slate-200 bg-white shadow-xl">
+                    <div class="glass-strong rounded-2xl p-8 border border-slate-200 bg-white shadow-2xl">
                         <form onsubmit="handleSignup(event)" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-600 mb-2">Full Name</label>
@@ -1611,7 +1641,7 @@
                                     <span id="req-len" class="req-item"><i class="ri-close-circle-line"></i> 6+ chars</span>
                                 </div>
                             </div>
-                            <button type="submit" class="w-full py-3 rounded-lg btn-primary text-white font-bold shadow-lg mt-4">
+                            <button type="submit" class="w-full py-3 rounded-lg btn-primary text-white font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 mt-4">
                                 Create Account
                             </button>
                         </form>
@@ -2230,6 +2260,9 @@
         </div>
     </footer>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <!-- JavaScript -->
     <script>
         // ==========================================
@@ -2280,6 +2313,7 @@
         let selectedPackage = null;
         let selectedPackageType = null;
         let selectedRating = 0;
+        let mapInitialized = false;
         
         const checkoutState = {
             packageType: null,
@@ -2313,8 +2347,10 @@
         };
 
         function performTransition(page) {
-            const loader = document.getElementById('page-loader');
-            loader.style.opacity = '1';
+            // Simple smooth transition logic (no loader overlay)
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('active');
+            });
             
             // Update SEO
             const seo = SEO_CONFIG[page] || SEO_CONFIG['home'];
@@ -2322,95 +2358,26 @@
             document.querySelector('meta[name="description"]').setAttribute('content', seo.desc);
             document.querySelector('link[rel="canonical"]').setAttribute('href', seo.canonical);
             
-            setTimeout(() => {
-                document.querySelectorAll('.page').forEach(p => {
-                    p.classList.remove('active');
-                });
+            // Scroll to top
+            window.scrollTo(0, 0);
+            
+            const target = document.getElementById(`page-${page}`);
+            if (target) {
+                target.classList.add('active');
+                this.currentPage = page;
+                history.pushState({}, '', '#' + page);
                 
-                const target = document.getElementById(`page-${page}`);
-                if (target) {
-                    target.classList.add('active');
-                    window.scrollTo(0, 0);
-                    history.pushState({}, '', '#' + page);
-                    this.currentPage = page;
-                    
-                    // Page specific loads
-                    if(page === 'home') loadHomePortfolio();
-                    if(page === 'portfolio') loadPortfolio();
-                    if(page === 'reviews') loadReviews();
-                    if(page === 'profile' && currentUser) loadProfileData();
-                }
-                
-                setTimeout(() => { loader.style.opacity = '0'; }, 300);
-            }, 200);
+                // Page specific loads
+                if(page === 'home') loadHomePortfolio();
+                if(page === 'portfolio') loadPortfolio();
+                if(page === 'reviews') loadReviews();
+                if(page === 'profile' && currentUser) loadProfileData();
+            }
         }
 
         // ==========================================
-        // PRELOADER & ANIMATIONS
+        // GLOBE ANIMATION
         // ==========================================
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('preloader').classList.add('fade-out');
-            }, 1500);
-        });
-
-        // Warp Canvas Animation
-        const warpCanvas = document.getElementById('warp-canvas');
-        if(warpCanvas) {
-            const ctx = warpCanvas.getContext('2d');
-            let w, h, particles = [];
-            
-            function resizeCanvas() {
-                w = warpCanvas.width = window.innerWidth;
-                h = warpCanvas.height = window.innerHeight;
-            }
-            
-            function createParticles() {
-                particles = [];
-                for(let i = 0; i < 200; i++) {
-                    particles.push({
-                        x: Math.random() * w,
-                        y: Math.random() * h,
-                        z: Math.random() * 2000
-                    });
-                }
-            }
-            
-            function animateWarp() {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-                ctx.fillRect(0, 0, w, h);
-                
-                ctx.fillStyle = 'rgba(30, 41, 59, 0.8)';
-                particles.forEach(p => {
-                    p.z -= 10;
-                    if(p.z <= 0) {
-                        p.z = 2000;
-                        p.x = Math.random() * w;
-                        p.y = Math.random() * h;
-                    }
-                    
-                    const scale = 500 / p.z;
-                    const x = (p.x - w/2) * scale + w/2;
-                    const y = (p.y - h/2) * scale + h/2;
-                    const size = scale * 2;
-                    
-                    if(x > 0 && x < w && y > 0 && y < h) {
-                        ctx.beginPath();
-                        ctx.arc(x, y, size, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                });
-                
-                requestAnimationFrame(animateWarp);
-            }
-            
-            resizeCanvas();
-            createParticles();
-            animateWarp();
-            window.addEventListener('resize', () => { resizeCanvas(); createParticles(); });
-        }
-
-        // Globe Canvas Animation
         const globeCanvas = document.getElementById('globe-canvas');
         if(globeCanvas) {
             const gCtx = globeCanvas.getContext('2d');
@@ -2464,6 +2431,74 @@
                 requestAnimationFrame(animateGlobe);
             }
             animateGlobe();
+        }
+
+        // ==========================================
+        // MAP INITIALIZATION (LEAFLET)
+        // ==========================================
+        function initMap() {
+            if (mapInitialized) return;
+            
+            try {
+                var map = L.map('map', {
+                    zoomControl: true,
+                    minZoom: 2,
+                    maxZoom: 18,
+                    worldCopyJump: true,
+                    attributionControl: true
+                }).setView([4.0, 105.0], 5);  // SE Asia focus
+
+                // Clean professional basemap: CartoDB Positron
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                }).addTo(map);
+
+                // Add scale for professionalism
+                L.control.scale({ imperial: false }).addTo(map);
+
+                // Custom SVG icon with pulse
+                var customIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
+                    iconSize: [36, 36],
+                    iconAnchor: [18, 36],
+                    popupAnchor: [0, -36]
+                });
+
+                // Client data
+                var clients = [
+                  { lat: 3.1390, lng: 101.6869, name: "E-Shop Malaysia", visits: "128,450 this month", url: "https://example-my.com", extra: "E-commerce Platform • Live since 2024" },
+                  { lat: 5.4164, lng: 100.3327, name: "Tech Startup Penang", visits: "62,300 this month", url: "https://techpg.my", extra: "SaaS Dashboard" },
+                  { lat: 1.3521, lng: 103.8198, name: "Finance Hub Singapore", visits: "95,800 this month", url: "https://sgfinance.sg", extra: "Fintech Application" },
+                  { lat: -6.2088, lng: 106.8456, name: "Retail Pro Indonesia", visits: "78,900 this month", url: "https://indoretail.id", extra: "Online Marketplace" },
+                  { lat: 3.0731, lng: 101.5185, name: "Edu Platform KL", visits: "45,200 this month", url: "https://eduplat.my", extra: "Learning Management System" },
+                  { lat: 51.5074, lng: -0.1278, name: "UK Consulting Group", visits: "31,000 this month", url: "https://ukconsult.co.uk", extra: "Corporate Website" }
+                ];
+
+                clients.forEach(function(client) {
+                  var popupHtml = `
+                    <div class="popup-content">
+                      <div class="popup-title">${client.name}</div>
+                      <div class="popup-stats">
+                        <strong>Monthly Visits:</strong> ${client.visits}<br>
+                        ${client.extra}
+                      </div>
+                      <a href="${client.url}" target="_blank" class="popup-link">Visit Live Website &rarr;</a>
+                    </div>
+                  `;
+
+                  L.marker([client.lat, client.lng], { icon: customIcon })
+                    .addTo(map)
+                    .bindPopup(popupHtml, { maxWidth: 320 })
+                    .bindTooltip(client.name, { direction: 'top', offset: [0, -10], className: 'tooltip-modern' });
+                });
+                
+                mapInitialized = true;
+            } catch(e) {
+                console.error("Map init error:", e);
+            }
         }
 
         // ==========================================
@@ -2984,25 +3019,28 @@
         // ==========================================
         function loadHomePortfolio() {
             if(!db) return;
-            db.collection("clients_portfolio").where("status", "==", true).limit(3).get()
+            const grid = document.getElementById('home-portfolio-grid');
+            // Ensure dummy item stays, only append from DB
+            // Strategy: Load DB items and append to grid
+            db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
                 .then((snapshot) => {
-                    const grid = document.getElementById('home-portfolio-grid');
-                    grid.innerHTML = '';
-                    if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">Coming soon</div>'; return; }
-                    
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        grid.innerHTML += `
-                            <div class="group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
-                                <div class="h-48 overflow-hidden"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                                <div class="p-6">
-                                    <h4 class="font-bold text-slate-900 mb-2">${data.name}</h4>
-                                    <p class="text-slate-600 text-sm mb-4">${data.desc || 'View project'}</p>
-                                    <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site →</a>
+                    // Don't clear grid completely to keep dummy item, or manage DOM carefully
+                    // Let's just append
+                    if(!snapshot.empty) {
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            grid.innerHTML += `
+                                <div class="group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
+                                    <div class="h-56 overflow-hidden"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                                    <div class="p-6">
+                                        <h4 class="font-bold text-slate-900 mb-2">${data.name}</h4>
+                                        <p class="text-slate-600 text-sm mb-4">${data.desc || 'View project'}</p>
+                                        <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site →</a>
+                                    </div>
                                 </div>
-                            </div>
-                        `;
-                    });
+                            `;
+                        });
+                    }
                 });
         }
 
@@ -3191,16 +3229,32 @@
 
         function updateHeaderAuth() {
             const authButtons = document.getElementById('auth-buttons');
+            const mobileAuthButtons = document.getElementById('mobile-auth-buttons');
+            
             if(currentUser) {
-                authButtons.innerHTML = `
+                const loggedInHtml = `
                     <button onclick="router.navigate('profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="ri-user-line"></i> Profile</button>
                     <button onclick="handleLogout()" class="hidden md:block text-sm font-medium text-slate-600 hover:text-red-600">Logout</button>
                     <button onclick="router.navigate('pricing')" class="px-5 py-2.5 rounded-full btn-primary text-white text-sm font-semibold shadow-lg">Get Started</button>
                 `;
+                authButtons.innerHTML = loggedInHtml;
+                mobileAuthButtons.innerHTML = `
+                     <button onclick="router.navigate('profile')" class="w-full py-3 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50">My Profile</button>
+                     <button onclick="handleLogout()" class="w-full py-3 rounded-lg border border-slate-300 text-red-600 font-medium hover:bg-red-50">Sign Out</button>
+                     <button onclick="router.navigate('pricing')" class="w-full py-3 rounded-lg btn-primary text-white font-medium">Get Started</button>
+                `;
             } else {
-                authButtons.innerHTML = `
+                const loggedOutHtml = `
                     <button onclick="router.navigate('login')" class="hidden md:block text-sm font-medium text-slate-600 hover:text-slate-900">Sign In</button>
                     <button onclick="router.navigate('pricing')" class="px-5 py-2.5 rounded-full btn-primary text-white text-sm font-semibold shadow-lg">Get Started</button>
+                    <button class="md:hidden text-slate-600 p-2" onclick="toggleMobileMenu()">
+                        <i class="ri-menu-4-line text-2xl"></i>
+                    </button>
+                `;
+                authButtons.innerHTML = loggedOutHtml;
+                mobileAuthButtons.innerHTML = `
+                    <button onclick="router.navigate('login')" class="w-full py-3 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50">Sign In</button>
+                    <button onclick="router.navigate('pricing')" class="w-full py-3 rounded-lg btn-primary text-white font-medium">Get Started</button>
                 `;
             }
         }
@@ -3225,6 +3279,9 @@
             setupStarRating();
             loadHomePortfolio();
             loadReviews();
+            
+            // Initialize Map on first load
+            initMap();
             
             const hash = window.location.hash.replace('#', '');
             if(hash && document.getElementById(`page-${hash}`)) router.navigate(hash);
