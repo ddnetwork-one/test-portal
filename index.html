@@ -938,7 +938,7 @@
                             <div class="p-6">
                                 <h4 class="font-bold text-slate-900 mb-2 text-lg">E-Commerce Launch</h4>
                                 <p class="text-slate-600 text-sm mb-4">A high-performance online store for a local fashion brand.</p>
-                                <a href="#" onclick="navigateTo('portfolio')" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</a>
+                                <button onclick="navigateTo('portfolio')" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</button>
                             </div>
                         </div>
                         <!-- Dynamic items appended here by JS -->
@@ -1027,13 +1027,25 @@
                     <h2 class="text-3xl md:text-4xl font-bold mb-4 text-slate-900">Stay Updated</h2>
                     <p class="text-slate-600 mb-8">Subscribe to our newsletter for the latest news, tips, and exclusive offers.</p>
                     
-                    <form action="https://ddnet.us6.list-manage.com/subscribe/post?u=384c79298eab3ae51990362dd&amp;id=5ddbfad2fc&amp;f_id=00820ae3f0" method="post" target="_blank" class="max-w-md mx-auto">
-                        <div class="flex gap-3">
-                            <input type="email" name="EMAIL" required placeholder="your@email.com" class="flex-1 input-field px-4 py-3 rounded-lg text-slate-800">
-                            <button type="submit" class="px-6 py-3 rounded-lg btn-primary text-white font-semibold">Subscribe</button>
+                    <!-- Newsletter Form Container -->
+                    <div id="newsletter-wrapper">
+                        <form id="newsletter-form" onsubmit="handleNewsletterSubmit(event)" class="max-w-md mx-auto">
+                            <div class="flex gap-3">
+                                <input type="email" name="EMAIL" required placeholder="your@email.com" class="flex-1 input-field px-4 py-3 rounded-lg text-slate-800">
+                                <button type="submit" id="newsletter-btn" class="px-6 py-3 rounded-lg btn-primary text-white font-semibold">Subscribe</button>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-3">Join 500+ Malaysian business owners. No spam, unsubscribe anytime.</p>
+                        </form>
+
+                        <!-- Success Message (Hidden by default) -->
+                        <div id="newsletter-success" class="hidden animate-fade-in">
+                            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="ri-mail-send-fill text-3xl text-emerald-600"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-2">Thanks for subscribing!</h3>
+                            <p class="text-slate-600">We’re glad to have you with us.</p>
                         </div>
-                        <p class="text-xs text-slate-500 mt-3">Join 500+ Malaysian business owners. No spam, unsubscribe anytime.</p>
-                    </form>
+                    </div>
                 </div>
             </div>
 
@@ -2211,6 +2223,41 @@
         }
 
         // ==========================================
+        // NEWSLETTER LOGIC (UPDATED)
+        // ==========================================
+        function handleNewsletterSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const input = form.querySelector('input');
+            const btn = document.getElementById('newsletter-btn');
+            const email = input.value;
+
+            if (!email) {
+                showToast("Please enter a valid email address.", "error");
+                return;
+            }
+
+            // Simulate background processing
+            const originalBtnText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "Joining...";
+
+            // In a real scenario, you would use fetch() to send data to Mailchimp API here.
+            // For this demo, we simulate a successful network request.
+            setTimeout(() => {
+                // Hide form
+                document.getElementById('newsletter-form').classList.add('hidden');
+                // Show success message
+                document.getElementById('newsletter-success').classList.remove('hidden');
+                showToast("Successfully subscribed!", "success");
+                
+                // Reset button state (just in case)
+                btn.disabled = false;
+                btn.innerText = originalBtnText;
+            }, 1500);
+        }
+
+        // ==========================================
         // AUTH LOGIC
         // ==========================================
         function handleLogin(e) {
@@ -2793,8 +2840,8 @@
                     const customInput = document.getElementById('custom-domain-text');
                     if(customInput) customInput.focus();
                 }
-                return;
-            }
+                return; 
+                            }
 
             // Gather Data
             const firstName = document.getElementById('co-firstname') ? document.getElementById('co-firstname').value : '';
@@ -3164,11 +3211,28 @@
 
             db.collection("products").where("status", "==", true).get()
                 .then((snapshot) => {
-                    grid.innerHTML = '';
-                    if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No products available yet.</div>'; return; }
+                    let products = [];
+                    snapshot.forEach(doc => products.push(doc.data()));
 
-                    snapshot.forEach((doc) => {
-                        const p = doc.data();
+                    // ==========================
+                    // INJECT REQUESTED PRODUCT: DDNetwork
+                    // ==========================
+                    const ddnetProduct = {
+                        name: "DDNetwork",
+                        price: "Free",
+                        desc: "Official DDNetwork Platform. Connect, manage, and grow your digital network seamlessly.",
+                        img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=400", // Generic network image
+                        link: "https://ddnet.my"
+                    };
+                    
+                    // Add DDNetwork to the beginning of the list
+                    products.unshift(ddnetProduct);
+                    // ==========================
+
+                    grid.innerHTML = '';
+                    if(products.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No products available yet.</div>'; return; }
+
+                    products.forEach((p) => {
                         const html = `
                             <div class="product-card hover-lift">
                                 <img src="${p.img || 'https://via.placeholder.com/400'}" alt="${p.name}" class="product-image">
@@ -3177,7 +3241,7 @@
                                     <p class="text-sm text-slate-500 mb-2">by DDNex</p>
                                     <p class="text-slate-600 text-sm mb-4 line-clamp-3">${p.desc}</p>
                                     <div class="mt-auto">
-                                        <div class="product-price">RM ${p.price}</div>
+                                        <div class="product-price">${p.price}</div>
                                         <a href="${p.link || '#'}" target="_blank" class="block w-full mt-4 text-center py-2 rounded-lg bg-slate-900 text-white font-medium hover:bg-slate-700 transition-colors">View Product</a>
                                     </div>
                                 </div>
