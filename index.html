@@ -81,10 +81,14 @@
                         'float': 'float 6s ease-in-out infinite',
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'marquee': 'marquee 40s linear infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.6s ease-out forwards'
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
-                        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } }
+                        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
                     }
                 }
             }
@@ -143,56 +147,44 @@
                 radial-gradient(at 0% 100%, rgba(30, 41, 59, 0.03) 0, transparent 50%);
         }
         
-        /* Page Transition System */
+        /* Performance Optimized Page Transition System */
         .page { 
             display: none; 
             opacity: 0; 
-            transform: translateY(20px); 
-            transition: opacity 0.4s ease, transform 0.4s ease; 
-            animation: fadeInPage 0.5s ease forwards;
+            /* Removed heavy transform to reduce repaints */
+            transition: opacity 0.3s ease; 
         }
         .page.active { 
             display: block; 
             opacity: 1; 
-            transform: translateY(0); 
+            animation: fadeIn 0.4s ease-out forwards;
         }
 
-        @keyframes fadeInPage {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
         .hover-lift { 
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease; 
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease; 
+            will-change: transform;
         }
         .hover-lift:hover { 
-            transform: translateY(-8px); 
-            box-shadow: 0 20px 40px -15px rgba(30, 41, 59, 0.15); 
+            transform: translateY(-4px); /* Reduced lift for performance */
+            box-shadow: 0 10px 20px -10px rgba(30, 41, 59, 0.15); 
         }
         
         .btn-primary {
             background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
+            will-change: transform;
         }
-        .btn-primary:before {
-            content: '';
-            position: absolute; top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        .btn-primary:hover:before { left: 100%; }
         .btn-primary:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 10px 30px -10px rgba(30, 41, 59, 0.3); 
+            transform: translateY(-1px); 
+            box-shadow: 0 5px 15px -5px rgba(30, 41, 59, 0.3); 
         }
         
         .input-field {
             background: rgba(248, 250, 252, 0.8);
             border: 1px solid rgba(203, 213, 225, 0.5);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
         .input-field:focus {
             border-color: #6366f1;
@@ -221,6 +213,7 @@
         .blob {
             position: absolute; filter: blur(80px); opacity: 0.15;
             animation: float 10s ease-in-out infinite;
+            will-change: transform;
         }
         
         /* Custom scrollbar */
@@ -234,6 +227,7 @@
             position: fixed; top: 100px; right: 20px;
             z-index: 9999;
             display: flex; flex-direction: column; gap: 10px;
+            pointer-events: none; /* Let clicks pass through container */
         }
         .toast-item {
             background: white;
@@ -243,8 +237,9 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             display: flex; align-items: center; gap: 12px;
             min-width: 300px; max-width: 400px;
+            pointer-events: auto; /* Enable clicks on the toast itself */
             transform: translateX(120%); opacity: 0;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
         }
         .toast-item.show { transform: translateX(0); opacity: 1; }
         .toast-success { border-left: 4px solid #10b981; }
@@ -277,12 +272,13 @@
             max-width: 450px;
             width: 90%;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            animation: scaleIn 0.4s ease;
+            transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        .modal-overlay.active .modal-content { transform: scale(1); }
 
         /* Mobile menu */
-        #mobile-menu { display: none; }
-        #mobile-menu.active { display: block; }
+        #mobile-menu { display: none; transform-origin: top; transition: transform 0.3s ease, opacity 0.3s ease; opacity: 0; transform: scaleY(0); }
+        #mobile-menu.active { display: block; opacity: 1; transform: scaleY(1); }
 
         /* Password requirements */
         .password-requirements {
@@ -483,11 +479,6 @@
             .package-popular { transform: scale(1); }
             #globe-canvas { display: none; }
         }
-        
-        @keyframes scaleIn {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
     </style>
 </head>
 <body class="bg-white antialiased">
@@ -514,12 +505,13 @@
         <div class="modal-content max-w-3xl">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-slate-800">Watch Our Process</h3>
-                <button onclick="document.getElementById('demo-modal').classList.remove('active')" class="text-slate-400 hover:text-slate-600">
+                <button onclick="closeModal('demo-modal')" class="text-slate-400 hover:text-slate-600">
                     <i class="ri-close-line text-2xl"></i>
                 </button>
             </div>
             <div class="aspect-video bg-slate-100 rounded-xl overflow-hidden border border-slate-200">
-                 <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Demo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                 <!-- Using a placeholder iframe for demo purposes -->
+                 <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?controls=0" title="Demo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
         </div>
     </div>
@@ -532,7 +524,7 @@
             </div>
             <h3 class="text-2xl font-bold text-slate-900 mb-2" id="success-title">Success!</h3>
             <p class="text-slate-600 mb-6" id="success-message">Operation completed successfully.</p>
-            <button onclick="document.getElementById('success-modal').classList.remove('active')" class="w-full py-3 rounded-lg btn-primary text-white font-semibold">Okay</button>
+            <button onclick="closeModal('success-modal')" class="w-full py-3 rounded-lg btn-primary text-white font-semibold">Okay</button>
         </div>
     </div>
 
@@ -552,24 +544,20 @@
             <div class="flex justify-between items-center h-20">
                 <a href="#" onclick="event.preventDefault(); navigateTo('home')" class="flex items-center gap-3 group">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                        <!-- Keeping the logo image, but the text next to it is updated -->
                         <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNex" class="w-6 h-6 object-contain invert">
                     </div>
-                    <!-- UPDATED: Brand Name -->
                     <span class="text-2xl font-bold tracking-tight text-slate-800">DD<span class="text-gradient">Nex</span></span>
                 </a>
 
                 <div class="hidden md:flex items-center gap-8">
-                    <!-- FIXED: Added onclick="event.preventDefault()..." to ensure router handles navigation -->
-                    <a href="#" onclick="event.preventDefault(); navigateTo('home')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Home</a>
-                    <a href="#" onclick="event.preventDefault(); navigateTo('features')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Services</a>
-                    <a href="#" onclick="event.preventDefault(); navigateTo('pricing')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
-                    <a href="#" onclick="event.preventDefault(); navigateTo('reviews')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Reviews</a>
-                    <a href="#" onclick="event.preventDefault(); navigateTo('about')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">About</a>
-                    <a href="#" onclick="event.preventDefault(); navigateTo('contact')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Contact</a>
+                    <a href="#" onclick="event.preventDefault(); navigateTo('home')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors" id="nav-home">Home</a>
+                    <a href="#" onclick="event.preventDefault(); navigateTo('features')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors" id="nav-features">Services</a>
+                    <a href="#" onclick="event.preventDefault(); navigateTo('pricing')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors" id="nav-pricing">Pricing</a>
+                    <a href="#" onclick="event.preventDefault(); navigateTo('reviews')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors" id="nav-reviews">Reviews</a>
+                    <a href="#" onclick="event.preventDefault(); navigateTo('about')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors" id="nav-about">About</a>
+                    <a href="#" onclick="event.preventDefault(); navigateTo('contact')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors" id="nav-contact">Contact</a>
                 </div>
 
-                <!-- UPDATED: Auth Buttons Logic -->
                 <div class="flex items-center gap-4" id="desktopAuthLinks"></div>
                 
                 <button class="md:hidden text-slate-600 p-2 ml-4" onclick="toggleMobileMenu()">
@@ -581,7 +569,6 @@
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="md:hidden glass-strong border-t border-slate-200">
             <div class="px-4 py-6 space-y-4">
-                <!-- FIXED: Mobile links also updated with router -->
                 <a href="#" onclick="event.preventDefault(); navigateTo('home'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-2 font-medium">Home</a>
                 <a href="#" onclick="event.preventDefault(); navigateTo('features'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-2 font-medium">Services</a>
                 <a href="#" onclick="event.preventDefault(); navigateTo('pricing'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-2 font-medium">Pricing</a>
@@ -613,7 +600,6 @@
                                 <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
                                 <span class="text-sm font-medium text-slate-600">Malaysia's #1 Web Solutions</span>
                             </div>
-                            <!-- UPDATED: Brand Name -->
                             <h1 class="text-5xl md:text-7xl font-bold leading-[1.1] mb-6">
                                 <span class="block text-slate-900 mb-2">Custom Websites for</span>
                                 <span class="text-gradient">Malaysian Businesses</span>
@@ -626,7 +612,7 @@
                                     View Pricing
                                     <i class="ri-arrow-right-line"></i>
                                 </button>
-                                <button onclick="document.getElementById('demo-modal').classList.add('active')" class="px-8 py-4 rounded-full glass text-slate-700 font-semibold text-lg hover:bg-white transition-all flex items-center gap-2">
+                                <button onclick="openModal('demo-modal')" class="px-8 py-4 rounded-full glass text-slate-700 font-semibold text-lg hover:bg-white transition-all flex items-center gap-2">
                                     <i class="ri-play-circle-line"></i>
                                     Watch Demo
                                 </button>
@@ -650,7 +636,7 @@
                         </div>
 
                         <!-- Dashboard Preview -->
-                        <div class="relative animate-scale-in hidden lg:block">
+                        <div class="relative animate-slide-up hidden lg:block">
                             <div class="absolute -inset-4 bg-gradient-to-r from-indigo-200/50 to-slate-200/50 rounded-3xl blur-2xl"></div>
                             <div class="relative glass rounded-2xl p-2 shadow-2xl">
                                 <div class="bg-white rounded-xl overflow-hidden border border-slate-200">
@@ -742,8 +728,7 @@
             <!-- Services Grid -->
             <div class="py-24 bg-white relative">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-16 animate-fade-in">
-                        <!-- UPDATED: Brand Name -->
+                    <div class="text-center mb-16">
                         <h2 class="text-3xl md:text-5xl font-bold mb-4 text-slate-900">Our <span class="text-gradient">Solutions</span></h2>
                         <p class="text-slate-600 text-lg max-w-2xl mx-auto">Designed in Malaysia. Built for the world. Choose the perfect package for your business needs.</p>
                     </div>
@@ -838,7 +823,6 @@
                         Interactive map of live websites – zoom, pan & click pins for details & direct visits.
                     </p>
 
-                    <!-- FIXED: Added min-height to container -->
                     <div id="map" class="w-full h-[500px] rounded-2xl shadow-lg border border-slate-200 mb-16 z-10 relative bg-slate-100"></div>
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
@@ -1194,25 +1178,21 @@
                                     <div class="grid md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-slate-600 mb-2">First Name</label>
-                                            <!-- Auto-filled via JS if logged in -->
                                             <input type="text" id="co-firstname" required class="input-field w-full px-4 py-3 rounded-lg text-slate-800" placeholder="John">
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-slate-600 mb-2">Last Name</label>
-                                            <!-- Auto-filled via JS if logged in -->
                                             <input type="text" id="co-lastname" required class="input-field w-full px-4 py-3 rounded-lg text-slate-800" placeholder="Doe">
                                         </div>
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-slate-600 mb-2">Email Address</label>
-                                        <!-- Auto-filled via JS if logged in -->
                                         <input type="email" id="co-email" required class="input-field w-full px-4 py-3 rounded-lg text-slate-800" placeholder="john@company.com">
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-slate-600 mb-2">Phone Number</label>
-                                        <!-- Auto-filled via JS if logged in, but left editable -->
                                         <input type="tel" id="co-phone" required class="input-field w-full px-4 py-3 rounded-lg text-slate-800" placeholder="0123456789">
                                     </div>
 
@@ -1396,8 +1376,22 @@
 
                     <!-- Reviews Grid -->
                     <div id="reviews-list" class="grid md:grid-cols-3 gap-6">
-                        <!-- Reviews loaded dynamically -->
-                        <div class="col-span-3 text-center py-12 text-slate-400">Loading reviews...</div>
+                        <!-- Initial Dummy Review (Static) -->
+                        <div class="glass rounded-2xl p-6 border border-slate-200 bg-white hover-lift">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">JD</div>
+                                <div>
+                                    <div class="font-bold text-slate-900">Jane Doe</div>
+                                    <div class="text-xs text-slate-500">Local Business Owner</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-1 mb-3 text-amber-500">
+                                <i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i>
+                            </div>
+                            <p class="text-slate-600 text-sm">"Excellent service! The team was very professional and the website was delivered faster than I expected."</p>
+                        </div>
+                        <!-- Dynamic Firebase reviews will be appended here via JS -->
+                        <div id="firebase-reviews-container" class="contents"></div>
                     </div>
                     <div class="text-center" style="margin-top: 2rem;"><button class="btn btn-primary" onclick="toggleFullReviews()">View All Reviews</button></div>
                 </div>
@@ -2274,7 +2268,6 @@
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center">
                             <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNex" class="w-6 h-6 object-contain invert">
                         </div>
-                        <!-- UPDATED: Brand Name -->
                         <span class="text-xl font-bold text-white">DDNex</span>
                     </div>
                     <p class="text-sm text-slate-400 leading-relaxed">Designed in Malaysia. Built for the world. Professional web design and AI solutions.</p>
@@ -2306,7 +2299,6 @@
                 </div>
             </div>
             <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                <!-- UPDATED: Copyright -->
                 <p class="text-sm text-slate-500">&copy; 2025–2026 DDNex Cloud · DDNex · Reg. No. 202603040752 (MA0342542-K)</p>
                 <div class="flex gap-4">
                     <a href="https://www.linkedin.com/in/muhammad-danial-danish-217bb82ba/" target="_blank" class="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors">
@@ -2419,24 +2411,23 @@
         }
 
         // ==========================================
-        // ROUTER (UPDATED FOR NEW HTML)
+        // ROUTER (OPTIMIZED FOR PERFORMANCE)
         // ==========================================
-        // FIXED: Added missing routes for features, about, and contact
         const routes = {
             '/': 'home', 
             '/home': 'home', 
-            '/features': 'features',  // ADDED
+            '/features': 'features',
             '/pricing': 'pricing', 
             '/reviews': 'reviews', 
             '/order': 'checkout', 
             '/clients': 'portfolio',
             '/founder-danialdanish': 'about', 
-            '/about': 'about',       // ADDED
+            '/about': 'about',
             '/login': 'login', 
             '/signup': 'signup', 
             '/profile': 'profile',
             '/helpdesk': 'helpdesk', 
-            '/contact': 'contact',   // ADDED
+            '/contact': 'contact',
             '/forgot-password': 'forgot-password',
             '/thank-you': 'thank-you', 
             '/updates': 'updates', 
@@ -2447,19 +2438,15 @@
             '/privacy': 'privacy'
         };
 
-        function routeLink(event, path) { event.preventDefault(); navigateTo(path); }
-
         function navigateTo(path) {
-            // FIXED: If path doesn't start with '/', add it automatically to match routes object
-            if (!path.startsWith('/')) {
-                path = '/' + path;
-            }
-
+            // Normalize path
+            if (!path.startsWith('/')) path = '/' + path;
             const sectionId = routes[path];
             if (!sectionId) return console.warn(`Route not found for path: ${path}`);
             
+            // Update History (pushState is faster than reloading)
             window.history.pushState({ path: path }, "", path);
-            updatePageSEO(path); // SEO Update
+            updatePageSEO(path);
             performTransition(sectionId);
         }
 
@@ -2485,40 +2472,32 @@
         let isTransitioning = false;
 
         function performTransition(targetSectionId, isInstant = false) {
-            if (isTransitioning) return;
+            if (isTransitioning || (document.getElementById(`page-${targetSectionId}`).classList.contains('active'))) return;
             isTransitioning = true;
 
             const currentSection = document.querySelector('.page.active');
             const targetSection = document.getElementById(`page-${targetSectionId}`);
-
-            if (currentSection === targetSection) {
-                isTransitioning = false;
-                return;
-            }
 
             const transitionDuration = 400; 
 
             const showNewSection = () => {
                 if (currentSection) {
                     currentSection.classList.remove('active');
-                    currentSection.style.opacity = '';
-                    currentSection.style.transform = '';
                 }
 
                 window.scrollTo(0, 0);
 
+                // Force reflow for animation
                 targetSection.style.display = 'block';
                 void targetSection.offsetWidth; 
                 targetSection.classList.add('active');
 
-                // Page specific logic
+                // Page specific logic (Lazy loaded logic)
                 if(targetSectionId === 'profile') loadProfilePageData();
-                if(targetSectionId === 'reviews') loadReviewsMarquee();
+                if(targetSectionId === 'reviews') loadReviewsFromFirebase();
                 if(targetSectionId === 'checkout' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
                 if(targetSectionId === 'updates' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-                if(targetSectionId === 'home') {
-                    loadHomePortfolio();
-                }
+                if(targetSectionId === 'home') loadHomePortfolio();
                 if(targetSectionId === 'portfolio') loadPortfolio();
 
                 isTransitioning = false;
@@ -2527,1500 +2506,1233 @@
             if (isInstant) {
                 showNewSection();
             } else {
-                if (currentSection) {
-                    currentSection.classList.remove('active');
-                }
-                setTimeout(showNewSection, 50);
+                // Hide current quickly
+                if (currentSection) currentSection.classList.remove('active');
+                setTimeout(showNewSection, 50); // Small delay to allow DOM to settle
             }
         }
     
         setTimeout(handleInitialRoute, 100);
 
         function updatePageSEO(path) {
-    const config = SEO_CONFIG[path];
-    if(config) {
-        document.title = config.title;
-        document.querySelector('meta[name="description"]').setAttribute("content", config.desc);
-        document.querySelector('link[rel="canonical"]').setAttribute("href", config.canonical);
-    }
-}
-
-// ==========================================
-// TOAST NOTIFICATION SYSTEM (OLD LOGIC)
-// ==========================================
-function showToast(message, type = 'info') {
-    let title = "Notice";
-    let iconClass = "ri-information-line";
-    
-    if (type === 'success') {
-        title = "Success";
-        iconClass = "ri-checkbox-circle-fill";
-    } else if (type === 'error') {
-        title = "Error";
-        iconClass = "ri-close-circle-fill";
-    } else if (type === 'warning') {
-        title = "Warning";
-        iconClass = "ri-error-warning-fill";
-    }
-    
-    const container = document.getElementById('toastContainer');
-    if(!container) return;
-    const toast = document.createElement('div');
-    toast.className = `toast-item toast-${type}`;
-    toast.innerHTML = `
-        <i class="toast-icon ${iconClass}"></i>
-        <div class="toast-content">
-            <div class="toast-title">${title}</div>
-            <div class="toast-message">${message}</div>
-        </div>
-        <i class="ri-close-line toast-close" onclick="this.parentElement.remove()"></i>
-    `;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 10);
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            if(toast.parentElement) toast.remove();
-        }, 500);
-    }, 4000);
-}
-
-// ==========================================
-// MODALS & ALERTS
-// ==========================================
-function showAuthModal() {
-    const modal = document.getElementById('auth-modal');
-    if(modal) modal.classList.add('active');
-}
-
-function closeAuthModal() {
-    const modal = document.getElementById('auth-modal');
-    if(modal) modal.classList.remove('active');
-}
-
-const modalOverlay = document.getElementById('glass-modal-overlay');
-const modalTitle = document.getElementById('glass-modal-title');
-const modalDesc = document.getElementById('glass-modal-desc');
-const modalBtn = document.getElementById('glass-modal-btn');
-const modalContainer = document.querySelector('.animated-notification-container');
-
-function showGlassModal(title, message, type = 'warning', btnText = 'Dismiss', btnCallback = null) {
-    if(!modalOverlay || !modalContainer) return;
-
-    modalTitle.innerText = title;
-    modalDesc.innerText = message;
-    
-    let iconHTML = '';
-    if (type === 'success') {
-        iconHTML = `
-            <div class="notif-icon-wrapper">
-                <svg class="checkmark-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45"/>
-                    <path class="checkmark-check" d="M30 50 L45 65 L70 35"/>
-                </svg>
-            </div>`;
-    } else if (type === 'error') {
-        iconHTML = `
-            <div class="notif-icon-wrapper shake-wrapper">
-                <svg class="error-circle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45"/>
-                    <path class="error-x left" d="M35 35 L65 65"/>
-                    <path class="error-x right" d="M65 35 L35 65"/>
-                </svg>
-            </div>`;
-    } else {
-        iconHTML = `<div class="warning-pulse"><i class="ri-information-line"></i></div>`;
-    }
-
-    const existingIcon = modalContainer.querySelector('.notif-icon-wrapper, .warning-pulse');
-    if (existingIcon) existingIcon.remove();
-
-    modalContainer.insertAdjacentHTML('afterbegin', iconHTML);
-
-    modalOverlay.style.display = 'flex';
-    void modalOverlay.offsetWidth; 
-    modalOverlay.classList.add('active');
-
-    clearTimeout(window.modalTimer);
-    window.modalTimer = setTimeout(() => {
-        closeModal();
-    }, 3000);
-
-    modalBtn.onclick = () => {
-        clearTimeout(window.modalTimer);
-                closeModal();
-        if (btnCallback) btnCallback();
-    };
-
-    function closeModal() {
-        if(!modalOverlay) return;
-        modalOverlay.classList.remove('active');
-        setTimeout(() => {
-            modalOverlay.style.display = 'none';
-            const wrapper = modalContainer.querySelector('.notif-icon-wrapper, .warning-pulse');
-            if(wrapper) wrapper.remove();
-        }, 400);
-    }
-}
-
-// ==========================================
-// AUTH LOGIC (FROM OLD HTML)
-// ==========================================
-function handleLogin(e) {
-    e.preventDefault();
-    if(!auth) return showGlassModal("Error", "Authentication system initializing...", "error");
-    
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    
-    auth.signInWithEmailAndPassword(email, password).then(() => {
-        const user = auth.currentUser;
-        triggerLoginSuccessAnimation(() => {
-            navigateTo('/');
-        }, user.displayName || user.email.split('@')[0]);
-    }).catch((error) => {
-        const friendlyMsg = getFirebaseErrorMessage(error);
-        showGlassModal("Login Failed", friendlyMsg, "error");
-    });
-}
-
-function handleSignup(e) {
-    e.preventDefault();
-    if(!auth) return showGlassModal("Error", "Firebase not configured", "error");
-    
-    const name = document.getElementById('signup-name').value;
-    const phone = document.getElementById('signup-phone').value;
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-    
-    auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
-        return db.collection("users").doc(userCredential.user.uid).set({ 
-            name: name, phone: phone, email: email, role: 'user',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp() 
-        });
-    }).then(() => {
-        triggerLoginSuccessAnimation(() => {
-            navigateTo('/');
-        }, name);
-    }).catch((error) => {
-        const friendlyMsg = getFirebaseErrorMessage(error);
-        showGlassModal("Signup Failed", friendlyMsg, "error");
-    });
-}
-
-function handleGoogleAuth() {
-    if(!auth) return showGlassModal("Error", "Auth not initialized", "error");
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then((result) => {
-        const user = result.user;
-        db.collection("users").doc(user.uid).get().then((doc) => {
-            if (!doc.exists) {
-                return db.collection("users").doc(user.uid).set({
-                    name: user.displayName || 'Google User', email: user.email, phone: '', role: 'user',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+            const config = SEO_CONFIG[path];
+            if(config) {
+                document.title = config.title;
+                document.querySelector('meta[name="description"]').setAttribute("content", config.desc);
+                document.querySelector('link[rel="canonical"]').setAttribute("href", config.canonical);
             }
-        }).then(() => {
-            const name = user.displayName || user.email.split('@')[0];
-            triggerLoginSuccessAnimation(() => {
+        }
+
+        // ==========================================
+        // UI UTILITIES
+        // ==========================================
+        function showToast(message, type = 'info') {
+            let title = "Notice";
+            let iconClass = "ri-information-line";
+            
+            if (type === 'success') {
+                title = "Success";
+                iconClass = "ri-checkbox-circle-fill";
+            } else if (type === 'error') {
+                title = "Error";
+                iconClass = "ri-close-circle-fill";
+            } else if (type === 'warning') {
+                title = "Warning";
+                iconClass = "ri-error-warning-fill";
+            }
+            
+            const container = document.getElementById('toastContainer');
+            if(!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast-item toast-${type}`;
+            toast.innerHTML = `
+                <i class="toast-icon ${iconClass}"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <i class="ri-close-line toast-close" onclick="this.parentElement.remove()"></i>
+            `;
+            
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if(toast.parentElement) toast.remove();
+                }, 500);
+            }, 4000);
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if(modal) {
+                modal.style.display = 'flex';
+                requestAnimationFrame(() => modal.classList.add('active'));
+            }
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if(modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if(menu) menu.classList.toggle('active');
+        }
+
+        // ==========================================
+        // AUTH LOGIC
+        // ==========================================
+        function handleLogin(e) {
+            e.preventDefault();
+            if(!auth) return showToast("Error", "Authentication system initializing...", "error");
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            auth.signInWithEmailAndPassword(email, password).then(() => {
+                showToast("Success", "Login Successful!", "success");
                 navigateTo('/');
-            }, name);
-        });
-    }).catch((error) => {
-        console.error(error);
-        const friendlyMsg = getFirebaseErrorMessage(error);
-        showGlassModal("Error", friendlyMsg, "error");
-    });
-}
-
-function triggerLoginSuccessAnimation(onCompleteCallback, userName) {
-    const overlay = document.getElementById('warp-transition-overlay');
-    const flash = document.getElementById('warp-flash');
-    const welcomeText = document.getElementById('warp-welcome-text');
-    
-    if(!overlay) {
-        if(onCompleteCallback) onCompleteCallback();
-        return;
-    }
-
-    const displayName = userName || 'Traveler';
-    welcomeText.innerHTML = `Welcome <span>${displayName}</span>`;
-    
-    // Initialize Canvas Stars
-    const warpCanvas = document.getElementById('warp-canvas');
-    const warpCtx = warpCanvas ? warpCanvas.getContext('2d') : null;
-    let warpStars = [];
-    let warpSpeed = 0;
-    let isWarping = false;
-    let warpAnimationId = null;
-
-    function initWarpStars() {
-        if(!warpCanvas) return;
-        warpCanvas.width = window.innerWidth;
-        warpCanvas.height = window.innerHeight;
-        warpStars = [];
-        for(let i=0; i<800; i++){
-            warpStars.push({
-                x: (Math.random()-0.5)*warpCanvas.width,
-                y: (Math.random()-0.5)*warpCanvas.height,
-                z: Math.random()*warpCanvas.width
+            }).catch((error) => {
+                showToast("Login Failed", getFirebaseErrorMessage(error), "error");
             });
         }
-    }
 
-    function animateWarp() {
-        if(!warpCtx) return;
-        const cx = warpCanvas.width / 2;
-        const cy = warpCanvas.height / 2;
-        
-        warpCtx.fillStyle = "#000000"; 
-        warpCtx.fillRect(0, 0, warpCanvas.width, warpCanvas.height);
-
-        for(let star of warpStars){
-            star.z -= warpSpeed;
-            if(star.z <= 0){
-                star.z = warpCanvas.width;
-                star.x = (Math.random()-0.5)*warpCanvas.width;
-                star.y = (Math.random()-0.5)*warpCanvas.height;
-            }
-            let k = 128.0 / star.z;
-            let px = star.x * k + cx;
-            let py = star.y * k + cy;
-            let size = (1 - star.z/warpCanvas.width) * 3.5;
+        function handleSignup(e) {
+            e.preventDefault();
+            if(!auth) return showToast("Error", "Firebase not configured", "error");
             
-            warpCtx.fillStyle = "#ffffff"; 
-            warpCtx.fillRect(px, py, size, size);
-
-            if(isWarping && warpSpeed > 5){
-                const gradient = warpCtx.createLinearGradient(px, py, px - star.x*0.03, py - star.y*0.03);
-                gradient.addColorStop(0, "rgba(255,255,255,0.8)"); 
-                gradient.addColorStop(1, "rgba(255,255,255,0)");
-                warpCtx.strokeStyle = gradient;
-                warpCtx.lineWidth = size * 0.8;
-                warpCtx.beginPath();
-                warpCtx.moveTo(px, py);
-                warpCtx.lineTo(px - star.x*0.05, py - star.y*0.05);
-                warpCtx.stroke();
-            }
-        }
-        warpAnimationId = requestAnimationFrame(animateWarp);
-    }
-
-    initWarpStars();
-    
-    overlay.classList.add('active');
-    isWarping = true;
-    
-    let accelerate = setInterval(()=>{
-        warpSpeed += 3; 
-        if (warpSpeed >= 80){
-            clearInterval(accelerate);
-        }
-    }, 30);
-    
-    setTimeout(() => {
-        welcomeText.style.opacity = "1";
-    }, 1500);
-    
-    setTimeout(() => {
-        flash.style.opacity = "1";
-        welcomeText.style.opacity = "0"; 
-        
-        clearInterval(accelerate);
-        
-        let decelerate = setInterval(() => {
-            warpSpeed -= 10;
-            if (warpSpeed <= 0) {
-                warpSpeed = 0;
-                clearInterval(decelerate);
-            }
-        }, 20);
-
-    }, 4000); 
-
-    setTimeout(()=>{
-        flash.style.opacity = "0";
-        overlay.classList.remove('active');
-        
-        if(warpAnimationId) cancelAnimationFrame(warpAnimationId);
-        warpAnimationId = null;
-        isWarping = false;
-
-        if(onCompleteCallback) onCompleteCallback();
-    }, 5000); 
-}
-
-function getFirebaseErrorMessage(error) {
-    switch (error.code) {
-        case 'auth/user-not-found': return "No account found with this email address.";
-        case 'auth/wrong-password': return "Incorrect password. Please try again.";
-        case 'auth/invalid-login-credentials': return "Invalid email or password. Please try again.";
-        case 'auth/invalid-credential': return "The provided credentials are invalid.";
-        case 'auth/email-already-in-use': return "This email is already registered. Please login.";
-        case 'auth/weak-password': return "Password should be at least 6 characters.";
-        case 'auth/invalid-email': return "Please enter a valid email address.";
-        case 'auth/too-many-requests': return "Access temporarily disabled due to many failed attempts. Reset password or try later.";
-        case 'auth/user-disabled': return "This account has been disabled. Contact support.";
-        case 'auth/popup-closed-by-user': return "Sign-in process was cancelled.";
-        case 'auth/network-request-failed': return "Network error. Please check your connection.";
-        default: return "An unexpected error occurred. Please try again.";
-    }
-}
-
-// ==========================================
-// PROFILE & AUTH STATE LISTENER
-// ==========================================
-function loadProfilePageData() {
-    if(!auth || !auth.currentUser) return;
-    const profFields = ['prof-name', 'prof-phone', 'prof-email', 'prof-company'];
-    profFields.forEach(id => document.getElementById(id).value = "Loading...");
-    db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            if(data.name) document.getElementById('prof-name').value = data.name;
-            if(data.phone) document.getElementById('prof-phone').value = data.phone;
-            if(data.email) document.getElementById('prof-email').value = data.email || auth.currentUser.email;
-            if(data.company) document.getElementById('prof-company').value = data.company;
-            if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; showVoucherCard(data.personalVoucher); } 
-            else { currentUserPersonalVoucher = null; hideVoucherCard(); }
-            loadOrderHistory(auth.currentUser.uid);
-        }
-    }).catch((error) => showGlassModal("Error", "Error loading profile data.", "error"));
-}
-
-function loadOrderHistory(uid) {
-    if(!db) return;
-    const tbody = document.getElementById('order-history-body');
-    const container = document.getElementById('profile-history-section');
-    const noMsg = document.getElementById('no-orders');
-    
-    container.style.display = 'block';
-    if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
-
-    db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(10)
-        .onSnapshot((snapshot) => {
-            if(tbody) tbody.innerHTML = '';
-            if (snapshot.empty) {
-                if(noMsg) noMsg.classList.remove('hidden');
-                if(tbody) tbody.parentElement.style.display = 'none';
-            } else {
-                if(noMsg) noMsg.classList.add('hidden');
-                if(tbody) tbody.parentElement.style.display = 'table';
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
-                    const total = data.total || 'RM 0';
-                    const pkg = data.package || 'Unknown Package';
-                    const status = data.status || 'Pending';
-                    let statusClass = 'status-pending';
-                    if(status === 'Paid') statusClass = 'status-paid';
-                    if(status === 'Completed') statusClass = 'status-completed';
-                    if(status === 'Cancelled') statusClass = 'status-cancelled';
-                    
-                    const row = `<tr><td>${date}</td><td style="font-weight:600; color:var(--text-main);">${pkg}</td><td>${total}</td><td><span class="status-badge ${statusClass}">${status}</span></td></tr>`;
-                    if(tbody) tbody.innerHTML += row;
+            const name = document.getElementById('signup-name').value;
+            const phone = document.getElementById('signup-phone').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
+                return db.collection("users").doc(userCredential.user.uid).set({ 
+                    name: name, phone: phone, email: email, role: 'user',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
                 });
+            }).then(() => {
+                showToast("Success", "Account Created!", "success");
+                navigateTo('/');
+            }).catch((error) => {
+                showToast("Signup Failed", getFirebaseErrorMessage(error), "error");
+            });
+        }
+
+        function handleGoogleAuth() {
+            if(!auth) return showToast("Error", "Auth not initialized", "error");
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then((result) => {
+                const user = result.user;
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if (!doc.exists) {
+                        return db.collection("users").doc(user.uid).set({
+                            name: user.displayName || 'Google User', email: user.email, phone: '', role: 'user',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }).then(() => {
+                    showToast("Success", "Logged in with Google", "success");
+                    navigateTo('/');
+                });
+            }).catch((error) => {
+                showToast("Error", getFirebaseErrorMessage(error), "error");
+            });
+        }
+
+        function getFirebaseErrorMessage(error) {
+            switch (error.code) {
+                case 'auth/user-not-found': return "No account found with this email address.";
+                case 'auth/wrong-password': return "Incorrect password. Please try again.";
+                case 'auth/invalid-login-credentials': return "Invalid email or password. Please try again.";
+                case 'auth/invalid-credential': return "The provided credentials are invalid.";
+                case 'auth/email-already-in-use': return "This email is already registered. Please login.";
+                case 'auth/weak-password': return "Password should be at least 6 characters.";
+                case 'auth/invalid-email': return "Please enter a valid email address.";
+                case 'auth/too-many-requests': return "Access temporarily disabled due to many failed attempts. Reset password or try later.";
+                case 'auth/user-disabled': return "This account has been disabled. Contact support.";
+                case 'auth/popup-closed-by-user': return "Sign-in process was cancelled.";
+                case 'auth/network-request-failed': return "Network error. Please check your connection.";
+                default: return "An unexpected error occurred. Please try again.";
             }
-        });
-}
+        }
 
-function showVoucherCard(voucher) {
-    const section = document.getElementById('profile-voucher-section');
-    const text = document.getElementById('profile-voucher-text');
-    const actionBtn = document.getElementById('profile-voucher-action');
-    if(!section || !text || !actionBtn) return;
-
-    section.style.display = 'block';
-    const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
-    let expiryText = voucher.expiryDate ? ` | Exp: ${voucher.expiryDate.toDate().toLocaleDateString()}` : "";
-    text.innerText = `Code: ${voucher.code} | Value: ${displayVal}${expiryText}`;
-    if (voucher.status === 'redeemed') {
-        document.getElementById('profile-voucher-title').innerText = "Voucher Redeemed";
-        text.style.textDecoration = 'line-through';
-        actionBtn.innerHTML = '<span style="color:var(--accent-success); font-weight:700; border:1px solid var(--accent-success); padding:4px 12px; border-radius:20px; font-size:0.8rem;">USED</span>';
-    } else {
-        document.getElementById('profile-voucher-title').innerText = "You have a Gift Voucher!";
-        actionBtn.innerHTML = '<button type="button" class="btn btn-danger" style="width: auto; padding: 0.6rem 1.2rem;" onclick="deletePersonalVoucher()">Delete</button>';
-    }
-}
-
-function hideVoucherCard() {
-    const section = document.getElementById('profile-voucher-section');
-    if(section) section.style.display = 'none';
-}
-
-function handleProfileUpdate(e) {
-    e.preventDefault();
-    if(!auth || !auth.currentUser) return;
-    const name = document.getElementById('prof-name').value;
-    const phone = document.getElementById('prof-phone').value;
-    const company = document.getElementById('prof-company').value;
-    db.collection("users").doc(auth.currentUser.uid).update({ name: name, phone: phone, company: company })
-    .then(() => {
-        showGlassModal("Success", "Profile Updated Successfully!", "success");
-        fetchAndSyncUserData(auth.currentUser.uid);
-    }).catch((error) => showGlassModal("Error", error.message, "error"));
-}
-
-function deletePersonalVoucher() {
-    if(!auth || !auth.currentUser) return;
-    if(confirm("Are you sure you want to remove this voucher?")) {
-        db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
-            currentUserPersonalVoucher = null; 
-            loadProfilePageData();
-            fetchAndSyncUserData(auth.currentUser.uid);
-            showGlassModal("Success", "Voucher removed from account.", "success");
-        });
-    }
-}
-
-function handleLogout() {
-    if(auth) { 
-        currentUserPersonalVoucher = null; 
-        auth.signOut().then(() => { 
-            showGlassModal("Success", "Logged out", "success"); 
-            navigateTo('/'); 
-        }); 
-    }
-}
-
-// Auth State Listener (Combined logic)
-if(auth) {
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            db.collection("users").doc(user.uid).get().then((doc) => {
+        // ==========================================
+        // AUTH STATE LISTENER
+        // ==========================================
+        function loadProfilePageData() {
+            if(!auth || !auth.currentUser) return;
+            const profFields = ['prof-name', 'prof-phone', 'prof-email', 'prof-company'];
+            profFields.forEach(id => { 
+                const el = document.getElementById(id); 
+                if(el) el.value = "Loading..."; 
+            });
+            db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
-                    currentUserRole = data.role || 'user'; 
-                    updateHeaderForUser(user); 
+                    if(data.name) document.getElementById('prof-name').value = data.name;
+                    if(data.phone) document.getElementById('prof-phone').value = data.phone;
+                    if(data.email) document.getElementById('prof-email').value = data.email || auth.currentUser.email;
+                    if(data.company) document.getElementById('prof-company').value = data.company;
                     if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; showVoucherCard(data.personalVoucher); } 
                     else { currentUserPersonalVoucher = null; hideVoucherCard(); }
-                    fetchAndSyncUserData(user.uid);
-                    if(!data.phone) {
-                        showGlassModal("Profile Incomplete", "Please complete your profile (Phone Number).", "warning");
-                        if(window.location.pathname !== '/profile') setTimeout(() => navigateTo('/profile'), 1000);
+                    loadOrderHistory(auth.currentUser.uid);
+                }
+            }).catch((error) => showToast("Error", "Error loading profile data.", "error"));
+        }
+
+        function loadOrderHistory(uid) {
+            if(!db) return;
+            const tbody = document.getElementById('order-history-body');
+            const container = document.getElementById('profile-history-section');
+            const noMsg = document.getElementById('no-orders');
+            
+            container.style.display = 'block';
+            if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+
+            db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(10)
+                .onSnapshot((snapshot) => {
+                    if(tbody) tbody.innerHTML = '';
+                    if (snapshot.empty) {
+                        if(noMsg) noMsg.classList.remove('hidden');
+                        if(tbody) tbody.parentElement.style.display = 'none';
+                    } else {
+                        if(noMsg) noMsg.classList.add('hidden');
+                        if(tbody) tbody.parentElement.style.display = 'table';
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
+                            const total = data.total || 'RM 0';
+                            const pkg = data.package || 'Unknown Package';
+                            const status = data.status || 'Pending';
+                            let statusClass = 'status-pending';
+                            if(status === 'Paid') statusClass = 'status-paid';
+                            if(status === 'Completed') statusClass = 'status-completed';
+                            if(status === 'Cancelled') statusClass = 'status-cancelled';
+                            
+                            const row = `<tr><td>${date}</td><td style="font-weight:600; color:var(--text-main);">${pkg}</td><td>${total}</td><td><span class="status-badge ${statusClass}">${status}</span></td></tr>`;
+                            if(tbody) tbody.innerHTML += row;
+                        });
+                    }
+                });
+        }
+
+        function showVoucherCard(voucher) {
+            const section = document.getElementById('profile-voucher-section');
+            const text = document.getElementById('profile-voucher-text');
+            const actionBtn = document.getElementById('profile-voucher-action');
+            if(!section || !text || !actionBtn) return;
+
+            section.style.display = 'block';
+            const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
+            let expiryText = voucher.expiryDate ? ` | Exp: ${voucher.expiryDate.toDate().toLocaleDateString()}` : "";
+            text.innerText = `Code: ${voucher.code} | Value: ${displayVal}${expiryText}`;
+            if (voucher.status === 'redeemed') {
+                document.getElementById('profile-voucher-title').innerText = "Voucher Redeemed";
+                text.style.textDecoration = 'line-through';
+                actionBtn.innerHTML = '<span style="color:var(--accent-success); font-weight:700; border:1px solid var(--accent-success); padding:4px 12px; border-radius:20px; font-size:0.8rem;">USED</span>';
+            } else {
+                document.getElementById('profile-voucher-title').innerText = "You have a Gift Voucher!";
+                actionBtn.innerHTML = '<button type="button" class="btn btn-danger" style="width: auto; padding: 0.6rem 1.2rem;" onclick="deletePersonalVoucher()">Delete</button>';
+            }
+        }
+
+        function hideVoucherCard() {
+            const section = document.getElementById('profile-voucher-section');
+            if(section) section.style.display = 'none';
+        }
+
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            if(!auth || !auth.currentUser) return;
+            const name = document.getElementById('prof-name').value;
+            const phone = document.getElementById('prof-phone').value;
+            const company = document.getElementById('prof-company').value;
+            db.collection("users").doc(auth.currentUser.uid).update({ name: name, phone: phone, company: company })
+            .then(() => {
+                showToast("Success", "Profile Updated Successfully!", "success");
+                fetchAndSyncUserData(auth.currentUser.uid);
+            }).catch((error) => showToast("Error", error.message,                 "error"));
+        }
+
+        function deletePersonalVoucher() {
+            if(!auth || !auth.currentUser) return;
+            if(confirm("Are you sure you want to remove this voucher?")) {
+                db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
+                    currentUserPersonalVoucher = null; 
+                    loadProfilePageData();
+                    fetchAndSyncUserData(auth.currentUser.uid);
+                    showToast("Success", "Voucher removed from account.", "success");
+                });
+            }
+        }
+
+        function handleLogout() {
+            if(auth) { 
+                currentUserPersonalVoucher = null; 
+                auth.signOut().then(() => { 
+                    showToast("Success", "Logged out", "success"); 
+                    navigateTo('/'); 
+                }); 
+            }
+        }
+
+        // Auth State Listener
+        if(auth) {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    db.collection("users").doc(user.uid).get().then((doc) => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            currentUserRole = data.role || 'user'; 
+                            updateHeaderForUser(user); 
+                            if(data.personalVoucher) { 
+                                currentUserPersonalVoucher = data.personalVoucher; 
+                                // If on profile page, show voucher
+                                if(document.getElementById('page-profile').classList.contains('active')) {
+                                    showVoucherCard(data.personalVoucher);
+                                }
+                            } else { 
+                                currentUserPersonalVoucher = null; 
+                                if(document.getElementById('page-profile').classList.contains('active')) {
+                                    hideVoucherCard();
+                                }
+                            }
+                            fetchAndSyncUserData(user.uid);
+                        }
+                    });
+                } else {
+                    updateHeaderForGuest(); 
+                    clearUserData(); 
+                    if(document.getElementById('page-profile').classList.contains('active')) {
+                        hideVoucherCard();
                     }
                 }
             });
-        } else {
-            updateHeaderForGuest(); 
-            clearUserData(); 
-            hideVoucherCard();
         }
-    });
-}
 
-function updateHeaderForUser(user) {
-    const isAdmin = currentUserRole === 'admin';
-    const deskAuth = document.getElementById('desktopAuthLinks');
-    if(deskAuth) {
-        let userControls = `<a href="#" onclick="navigateTo('/profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="ri-user-line"></i> Profile</a><span class="logout-btn hidden md:block text-slate-600 cursor-pointer transition: 0.2s white-space-nowrap;" onclick="handleLogout()">Logout</span>`;
-        if (isAdmin) userControls = `<a href="admin.html" target="_blank" class="admin-link" title="Admin Portal"><i class="ri-shield-user-fill"></i></a><span style="color:var(--text-tertiary); margin: 0 10px;">|</span>${userControls}`;
-        deskAuth.innerHTML = userControls;
-    }
-    
-    const mobAuth = document.getElementById('mobileAuthLinksContainer');
-    if(mobAuth) {
-        let authButtons = `<a href="/profile" onclick="routeLink(event, '/profile'); toggleMobileMenu()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-user-fill" style="margin-right:15px;"></i> Profile</a>`;
-        if (isAdmin) authButtons += `<a href="admin.html" target="_blank" onclick="toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-shield-user-fill" style="margin-right:15px; color:var(--accent-warn);"></i> Admin</a>`;
-        authButtons += `<a href="#" onclick="handleLogout(); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; color: var(--accent-warn);"><i class="ri-logout-box-r-fill" style="margin-right:15px;"></i> Logout</a>`;
-        mobAuth.innerHTML = authButtons;
-    }
-}
-
-function updateHeaderForGuest() {
-    const deskAuth = document.getElementById('desktopAuthLinks');
-    if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="navigateTo('login')" class="btn-glass" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-login-circle-fill"></i> Login</a>`;
-    const mobAuth = document.getElementById('mobileAuthLinksContainer');
-    if(mobAuth) mobAuth.innerHTML = `<a href="/login" onclick="navigateTo('login'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-login-circle-fill" style="margin-right:15px;"></i> Login</a><a href="/signup" onclick="navigateTo('signup'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-user-add-fill" style="margin-right:15px;"></i> Sign Up</a>`;
-}
-
-// Helper to clear data
-function clearUserData() {
-    const inputs = ['prof-name', 'prof-phone', 'prof-email', 'prof-company', 'co-name', 'co-phone', 'co-email', 'co-company'];
-    inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    const label = document.getElementById('auto-fill-label'); if(label) label.style.display = 'none';
-}
-
-// ==========================================
-// PRICING & CHECKOUT LOGIC (INTEGRATED)
-// ==========================================
-function setBilling(cycle) {
-    billingCycle = cycle;
-    // New HTML uses buttons, so we toggle their classes directly
-    const btnMonthly = document.getElementById('btn-monthly');
-    const btnOnetime = document.getElementById('btn-onetime');
-
-    if(btnMonthly && btnOnetime) {
-        if(cycle === 'monthly') { 
-            btnMonthly.classList.add('bg-slate-800', 'text-white'); 
-            btnOnetime.classList.remove('bg-slate-800', 'text-white'); 
-        } else { 
-            btnMonthly.classList.remove('bg-slate-800', 'text-white'); 
-            btnOnetime.classList.add('bg-slate-800', 'text-white'); 
-        }
-    }
-
-    // Update Prices in UI
-    document.querySelectorAll('.price-display').forEach(el => {
-        // In new HTML, data attributes are used
-        const monthly = el.dataset.monthly;
-        const onetime = el.dataset.onetime;
-        if (monthly && onetime) {
-            el.textContent = 'RM ' + (cycle === 'monthly' ? monthly : onetime);
-            el.parentElement.querySelector('.price-period').textContent = cycle === 'monthly' ? '/month' : ' one-time';
-        }
-    });
-
-    // Toggle Maintenance visibility
-    document.querySelectorAll('.maintenance-yes').forEach(el => el.classList.toggle('hidden', cycle === 'onetime'));
-    document.querySelectorAll('.maintenance-no').forEach(el => el.classList.toggle('hidden', cycle === 'monthly'));
-
-    // Update State
-    state.billingCycle = cycle;
-    state.isOneTime = (cycle === 'onetime');
-    
-    // If on checkout page, update totals
-    if(selectedPackageType && PRICING_DATA[selectedPackageType]) {
-        state.packagePrice = cycle === 'monthly' ? PRICING_DATA[selectedPackageType].monthly : PRICING_DATA[selectedPackageType].oneTime;
-        // Re-calculate total
-        updateTotal();
-    }
-}
-
-function attemptSelectPackage(name, type) {
-    // Logic from old HTML: Check login first
-    if (typeof auth === 'undefined' || auth === null) { showGlassModal("Error", "Authentication system initializing...", "error"); return; }
-    
-    if (auth.currentUser) { 
-        selectPackage(name, type); 
-    } else { 
-        showAuthModal(); 
-    }
-}
-
-function selectPackage(name, type) {
-    selectedPackage = name;
-    selectedPackageType = type;
-    state.packageType = type;
-    state.billingCycle = billingCycle;
-    state.isOneTime = (billingCycle === 'onetime');
-    state.paymentMode = 'full';
-    state.setupFee = PRICING_DATA[type].setupFee;
-    state.packagePrice = billingCycle === 'monthly' ? PRICING_DATA[type].monthly : PRICING_DATA[type].oneTime;
-
-    // UI Updates for Checkout
-    const summaryPkgName = document.getElementById('summary-pkg-name');
-    const summaryPkgPrice = document.getElementById('summary-pkg-price');
-    const summaryBillingType = document.getElementById('summary-billing-type');
-
-    if(summaryPkgName) summaryPkgName.textContent = name;
-    if(summaryPkgPrice) summaryPkgPrice.textContent = billingCycle === 'monthly' ? `RM ${state.packagePrice}/month` : `RM ${state.packagePrice} one-time`;
-    if(summaryBillingType) summaryBillingType.textContent = billingCycle === 'monthly' ? 'Billed monthly. Cancel anytime.' : 'One-time purchase. No maintenance included.';
-
-    // Auto-fill data if logged in
-    if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-    else { clearUserData(); hideVoucherCard(); }
-
-    updateTotal();
-    navigateTo('checkout');
-}
-
-function fetchAndSyncUserData(uid) {
-    if(!db) return;
-    db.collection("users").doc(uid).get().then((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            // Sync inputs if they exist
-            if(document.getElementById('co-firstname')) document.getElementById('co-firstname').value = data.name || '';
-            if(document.getElementById('co-lastname')) document.getElementById('co-lastname').value = ''; // Split name logic usually handles this, simplistic here
-            if(document.getElementById('co-email')) {
-                document.getElementById('co-email').value = data.email || auth.currentUser.email;
-                document.getElementById('co-email').readOnly = true; // Lock email
+        function updateHeaderForUser(user) {
+            const isAdmin = currentUserRole === 'admin';
+            const deskAuth = document.getElementById('desktopAuthLinks');
+            if(deskAuth) {
+                let userControls = `<a href="#" onclick="navigateTo('profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="ri-user-line"></i> Profile</a><span class="logout-btn hidden md:block text-slate-600 cursor-pointer transition: 0.2s white-space-nowrap;" onclick="handleLogout()">Logout</span>`;
+                if (isAdmin) userControls = `<a href="admin.html" target="_blank" class="admin-link" title="Admin Portal"><i class="ri-shield-user-fill"></i></a><span style="color:var(--text-tertiary); margin: 0 10px;">|</span>${userControls}`;
+                deskAuth.innerHTML = userControls;
             }
-            if(document.getElementById('co-phone')) document.getElementById('co-phone').value = data.phone || '';
-            if(document.getElementById('co-company')) document.getElementById('co-company').value = data.company || '';
             
-            if(data.personalVoucher) { 
-                currentUserPersonalVoucher = data.personalVoucher; 
-                // Show in checkout if applicable
-                const checkoutVoucherSection = document.getElementById('checkout-voucher-section');
-                if(checkoutVoucherSection) {
-                    checkoutVoucherSection.style.display = 'block';
-                    const displayVal = data.personalVoucher.type === 'fixed' ? `RM ${data.personalVoucher.value}` : `${data.personalVoucher.value * 100}%`;
-                    document.getElementById('checkout-voucher-text').innerText = `${data.personalVoucher.code} (-${displayVal})`;
+            const mobAuth = document.getElementById('mobileAuthLinksContainer');
+            if(mobAuth) {
+                let authButtons = `<a href="#" onclick="navigateTo('profile'); toggleMobileMenu()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-user-fill" style="margin-right:15px;"></i> Profile</a>`;
+                if (isAdmin) authButtons += `<a href="admin.html" target="_blank" onclick="toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-shield-user-fill" style="margin-right:15px; color:var(--accent-warn);"></i> Admin</a>`;
+                authButtons += `<a href="#" onclick="handleLogout(); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; color: var(--accent-warn);"><i class="ri-logout-box-r-fill" style="margin-right:15px;"></i> Logout</a>`;
+                mobAuth.innerHTML = authButtons;
+            }
+        }
+
+        function updateHeaderForGuest() {
+            const deskAuth = document.getElementById('desktopAuthLinks');
+            if(deskAuth) deskAuth.innerHTML = `<a href="#" onclick="navigateTo('login')" class="btn-glass" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-login-circle-fill"></i> Login</a>`;
+            const mobAuth = document.getElementById('mobileAuthLinksContainer');
+            if(mobAuth) mobAuth.innerHTML = `<a href="#" onclick="navigateTo('login'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-login-circle-fill" style="margin-right:15px;"></i> Login</a><a href="#" onclick="navigateTo('signup'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-user-add-fill" style="margin-right:15px;"></i> Sign Up</a>`;
+        }
+
+        function clearUserData() {
+            const inputs = ['prof-name', 'prof-phone', 'prof-email', 'prof-company', 'co-firstname', 'co-lastname', 'co-email', 'co-phone', 'co-company'];
+            inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+            const label = document.getElementById('auto-fill-label'); if(label) label.style.display = 'none';
+        }
+
+        // ==========================================
+        // PRICING & CHECKOUT LOGIC
+        // ==========================================
+        function setBilling(cycle) {
+            billingCycle = cycle;
+            const btnMonthly = document.getElementById('btn-monthly');
+            const btnOnetime = document.getElementById('btn-onetime');
+
+            if(btnMonthly && btnOnetime) {
+                if(cycle === 'monthly') { 
+                    btnMonthly.classList.add('bg-slate-800', 'text-white'); 
+                    btnOnetime.classList.remove('bg-slate-800', 'text-white'); 
+                } else { 
+                    btnMonthly.classList.remove('bg-slate-800', 'text-white'); 
+                    btnOnetime.classList.add('bg-slate-800', 'text-white'); 
                 }
+            }
+
+            document.querySelectorAll('.price-display').forEach(el => {
+                const monthly = el.dataset.monthly;
+                const onetime = el.dataset.onetime;
+                if (monthly && onetime) {
+                    el.textContent = 'RM ' + (cycle === 'monthly' ? monthly : onetime);
+                    el.parentElement.querySelector('.price-period').textContent = cycle === 'monthly' ? '/month' : ' one-time';
+                }
+            });
+
+            document.querySelectorAll('.maintenance-yes').forEach(el => el.classList.toggle('hidden', cycle === 'onetime'));
+            document.querySelectorAll('.maintenance-no').forEach(el => el.classList.toggle('hidden', cycle === 'monthly'));
+
+            state.billingCycle = cycle;
+            state.isOneTime = (cycle === 'onetime');
+            
+            if(selectedPackageType && PRICING_DATA[selectedPackageType]) {
+                state.packagePrice = cycle === 'monthly' ? PRICING_DATA[selectedPackageType].monthly : PRICING_DATA[selectedPackageType].oneTime;
+                updateTotal();
+            }
+        }
+
+        function attemptSelectPackage(name, type) {
+            if (typeof auth === 'undefined' || auth === null) { showToast("Error", "Authentication system initializing...", "error"); return; }
+            
+            if (auth.currentUser) { 
+                selectPackage(name, type); 
             } else { 
-                currentUserPersonalVoucher = null; 
-                if(document.getElementById('checkout-voucher-section')) document.getElementById('checkout-voucher-section').style.display = 'none';
+                openModal('auth-modal'); 
             }
         }
-    });
-}
 
-function updateDomain(type, element) {
-    state.domainType = type;
-    if(element) {
-        const options = element.parentElement.querySelectorAll('.radio-option');
-        options.forEach(opt => opt.classList.remove('selected'));
-        element.classList.add('selected');
-        // Check radio input
-        const input = element.querySelector('input');
-        if(input) input.checked = true;
-    }
-    
-    if(type === 'sub') {
-        if(document.getElementById('input-subdomain')) document.getElementById('input-subdomain').style.display = 'block';
-        if(document.getElementById('input-custom')) document.getElementById('input-custom').style.display = 'none';
-        state.domainPrice = 0; 
-    } else {
-        if(document.getElementById('input-subdomain')) document.getElementById('input-subdomain').style.display = 'none';
-        if(document.getElementById('input-custom')) document.getElementById('input-custom').style.display = 'block';
-        state.domainPrice = 0; 
-    }
-    updateSummaryText(); updateTotal();
-}
+        function selectPackage(name, type) {
+            selectedPackage = name;
+            selectedPackageType = type;
+            state.packageType = type;
+            state.billingCycle = billingCycle;
+            state.isOneTime = (billingCycle === 'onetime');
+            state.paymentMode = 'full';
+            state.setupFee = PRICING_DATA[type].setupFee;
+            state.packagePrice = billingCycle === 'monthly' ? PRICING_DATA[type].monthly : PRICING_DATA[type].oneTime;
 
-function updateSummaryText() {
-    if(state.domainType === 'sub') {
-        const val = document.getElementById('subdomain-text') ? document.getElementById('subdomain-text').value : '';
-        state.domainName = val ? `${val}.ddnex.my` : '';
-        if(document.getElementById('url-preview')) document.getElementById('url-preview').innerText = state.domainName || '.ddnex.my';
-        state.domainNameValid = (val.length > 0);
-    } else {
-        const val = document.getElementById('custom-domain-text') ? document.getElementById('custom-domain-text').value : '';
-        state.domainName = val;
-        state.domainNameValid = (val.length > 0);
-    }
-    // Update Summary UI text
-    if(document.getElementById('summary-domain')) {
-        document.getElementById('summary-domain').innerText = state.domainType === 'sub' ? 'Free' : (val ? 'User Provided' : 'RM 0');
-    }
-}
+            const summaryPkgName = document.getElementById('summary-pkg-name');
+            const summaryPkgPrice = document.getElementById('summary-pkg-price');
+            const summaryBillingType = document.getElementById('summary-billing-type');
 
-function updateMaintenance(plan, element) {
-    const options = element.parentElement.querySelectorAll('.radio-option');
-    options.forEach(opt => opt.classList.remove('selected'));
-    element.classList.add('selected');
-    const input = element.querySelector('input');
-    if(input) input.checked = true;
-    
-    if(plan === 'none') state.maintenancePrice = 0;
-    if(plan === 'basic') state.maintenancePrice = 50;
-    if(plan === 'business') state.maintenancePrice = 100;
-    
-    // Update UI
-    const label = plan === 'none' ? 'None' : (plan === 'basic' ? 'Basic (RM 50/mo)' : 'Business (RM 100/mo)');
-    if(document.getElementById('summary-maintenance')) document.getElementById('summary-maintenance').innerText = label;
-    updateTotal();
-}
+            if(summaryPkgName) summaryPkgName.textContent = name;
+            if(summaryPkgPrice) summaryPkgPrice.textContent = billingCycle === 'monthly' ? `RM ${state.packagePrice}/month` : `RM ${state.packagePrice} one-time`;
+            if(summaryBillingType) summaryBillingType.textContent = billingCycle === 'monthly' ? 'Billed monthly. Cancel anytime.' : 'One-time purchase. No maintenance included.';
 
-function applyPromo() {
-    if(!auth || !auth.currentUser) return showGlassModal("Error", "Please login to use Promo Codes.", "error");
-    const input = document.getElementById('promo-input');
-    const code = input ? input.value.trim().toUpperCase() : '';
-    
-    if(!code || code === "") {
-        showGlassModal("Error", "Please enter a voucher code first.", "error");
-        if(input) input.focus(); 
-        return;
-    }
-    
-    if(PROMO_CODES.hasOwnProperty(code)) {
-        state.discountType = 'percent';
-        state.discountRate = PROMO_CODES[code];
-        state.discountCode = code;
-        showGlassModal("Success", `Promo Applied: ${code}`, "success");
-        if(document.getElementById('row-discount')) {
-            document.getElementById('row-discount').style.display = 'flex';
-            document.getElementById('summary-promo-code').innerText = code;
-            document.getElementById('summary-discount-val').innerText = `-${state.discountRate * 100}%`;
+            if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+            else { clearUserData(); hideVoucherCard(); }
+
+            updateTotal();
+            navigateTo('checkout');
         }
-        updateTotal();
-    } else {
-        showGlassModal("Error", "Invalid code. Please check and try again.", "error");
-    }
-}
 
-function applyPersonalVoucher() {
-    if(!currentUserPersonalVoucher) return; 
-    if(currentUserPersonalVoucher.status === 'redeemed') return showGlassModal("Error", "This voucher has already been used.", "error");
-    if(currentUserPersonalVoucher.expiryDate) {
-        const now = new Date();
-        const expiry = currentUserPersonalVoucher.expiryDate.toDate();
-        if(now > expiry) return showGlassModal("Error", "This voucher has expired.", "error");
-    }
-    state.discountType = currentUserPersonalVoucher.type;
-    state.discountCode = currentUserPersonalVoucher.code;
-    if(state.discountType === 'fixed') { state.discountFixed = currentUserPersonalVoucher.value; state.discountRate = 0; } 
-    else { state.discountRate = currentUserPersonalVoucher.value; state.discountFixed = 0; }
-    
-    showGlassModal("Success", `Voucher ${state.discountCode} Applied!`, "success");
-    if(document.getElementById('row-discount')) {
-        document.getElementById('row-discount').style.display = 'flex';
-        document.getElementById('summary-promo-code').innerText = state.discountCode;
-        const displayVal = state.discountType === 'fixed' ? `RM ${state.discountFixed}` : `${state.discountRate * 100}%`;
-        document.getElementById('summary-discount-val').innerText = `-${displayVal}`;
-    }
-    updateTotal();
-}
-
-function deletePersonalVoucher() {
-    if(!auth || !auth.currentUser) return;
-    if(confirm("Are you sure you want to remove this voucher?")) {
-        db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
-            currentUserPersonalVoucher = null;
-            loadProfilePageData();
-            fetchAndSyncUserData(auth.currentUser.uid);
-            showGlassModal("Success", "Voucher removed from account.", "success");
-        });
-    }
-}
-
-function removeVoucher() {
-    state.discountCode = ''; state.discountRate = 0; state.discountFixed = 0;
-    if(document.getElementById('row-discount')) document.getElementById('row-discount').style.display = 'none';
-    showGlassModal("Info", "Voucher removed", "warning");
-    updateTotal();
-    if(currentUserPersonalVoucher) applyPersonalVoucher(); // Re-apply personal if exists but removed global
-}
-
-function updateTotal() {
-    let subtotal = state.packagePrice + state.setupFee + state.maintenancePrice;
-    if(state.domainType === 'sub') subtotal += state.domainPrice; 
-    
-    let discountAmt = 0;
-    if(state.discountType === 'fixed') discountAmt = state.discountFixed;
-    else discountAmt = subtotal * state.discountRate;
-    
-    const finalTotal = Math.max(0, Math.round(subtotal - discountAmt));
-    
-    // Update UI Elements if they exist
-    if(document.getElementById('summary-final-total')) document.getElementById('summary-final-total').innerText = `RM ${finalTotal}`;
-    if(document.getElementById('summary-package-price')) document.getElementById('summary-package-price').innerText = `RM ${state.packagePrice}`;
-    if(document.getElementById('summary-setup')) document.getElementById('summary-setup').innerText = state.setupFee > 0 ? `RM ${state.setupFee}` : 'RM 0';
-    
-    // Set specific discounts for billing toggle visual
-    if(document.getElementById('summary-recurring')) document.getElementById('summary-recurring').innerText = `RM ${state.packagePrice} / ${state.isOneTime ? 'one-time' : 'month'}`;
-    
-    // Apply deposit logic if needed (from old HTML, though new HTML might not have deposit UI, keeping logic)
-    let paymentDue = finalTotal;
-    // state.paymentMode logic is preserved from old HTML
-    
-    if(document.getElementById('summary-discount')) {
-         document.getElementById('summary-discount').innerText = `-${Math.round(discountAmt)}`;
-    }
-}
-
-// ==========================================
-// RAZORPAY INTEGRATION (FROM OLD HTML)
-// ==========================================
-function initiateRazorpayPayment() {
-    const termsCheck = document.getElementById('terms-check');
-    if(!termsCheck || !termsCheck.checked) {
-        showGlassModal("Action Required", "Please agree to Terms & Conditions to proceed.", "warning", "I Agree", () => { document.getElementById('terms-check').checked = true; });
-        return;
-    }
-
-    if(!state.domainNameValid) {
-        if(state.domainType === 'sub') {
-            showGlassModal("Missing Input", "Please fill in your Subdomain Name.", "warning");
-            const subInput = document.getElementById('subdomain-text');
-            if(subInput) subInput.focus();
-        } else {
-            showGlassModal("Missing Input", "Please fill in your Custom Domain Name.", "warning");
-            const customInput = document.getElementById('custom-domain-text');
-            if(customInput) customInput.focus();
-        }
-        return;
-    }
-
-    // Gather Data
-    const name = (document.getElementById('co-firstname') || '') + ' ' + (document.getElementById('co-lastname') || '');
-    const phone = document.getElementById('co-phone') ? document.getElementById('co-phone').value : '';
-    const email = document.getElementById('co-email') ? document.getElementById('co-email').value : '';
-    
-    if(!name || !phone || !email) return showGlassModal("Error", "Please enter Name, Phone, and Email.", "error");
-
-    const totalText = document.getElementById('summary-final-total') ? document.getElementById('summary-final-total').innerText : 'RM 0';
-    const amountNumeric = parseFloat(totalText.replace('RM ', ''));
-    const amountInSubunits = Math.round(amountNumeric * 100);
-
-    const pendingOrder = {
-        userId: auth.currentUser ? auth.currentUser.uid : null,
-        name: name, phone: phone, email: email, 
-        package: selectedPackage || document.getElementById('summary-pkg-name').innerText, 
-        domainType: state.domainType, domainName: state.domainName, domainPrice: state.domainPrice,
-        packagePrice: state.packagePrice, setupFee: state.setupFee, maintenancePrice: state.maintenancePrice,
-        total: `RM ${amountNumeric}`, 
-        discountCode: state.discountCode || null, paymentMethod: 'Razorpay (Curlec)',
-        paymentMode: state.paymentMode, billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
-        status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
-
-    const options = {
-        "key": RAZORPAY_KEY_ID, "amount": amountInSubunits, "currency": RAZORPAY_CURRENCY, 
-        "name": "DDNex",
-        "description": document.getElementById('summary-pkg-name').innerText + (state.paymentMode === 'deposit' ? " (Deposit)" : ""),
-        "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
-        "handler": function(response){ 
-            handlePaymentSuccess(response.razorpay_payment_id);
-        },
-        "modal": { 
-            "ondismiss": function(){ 
-                console.log('Checkout form closed/cancelled by user');
-                if(document.getElementById('btn-pay-now')) document.getElementById('btn-pay-now').classList.add('hidden');
-                if(document.getElementById('manual-confirm-section')) document.getElementById('manual-confirm-section').classList.add('hidden');
-                if(document.getElementById('payment-failed-section')) document.getElementById('payment-failed-section').classList.remove('hidden');
-            }
-        },
-        "prefill": { "name": name, "email": email, "contact": phone },
-        "notes": { "address": document.getElementById('co-company').value || "Malaysia", "package": selectedPackage, "domain": state.domainName, "payment_mode": state.paymentMode },
-        "theme": { "color": "#1e293b" }
-    };
-
-    try {
-        const rzp1 = new Razorpay(options);
-        rzp1.open(); 
-        
-        if(document.getElementById('btn-pay-now')) document.getElementById('btn-pay-now').classList.add('hidden');
-        if(document.getElementById('manual-confirm-section')) document.getElementById('manual-confirm-section').classList.remove('hidden');
-        if(document.getElementById('payment-failed-section')) document.getElementById('payment-failed-section').classList.add('hidden');
-
-    } catch (error) {
-        console.error("Razorpay Error:", error);
-        showGlassModal("Error", "Payment Gateway Error. Please contact support.", "error");
-    }
-}
-
-function handlePaymentSuccess(paymentId) {
-    const pendingOrderStr = localStorage.getItem('pendingOrder');
-    if(!pendingOrderStr) {
-        showToast("Order data missing. Contact support.", "error");
-        return;
-    }
-
-    const orderData = JSON.parse(pendingOrderStr);
-    
-    orderData.razorpay_payment_id = paymentId;
-    orderData.status = 'Paid'; 
-    
-    const overlay = document.getElementById('processing-overlay');
-    if(overlay) {
-        overlay.style.display = 'flex';
-        const msgEl = document.getElementById('process-message');
-        if(msgEl) msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Payment...`;
-    }
-
-    let voucherUpdatePromise = Promise.resolve();
-    if (orderData.discountCode && auth.currentUser && auth.currentUser.uid) {
-        voucherUpdatePromise = db.collection("users").doc(auth.currentUser.uid).update({
-            "personalVoucher.status": "redeemed"
-        }).then(() => {
-            console.log("Voucher status updated to redeemed.");
-            if(currentUserPersonalVoucher) currentUserPersonalVoucher.status = 'redeemed';
-        }).catch(err => console.error("Failed to update voucher status", err));
-    }
-
-    voucherUpdatePromise.then(() => {
-        const firebaseOrderData = {
-            adminNote: "OWN COMPANY CREATED", companyName: orderData.companyName || "DDNex One",
-            customerEmail: orderData.email, customerName: orderData.name, customerPhone: orderData.phone,
-            domain: orderData.domainName, internalNotes: "",
-            maintenance: orderData.maintenancePrice > 0 ? (orderData.maintenancePrice === 50 ? "Basic" : "Business") : "None",
-            package: orderData.package, paymentMethod: "Razorpay (Curlec)", promo: orderData.discountCode || "",
-            razorpay_payment_id: paymentId,
-            salesRepIds: [], salesTeamIds: [], salesTeamNames: [], status: "Paid",
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(), total: orderData.total, userId: orderData.userId || ""
-        };
-        return db.collection("orders").add(firebaseOrderData);
-    }).then(() => {
-        localStorage.removeItem('pendingOrder');
-        showToast("Payment Successful!", "success");
-        if(overlay) overlay.style.display = 'none';
-        navigateTo('thank-you');
-    }).catch((error) => {
-        console.error("Order Error:", error);
-        showToast("Order processing failed. Please contact support.", "error");
-        if(overlay) overlay.style.display = 'none';
-        if(document.getElementById('manual-confirm-section')) document.getElementById('manual-confirm-section').style.display = 'block';
-    });
-}
-
-function handleManualConfirmation() {
-    const pendingOrderStr = localStorage.getItem('pendingOrder');
-    if(!pendingOrderStr) {
-        showGlassModal("Error", "Order data missing. Please start over.", "error");
-        navigateTo('pricing');
-        return;
-    }
-    handlePaymentSuccess('MANUAL_CHECK_' + Date.now());
-}
-
-// ==========================================
-// HELPDESK LOGIC
-// ==========================================
-async function generateSmartTicketId() {
-    if(!db) return `#Ticket-${Math.floor(1000 + Math.random() * 9000)}`;
-    try {
-        const snapshot = await db.collection("tickets").where("ticketId", "!=", null).orderBy("ticketId", "desc").limit(1).get();
-        let nextNumber =1;
-        if (!snapshot.empty) {
-            const lastTicket = snapshot.docs[0].data();
-            const parts = lastTicket.ticketId.split('-');
-            const lastNum = parseInt(parts[1]);
-            if (!isNaN(lastNum)) nextNumber = lastNum + 1;
-        }
-        const idString = String(nextNumber).padStart(4, '0');
-        return `#Ticket-${idString}`;
-    } catch (error) { return `#Ticket-${Math.floor(1000 + Math.random() * 9000)}`; }
-}
-
-async function handleTicketSubmit(e) {
-    e.preventDefault();
-    if(!db) return showGlassModal("Error", "Database offline", "error");
-    const btn = document.getElementById('btn-submit-ticket');
-    const name = document.getElementById('ticket-name').value;
-    const email = document.getElementById('ticket-email').value;
-    const type = document.getElementById('ticket-type').value;
-    const message = document.getElementById('ticket-message').value;
-    if(!name || !email || !type || !message) return showGlassModal("Error", "Please fill in all fields.", "error");
-
-    if(btn) { btn.disabled = true; btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Generating ID...'; }
-
-    try {
-        const smartId = await generateSmartTicketId();
-        const ticketData = {
-            ticketId: smartId, name: name, email: email, type: type, message: message, status: "Open",
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(), userId: auth.currentUser ? auth.currentUser.uid : null
-        };
-        await db.collection("tickets").add(ticketData);
-        if(document.getElementById('display-case-id')) document.getElementById('display-case-id').innerText = smartId;
-        if(document.getElementById('case-id-display')) document.getElementById('case-id-display').style.display = 'block';
-        if(e.target) e.target.reset();
-        showGlassModal("Success", `Ticket Submitted! ID: ${smartId}`, "success");
-        setTimeout(() => {
-            let notifyMsg = `Hi Admin,\n*New Ticket Received.*\n\n*Case ID:* ${smartId}\n*Name:* ${name}\n*Type:* ${type}`;
-            window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(notifyMsg)}`, '_blank');
-        }, 1000);
-    } catch (error) {
-        console.error(error); showGlassModal("Error", "Failed to submit ticket. Try again.", "error");
-    } finally {
-        if(btn) { btn.disabled = false; btn.innerText = 'Submit Ticket'; }
-    }
-}
-
-function copyTicketId() {
-    const idText = document.getElementById('display-case-id').innerText;
-    navigator.clipboard.writeText(idText).then(() => showGlassModal("Success", "ID copied to clipboard!", "success")).catch(err => showGlassModal("Error", "Failed to copy", "error"));
-}
-
-function fetchTicketHistory() {
-    if(!db) return;
-    const caseId = document.getElementById('history-search-id') ? document.getElementById('history-search-id').value.trim() : '';
-    if(!caseId) return showGlassModal("Error", "Please enter a Case ID.", "error");
-    const listContainer = document.getElementById('ticket-list');
-    if(listContainer) listContainer.innerHTML = '<div style="text-align:center; color: var(--text-tertiary);">Searching...</div>';
-    db.collection("tickets").where("ticketId", "==", caseId).get()
-        .then((snapshot) => {
-            if(listContainer) listContainer.innerHTML = ''; 
-            if (snapshot.empty) { 
-                if(listContainer) listContainer.innerHTML = '<div style="text-align:center; color: #ef4444; padding: 1rem;">No ticket found with that Case ID.</div>'; 
-                return; 
-            }
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const item = document.createElement('div');
-                item.className = 'glass-card'; 
-                if(item.style) {
-                    item.style.padding = '1rem'; 
-                    item.style.marginBottom = '0'; 
-                    item.style.display = 'grid'; 
-                    item.style.gridTemplateColumns = '1fr 1fr 1fr'; 
-                    item.style.alignItems = 'center';
-                }
-                item.innerHTML = `<div><div style="color:var(--text-main); font-weight:600;">${data.type}</div><div style="font-size:0.75rem; color:var(--text-tertiary);">${data.ticketId}</div></div><div class="ticket-id">${data.ticketId || doc.id}</div><div style="text-align:right;"><span style="background="${data.status==='Open'?'#fffbeb':'#ecfdf5'}; color="${data.status==='Open'?'var(--accent-warn)':'var(--accent-success)'}; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">${data.status}</span></div></div>`;
-                if(listContainer) listContainer.appendChild(item);
-            });
-        });
-}
-
-// ==========================================
-// REQUEST & UPDATES LOGIC
-// ==========================================
-function handleUpdateTypeChange(type, element) {
-    // This function handles the old HTML's logic for the Updates page dynamic fields
-    const options = element.parentElement.querySelectorAll('.radio-option');
-    options.forEach(opt => opt.classList.remove('selected'));
-    element.classList.add('selected');
-    const input = element.querySelector('input');
-    if(input) input.checked = true;
-    
-    // Hide all field groups
-    ['field-content', 'field-upgrade', 'field-renew', 'field-remove'].forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.classList.add('hidden');
-    });
-    
-    // Show selected
-    const targetId = `field-${type}`;
-    const targetEl = document.getElementById(targetId);
-    if(targetEl) targetEl.classList.remove('hidden');
-}
-
-function handleRequestSubmit(e) {
-    e.preventDefault();
-    if(!db) return showGlassModal("Error", "Database offline", "error");
-    const btn = document.getElementById('btn-submit-request');
-    const originalText = btn ? btn.innerText : 'Submit Request';
-    if(btn) { btn.disabled = true; btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...'; }
-
-    const name = document.getElementById('req-name').value;
-    const phone = document.getElementById('req-phone').value;
-    const typeInput = document.querySelector('input[name="req_type"]:checked');
-    if(!typeInput) { showGlassModal("Error", "Please select a request type.", "error"); if(btn) { btn.disabled = false; btn.innerText = originalText; return; } }
-    const type = typeInput.value;
-
-    let requestData = { name: name, phone: phone, type: type, status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp(), userId: auth.currentUser ? auth.currentUser.uid : null };
-
-    try {
-        if (type === 'content') { requestData.details = document.getElementById('req-desc-content').value; } 
-        else if (type === 'upgrade') {
-            requestData.currentPlan = document.getElementById('req-current-plan').value;
-            requestData.newPlan = document.getElementById('req-new-plan').value;
-            requestData.details = document.getElementById('req-desc-upgrade').value;
-        } else if (type === 'renew') {
-            requestData.plan = document.getElementById('req-renew-plan').value;
-            requestData.duration = "1 Year"; 
-        } else if (type === 'remove') { requestData.details = document.getElementById('req-desc-remove').value; }
-
-        db.collection("customer_requests").add(requestData).then(() => {
-            showGlassModal("Success", "Request Submitted Successfully!", "success");
-            if(e.target) e.target.reset();
-            let waMsg = `Hi Admin,\n*New Customer Request*\n\n*Name:* ${name}\n*Phone:* ${phone}\n*Type:* ${type}`;
-            if(requestData.details) waMsg += `\n*Details:* ${requestData.details}`;
-            setTimeout(() => { window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(waMsg)}`, '_blank'); }, 1000);
-        }).catch((err) => { console.error(err); showGlassModal("Error", "Error submitting request.", "error"); });
-    } catch (error) { console.error(error); showGlassModal("Error", "Invalid form data.", "error"); } 
-    finally { if(btn) { btn.disabled = false; btn.innerText = originalText; } }
-}
-
-// ==========================================
-// WEBSITE IDEA SUBMISSION
-// ==========================================
-function handleWebsiteIdeaSubmit(event) {
-    event.preventDefault(); 
-    
-    const form = document.getElementById('website-idea-form');
-    if(!form) return;
-    const name = document.getElementById('idea-name').value;
-    const phone = document.getElementById('idea-phone').value;
-    const email = document.getElementById('idea-email').value;
-    const company = document.getElementById('idea-company').value;
-    const source = document.getElementById('idea-source').value;
-    const type = document.getElementById('idea-type').value;
-    const message = document.getElementById('idea-message').value;
-    const references = document.getElementById('idea-references').value;
-
-    if(!name || !phone || !email || !message) return showGlassModal("Error", "Please fill in Name, Phone, Email and Description.", "error");
-
-    const btn = document.getElementById('btn-submit-idea');
-    const originalText = btn ? btn.innerText : 'Submit Idea';
-    if(btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Saving...';
-    }
-
-    const requestData = {
-        name: name, phone: phone, email: email, company: company || '', source: source || '',
-        type: type || 'New Website', details: message, references: references || '', status: 'Pending',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        userId: auth.currentUser ? auth.currentUser.uid : null, source: 'Website Description Form'
-    };
-
-    if(db) {
-        db.collection("customer_requests").add(requestData)
-            .then(() => {
-                const successModal = document.getElementById('idea-success-modal');
-                if(successModal) {
-                    successModal.style.display = 'flex';
-                    requestAnimationFrame(() => { successModal.classList.add('active'); });
-                }
-                if(form) form.reset();
-            })
-            .catch((error) => {
-                console.error("Firebase Save Error:", error);
-                showGlassModal("Error", "Failed to save idea. Please try again.", "error");
-            })
-            .finally(() => {
-                if(btn) {
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                }
-            });
-    } else {
-        showGlassModal("Error", "Database connection error.", "error");
-        if(btn) {
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }
-    }
-}
-
-function closeIdeaSuccessModal() {
-    const modal = document.getElementById('idea-success-modal');
-    if(modal) {
-        modal.classList.remove('active');
-        setTimeout(() => { modal.style.display = 'none'; navigateTo('/'); }, 300);
-    }
-}
-
-function handleContactSubmit(e) {
-    e.preventDefault();
-    const name = document.getElementById('contact-name') ? document.getElementById('contact-name').value : '';
-    const email = document.getElementById('contact-email') ? document.getElementById('contact-email').value : '';
-    const message = document.getElementById('contact-message') ? document.getElementById('contact-message').value : '';
-    if(!name || !email || !message) return showGlassModal("Error", "Please fill in all fields.", "error");
-
-    const btn = e.target ? e.target.querySelector('button') : null;
-    const originalText = btn ? btn.innerText : 'Send Message';
-    if(btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
-    }
-
-    const data = {
-        name: name, email: email, message: message, type: 'Contact Inquiry', status: 'Pending',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        userId: auth.currentUser ? auth.currentUser.uid : null, source: 'Contact Page Form'
-    };
-
-    if(db) {
-        db.collection("customer_requests").add(data)
-            .then(() => {
-                showGlassModal("Success", "Thank you for your interest!", "success");
-                if(e.target) e.target.reset();
-            })
-            .catch((error) => {
-                console.error(error);
-                showGlassModal("Error", "Failed to send message. Please try again.", "error");
-            })
-            .finally(() => {
-                if(btn) {
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                }
-            });
-    } else {
-        showGlassModal("Error", "System offline. Please try again later.", "error");
-        if(btn) {
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }
-    }
-}
-
-// ==========================================
-// REVIEWS LOGIC
-// ==========================================
-function setupStarRating() {
-    const container = document.getElementById('star-input-container');
-    if(!container) return;
-    const stars = container.querySelectorAll('.star-icon');
-    const hiddenInput = document.getElementById('rating-value');
-
-    stars.forEach(star => {
-        star.addEventListener('mouseover', function() {
-            highlightStars(parseInt(this.getAttribute('data-val')));
-        });
-        
-        star.addEventListener('click', function() {
-            selectedRating = parseInt(this.getAttribute('data-val'));
-            if(hiddenInput) hiddenInput.value = selectedRating;
-            highlightStars(selectedRating);
-            if(document.getElementById('rating-error')) document.getElementById('rating-error').style.display = 'none';
-        });
-    });
-
-    container.addEventListener('mouseleave', function() {
-        highlightStars(selectedRating);
-    });
-}
-
-function highlightStars(count) {
-    const container = document.getElementById('star-input-container');
-    if(!container) return;
-    const stars = container.querySelectorAll('.star-icon');
-    stars.forEach(star => {
-        star.classList.toggle('selected', parseInt(star.getAttribute('data-val')) <= count);
-    });
-}
-
-function listenToReviews() {
-    if(!db) return;
-    db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20)
-        .onSnapshot((snapshot) => {
-            reviewsCache = []; 
-            snapshot.forEach(doc => reviewsCache.push(doc.data()));
-            loadReviewsMarquee();
-        }, (error) => console.error("Error syncing reviews:", error));
-}
-
-function loadReviewsMarquee() {
-    const row1 = document.getElementById('reviews-marquee-row-1');
-    const row2 = document.getElementById('reviews-marquee-row-2');
-    if(!row1 || !row2) return;
-    
-    let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
-    
-    if (allReviews.length === 0) {
-        row1.innerHTML = '<div class="review-marquee-item">No reviews yet.</div>';
-        row2.innerHTML = '';
-        return;
-    }
-
-    const createMarqueeHTML = (list) => list.map(data => {
-        let starsHtml = '';
-        for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color="${i<=data.rating?'var(--accent-star)':'#cbd5e1'}"></i>`;
-        return `
-            <div class="review-marquee-item">
-                <div class="rm-rating">${starsHtml}</div>
-                <div class="rm-text">"${data.comment.substring(0, 100)}${data.comment.length > 100 ? '...' : ''}"</div>
-                <div class="rm-author">- ${data.userName || 'User'}</div>
-            </div>`;
-    }).join('');
-
-    const mid = Math.ceil(allReviews.length / 2);
-    const list1 = allReviews.slice(0, mid);
-    const list2 = allReviews.slice(mid);
-
-    row1.innerHTML = createMarqueeHTML(list1) + createMarqueeHTML(list1);
-    row2.innerHTML = createMarqueeHTML(list2) + createMarqueeHTML(list2);
-}
-
-const DUMMY_REVIEWS = [
-    { rating: 5, userName: 'PNE Arena Enterprise', comment: 'Excellent service! The team was very professional and delivery was faster than expected.', timestamp: null },
-];
-
-function toggleFullReviews() {
-    const list = document.getElementById('reviews-list');
-    const btn = event.target;
-    if(!list) return;
-    
-    if (list.classList.contains('hidden')) {
-        list.innerHTML = '';
-        let allReviews = reviewsCache.length > 0 ? reviewsCache : DUMMY_REVIEWS;
-        if(allReviews.length > 0) {
-            allReviews.forEach(data => {
-                const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
-                const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
-                let starsHtml = '';
-                for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color="${i<=data.rating?'var(--accent-star)':'#cbd5e1'}"></i>`;
-                const html = `
-                    <div class="review-card">
-                        <div class="review-header">
-                            <div class="review-avatar">${initials}</div>
-                            <div class="review-info"><h4>${data.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
-                        </div>
-                        <div class="review-stars">${starsHtml}</div>
-                        <p class="review-text">"${data.comment}"</p>
-                    </div>`;
-                list.innerHTML += html;
-            });
-        } else list.innerHTML = '<div class="text-center" style="grid-column: 1/-1;">No reviews found.</div>';
-        list.classList.remove('hidden');
-        if(btn) btn.innerText = "Hide Reviews";
-    } else {
-        list.classList.add('hidden');
-        if(btn) btn.innerText = "View All Reviews";
-    }
-}
-
-function handleReviewSubmit(e) {
-    e.preventDefault();
-    if(!auth || !auth.currentUser) return showGlassModal("Login Required", "You must be logged in to submit a review.", "warning", "Login", () => navigateTo('/login'));
-
-    if(selectedRating === 0) return showGlassModal("Rating Missing", "Please select a star rating.", "warning");
-
-    const comment = document.getElementById('review-comment') ? document.getElementById('review-comment').value : '';
-    const user = auth.currentUser;
-    let displayName = user.email.split('@')[0];
-    
-    db.collection("users").doc(user.uid).get().then(doc => {
-        if(doc.exists && doc.data().name) displayName = doc.data().name;
-        const reviewData = { 
-            userId: user.uid, userName: displayName, userEmail: user.email, rating: selectedRating, comment: comment, 
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'approved' 
-        };
-        return db.collection("customer_reviews").add(reviewData);
-    }).then(() => {
-        showGlassModal("Success", "Review submitted successfully!", "success");
-        if(document.getElementById('review-form')) document.getElementById('review-form').reset();
-        selectedRating = 0;
-        highlightStars(0);
-        // Refresh list if open
-        if(document.getElementById('reviews-list') && !document.getElementById('reviews-list').classList.contains('hidden')) {
-            toggleFullReviews(); // Reload logic inside if needed
-        }
-    }).catch(err => {
-        console.error(err); 
-        showGlassModal("Error", "Failed to submit review.", "error");
-    });
-}
-
-// ==========================================
-// PORTFOLIO LOGIC
-// ==========================================
-function loadHomePortfolio() {
-    if(!db) return;
-    const container = document.getElementById('home-portfolio-grid');
-    if(!container) return;
-    
-    db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
-        .then((snapshot) => {
-            // Ensure dummy item stays, only append from DB
-            if(!snapshot.empty) {
-                snapshot.forEach((doc) => {
+        function fetchAndSyncUserData(uid) {
+            if(!db) return;
+            db.collection("users").doc(uid).get().then((doc) => {
+                if (doc.exists) {
                     const data = doc.data();
-                    const html = `
-                        <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
-                            <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                            <div class="p-6">
-                                <h4 class="font-bold text-slate-900 mb-2">${data.name}</h4>
-                                <p class="text-slate-600 text-sm mb-4">${data.desc || 'View project'}</p>
-                                <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site &rarr;</a>
-                            </div>
-                        </div>`;
-                    container.innerHTML += html;
+                    if(document.getElementById('co-firstname')) document.getElementById('co-firstname').value = data.name || '';
+                    if(document.getElementById('co-lastname')) document.getElementById('co-lastname').value = '';
+                    if(document.getElementById('co-email')) {
+                        document.getElementById('co-email').value = data.email || auth.currentUser.email;
+                        document.getElementById('co-email').readOnly = true;
+                    }
+                    if(document.getElementById('co-phone')) document.getElementById('co-phone').value = data.phone || '';
+                    if(document.getElementById('co-company')) document.getElementById('co-company').value = data.company || '';
+                    
+                    if(data.personalVoucher) { 
+                        currentUserPersonalVoucher = data.personalVoucher; 
+                        const checkoutVoucherSection = document.getElementById('checkout-voucher-section');
+                        if(checkoutVoucherSection) {
+                            checkoutVoucherSection.style.display = 'block';
+                            const displayVal = data.personalVoucher.type === 'fixed' ? `RM ${data.personalVoucher.value}` : `${data.personalVoucher.value * 100}%`;
+                            document.getElementById('checkout-voucher-text').innerText = `${data.personalVoucher.code} (-${displayVal})`;
+                        }
+                    } else { 
+                        currentUserPersonalVoucher = null; 
+                        if(document.getElementById('checkout-voucher-section')) document.getElementById('checkout-voucher-section').style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function updateDomain(type, element) {
+            state.domainType = type;
+            if(element) {
+                const options = element.parentElement.querySelectorAll('.radio-option');
+                options.forEach(opt => opt.classList.remove('selected'));
+                element.classList.add('selected');
+                const input = element.querySelector('input');
+                if(input) input.checked = true;
+            }
+            
+            if(type === 'sub') {
+                if(document.getElementById('input-subdomain')) document.getElementById('input-subdomain').style.display = 'block';
+                if(document.getElementById('input-custom')) document.getElementById('input-custom').style.display = 'none';
+                state.domainPrice = 0; 
+            } else {
+                if(document.getElementById('input-subdomain')) document.getElementById('input-subdomain').style.display = 'none';
+                if(document.getElementById('input-custom')) document.getElementById('input-custom').style.display = 'block';
+                state.domainPrice = 0; 
+            }
+            updateSummaryText(); updateTotal();
+        }
+
+        function updateSummaryText() {
+            if(state.domainType === 'sub') {
+                const val = document.getElementById('subdomain-text') ? document.getElementById('subdomain-text').value : '';
+                state.domainName = val ? `${val}.ddnex.my` : '';
+                if(document.getElementById('url-preview')) document.getElementById('url-preview').innerText = state.domainName || '.ddnex.my';
+                state.domainNameValid = (val.length > 0);
+            } else {
+                const val = document.getElementById('custom-domain-text') ? document.getElementById('custom-domain-text').value : '';
+                state.domainName = val;
+                state.domainNameValid = (val.length > 0);
+            }
+            if(document.getElementById('summary-domain')) {
+                document.getElementById('summary-domain').innerText = state.domainType === 'sub' ? 'Free' : (val ? 'User Provided' : 'RM 0');
+            }
+        }
+
+        function updateMaintenance(plan, element) {
+            const options = element.parentElement.querySelectorAll('.radio-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            const input = element.querySelector('input');
+            if(input) input.checked = true;
+            
+            if(plan === 'none') state.maintenancePrice = 0;
+            if(plan === 'basic') state.maintenancePrice = 50;
+            if(plan === 'business') state.maintenancePrice = 100;
+            
+            const label = plan === 'none' ? 'None' : (plan === 'basic' ? 'Basic (RM 50/mo)' : 'Business (RM 100/mo)');
+            if(document.getElementById('summary-maintenance')) document.getElementById('summary-maintenance').innerText = label;
+            updateTotal();
+        }
+
+        function applyPromo() {
+            if(!auth || !auth.currentUser) return showToast("Error", "Please login to use Promo Codes.", "error");
+            const input = document.getElementById('promo-input');
+            const code = input ? input.value.trim().toUpperCase() : '';
+            
+            if(!code || code === "") {
+                showToast("Error", "Please enter a voucher code first.", "error");
+                if(input) input.focus(); 
+                return;
+            }
+            
+            if(PROMO_CODES.hasOwnProperty(code)) {
+                state.discountType = 'percent';
+                state.discountRate = PROMO_CODES[code];
+                state.discountCode = code;
+                showToast("Success", `Promo Applied: ${code}`, "success");
+                if(document.getElementById('row-discount')) {
+                    document.getElementById('row-discount').style.display = 'flex';
+                    document.getElementById('summary-promo-code').innerText = code;
+                    document.getElementById('summary-discount-val').innerText = `-${state.discountRate * 100}%`;
+                }
+                updateTotal();
+            } else {
+                showToast("Error", "Invalid code. Please check and try again.", "error");
+            }
+        }
+
+        function applyPersonalVoucher() {
+            if(!currentUserPersonalVoucher) return; 
+            if(currentUserPersonalVoucher.status === 'redeemed') return showToast("Error", "This voucher has already been used.", "error");
+            if(currentUserPersonalVoucher.expiryDate) {
+                const now = new Date();
+                const expiry = currentUserPersonalVoucher.expiryDate.toDate();
+                if(now > expiry) return showToast("Error", "This voucher has expired.", "error");
+            }
+            state.discountType = currentUserPersonalVoucher.type;
+            state.discountCode = currentUserPersonalVoucher.code;
+            if(state.discountType === 'fixed') { state.discountFixed = currentUserPersonalVoucher.value; state.discountRate = 0; } 
+            else { state.discountRate = currentUserPersonalVoucher.value; state.discountFixed = 0; }
+            
+            showToast("Success", `Voucher ${state.discountCode} Applied!`, "success");
+            if(document.getElementById('row-discount')) {
+                document.getElementById('row-discount').style.display = 'flex';
+                document.getElementById('summary-promo-code').innerText = state.discountCode;
+                const displayVal = state.discountType === 'fixed' ? `RM ${state.discountFixed}` : `${state.discountRate * 100}%`;
+                document.getElementById('summary-discount-val').innerText = `-${displayVal}`;
+            }
+            updateTotal();
+        }
+
+        function removeVoucher() {
+            state.discountCode = ''; state.discountRate = 0; state.discountFixed = 0;
+            if(document.getElementById('row-discount')) document.getElementById('row-discount').style.display = 'none';
+            showToast("Info", "Voucher removed", "warning");
+            updateTotal();
+            if(currentUserPersonalVoucher) applyPersonalVoucher(); 
+        }
+
+        function updateTotal() {
+            let subtotal = state.packagePrice + state.setupFee + state.maintenancePrice;
+            if(state.domainType === 'sub') subtotal += state.domainPrice; 
+            
+            let discountAmt = 0;
+            if(state.discountType === 'fixed') discountAmt = state.discountFixed;
+            else discountAmt = subtotal * state.discountRate;
+            
+            const finalTotal = Math.max(0, Math.round(subtotal - discountAmt));
+            
+            if(document.getElementById('summary-final-total')) document.getElementById('summary-final-total').innerText = `RM ${finalTotal}`;
+            if(document.getElementById('summary-package-price')) document.getElementById('summary-package-price').innerText = `RM ${state.packagePrice}`;
+            if(document.getElementById('summary-setup')) document.getElementById('summary-setup').innerText = state.setupFee > 0 ? `RM ${state.setupFee}` : 'RM 0';
+            
+            if(document.getElementById('summary-recurring')) document.getElementById('summary-recurring').innerText = `RM ${state.packagePrice} / ${state.isOneTime ? 'one-time' : 'month'}`;
+            
+            let paymentDue = finalTotal;
+            
+            if(document.getElementById('summary-discount')) {
+                 document.getElementById('summary-discount').innerText = `-${Math.round(discountAmt)}`;
+            }
+        }
+
+        // ==========================================
+        // RAZORPAY INTEGRATION
+        // ==========================================
+        function initiateRazorpayPayment() {
+            const termsCheck = document.getElementById('terms-check');
+            if(!termsCheck || !termsCheck.checked) {
+                showToast("Action Required", "Please agree to Terms & Conditions to proceed.", "warning");
+                return;
+            }
+
+            if(!state.domainNameValid) {
+                if(state.domainType === 'sub') {
+                    showToast("Missing Input", "Please fill in your Subdomain Name.", "warning");
+                    const subInput = document.getElementById('subdomain-text');
+                    if(subInput) subInput.focus();
+                } else {
+                    showToast("Missing Input", "Please fill in your Custom Domain Name.", "warning");
+                    const customInput = document.getElementById('custom-domain-text');
+                    if(customInput) customInput.focus();
+                }
+                return;
+            }
+
+            const name = (document.getElementById('co-firstname') || '') + ' ' + (document.getElementById('co-lastname') || '');
+            const phone = document.getElementById('co-phone') ? document.getElementById('co-phone').value : '';
+            const email = document.getElementById('co-email') ? document.getElementById('co-email').value : '';
+            
+            if(!name || !phone || !email) return showToast("Error", "Please enter Name, Phone, and Email.", "error");
+
+            const totalText = document.getElementById('summary-final-total') ? document.getElementById('summary-final-total').innerText : 'RM 0';
+            const amountNumeric = parseFloat(totalText.replace('RM ', ''));
+            const amountInSubunits = Math.round(amountNumeric * 100);
+
+            const pendingOrder = {
+                userId: auth.currentUser ? auth.currentUser.uid : null,
+                name: name, phone: phone, email: email, 
+                package: selectedPackage || document.getElementById('summary-pkg-name').innerText, 
+                domainType: state.domainType, domainName: state.domainName, domainPrice: state.domainPrice,
+                packagePrice: state.packagePrice, setupFee: state.setupFee, maintenancePrice: state.maintenancePrice,
+                total: `RM ${amountNumeric}`, 
+                discountCode: state.discountCode || null, paymentMethod: 'Razorpay (Curlec)',
+                paymentMode: state.paymentMode, billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
+                status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+
+            const options = {
+                "key": RAZORPAY_KEY_ID, "amount": amountInSubunits, "currency": RAZORPAY_CURRENCY, 
+                "name": "DDNex",
+                "description": document.getElementById('summary-pkg-name').innerText + (state.paymentMode === 'deposit' ? " (Deposit)" : ""),
+                "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
+                "handler": function(response){ 
+                    handlePaymentSuccess(response.razorpay_payment_id);
+                },
+                "modal": { 
+                    "ondismiss": function(){ 
+                        if(document.getElementById('btn-pay-now')) document.getElementById('btn-pay-now').classList.add('hidden');
+                        if(document.getElementById('manual-confirm-section')) document.getElementById('manual-confirm-section').classList.add('hidden');
+                        if(document.getElementById('payment-failed-section')) document.getElementById('payment-failed-section').classList.remove('hidden');
+                    }
+                },
+                "prefill": { "name": name, "email": email, "contact": phone },
+                "notes": { "address": document.getElementById('co-company').value || "Malaysia", "package": selectedPackage, "domain": state.domainName, "payment_mode": state.paymentMode },
+                "theme": { "color": "#1e293b" }
+            };
+
+            try {
+                const rzp1 = new Razorpay(options);
+                rzp1.open(); 
+                
+                if(document.getElementById('btn-pay-now')) document.getElementById('btn-pay-now').classList.add('hidden');
+                if(document.getElementById('manual-confirm-section')) document.getElementById('manual-confirm-section').classList.remove('hidden');
+                if(document.getElementById('payment-failed-section')) document.getElementById('payment-failed-section').classList.add('hidden');
+
+            } catch (error) {
+                console.error("Razorpay Error:", error);
+                showToast("Error", "Payment Gateway Error. Please contact support.", "error");
+            }
+        }
+
+        function handlePaymentSuccess(paymentId) {
+            const pendingOrderStr = localStorage.getItem('pendingOrder');
+            if(!pendingOrderStr) {
+                showToast("Order data missing. Contact support.", "error");
+                return;
+            }
+
+            const orderData = JSON.parse(pendingOrderStr);
+            
+            orderData.razorpay_payment_id = paymentId;
+            orderData.status = 'Paid'; 
+            
+            const overlay = document.getElementById('processing-overlay');
+            if(overlay) {
+                overlay.style.display = 'flex';
+                const msgEl = document.getElementById('process-message');
+                if(msgEl) msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Payment...`;
+            }
+
+            let voucherUpdatePromise = Promise.resolve();
+            if (orderData.discountCode && auth.currentUser && auth.currentUser.uid) {
+                voucherUpdatePromise = db.collection("users").doc(auth.currentUser.uid).update({
+                    "personalVoucher.status": "redeemed"
+                }).then(() => {
+                    if(currentUserPersonalVoucher) currentUserPersonalVoucher.status = 'redeemed';
+                }).catch(err => console.error("Failed to update voucher status", err));
+            }
+
+            voucherUpdatePromise.then(() => {
+                const firebaseOrderData = {
+                    adminNote: "OWN COMPANY CREATED", companyName: orderData.companyName || "DDNex One",
+                    customerEmail: orderData.email, customerName: orderData.name, customerPhone: orderData.phone,
+                    domain: orderData.domainName, internalNotes: "",
+                    maintenance: orderData.maintenancePrice > 0 ? (orderData.maintenancePrice === 50 ? "Basic" : "Business") : "None",
+                    package: orderData.package, paymentMethod: "Razorpay (Curlec)", promo: orderData.discountCode || "",
+                    razorpay_payment_id: paymentId,
+                    salesRepIds: [], salesTeamIds: [], salesTeamNames: [], status: "Paid",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), total: orderData.total, userId: orderData.userId || ""
+                };
+                return db.collection("orders").add(firebaseOrderData);
+            }).then(() => {
+                localStorage.removeItem('pendingOrder');
+                showToast("Payment Successful!", "success");
+                if(overlay) overlay.style.display = 'none';
+                navigateTo('thank-you');
+            }).catch((error) => {
+                console.error("Order Error:", error);
+                showToast("Order processing failed. Please contact support.", "error");
+                if(overlay) overlay.style.display = 'none';
+                if(document.getElementById('manual-confirm-section')) document.getElementById('manual-confirm-section').style.display = 'block';
+            });
+        }
+
+        function handleManualConfirmation() {
+            const pendingOrderStr = localStorage.getItem('pendingOrder');
+            if(!pendingOrderStr) {
+                showToast("Error", "Order data missing. Please start over.", "error");
+                navigateTo('pricing');
+                return;
+            }
+            handlePaymentSuccess('MANUAL_CHECK_' + Date.now());
+        }
+
+        // ==========================================
+        // HELPDESK LOGIC
+        // ==========================================
+        async function generateSmartTicketId() {
+            if(!db) return `#Ticket-${Math.floor(1000 + Math.random() * 9000)}`;
+            try {
+                const snapshot = await db.collection("tickets").where("ticketId", "!=", null).orderBy("ticketId", "desc").limit(1).get();
+                let nextNumber = 1;
+                if (!snapshot.empty) {
+                    const lastTicket = snapshot.docs[0].data();
+                    const parts = lastTicket.ticketId.split('-');
+                    const lastNum = parseInt(parts[1]);
+                    if (!isNaN(lastNum)) nextNumber = lastNum + 1;
+                }
+                const idString = String(nextNumber).padStart(4, '0');
+                return `#Ticket-${idString}`;
+            } catch (error) { return `#Ticket-${Math.floor(1000 + Math.random() * 9000)}`; }
+        }
+
+        async function handleTicketSubmit(e) {
+            e.preventDefault();
+            if(!db) return showToast("Error", "Database offline", "error");
+            const btn = document.getElementById('btn-submit-ticket');
+            const name = document.getElementById('ticket-name').value;
+            const email = document.getElementById('ticket-email').value;
+            const type = document.getElementById('ticket-type').value;
+            const message = document.getElementById('ticket-message').value;
+            if(!name || !email || !type || !message) return showToast("Error", "Please fill in all fields.", "error");
+
+            if(btn) { btn.disabled = true; btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Generating ID...'; }
+
+            try {
+                const smartId = await generateSmartTicketId();
+                const ticketData = {
+                    ticketId: smartId, name: name, email: email, type: type, message: message, status: "Open",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), userId: auth.currentUser ? auth.currentUser.uid : null
+                };
+                await db.collection("tickets").add(ticketData);
+                if(document.getElementById('display-case-id')) document.getElementById('display-case-id').innerText = smartId;
+                if(document.getElementById('case-id-display')) document.getElementById('case-id-display').style.display = 'block';
+                if(e.target) e.target.reset();
+                showToast("Success", `Ticket Submitted! ID: ${smartId}`, "success");
+                setTimeout(() => {
+                    let notifyMsg = `Hi Admin,\n*New Ticket Received.*\n\n*Case ID:* ${smartId}\n*Name:* ${name}\n*Type:* ${type}`;
+                    window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(notifyMsg)}`, '_blank');
+                }, 1000);
+            } catch (error) {
+                console.error(error); showToast("Error", "Failed to submit ticket. Try again.", "error");
+            } finally {
+                if(btn) { btn.disabled = false; btn.innerText = 'Submit Ticket'; }
+            }
+        }
+
+        function copyTicketId() {
+            const idText = document.getElementById('display-case-id').innerText;
+            navigator.clipboard.writeText(idText).then(() => showToast("Success", "ID copied to clipboard!", "success")).catch(err => showToast("Error", "Failed to copy", "error"));
+        }
+
+        function fetchTicketHistory() {
+            if(!db) return;
+            const caseId = document.getElementById('history-search-id') ? document.getElementById('history-search-id').value.trim() : '';
+            if(!caseId) return showToast("Error", "Please enter a Case ID.", "error");
+            const listContainer = document.getElementById('ticket-list');
+            if(listContainer) listContainer.innerHTML = '<div style="text-align:center; color: var(--text-tertiary);">Searching...</div>';
+            db.collection("tickets").where("ticketId", "==", caseId).get()
+                .then((snapshot) => {
+                    if(listContainer) listContainer.innerHTML = ''; 
+                    if (snapshot.empty) { 
+                        if(listContainer) listContainer.innerHTML = '<div style="text-align:center; color: #ef4444; padding: 1rem;">No ticket found with that Case ID.</div>'; 
+                        return; 
+                    }
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const item = document.createElement('div');
+                        item.className = 'glass-card'; 
+                        if(item.style) {
+                            item.style.padding = '1rem'; 
+                            item.style.marginBottom = '0'; 
+                            item.style.display = 'grid'; 
+                            item.style.gridTemplateColumns = '1fr 1fr 1fr'; 
+                            item.style.alignItems = 'center';
+                        }
+                        item.innerHTML = `<div><div style="color:var(--text-main); font-weight:600;">${data.type}</div><div style="font-size:0.75rem; color:var(--text-tertiary);">${data.ticketId}</div></div><div class="ticket-id">${data.ticketId || doc.id}</div><div style="text-align:right;"><span style="background="${data.status==='Open'?'#fffbeb':'#ecfdf5'}; color="${data.status==='Open'?'var(--accent-warn)':'var(--accent-success)'}; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">${data.status}</span></div></div>`;
+                        if(listContainer) listContainer.appendChild(item);
+                    });
                 });
+        }
+
+        // ==========================================
+        // REQUEST & UPDATES LOGIC
+        // ==========================================
+        function handleUpdateTypeChange(type, element) {
+            const options = element.parentElement.querySelectorAll('.radio-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            const input = element.querySelector('input');
+            if(input) input.checked = true;
+            
+            ['field-content', 'field-upgrade', 'field-renew', 'field-remove'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+            
+            const targetId = `field-${type}`;
+            const targetEl = document.getElementById(targetId);
+            if(targetEl) targetEl.classList.remove('hidden');
+        }
+
+        function handleRequestSubmit(e) {
+            e.preventDefault();
+            if(!db) return showToast("Error", "Database offline", "error");
+            const btn = document.getElementById('btn-submit-request');
+            const originalText = btn ? btn.innerText : 'Submit Request';
+            if(btn) { btn.disabled = true; btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...'; }
+
+            const name = document.getElementById('req-name').value;
+            const phone = document.getElementById('req-phone').value;
+            const typeInput = document.querySelector('input[name="req_type"]:checked');
+            if(!typeInput) { showToast("Error", "Please select a request type.", "error"); if(btn) { btn.disabled = false; btn.innerText = originalText; return; } }
+            const type = typeInput.value;
+
+            let requestData = { name: name, phone: phone, type: type, status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp(), userId: auth.currentUser ? auth.currentUser.uid : null };
+
+            try {
+                if (type === 'content') { requestData.details = document.getElementById('req-desc-content').value; } 
+                else if (type === 'upgrade') {
+                    requestData.currentPlan = document.getElementById('req-current-plan').value;
+                    requestData.newPlan = document.getElementById('req-new-plan').value;
+                    requestData.details = document.getElementById('req-desc-upgrade').value;
+                } else if (type === 'renew') {
+                    requestData.plan = document.getElementById('req-renew-plan').value;
+                    requestData.duration = "1 Year"; 
+                } else if (type === 'remove') { requestData.details = document.getElementById('req-desc-remove').value; }
+
+                db.collection("customer_requests").add(requestData).then(() => {
+                    showToast("Success", "Request Submitted Successfully!", "success");
+                    if(e.target) e.target.reset();
+                    let waMsg = `Hi Admin,\n*New Customer Request*\n\n*Name:* ${name}\n*Phone:* ${phone}\n*Type:* ${type}`;
+                    if(requestData.details) waMsg += `\n*Details:* ${requestData.details}`;
+                    setTimeout(() => { window.open(`https://wa.me/${ADMIN_PHONE_NO}?text=${encodeURIComponent(waMsg)}`, '_blank'); }, 1000);
+                }).catch((err) => { console.error(err); showToast("Error", "Error submitting request.", "error"); });
+            } catch (error) { console.error(error); showToast("Error", "Invalid form data.", "error"); } 
+            finally { if(btn) { btn.disabled = false; btn.innerText = originalText; } }
+        }
+
+        // ==========================================
+        // WEBSITE IDEA SUBMISSION
+        // ==========================================
+        function handleWebsiteIdeaSubmit(event) {
+            event.preventDefault(); 
+            
+            const form = document.getElementById('website-idea-form');
+            if(!form) return;
+            const name = document.getElementById('idea-name').value;
+            const phone = document.getElementById('idea-phone').value;
+            const email = document.getElementById('idea-email').value;
+            const company = document.getElementById('idea-company').value;
+            const source = document.getElementById('idea-source').value;
+            const type = document.getElementById('idea-type').value;
+            const message = document.getElementById('idea-message').value;
+            const references = document.getElementById('idea-references').value;
+
+            if(!name || !phone || !email || !message) return showToast("Error", "Please fill in Name, Phone, Email and Description.", "error");
+
+            const btn = document.getElementById('btn-submit-idea');
+            const originalText = btn ? btn.innerText : 'Submit Idea';
+            if(btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Saving...';
+            }
+
+            const requestData = {
+                name: name, phone: phone, email: email, company: company || '', source: source || '',
+                type: type || 'New Website', details: message, references: references || '', status: 'Pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                userId: auth.currentUser ? auth.currentUser.uid : null, source: 'Website Description Form'
+            };
+
+            if(db) {
+                db.collection("customer_requests").add(requestData)
+                    .then(() => {
+                        const successModal = document.getElementById('idea-success-modal');
+                        if(successModal) {
+                            successModal.style.display = 'flex';
+                            requestAnimationFrame(() => { successModal.classList.add('active'); });
+                        }
+                        if(form) form.reset();
+                    })
+                    .catch((error) => {
+                        console.error("Firebase Save Error:", error);
+                        showToast("Error", "Failed to save idea. Please try again.", "error");
+                    })
+                    .finally(() => {
+                        if(btn) {
+                            btn.disabled = false;
+                            btn.innerText = originalText;
+                        }
+                    });
+            } else {
+                showToast("Error", "Database connection error.", "error");
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            }
+        }
+
+        function closeIdeaSuccessModal() {
+            const modal = document.getElementById('idea-success-modal');
+            if(modal) {
+                modal.classList.remove('active');
+                setTimeout(() => { modal.style.display = 'none'; navigateTo('/'); }, 300);
+            }
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('contact-name') ? document.getElementById('contact-name').value : '';
+            const email = document.getElementById('contact-email') ? document.getElementById('contact-email').value : '';
+            const message = document.getElementById('contact-message') ? document.getElementById('contact-message').value : '';
+            if(!name || !email || !message) return showToast("Error", "Please fill in all fields.", "error");
+
+            const btn = e.target ? e.target.querySelector('button') : null;
+            const originalText = btn ? btn.innerText : 'Send Message';
+            if(btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
+            }
+
+            const data = {
+                name: name, email: email, message: message, type: 'Contact Inquiry', status: 'Pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                userId: auth.currentUser ? auth.currentUser.uid : null, source: 'Contact Page Form'
+            };
+
+            if(db) {
+                db.collection("customer_requests").add(data)
+                    .then(() => {
+                        showToast("Success", "Thank you for your interest!", "success");
+                        if(e.target) e.target.reset();
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        showToast("Error", "Failed to send message. Please try again.", "error");
+                    })
+                    .finally(() => {
+                        if(btn) {
+                            btn.disabled = false;
+                            btn.innerText = originalText;
+                        }
+                    });
+            } else {
+                showToast("Error", "System offline. Please try again later.", "error");
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            }
+        }
+
+        // ==========================================
+        // REVIEWS LOGIC
+        // ==========================================
+        function setupStarRating() {
+            const container = document.getElementById('star-input-container');
+            if(!container) return;
+            const stars = container.querySelectorAll('.star-icon');
+            const hiddenInput = document.getElementById('rating-value');
+
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    highlightStars(parseInt(this.getAttribute('data-val')));
+                });
+                
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.getAttribute('data-val'));
+                    if(hiddenInput) hiddenInput.value = selectedRating;
+                    highlightStars(selectedRating);
+                    if(document.getElementById('rating-error')) document.getElementById('rating-error').style.display = 'none';
+                });
+            });
+
+            container.addEventListener('mouseleave', function() {
+                highlightStars(selectedRating);
+            });
+        }
+
+        function highlightStars(count) {
+            const container = document.getElementById('star-input-container');
+            if(!container) return;
+            const stars = container.querySelectorAll('.star-icon');
+            stars.forEach(star => {
+                star.classList.toggle('selected', parseInt(star.getAttribute('data-val')) <= count);
+            });
+        }
+
+        function loadReviewsFromFirebase() {
+            if(!db) return;
+            const firebaseContainer = document.getElementById('firebase-reviews-container');
+            if(!firebaseContainer) firebaseContainer.innerHTML = '';
+            
+            db.collection("customer_reviews").orderBy("timestamp", "desc").limit(10)
+                .get()
+                .then((snapshot) => {
+                    if(snapshot.empty) return;
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
+                        const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
+                        let starsHtml = '';
+                        for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'#fbbf24':'#cbd5e1'}"></i>`;
+                        
+                        const html = `
+                            <div class="glass rounded-2xl p-6 border border-slate-200 bg-white hover-lift">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">${initials}</div>
+                                    <div>
+                                        <div class="font-bold text-slate-900">${data.userName || 'Anonymous'}</div>
+                                        <div class="text-xs text-slate-500">${date}</div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-1 mb-3 text-amber-500">${starsHtml}</div>
+                                <p class="text-slate-600 text-sm">"${data.comment}"</p>
+                            </div>`;
+                        if(firebaseContainer) firebaseContainer.innerHTML += html;
+                    });
+                })
+                .catch(err => console.error("Error loading reviews", err));
+        }
+
+        function handleReviewSubmit(e) {
+            e.preventDefault();
+            if(!auth || !auth.currentUser) return showToast("Login Required", "You must be logged in to submit a review.", "warning");
+
+            if(selectedRating === 0) return showToast("Rating Missing", "Please select a star rating.", "warning");
+
+            const comment = document.getElementById('review-comment') ? document.getElementById('review-comment').value : '';
+            const user = auth.currentUser;
+            let displayName = user.email.split('@')[0];
+            
+            db.collection("users").doc(user.uid).get().then(doc => {
+                if(doc.exists && doc.data().name) displayName = doc.data().name;
+                const reviewData = { 
+                    userId: user.uid, userName: displayName, userEmail: user.email, rating: selectedRating, comment: comment, 
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'approved' 
+                };
+                return db.collection("customer_reviews").add(reviewData);
+            }).then(() => {
+                showToast("Success", "Review submitted successfully!", "success");
+                if(document.getElementById('review-form')) document.getElementById('review-form').reset();
+                selectedRating = 0;
+                highlightStars(0);
+                loadReviewsFromFirebase(); // Reload list
+            }).catch(err => {
+                console.error(err); 
+                showToast("Error", "Failed to submit review.", "error");
+            });
+        }
+
+        function toggleFullReviews() {
+            // Simple toggle for demonstration - in full app might open a modal
+            const list = document.getElementById('reviews-list');
+            if(list) {
+                list.scrollIntoView({behavior: 'smooth'});
+            }
+        }
+
+        // ==========================================
+        // PORTFOLIO LOGIC
+        // ==========================================
+        function loadHomePortfolio() {
+            if(!db) return;
+            const container = document.getElementById('home-portfolio-grid');
+            if(!container) return;
+            
+            db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
+                .then((snapshot) => {
+                    if(!snapshot.empty) {
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const html = `
+                                <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
+                                    <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                                    <div class="p-6">
+                                        <h4 class="font-bold text-slate-900 mb-2">${data.name}</h4>
+                                        <p class="text-slate-600 text-sm mb-4">${data.desc || 'View project'}</p>
+                                        <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site &rarr;</a>
+                                    </div>
+                                </div>`;
+                            container.innerHTML += html;
+                        });
+                    }
+                });
+        }
+
+        function loadPortfolio() {
+            if(!db) return;
+            const grid = document.getElementById('portfolio-grid');
+            if(!grid) return;
+            
+            db.collection("clients_portfolio").where("status", "==", true).get()
+                .then((snapshot) => {
+                    grid.innerHTML = '';
+                    if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No projects yet</div>'; return; }
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        grid.innerHTML += `
+                            <div class="group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
+                                <div class="h-56 overflow-hidden"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                                <div class="p-6">
+                                    <h4 class="font-bold text-slate-900 mb-2 text-lg">${data.name}</h4>
+                                    <p class="text-slate-600 text-sm mb-4">${data.desc || 'Professional website solution'}</p>
+                                    <a href="${data.link}" target="_blank" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</a>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+        }
+
+        // ==========================================
+        // MAP & GLOBE INIT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setupStarRating();
+            loadHomePortfolio();
+            // Load reviews immediately on home load if container exists
+            if(document.getElementById('firebase-reviews-container')) {
+                loadReviewsFromFirebase();
+            }
+            initMap(); 
+        });
+
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if(nav) {
+                if(window.scrollY > 50) nav.classList.add('shadow-lg');
+                else nav.classList.remove('shadow-lg');
             }
         });
-}
 
-function loadPortfolio() {
-    if(!db) return;
-    const grid = document.getElementById('portfolio-grid');
-    if(!grid) return;
-    
-    db.collection("clients_portfolio").where("status", "==", true).get()
-        .then((snapshot) => {
-            grid.innerHTML = '';
-            if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No projects yet</div>'; return; }
-            
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                grid.innerHTML += `
-                    <div class="group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
-                        <div class="h-56 overflow-hidden"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                        <div class="p-6">
-                            <h4 class="font-bold text-slate-900 mb-2 text-lg">${data.name}</h4>
-                            <p class="text-slate-600 text-sm mb-4">${data.desc || 'Professional website solution'}</p>
-                            <a href="${data.link}" target="_blank" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</a>
-                        </div>
+        window.addEventListener('popstate', () => {
+            const hash = window.location.hash.replace('#', '') || 'home';
+            if(document.getElementById(`page-${hash}`)) navigateTo(hash);
+        });
+
+        // Initialize Listeners
+        initializeDatabase();
+        listenToConfig();
+
+        // ==========================================
+        // INIT MAP FUNCTION
+        // ==========================================
+        function initMap() {
+            const mapContainer = document.getElementById('map');
+            if (typeof L === 'undefined' || !mapContainer) {
+                console.warn("Leaflet or Map container not found.");
+                return;
+            }
+
+            const map = L.map('map').setView([4.2105, 101.9758], 6); 
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            const clients = [
+                { name: "KL Tech Hub", location: [3.1390, 101.6869], desc: "E-commerce Platform", link: "#" },
+                { name: "Penang Digital", location: [5.4141, 100.3288], desc: "Corporate Site", link: "#" },
+                { name: "Johor SME", location: [1.4927, 103.7414], desc: "Landing Page", link: "#" },
+                { name: "Singapore Partner", location: [1.3521, 103.8198], desc: "Regional Portal", link: "#" },
+                { name: "Bali Resort", location: [-8.4095, 115.1889], desc: "Hotel Booking", link: "#" },
+                { name: "Jakarta Startup", location: [-6.2088, 106.8456], desc: "Fintech App", link: "#" },
+                { name: "Tokyo Client", location: [35.6762, 139.6503], desc: "Consultancy", link: "#" }
+            ];
+
+            const pinIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
+                iconSize: [36, 36],
+                iconAnchor: [18, 36]
+            });
+
+            clients.forEach(client => {
+                const marker = L.marker(client.location, { icon: pinIcon }).addTo(map);
+                
+                const popupContent = `
+                    <div class="popup-content">
+                        <div class="popup-title">${client.name}</div>
+                        <div class="popup-stats">${client.desc}</div>
+                        <a href="${client.link}" target="_blank" class="popup-link">Visit Site</a>
                     </div>
                 `;
+                
+                marker.bindPopup(popupContent);
             });
-        });
-}
-
-// ==========================================
-// MAP & GLOBE (INIT) - FIXED
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    setupStarRating();
-    loadHomePortfolio();
-    listenToReviews();
-    initMap(); // Initialize map from new HTML
-});
-
-window.addEventListener('scroll', () => {
-    const nav = document.getElementById('navbar');
-    if(nav) {
-        if(window.scrollY > 50) nav.classList.add('shadow-lg');
-        else nav.classList.remove('shadow-lg');
-    }
-});
-
-window.addEventListener('popstate', () => {
-    const hash = window.location.hash.replace('#', '') || 'home';
-    if(document.getElementById(`page-${hash}`)) navigateTo(hash);
-});
-
-// Initialize Auth Listeners if needed (already handled above, but good to have entry point)
-initializeDatabase();
-listenToConfig();
-
-// ==========================================
-// INIT MAP FUNCTION - FIXED
-// ==========================================
-function initMap() {
-    const mapContainer = document.getElementById('map');
-    if (typeof L === 'undefined' || !mapContainer) {
-        console.warn("Leaflet or Map container not found.");
-        return;
-    }
-
-    // Create the map instance centered on Malaysia
-    const map = L.map('map').setView([4.2105, 101.9758], 6); 
-
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    // Sample Data for "Global Clients"
-    const clients = [
-        { name: "KL Tech Hub", location: [3.1390, 101.6869], desc: "E-commerce Platform", link: "#" },
-        { name: "Penang Digital", location: [5.4141, 100.3288], desc: "Corporate Site", link: "#" },
-        { name: "Johor SME", location: [1.4927, 103.7414], desc: "Landing Page", link: "#" },
-        { name: "Singapore Partner", location: [1.3521, 103.8198], desc: "Regional Portal", link: "#" },
-        { name: "Bali Resort", location: [-8.4095, 115.1889], desc: "Hotel Booking", link: "#" },
-        { name: "Jakarta Startup", location: [-6.2088, 106.8456], desc: "Fintech App", link: "#" },
-        { name: "Tokyo Client", location: [35.6762, 139.6503], desc: "Consultancy", link: "#" }
-    ];
-
-    // Custom Icon (Green Pin)
-    const pinIcon = L.divIcon({
-        className: 'custom-marker',
-        html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
-        iconSize: [36, 36],
-        iconAnchor: [18, 36]
-    });
-
-    // Add markers to map
-    clients.forEach(client => {
-        const marker = L.marker(client.location, { icon: pinIcon }).addTo(map);
-        
-        // Popup content
-        const popupContent = `
-            <div class="popup-content">
-                <div class="popup-title">${client.name}</div>
-                <div class="popup-stats">${client.desc}</div>
-                <a href="${client.link}" target="_blank" class="popup-link">Visit Site</a>
-            </div>
-        `;
-        
-        marker.bindPopup(popupContent);
-    });
-}
-
-// ==========================================
-// GLOBE ANIMATION (HOME DECORATION)
-// ==========================================
-// Simple implementation to prevent errors if canvas exists
-const canvas = document.getElementById('globe-canvas');
-if (canvas) {
-    // Placeholder logic or 3D library integration would go here
-    // Leaving empty to keep the file single and lightweight as requested
-}
-
+        }
     </script>
 
     <!-- Leaflet JS (For Map) -->
