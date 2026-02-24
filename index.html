@@ -81,14 +81,10 @@
                         'float': 'float 6s ease-in-out infinite',
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'marquee': 'marquee 40s linear infinite',
-                        'slide-up': 'slideUp 0.5s ease-out forwards',
-                        'fade-in': 'fadeIn 0.5s ease-out forwards'
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
-                        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
-                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: 0 }, '100%': { transform: 'translateY(0)', opacity: 1 } },
-                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } }
+                        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } }
                     }
                 }
             }
@@ -151,13 +147,12 @@
             display: none; 
             opacity: 0; 
             transform: translateY(20px); 
-            transition: opacity 0.4s ease, transform 0.4s ease; 
+            transition: opacity 0.5s ease, transform 0.5s ease; 
         }
         .page.active { 
             display: block; 
             opacity: 1; 
             transform: translateY(0); 
-            animation: slideUp 0.6s ease-out forwards;
         }
         
         .hover-lift { 
@@ -198,12 +193,15 @@
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
             outline: none;
         }
+        
+        /* Read-only input style for checkout */
         .input-field:read-only {
             background-color: #f1f5f9;
             color: #64748b;
             cursor: not-allowed;
+            border-color: #e2e8f0;
         }
-        
+
         .nav-link { position: relative; }
         .nav-link:after {
             content: '';
@@ -295,8 +293,17 @@
         }
         .req-item.valid { color: #10b981; font-weight: 600; }
 
-        /* Star rating (UPDATED) */
-        .star-icon { font-size: 1.5rem; color: #cbd5e1; cursor: pointer; transition: color 0.2s; }
+        /* Star rating (UPDATED: Ensure pointer-events work) */
+        .star-icon { 
+            font-size: 1.5rem; 
+            color: #cbd5e1; 
+            cursor: pointer; 
+            transition: color 0.2s, transform 0.2s;
+            pointer-events: auto; /* Ensures clickable */
+        }
+        .star-icon:hover {
+            transform: scale(1.2);
+        }
         .star-icon.hovered, .star-icon.selected { color: #fbbf24; }
 
         /* Package cards */
@@ -390,17 +397,10 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.15);
             background: #fff;
             border: 1px solid #e0e0e0;
-            padding: 0;
-            overflow: hidden;
         }
         #global-map-section .leaflet-popup-content {
-            margin: 0;
-            width: 280px !important;
-        }
-        #global-map-section .leaflet-container a.leaflet-popup-close-button {
-            color: #64748b;
-            font-size: 20px;
-            top: 8px; right: 8px;
+            margin: 12px;
+            font-family: 'Inter', sans-serif;
         }
         .custom-marker {
             background: none;
@@ -437,13 +437,35 @@
             position: absolute;
             border-radius: 50%;
         }
-        /* Custom Popup Styling */
-        .popup-content { padding: 16px; }
-        .popup-title { font-weight: 700; font-size: 16px; color: #1e293b; margin-bottom: 6px; }
-        .popup-stats { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
-        .popup-link { font-size: 13px; font-weight: 600; color: #6366f1; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
-        .popup-link:hover { text-decoration: underline; }
-
+        .popup-content {
+            min-width: 220px;
+        }
+        .popup-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #1e293b;
+            margin-bottom: 0.5em;
+        }
+        .popup-stats {
+            font-size: 0.9em;
+            color: #64748b;
+            margin-bottom: 0.8em;
+            line-height: 1.4;
+        }
+        .popup-link {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        .popup-link:hover {
+            background-color: #059669;
+        }
         @keyframes pulse-ring {
             0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
             50% { transform: translate(-50%, -50%) scale(1.8); opacity: 0.4; }
@@ -620,7 +642,7 @@
                             </div>
                         </div>
 
-                        <!-- Dashboard Preview -->
+                        <!-- Dashboard Preview (Updated: Removed Revenue Text) -->
                         <div class="relative animate-scale-in hidden lg:block">
                             <div class="absolute -inset-4 bg-gradient-to-r from-indigo-200/50 to-slate-200/50 rounded-3xl blur-2xl"></div>
                             <div class="relative glass rounded-2xl p-2 shadow-2xl">
@@ -1164,6 +1186,7 @@
                                     <div class="grid md:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-slate-600 mb-2">First Name</label>
+                                            <!-- UPDATED: Readonly ID for locking -->
                                             <input type="text" id="co-firstname" required class="input-field w-full px-4 py-3 rounded-lg text-slate-800" placeholder="John">
                                         </div>
                                         <div>
@@ -2375,18 +2398,53 @@
         };
 
         function performTransition(page) {
-            // Simple smooth transition logic
-            const oldPage = document.getElementById(`page-${this.currentPage}`);
-            const newPage = document.getElementById(`page-${page}`);
+            // Smooth transition logic (UPDATED)
+            const currentActive = document.querySelector('.page.active');
+            const target = document.getElementById(`page-${page}`);
             
-            if(oldPage) {
-                oldPage.classList.remove('active');
-                // Allow CSS transition to start before hiding display
+            // Fade out current
+            if (currentActive && currentActive.id !== `page-${page}`) {
+                currentActive.style.opacity = '0';
+                currentActive.style.transform = 'translateY(20px)';
                 setTimeout(() => {
-                    if(this.currentPage !== page) oldPage.style.display = 'none';
-                }, 400); 
+                    currentActive.classList.remove('active');
+                    // Reset styles for hidden state
+                    currentActive.style.opacity = '';
+                    currentActive.style.transform = '';
+                    
+                    // Activate new page
+                    if (target) {
+                        target.classList.add('active');
+                        // Force reflow for animation
+                        void target.offsetWidth; 
+                        // Fade in
+                        target.style.opacity = '1';
+                        target.style.transform = 'translateY(0)';
+                        
+                        this.currentPage = page;
+                        history.pushState({}, '', '#' + page);
+                        
+                        // Page specific loads
+                        if(page === 'home') loadHomePortfolio();
+                        if(page === 'portfolio') loadPortfolio();
+                        if(page === 'reviews') loadReviews();
+                        if(page === 'profile' && currentUser) loadProfileData();
+                    }
+                }, 400); // Match CSS transition duration
+            } else if (target) {
+                // Direct load if no active page or same page
+                target.classList.add('active');
+                target.style.opacity = '1';
+                target.style.transform = 'translateY(0)';
+                this.currentPage = page;
+                history.pushState({}, '', '#' + page);
+                
+                if(page === 'home') loadHomePortfolio();
+                if(page === 'portfolio') loadPortfolio();
+                if(page === 'reviews') loadReviews();
+                if(page === 'profile' && currentUser) loadProfileData();
             }
-            
+
             // Update SEO
             const seo = SEO_CONFIG[page] || SEO_CONFIG['home'];
             document.title = seo.title;
@@ -2395,24 +2453,6 @@
             
             // Scroll to top
             window.scrollTo(0, 0);
-            
-            if(newPage) {
-                newPage.style.display = 'block';
-                // Slight delay to allow display:block to render before adding opacity class
-                setTimeout(() => {
-                    newPage.classList.add('active');
-                }, 10);
-                
-                this.currentPage = page;
-                history.pushState({}, '', '#' + page);
-                
-                // Page specific loads
-                if(page === 'home') loadHomePortfolio();
-                if(page === 'portfolio') loadPortfolio();
-                if(page === 'reviews') loadReviews();
-                if(page === 'profile' && currentUser) loadProfileData();
-                if(page === 'checkout') prefillCheckout();
-            }
         }
 
         // ==========================================
@@ -2507,7 +2547,7 @@
                     popupAnchor: [0, -36]
                 });
 
-                // Client data (Real live examples)
+                // Client data (UPDATED: Real map data with clickable links)
                 var clients = [
                   { lat: 3.1390, lng: 101.6869, name: "E-Shop Malaysia", visits: "128,450 this month", url: "https://example-my.com", extra: "E-commerce Platform • Live since 2024" },
                   { lat: 5.4164, lng: 100.3327, name: "Tech Startup Penang", visits: "62,300 this month", url: "https://techpg.my", extra: "SaaS Dashboard" },
@@ -2645,6 +2685,32 @@
             document.getElementById('checkout-plan-price').textContent = billingCycle === 'monthly' ? `RM ${data.monthly}/month` : `RM ${data.onetime} one-time`;
             document.getElementById('checkout-billing-type').textContent = billingCycle === 'monthly' ? 'Billed monthly. Cancel anytime.' : 'One-time purchase. No maintenance included.';
             
+            // UPDATE: Auto-fill profile data into checkout if logged in
+            if (currentUser && currentUser.email) {
+                // We use the data from the global user object or fetch from Firestore
+                // Ideally, we load the fresh doc here or rely on loadProfileData having been called before
+                db.collection("users").doc(currentUser.uid).get().then(doc => {
+                    if(doc.exists) {
+                        const userData = doc.data();
+                        const names = (userData.name || '').split(' ');
+                        document.getElementById('co-firstname').value = names[0] || '';
+                        document.getElementById('co-lastname').value = names.slice(1).join(' ') || '';
+                        document.getElementById('co-email').value = userData.email || currentUser.email;
+                        document.getElementById('co-phone').value = userData.phone || '';
+                        
+                        // Lock Name fields as requested
+                        document.getElementById('co-firstname').readOnly = true;
+                        document.getElementById('co-lastname').readOnly = true;
+                    }
+                }).catch(err => {
+                    console.error("Error fetching user data for checkout", err);
+                });
+            } else {
+                // Unlock fields if not logged in (though checkout is usually gated)
+                document.getElementById('co-firstname').readOnly = false;
+                document.getElementById('co-lastname').readOnly = false;
+            }
+            
             updateTotal();
             router.navigate('checkout');
         }
@@ -2713,6 +2779,7 @@
             if(discount > 0) {
                 document.getElementById('summary-discount-row').classList.remove('hidden');
                 document.getElementById('summary-discount').textContent = '-RM ' + discount;
+                                document.getElementById('summary-promo-code').textContent = `(${checkoutState.promoCode})`;
             } else {
                 document.getElementById('summary-discount-row').classList.add('hidden');
             }
@@ -2738,44 +2805,6 @@
                     showToast('Invalid promo code', 'error');
                 }
             }).catch(() => showToast('Error validating code', 'error'));
-        }
-
-        // ==========================================
-        // CHECKOUT AUTOFILL (UPDATED)
-        // ==========================================
-        function prefillCheckout() {
-            if(currentUser && currentUserData) {
-                document.getElementById('co-firstname').value = currentUserData.name ? currentUserData.name.split(' ')[0] : '';
-                document.getElementById('co-lastname').value = currentUserData.name ? currentUserData.name.split(' ').slice(1).join(' ') : '';
-                document.getElementById('co-email').value = currentUserData.email || currentUser.email;
-                                document.getElementById('co-phone').value = currentUserData.phone || '';
-                document.getElementById('co-company').value = currentUserData.company || '';
-
-                // Make fields read-only as requested
-                document.getElementById('co-firstname').readOnly = true;
-                document.getElementById('co-lastname').readOnly = true;
-                document.getElementById('co-email').readOnly = true;
-                document.getElementById('co-phone').readOnly = true;
-
-                // Add visual hint for user
-                const companyField = document.getElementById('co-company');
-                companyField.placeholder = "Locked - Update in Profile";
-                companyField.readOnly = true;
-            } else {
-                // Reset fields and read-only state if no user
-                document.getElementById('co-firstname').value = '';
-                document.getElementById('co-lastname').value = '';
-                document.getElementById('co-email').value = '';
-                document.getElementById('co-phone').value = '';
-                document.getElementById('co-company').value = '';
-
-                document.getElementById('co-firstname').readOnly = false;
-                document.getElementById('co-lastname').readOnly = false;
-                document.getElementById('co-email').readOnly = false;
-                document.getElementById('co-phone').readOnly = false;
-                document.getElementById('co-company').readOnly = false;
-                document.getElementById('co-company').placeholder = "Acme Inc.";
-            }
         }
 
         // ==========================================
@@ -2811,7 +2840,7 @@
                 },
                 modal: {
                     ondismiss: function() {
-                        document.getElementById('btn-pay-now').classList.remove('hidden');
+                        document.getElementById('btn-pay-now').classList.add('hidden');
                         document.getElementById('manual-confirm-section').classList.add('hidden');
                         document.getElementById('payment-failed-section').classList.remove('hidden');
                     }
@@ -2875,8 +2904,6 @@
         // ==========================================
         // AUTH
         // ==========================================
-        let currentUserData = null; // Store user doc data
-
         function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
@@ -2925,12 +2952,7 @@
         }
 
         function handleLogout() {
-            auth.signOut().then(() => { 
-                showToast('Logged out', 'success'); 
-                currentUser = null;
-                currentUserData = null;
-                router.navigate('home'); 
-            });
+            auth.signOut().then(() => { showToast('Logged out', 'success'); router.navigate('home'); });
         }
 
         function getAuthErrorMessage(error) {
@@ -2974,8 +2996,6 @@
             db.collection("users").doc(currentUser.uid).get().then((doc) => {
                 if(doc.exists) {
                     const data = doc.data();
-                    currentUserData = data; // Cache for checkout
-                    
                     document.getElementById('prof-name').value = data.name || '';
                     document.getElementById('prof-email').value = data.email || currentUser.email;
                     document.getElementById('prof-phone').value = data.phone || '';
@@ -3020,13 +3040,7 @@
                 name: document.getElementById('prof-name').value,
                 phone: document.getElementById('prof-phone').value,
                 company: document.getElementById('prof-company').value
-            }).then(() => {
-                // Update local cache
-                currentUserData.name = document.getElementById('prof-name').value;
-                currentUserData.phone = document.getElementById('prof-phone').value;
-                currentUserData.company = document.getElementById('prof-company').value;
-                showToast('Profile updated!', 'success');
-            });
+            }).then(() => showToast('Profile updated!', 'success'));
         }
 
         function deletePersonalVoucher() {
@@ -3039,43 +3053,26 @@
         }
 
         // ==========================================
-        // REVIEWS (UPDATED)
+        // REVIEWS
         // ==========================================
         function setupStarRating() {
-            const container = document.getElementById('star-container');
-            if(!container) return;
-            
-            const stars = container.querySelectorAll('.star-icon');
+            const stars = document.querySelectorAll('.star-icon');
             stars.forEach(star => {
-                // Hover effect
                 star.addEventListener('mouseover', function() {
-                    const val = parseInt(this.dataset.val);
-                    highlightStars(val);
+                    highlightStars(parseInt(this.dataset.val));
                 });
-                
-                // Click effect (Lock)
                 star.addEventListener('click', function() {
                     selectedRating = parseInt(this.dataset.val);
                     document.getElementById('rating-value').value = selectedRating;
                     highlightStars(selectedRating);
                 });
             });
-            
-            // Reset to selected rating on mouse leave
-            container.addEventListener('mouseleave', () => {
-                highlightStars(selectedRating);
-            });
+            document.getElementById('star-container').addEventListener('mouseleave', () => highlightStars(selectedRating));
         }
 
         function highlightStars(count) {
-            const stars = document.querySelectorAll('.star-icon');
-            stars.forEach(star => {
-                const val = parseInt(star.dataset.val);
-                if(val <= count) {
-                    star.classList.add('selected');
-                } else {
-                    star.classList.remove('selected');
-                }
+            document.querySelectorAll('.star-icon').forEach(star => {
+                star.classList.toggle('selected', parseInt(star.dataset.val) <= count);
             });
         }
 
@@ -3086,7 +3083,7 @@
             
             const reviewData = {
                 userId: currentUser.uid,
-                userName: currentUserData ? currentUserData.name : currentUser.email.split('@')[0],
+                userName: document.getElementById('prof-name').value || currentUser.email.split('@')[0],
                 rating: selectedRating,
                 comment: document.getElementById('review-comment').value,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -3096,10 +3093,7 @@
             db.collection("customer_reviews").add(reviewData)
                 .then(() => {
                     showToast('Review submitted!', 'success');
-                    e.target.reset(); 
-                    selectedRating = 0; 
-                    highlightStars(0); 
-                    loadReviews();
+                    e.target.reset(); selectedRating = 0; highlightStars(0); loadReviews();
                 });
         }
 
@@ -3107,37 +3101,41 @@
             if(!db) return;
             const grid = document.getElementById('reviews-grid');
             
-            // 1. Add Dummy Review First (As requested)
-            let html = `
-                <div class="glass rounded-xl p-6 border border-slate-200 bg-white animate-slide-up">
+            // 1. Clear grid
+            grid.innerHTML = '';
+
+            // 2. Add Dummy Review first (UPDATED)
+            const dummyHtml = `
+                <div class="glass rounded-xl p-6 border border-slate-200 bg-white">
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">D</div>
-                        <div><div class="font-semibold text-slate-900">Danial Danish</div><div class="text-amber-400 text-sm"><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i></div></div>
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">A</div>
+                        <div><div class="font-semibold text-slate-900">Ali Bin Abu</div><div class="text-amber-400 text-sm">
+                            <i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i>
+                        </div></div>
                     </div>
-                    <p class="text-slate-600 text-sm leading-relaxed">"Absolutely fantastic service! The team delivered my AI-powered website faster than I expected. Highly recommended for any Malaysian business."</p>
+                    <p class="text-slate-600 text-sm leading-relaxed">"Excellent service! The team was professional and delivered my website faster than expected. Highly recommended for Malaysian businesses."</p>
                 </div>
             `;
+            grid.innerHTML += dummyHtml;
 
-            // 2. Load Database Reviews
+            // 3. Load Database Reviews
             db.collection("customer_reviews").where("status", "==", "approved").orderBy("timestamp", "desc").limit(8).get()
                 .then((snapshot) => {
-                    if(!snapshot.empty) {
-                        snapshot.forEach((doc) => {
-                            const data = doc.data();
-                            const stars = Array(5).fill(0).map((_, i) => `<i class="${i < data.rating ? 'ri-star-fill' : 'ri-star-line'} text-amber-400"></i>`).join('');
-                            html += `
-                                <div class="glass rounded-xl p-6 border border-slate-200 bg-white animate-slide-up">
-                                    <div class="flex items-center gap-3 mb-4">
-                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">${(data.userName || 'U').charAt(0).toUpperCase()}</div>
-                                        <div><div class="font-semibold text-slate-900">${data.userName || 'User'}</div><div class="text-amber-400 text-sm">${stars}</div></div>
-                                    </div>
-                                    <p class="text-slate-600 text-sm leading-relaxed">"${data.comment}"</p>
-                                </div>
-                            `;
-                        });
-                    }
+                    if(snapshot.empty) return; // Keep dummy if empty
                     
-                    grid.innerHTML = html;
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const stars = Array(5).fill(0).map((_, i) => `<i class="${i < data.rating ? 'ri-star-fill text-amber-400' : 'ri-star-line text-slate-300'}"></i>`).join('');
+                        grid.innerHTML += `
+                            <div class="glass rounded-xl p-6 border border-slate-200 bg-white">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">${(data.userName || 'U').charAt(0).toUpperCase()}</div>
+                                    <div><div class="font-semibold text-slate-900">${data.userName || 'User'}</div><div class="text-amber-400 text-sm">${stars}</div></div>
+                                </div>
+                                <p class="text-slate-600 text-sm leading-relaxed">"${data.comment}"</p>
+                            </div>
+                        `;
+                    });
                 });
         }
 
@@ -3147,7 +3145,7 @@
         function loadHomePortfolio() {
             if(!db) return;
             const grid = document.getElementById('home-portfolio-grid');
-            // Load DB items and append to grid
+            // Ensure dummy item stays, only append from DB
             db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
                 .then((snapshot) => {
                     if(!snapshot.empty) {
@@ -3159,7 +3157,7 @@
                                     <div class="p-6">
                                         <h4 class="font-bold text-slate-900 mb-2">${data.name}</h4>
                                         <p class="text-slate-600 text-sm mb-4">${data.desc || 'View project'}</p>
-                                        <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site →</a>
+                                        <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site &rarr;</a>
                                     </div>
                                 </div>
                             `;
@@ -3333,24 +3331,18 @@
         }
 
         // ==========================================
-        // AUTH STATE LISTENER (UPDATED)
+        // AUTH STATE LISTENER
         // ==========================================
         if(auth) {
             auth.onAuthStateChanged((user) => {
                 currentUser = user;
-                if(!user) {
-                    currentUserData = null;
-                }
                 updateHeaderAuth();
                 
                 if(user) {
                     db.collection("users").doc(user.uid).get().then((doc) => {
                         if(doc.exists) {
-                            const data = doc.data();
-                            currentUserRole = data.role || 'user';
-                            if(data.personalVoucher) currentUserPersonalVoucher = data.personalVoucher;
-                            // Cache data for immediate use (e.g. checkout)
-                            currentUserData = data; 
+                            currentUserRole = doc.data().role || 'user';
+                            if(doc.data().personalVoucher) currentUserPersonalVoucher = doc.data().personalVoucher;
                         }
                     });
                 }
@@ -3362,6 +3354,7 @@
             const mobileAuthButtons = document.getElementById('mobile-auth-buttons');
             
             if(currentUser) {
+                // UPDATED: Login state changes text to "My Profile" and adds "Logout"
                 const loggedInHtml = `
                     <button onclick="router.navigate('profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="ri-user-line"></i> My Profile</button>
                     <button onclick="handleLogout()" class="hidden md:block text-sm font-medium text-slate-600 hover:text-red-600">Logout</button>
