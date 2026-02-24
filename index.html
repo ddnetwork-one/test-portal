@@ -81,10 +81,14 @@
                         'float': 'float 6s ease-in-out infinite',
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'marquee': 'marquee 40s linear infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
-                        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } }
+                        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } }
                     }
                 }
             }
@@ -147,12 +151,10 @@
             display: none; 
             opacity: 0; 
             transform: translateY(20px); 
-            transition: opacity 0.4s ease, transform 0.4s ease; 
         }
         .page.active { 
             display: block; 
-            opacity: 1; 
-            transform: translateY(0); 
+            animation: fadeIn 0.4s ease forwards, slideUp 0.4s ease forwards; 
         }
         
         .hover-lift { 
@@ -192,6 +194,13 @@
             background: #ffffff;
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
             outline: none;
+        }
+        
+        .input-locked {
+            background-color: #f1f5f9;
+            color: #64748b;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
         }
         
         .nav-link { position: relative; }
@@ -286,7 +295,7 @@
         .req-item.valid { color: #10b981; font-weight: 600; }
 
         /* Star rating */
-        .star-icon { font-size: 1.5rem; color: #cbd5e1; cursor: pointer; transition: color 0.2s; }
+        .star-icon { font-size: 1.5rem; color: #cbd5e1; cursor: pointer; transition: color 0.2s; user-select: none; }
         .star-icon.hovered, .star-icon.selected { color: #fbbf24; }
 
         /* Package cards */
@@ -381,6 +390,7 @@
             background: #fff;
             border: 1px solid #e0e0e0;
         }
+        .leaflet-popup-content { margin: 12px 16px !important; }
         .custom-marker {
             background: none;
             border: none;
@@ -416,6 +426,12 @@
             position: absolute;
             border-radius: 50%;
         }
+        .popup-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+        .popup-stats { font-size: 12px; color: #64748b; line-height: 1.5; margin-bottom: 8px; }
+        .popup-link { display: inline-block; padding: 6px 12px; background: #1e293b; color: #fff; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600; transition: background 0.2s; }
+        .popup-link:hover { background: #334155; }
+        .tooltip-modern { border: none; background: rgba(30, 41, 59, 0.9); color: white; padding: 4px 8px; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+
         @keyframes pulse-ring {
             0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
             50% { transform: translate(-50%, -50%) scale(1.8); opacity: 0.4; }
@@ -546,13 +562,13 @@
         <section id="page-home" class="page active">
             <!-- Hero -->
             <div class="relative min-h-[90vh] flex items-center bg-mesh overflow-hidden">
-                <div class="blob bg-indigo-400 w-96 h-96 rounded-full top-0 left-0 -translate-x-1/2 -translate-y-1/2"></div>
+                <div class="blob bg-indigo-400 w-96 h-96 rounded-full top-0 left:0 -translate-x-1/2 -translate-y-1/2"></div>
                 <div class="blob bg-slate-400 w-96 h-96 rounded-full bottom-0 right:0 translate-x-1/2 translate-y-1/2" style="animation-delay: -5s;"></div>
                 <canvas id="globe-canvas"></canvas>
                 
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
                     <div class="grid lg:grid-cols-2 gap-12 items-center">
-                        <div class="animate-slide-up">
+                        <div>
                             <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-6 border border-indigo-200">
                                 <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
                                 <span class="text-sm font-medium text-slate-600">Malaysia's #1 Web Solutions</span>
@@ -592,8 +608,8 @@
                             </div>
                         </div>
 
-                        <!-- Dashboard Preview (Updated: Removed Revenue Text) -->
-                        <div class="relative animate-scale-in hidden lg:block">
+                        <!-- Dashboard Preview -->
+                        <div class="relative hidden lg:block">
                             <div class="absolute -inset-4 bg-gradient-to-r from-indigo-200/50 to-slate-200/50 rounded-3xl blur-2xl"></div>
                             <div class="relative glass rounded-2xl p-2 shadow-2xl">
                                 <div class="bg-white rounded-xl overflow-hidden border border-slate-200">
@@ -662,7 +678,6 @@
             <div class="py-12 border-y border-slate-200 bg-slate-50/50 overflow-hidden">
                 <div class="marquee-container">
                     <div class="marquee-content">
-                        <!-- Repeat content for seamless loop -->
                         <div class="flex gap-16 px-8">
                             <div class="flex items-center gap-2 text-slate-700 font-semibold whitespace-nowrap"><i class="ri-check-double-line text-green-500 text-xl"></i>Trusted by 10+ Clients</div>
                             <div class="flex items-center gap-2 text-slate-700 font-semibold whitespace-nowrap"><i class="ri-global-line text-indigo-500 text-xl"></i>Global Standard Hosting</div>
@@ -686,7 +701,7 @@
             <!-- Services Grid -->
             <div class="py-24 bg-white relative">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-16 animate-fade-in">
+                    <div class="text-center mb-16">
                         <h2 class="text-3xl md:text-5xl font-bold mb-4 text-slate-900">Our <span class="text-gradient">Solutions</span></h2>
                         <p class="text-slate-600 text-lg max-w-2xl mx-auto">Designed in Malaysia. Built for the world. Choose the perfect package for your business needs.</p>
                     </div>
@@ -765,7 +780,6 @@
                                 <a href="#" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</a>
                             </div>
                         </div>
-                        <!-- Dynamic items will be appended here -->
                     </div>
                     <div class="text-center mt-12">
                         <button onclick="router.navigate('portfolio')" class="px-8 py-4 rounded-full btn-primary text-white font-bold">View All Projects</button>
@@ -773,7 +787,7 @@
                 </div>
             </div>
 
-            <!-- GLOBAL CLIENT MAP SECTION (NEW) -->
+            <!-- GLOBAL CLIENT MAP SECTION (UPDATED) -->
             <section id="global-map-section" class="py-24 bg-white relative overflow-hidden">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h2 class="text-4xl md:text-5xl font-bold mb-4 text-slate-900">Global Client <span class="text-gradient">Reach</span></h2>
@@ -1317,11 +1331,11 @@
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-slate-600 mb-2">Your Rating</label>
                                     <div class="flex gap-2" id="star-container">
-                                        <i class="ri-star-fill star-icon" data-val="1"></i>
-                                        <i class="ri-star-fill star-icon" data-val="2"></i>
-                                        <i class="ri-star-fill star-icon" data-val="3"></i>
-                                        <i class="ri-star-fill star-icon" data-val="4"></i>
-                                        <i class="ri-star-fill star-icon" data-val="5"></i>
+                                        <i class="ri-star-line star-icon" data-val="1"></i>
+                                        <i class="ri-star-line star-icon" data-val="2"></i>
+                                        <i class="ri-star-line star-icon" data-val="3"></i>
+                                        <i class="ri-star-line star-icon" data-val="4"></i>
+                                        <i class="ri-star-line star-icon" data-val="5"></i>
                                     </div>
                                     <input type="hidden" id="rating-value" required>
                                 </div>
@@ -1336,8 +1350,24 @@
 
                     <!-- Reviews Grid -->
                     <div id="reviews-grid" class="grid md:grid-cols-3 gap-6">
-                        <!-- Reviews loaded dynamically -->
-                        <div class="col-span-3 text-center py-12 text-slate-400">Loading reviews...</div>
+                        <!-- Dummy Review Added -->
+                        <div class="glass rounded-xl p-6 border border-slate-200 bg-white">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold">A</div>
+                                <div>
+                                    <div class="font-semibold text-slate-900">Ahmad Razak</div>
+                                    <div class="text-amber-400 text-sm">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-slate-600 text-sm leading-relaxed">"Excellent service and fast delivery. The team understood exactly what I needed for my business. Highly recommended!"</p>
+                        </div>
+                        <!-- Dynamic reviews will be appended here -->
                     </div>
                 </div>
             </div>
@@ -1544,7 +1574,7 @@
             </div>
         </section>
 
-        <!-- LOGIN PAGE (Redesigned) -->
+        <!-- LOGIN PAGE -->
         <section id="page-login" class="page">
             <div class="min-h-screen flex items-center justify-center bg-mesh py-12 px-4 relative overflow-hidden">
                 <div class="absolute inset-0 z-0">
@@ -1600,7 +1630,7 @@
             </div>
         </section>
 
-        <!-- SIGNUP PAGE (Redesigned) -->
+        <!-- SIGNUP PAGE -->
         <section id="page-signup" class="page">
             <div class="min-h-screen flex items-center justify-center bg-mesh py-12 px-4 relative overflow-hidden">
                 <div class="absolute inset-0 z-0">
@@ -2308,6 +2338,7 @@
         let db, auth;
         let currentUser = null;
         let currentUserRole = 'user';
+        let currentUserData = null; // Store user data object
         let currentUserPersonalVoucher = null;
         let billingCycle = 'monthly';
         let selectedPackage = null;
@@ -2347,18 +2378,15 @@
         };
 
         function performTransition(page) {
-            // Simple smooth transition logic (no loader overlay)
             document.querySelectorAll('.page').forEach(p => {
                 p.classList.remove('active');
             });
             
-            // Update SEO
             const seo = SEO_CONFIG[page] || SEO_CONFIG['home'];
             document.title = seo.title;
             document.querySelector('meta[name="description"]').setAttribute('content', seo.desc);
             document.querySelector('link[rel="canonical"]').setAttribute('href', seo.canonical);
             
-            // Scroll to top
             window.scrollTo(0, 0);
             
             const target = document.getElementById(`page-${page}`);
@@ -2367,11 +2395,11 @@
                 this.currentPage = page;
                 history.pushState({}, '', '#' + page);
                 
-                // Page specific loads
                 if(page === 'home') loadHomePortfolio();
                 if(page === 'portfolio') loadPortfolio();
                 if(page === 'reviews') loadReviews();
                 if(page === 'profile' && currentUser) loadProfileData();
+                if(page === 'checkout' && currentUser) prefillCheckout(); // Prefill if logged in
             }
         }
 
@@ -2401,7 +2429,6 @@
                 const cy = gH / 2;
                 const r = 200;
                 
-                // Draw grid
                 gCtx.strokeStyle = 'rgba(99, 102, 241, 0.1)';
                 gCtx.lineWidth = 1;
                 for(let i = 0; i < 12; i++) {
@@ -2410,7 +2437,6 @@
                     gCtx.stroke();
                 }
                 
-                // Draw points
                 gCtx.fillStyle = 'rgba(99, 102, 241, 0.5)';
                 points.forEach(p => {
                     const x = Math.cos(p.lon + rotation) * Math.cos(p.lat);
@@ -2446,19 +2472,16 @@
                     maxZoom: 18,
                     worldCopyJump: true,
                     attributionControl: true
-                }).setView([4.0, 105.0], 5);  // SE Asia focus
+                }).setView([4.0, 105.0], 5);
 
-                // Clean professional basemap: CartoDB Positron
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                     subdomains: 'abcd',
                     maxZoom: 20
                 }).addTo(map);
 
-                // Add scale for professionalism
                 L.control.scale({ imperial: false }).addTo(map);
 
-                // Custom SVG icon with pulse
                 var customIcon = L.divIcon({
                     className: 'custom-marker',
                     html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
@@ -2467,7 +2490,6 @@
                     popupAnchor: [0, -36]
                 });
 
-                // Client data
                 var clients = [
                   { lat: 3.1390, lng: 101.6869, name: "E-Shop Malaysia", visits: "128,450 this month", url: "https://example-my.com", extra: "E-commerce Platform • Live since 2024" },
                   { lat: 5.4164, lng: 100.3327, name: "Tech Startup Penang", visits: "62,300 this month", url: "https://techpg.my", extra: "SaaS Dashboard" },
@@ -2650,7 +2672,6 @@
             
             let total = checkoutState.price + checkoutState.setupFee;
             
-            // Maintenance cost
             let maintCost = 0;
             if(isMonthly) {
                 if(checkoutState.maintenance === 'basic') maintCost = 50;
@@ -2658,11 +2679,9 @@
                 total += maintCost;
             }
             
-            // Discount
             let discount = checkoutState.discount || 0;
             let finalTotal = Math.max(0, total - discount);
             
-            // Update UI
             document.getElementById('summary-package').textContent = data.name;
             document.getElementById('summary-package-price').textContent = 'RM ' + checkoutState.price;
             document.getElementById('summary-setup').textContent = 'RM ' + checkoutState.setupFee;
@@ -2685,7 +2704,6 @@
             if(!code) { showToast('Please enter a promo code', 'error'); return; }
             if(!currentUser) { showToast('Please login to use promo codes', 'error'); return; }
             
-            // Check Firestore for promo
             db.collection("promo_codes").doc(code).get().then(doc => {
                 if(doc.exists) {
                     const data = doc.data();
@@ -2703,6 +2721,35 @@
         // ==========================================
         // CHECKOUT & PAYMENT
         // ==========================================
+        
+        // NEW: Prefill checkout if user is logged in
+        function prefillCheckout() {
+            if (currentUserData) {
+                const nameParts = (currentUserData.name || '').split(' ');
+                const firstName = nameParts[0] || '';
+                const lastName = nameParts.slice(1).join(' ') || '';
+                
+                const fnInput = document.getElementById('co-firstname');
+                const lnInput = document.getElementById('co-lastname');
+                const emailInput = document.getElementById('co-email');
+                const phoneInput = document.getElementById('co-phone');
+                const companyInput = document.getElementById('co-company');
+                
+                fnInput.value = firstName;
+                lnInput.value = lastName;
+                emailInput.value = currentUserData.email || currentUser.email;
+                phoneInput.value = currentUserData.phone || '';
+                companyInput.value = currentUserData.company || '';
+                
+                // Disable editing
+                [fnInput, lnInput, emailInput, phoneInput].forEach(input => {
+                    input.classList.add('input-locked');
+                    input.readOnly = true;
+                    input.title = "To change this, please update your profile.";
+                });
+            }
+        }
+
         function handleCheckout(e) {
             e.preventDefault();
             initiateRazorpayPayment();
@@ -2889,6 +2936,7 @@
             db.collection("users").doc(currentUser.uid).get().then((doc) => {
                 if(doc.exists) {
                     const data = doc.data();
+                    currentUserData = data; // Cache data
                     document.getElementById('prof-name').value = data.name || '';
                     document.getElementById('prof-email').value = data.email || currentUser.email;
                     document.getElementById('prof-phone').value = data.phone || '';
@@ -2933,7 +2981,13 @@
                 name: document.getElementById('prof-name').value,
                 phone: document.getElementById('prof-phone').value,
                 company: document.getElementById('prof-company').value
-            }).then(() => showToast('Profile updated!', 'success'));
+            }).then(() => {
+                showToast('Profile updated!', 'success');
+                // Update cached data
+                currentUserData.name = document.getElementById('prof-name').value;
+                currentUserData.phone = document.getElementById('prof-phone').value;
+                currentUserData.company = document.getElementById('prof-company').value;
+            });
         }
 
         function deletePersonalVoucher() {
@@ -2950,22 +3004,33 @@
         // ==========================================
         function setupStarRating() {
             const stars = document.querySelectorAll('.star-icon');
+            const container = document.getElementById('star-container');
+            
             stars.forEach(star => {
-                star.addEventListener('mouseover', function() {
-                    highlightStars(parseInt(this.dataset.val));
-                });
                 star.addEventListener('click', function() {
                     selectedRating = parseInt(this.dataset.val);
                     document.getElementById('rating-value').value = selectedRating;
                     highlightStars(selectedRating);
                 });
+                
+                star.addEventListener('mouseover', function() {
+                    highlightStars(parseInt(this.dataset.val), true);
+                });
             });
-            document.getElementById('star-container').addEventListener('mouseleave', () => highlightStars(selectedRating));
+            
+            container.addEventListener('mouseleave', () => highlightStars(selectedRating));
         }
 
-        function highlightStars(count) {
+        function highlightStars(count, isHover = false) {
             document.querySelectorAll('.star-icon').forEach(star => {
-                star.classList.toggle('selected', parseInt(star.dataset.val) <= count);
+                const val = parseInt(star.dataset.val);
+                if (val <= count) {
+                    star.classList.add(isHover ? 'hovered' : 'selected');
+                    star.className = 'ri-star-fill star-icon ' + (isHover ? 'hovered' : 'selected');
+                } else {
+                    star.classList.remove('hovered', 'selected');
+                    star.className = 'ri-star-line star-icon';
+                }
             });
         }
 
@@ -2974,9 +3039,12 @@
             if(!currentUser) { showToast('Please login to submit a review', 'error'); return; }
             if(selectedRating === 0) { showToast('Please select a rating', 'error'); return; }
             
+            // Use cached user data or fetch fresh
+            const userName = currentUserData ? currentUserData.name : currentUser.email.split('@')[0];
+            
             const reviewData = {
                 userId: currentUser.uid,
-                userName: document.getElementById('prof-name').value || currentUser.email.split('@')[0],
+                userName: userName,
                 rating: selectedRating,
                 comment: document.getElementById('review-comment').value,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -2986,7 +3054,10 @@
             db.collection("customer_reviews").add(reviewData)
                 .then(() => {
                     showToast('Review submitted!', 'success');
-                    e.target.reset(); selectedRating = 0; highlightStars(0); loadReviews();
+                    document.getElementById('review-comment').value = '';
+                    selectedRating = 0;
+                    highlightStars(0);
+                    loadReviews();
                 });
         }
 
@@ -2995,8 +3066,15 @@
             db.collection("customer_reviews").where("status", "==", "approved").orderBy("timestamp", "desc").limit(9).get()
                 .then((snapshot) => {
                     const grid = document.getElementById('reviews-grid');
+                    // Keep dummy review, just append others
+                    const dummyReview = grid.querySelector('.glass');
                     grid.innerHTML = '';
-                    if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No reviews yet</div>'; return; }
+                    if(dummyReview) grid.appendChild(dummyReview);
+
+                    if(snapshot.empty && !dummyReview) { 
+                        grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No reviews yet</div>'; 
+                        return; 
+                    }
                     
                     snapshot.forEach((doc) => {
                         const data = doc.data();
@@ -3011,6 +3089,12 @@
                             </div>
                         `;
                     });
+                }).catch(err => {
+                    console.error("Error loading reviews: ", err);
+                    // Handle index error gracefully
+                    if(err.code === 'failed-precondition') {
+                        // Fallback: simple query without ordering if index not ready
+                    }
                 });
         }
 
@@ -3020,12 +3104,8 @@
         function loadHomePortfolio() {
             if(!db) return;
             const grid = document.getElementById('home-portfolio-grid');
-            // Ensure dummy item stays, only append from DB
-            // Strategy: Load DB items and append to grid
             db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
                 .then((snapshot) => {
-                    // Don't clear grid completely to keep dummy item, or manage DOM carefully
-                    // Let's just append
                     if(!snapshot.empty) {
                         snapshot.forEach((doc) => {
                             const data = doc.data();
@@ -3219,10 +3299,13 @@
                 if(user) {
                     db.collection("users").doc(user.uid).get().then((doc) => {
                         if(doc.exists) {
-                            currentUserRole = doc.data().role || 'user';
-                            if(doc.data().personalVoucher) currentUserPersonalVoucher = doc.data().personalVoucher;
+                            currentUserData = doc.data(); // Store user data globally
+                            currentUserRole = currentUserData.role || 'user';
+                            if(currentUserData.personalVoucher) currentUserPersonalVoucher = currentUserData.personalVoucher;
                         }
                     });
+                } else {
+                    currentUserData = null;
                 }
             });
         }
@@ -3233,8 +3316,8 @@
             
             if(currentUser) {
                 const loggedInHtml = `
-                    <button onclick="router.navigate('profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="ri-user-line"></i> Profile</button>
-                    <button onclick="handleLogout()" class="hidden md:block text-sm font-medium text-slate-600 hover:text-red-600">Logout</button>
+                    <button onclick="router.navigate('profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="ri-user-line"></i> My Profile</button>
+                    <button onclick="handleLogout()" class="hidden md:block text-sm font-medium text-red-500 hover:text-red-600">Log out</button>
                     <button onclick="router.navigate('pricing')" class="px-5 py-2.5 rounded-full btn-primary text-white text-sm font-semibold shadow-lg">Get Started</button>
                 `;
                 authButtons.innerHTML = loggedInHtml;
@@ -3260,27 +3343,12 @@
         }
 
         // ==========================================
-        // MAINTENANCE CHECK
-        // ==========================================
-        if(db) {
-            db.collection("config").doc("site_settings").onSnapshot((doc) => {
-                if(doc.exists && doc.data().maintenance_active) {
-                    document.getElementById('maintenance-overlay').classList.add('active');
-                } else {
-                    document.getElementById('maintenance-overlay').classList.remove('active');
-                }
-            });
-        }
-
-        // ==========================================
         // EVENT LISTENERS
         // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
             setupStarRating();
             loadHomePortfolio();
             loadReviews();
-            
-            // Initialize Map on first load
             initMap();
             
             const hash = window.location.hash.replace('#', '');
