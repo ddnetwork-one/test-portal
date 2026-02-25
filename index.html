@@ -85,8 +85,8 @@
                         'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'fade-in': 'fadeIn 0.6s ease-out forwards',
                         'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'page-enter': 'pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'page-exit': 'pageExit 0.3s cubic-bezier(0.4, 0, 1, 1) forwards',
+                        'page-enter': 'pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'page-exit': 'pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
@@ -95,12 +95,12 @@
                         fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
                         scaleIn: { '0%': { opacity: 0, transform: 'scale(0.95)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
                         pageEnter: {
-                            '0%': { opacity: 0, transform: 'translateY(10px)' },
+                            '0%': { opacity: 0, transform: 'translateY(15px)' },
                             '100%': { opacity: 1, transform: 'translateY(0)' }
                         },
                         pageExit: {
                             '0%': { opacity: 1, transform: 'translateY(0)' },
-                            '100%': { opacity: 0, transform: 'translateY(-10px)' }
+                            '100%': { opacity: 0, transform: 'translateY(-15px)' }
                         }
                     }
                 }
@@ -181,7 +181,9 @@
                 radial-gradient(at 0% 100%, rgba(30, 41, 59, 0.03) 0, transparent 50%);
         }
         
-        /* Page Transition System */
+        /* ==========================================
+           PAGE TRANSITION SYSTEM (UPGRADED)
+           ========================================== */
         .page { 
             display: none; 
             opacity: 0; 
@@ -199,13 +201,15 @@
             opacity: 1; 
             position: relative; 
             z-index: 20;
-            animation: pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Animation classes for manual triggering */
-        .anim-exit {
-            animation: pageExit 0.3s cubic-bezier(0.4, 0, 1, 1) forwards !important;
-            pointer-events: none; 
+        /* Exit animation class */
+        .page.anim-exit {
+            animation: pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+            pointer-events: none; /* Prevent clicks during exit */
+            z-index: 5;
+            position: absolute; /* Ensure it doesn't push layout */
         }
 
         /* Interactions */
@@ -480,6 +484,90 @@
         }
 
         /* ==========================================
+           LEADERSHIP STYLES (NEW)
+           ========================================== */
+        .leader-card {
+            background: white;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            border: 1px solid #f1f5f9;
+        }
+        
+        .leader-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #1e293b, #6366f1);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+        
+        .leader-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .leader-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.15);
+        }
+
+        .leader-img-wrapper {
+            position: relative;
+            padding-top: 120%; /* Aspect Ratio */
+            overflow: hidden;
+            background-color: #f8fafc;
+        }
+
+        .leader-img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .leader-card:hover .leader-img {
+            transform: scale(1.05);
+        }
+
+        .leader-content {
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            background: white;
+        }
+
+        .leader-role {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #f1f5f9;
+            color: #475569;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .leader-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+
+        .leader-bio {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* ==========================================
            AGGRESSIVE MOBILE RESPONSIVE OPTIMIZATION
            ========================================== */
         @media (max-width: 768px) {
@@ -550,6 +638,9 @@
             }
 
             .page { position: absolute; width: 100%; left: 0; }
+            
+            /* Leadership Mobile */
+            .leader-card { margin-bottom: 1rem; }
         }
         
         @keyframes scaleIn {
@@ -936,6 +1027,7 @@
                     <a href="#" onclick="event.preventDefault(); navigateTo('pricing')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
                     <a href="#" onclick="event.preventDefault(); navigateTo('reviews')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Reviews</a>
                     <a href="#" onclick="event.preventDefault(); navigateTo('clients')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Portfolio</a>
+                    <a href="#" onclick="event.preventDefault(); navigateTo('leadership')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Leadership</a>
                     <a href="#" onclick="event.preventDefault(); navigateTo('contact')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Contact</a>
                 </div>
 
@@ -956,6 +1048,7 @@
                 <a href="#" onclick="event.preventDefault(); navigateTo('pricing'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-4 font-medium border-b border-slate-100">Pricing</a>
                 <a href="#" onclick="event.preventDefault(); navigateTo('reviews'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-4 font-medium border-b border-slate-100">Reviews</a>
                 <a href="#" onclick="event.preventDefault(); navigateTo('clients'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-4 font-medium border-b border-slate-100">Portfolio</a>
+                <a href="#" onclick="event.preventDefault(); navigateTo('leadership'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-4 font-medium border-b border-slate-100">Leadership</a>
                 <a href="#" onclick="event.preventDefault(); navigateTo('contact'); toggleMobileMenu()" class="block text-slate-600 hover:text-slate-900 py-4 font-medium border-b border-slate-100">Contact</a>
                 <div id="mobileAuthLinksContainer" class="pt-4 mt-4 border-t border-slate-200 flex flex-col gap-3"></div>
             </div>
@@ -1308,6 +1401,67 @@
                         <button onclick="navigateTo('contact')" class="px-8 py-4 rounded-full glass text-slate-700 font-semibold text-lg hover:bg-white transition-all">
                             Talk to Sales
                         </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LEADERSHIP SECTION (NEW) -->
+        <section id="page-leadership" class="page">
+            <div class="bg-mesh py-12 md:py-24">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-16">
+                        <span class="text-sm font-bold tracking-wider text-indigo-600 uppercase">The Team</span>
+                        <h1 class="text-4xl md:text-6xl font-bold mt-3 mb-6 text-slate-900">Meet Our <span class="text-gradient">Leadership</span></h1>
+                        <p class="text-xl text-slate-600 max-w-3xl mx-auto">The visionaries driving innovation and excellence at DDNex.</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-8 md:gap-12">
+                        
+                        <!-- Danial Danish -->
+                        <div class="leader-card">
+                            <div class="leader-img-wrapper">
+                                <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="Danial Danish" class="leader-img bg-slate-100">
+                            </div>
+                            <div class="leader-content">
+                                <span class="leader-role">Founder & CEO</span>
+                                <h3 class="leader-name">Danial Danish</h3>
+                                <p class="leader-bio">
+                                    Founder of DDNetwork, DDNex, and DD Cloud Network MY. Passionate about democratizing web technology for Malaysian businesses and driving global digital innovation.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Bella -->
+                        <div class="leader-card">
+                            <div class="leader-img-wrapper">
+                                <!-- Using a placeholder icon/image for Bella since no URL was provided -->
+                                <img src="https://ui-avatars.com/api/?name=Bella+Manager&background=random&size=512" alt="Bella" class="leader-img bg-slate-100">
+                            </div>
+                            <div class="leader-content">
+                                <span class="leader-role">Project & Client Manager</span>
+                                <h3 class="leader-name">Bella</h3>
+                                <p class="leader-bio">
+                                    Ensures every project runs smoothly from concept to launch. Bella is the bridge between our creative teams and our valued clients, guaranteeing satisfaction at every milestone.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Putri -->
+                        <div class="leader-card">
+                            <div class="leader-img-wrapper">
+                                <!-- Using a placeholder icon/image for Putri since no URL was provided -->
+                                <img src="https://ui-avatars.com/api/?name=Putri+Marketing&background=random&size=512" alt="Putri" class="leader-img bg-slate-100">
+                            </div>
+                            <div class="leader-content">
+                                <span class="leader-role">Marketing Manager</span>
+                                <h3 class="leader-name">Putri</h3>
+                                <p class="leader-bio">
+                                    The voice behind our brand. Putri crafts compelling narratives and strategies that connect DDNex with businesses looking to transform their digital presence.
+                                </p>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -2360,7 +2514,8 @@
             '/privacy': { title: 'Privacy Policy | DDNex', desc: 'DDNex privacy policy regarding data collection, security, and user rights.', canonical: 'https://ddnex.my/privacy' },
             '/login': { title: 'Login | DDNex', desc: 'Login to your DDNex dashboard to manage your orders and profile.', canonical: 'https://ddnex.my/login' },
             '/signup': { title: 'Sign Up | DDNex', desc: 'Create an account with DDNex to start your digital journey today.', canonical: 'https://ddnex.my/signup' },
-            '/forgot-password': { title: 'Forgot Password | DDNex', desc: 'Reset your DDNex account password securely.', canonical: 'https://ddnex.my/forgot-password' }
+            '/forgot-password': { title: 'Forgot Password | DDNex', desc: 'Reset your DDNex account password securely.', canonical: 'https://ddnex.my/forgot-password' },
+            '/leadership': { title: 'Leadership Team | DDNex', desc: 'Meet the founders and leaders driving innovation at DDNex.', canonical: 'https://ddnex.my/leadership' }
         };
 
         let PRICING_DATA = {
@@ -2490,7 +2645,8 @@
             '/about-company': 'about', 
             '/terms': 'terms', 
             '/faq': 'faq', 
-            '/privacy': 'privacy'
+            '/privacy': 'privacy',
+            '/leadership': 'leadership'
         };
 
         function routeLink(event, path) { event.preventDefault(); navigateTo(path); }
@@ -2546,21 +2702,26 @@
             window.scrollTo(0, 0);
 
             if (currentSection) {
+                // 1. Add exit animation class
                 currentSection.classList.add('anim-exit');
                 
+                // 2. Wait for exit animation to finish
                 setTimeout(() => {
                     currentSection.classList.remove('active', 'anim-exit');
                     currentSection.style.display = 'none';
                     
+                    // 3. Prepare and enter new section
                     targetSection.style.display = 'block';
                     void targetSection.offsetWidth; 
                     targetSection.classList.add('active');
                     
+                    // 4. Handle page specific logic
                     handlePageLogic(targetSectionId);
                     
                     isTransitioning = false;
-                }, 300); 
+                }, 400); // 400ms matches the CSS animation duration
             } else {
+                // First load or no previous section
                 targetSection.style.display = 'block';
                 targetSection.classList.add('active');
                 handlePageLogic(targetSectionId);
@@ -3786,12 +3947,12 @@
                 menu.classList.remove('active');
                 icon.classList.remove('ri-close-line');
                 icon.classList.add('ri-menu-4-line');
-                body.style.overflow = ''; 
+                body.style.overflow = ''; // Unlock scroll
             } else {
                 menu.classList.add('active');
                 icon.classList.remove('ri-menu-4-line');
                 icon.classList.add('ri-close-line');
-                body.style.overflow = 'hidden'; 
+                body.style.overflow = 'hidden'; // Lock scroll
             }
         }
     }
@@ -3848,6 +4009,7 @@
             return;
         }
 
+        // Initialize map centered on Malaysia
         const map = L.map('map').setView([4.2105, 101.9758], 6); 
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -3900,5 +4062,3 @@
     <script src="https://app.livechatai.com/embed.js" data-id="cmlas1njr0001jj04hi5ygd18" async defer></script>
 </body>
 </html>
-
-full, without remove anything.
