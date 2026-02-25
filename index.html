@@ -117,7 +117,7 @@
         * { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; width: 100%; overflow-x: hidden; }
         body { font-family: 'Inter', sans-serif; background: #ffffff; color: #0f172a; display: flex; flex-direction: column; }
-        /* REMOVED padding-top from main here to fix the white gap */
+        
         main { flex: 1; width: 100%; position: relative; }
         
         /* Glassmorphism */
@@ -158,15 +158,16 @@
             display: none; 
             opacity: 0; 
             min-height: 100%;
+            width: 100%;
         }
         .page.active { 
             display: block; 
             opacity: 1; 
-            animation: fadeInPage 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: fadeInPage 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         @keyframes fadeInPage {
-            from { opacity: 0; transform: translateY(5px); } 
+            from { opacity: 0; transform: translateY(10px); } 
             to { opacity: 1; transform: translateY(0); }
         }
         
@@ -507,6 +508,17 @@
             /* Hero specific adjustments */
             .hero-badge { font-size: 0.8rem !important; padding: 0.25rem 0.75rem; }
             .btn-primary { padding: 0.75rem 1.5rem; font-size: 1rem; }
+            
+            /* Full Screen Mobile: Ensure containers utilize full width */
+            .max-w-7xl {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            
+            /* Hide Desktop Auth on Mobile Explicitly */
+            #desktopAuthLinks {
+                display: none !important;
+            }
         }
         
         @keyframes scaleIn {
@@ -781,7 +793,7 @@
                     <a href="#" onclick="event.preventDefault(); navigateTo('contact')" class="nav-link text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Contact</a>
                 </div>
 
-                <div class="flex items-center gap-4" id="desktopAuthLinks"></div>
+                <div class="flex items-center gap-4 hidden md:flex" id="desktopAuthLinks"></div>
                 
                 <button class="md:hidden text-slate-600 p-2 ml-4 z-50 relative" onclick="toggleMobileMenu()">
                     <i id="mobile-menu-icon" class="ri-menu-4-line text-2xl"></i>
@@ -805,14 +817,11 @@
     </nav>
 
     <!-- Main Content -->
-    <!-- PT-20 REMOVED HERE to fix the white gap behind navbar. -->
     <main class="">
 
         <!-- HOME PAGE -->
         <section id="page-home" class="page active">
             <!-- Hero -->
-            <!-- Added pt-20 to the hero container to push content below navbar, 
-                 while bg-mesh extends behind the navbar (fixing the 2-tone issue). -->
             <div class="relative min-h-[90vh] md:min-h-screen flex items-center bg-mesh overflow-hidden pt-20">
                 <div class="blob bg-indigo-400 w-96 h-96 rounded-full top-0 left-0 -translate-x-1/2 -translate-y-1/2"></div>
                 <div class="blob bg-slate-400 w-96 h-96 rounded-full bottom-0 right:0 translate-x-1/2 translate-y-1/2" style="animation-delay: -5s;"></div>
@@ -821,7 +830,6 @@
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full pb-12 md:pb-0">
                     <div class="grid lg:grid-cols-2 gap-12 items-center">
                         <div class="animate-slide-up">
-                            <!-- Added 'hero-badge' class for mobile styling -->
                             <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-6 border border-indigo-200">
                                 <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
                                 <span class="text-sm font-medium text-slate-600">Malaysia's #1 Web Solutions</span>
@@ -1808,7 +1816,7 @@
                                     <input type="checkbox" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                                     Remember me
                                 </label>
-                                <a href="#" onclick="navigateTo('forgot-password')" class="text-indigo-600 hover:underline">Forgot password?</a>
+                                <a href="#" onclick="event.preventDefault(); navigateTo('forgot-password')" class="text-indigo-600 hover:underline">Forgot password?</a>
                             </div>
                             <button type="submit" class="w-full py-3 rounded-lg btn-primary text-white font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
                                 Sign In
@@ -1826,6 +1834,43 @@
                                 <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                                 Google
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FORGOT PASSWORD PAGE (NEW) -->
+        <section id="page-forgot-password" class="page">
+            <div class="min-h-screen flex items-center justify-center bg-mesh py-12 px-4 relative overflow-hidden">
+                <div class="absolute inset-0 z-0">
+                    <div class="absolute top-0 right-0 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                    <div class="absolute bottom-0 left-0 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+                </div>
+
+                <div class="max-w-md w-full relative z-10">
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-600 flex items-center justify-center mx-auto mb-4 shadow-lg animate-float">
+                            <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNex" class="w-8 h-8 object-contain invert">
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-900">Reset Password</h2>
+                        <p class="text-slate-600 mt-2">Enter your email to receive a reset link.</p>
+                    </div>
+
+                    <div class="glass-strong rounded-2xl p-8 border border-slate-200 bg-white shadow-2xl">
+                        <form onsubmit="handleForgotPassword(event)" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-2">Email Address</label>
+                                <input type="email" id="forgot-email" required class="input-field w-full px-4 py-3 rounded-lg text-slate-800" placeholder="you@example.com">
+                            </div>
+                            <button type="submit" class="w-full py-3 rounded-lg btn-primary text-white font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                                Send Reset Link
+                            </button>
+                        </form>
+
+                        <div class="mt-6 text-center text-sm text-slate-600">
+                            Remember your password? 
+                            <button onclick="navigateTo('login')" class="text-indigo-600 hover:underline font-medium">Sign In</button>
                         </div>
                     </div>
                 </div>
@@ -2060,7 +2105,8 @@
             '/terms': { title: 'Terms & Conditions | DDNex', desc: 'Read our terms of service, hosting policies, and refund guidelines.', canonical: 'https://ddnex.my/terms' },
             '/privacy': { title: 'Privacy Policy | DDNex', desc: 'DDNex privacy policy regarding data collection, security, and user rights.', canonical: 'https://ddnex.my/privacy' },
             '/login': { title: 'Login | DDNex', desc: 'Login to your DDNex dashboard to manage your orders and profile.', canonical: 'https://ddnex.my/login' },
-            '/signup': { title: 'Sign Up | DDNex', desc: 'Create an account with DDNex to start your digital journey today.', canonical: 'https://ddnex.my/signup' }
+            '/signup': { title: 'Sign Up | DDNex', desc: 'Create an account with DDNex to start your digital journey today.', canonical: 'https://ddnex.my/signup' },
+            '/forgot-password': { title: 'Forgot Password | DDNex', desc: 'Reset your DDNex account password securely.', canonical: 'https://ddnex.my/forgot-password' }
         };
 
         let PRICING_DATA = {
@@ -2232,6 +2278,7 @@
 
         let isTransitioning = false;
 
+        // UPDATED TRANSITION LOGIC FOR SMOOTHNESS AND NO OVERLAP
         function performTransition(targetSectionId, isInstant = false) {
             if (isTransitioning) return;
             isTransitioning = true;
@@ -2244,21 +2291,41 @@
                 return;
             }
 
-            // Hide current immediately
-            if (currentSection) {
-                currentSection.classList.remove('active');
-                setTimeout(() => { 
-                    currentSection.style.display = 'none';
-                }, 10);
-            }
-
-            // Show new immediately
+            // 1. Scroll to top immediately to prevent "jumping" visual
             window.scrollTo(0, 0);
-            targetSection.style.display = 'block';
-            void targetSection.offsetWidth; 
-            targetSection.classList.add('active');
 
-            // Page specific logic
+            // 2. Fade out current section if it exists
+            if (currentSection) {
+                currentSection.style.opacity = '0';
+                currentSection.style.transition = 'opacity 0.3s ease';
+                
+                // Wait for fade out to finish before hiding
+                setTimeout(() => {
+                    currentSection.classList.remove('active');
+                    currentSection.style.display = 'none';
+                    currentSection.style.transition = ''; // Reset transition
+                    
+                    // 3. Show new section
+                    targetSection.style.display = 'block';
+                    // Force reflow
+                    void targetSection.offsetWidth; 
+                    targetSection.classList.add('active');
+                    
+                    // 4. Page specific logic
+                    handlePageLogic(targetSectionId);
+                    
+                    isTransitioning = false;
+                }, 300); // Matches CSS fade time
+            } else {
+                // No current section (initial load)
+                targetSection.style.display = 'block';
+                targetSection.classList.add('active');
+                handlePageLogic(targetSectionId);
+                isTransitioning = false;
+            }
+        }
+
+        function handlePageLogic(targetSectionId) {
             if(targetSectionId === 'profile') loadProfilePageData();
             if(targetSectionId === 'reviews' || targetSectionId === 'home') {
                 renderDummyReview(); 
@@ -2272,8 +2339,6 @@
             }
             if(targetSectionId === 'portfolio') loadPortfolio();
             if(targetSectionId === 'products') loadProducts();
-
-            isTransitioning = false;
         }
     
         setTimeout(handleInitialRoute, 100);
@@ -2363,6 +2428,25 @@
             }).catch((error) => {
                 const friendlyMsg = getFirebaseErrorMessage(error);
                 showNotification("Login Failed", friendlyMsg, "error");
+            });
+        }
+        
+        // NEW: Handle Forgot Password
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            if(!auth) return showNotification("Error", "Authentication system initializing...", "error");
+            
+            const email = document.getElementById('forgot-email').value;
+            
+            if(!email) return showNotification("Error", "Please enter your email address.", "error");
+
+            auth.sendPasswordResetEmail(email).then(() => {
+                showNotification("Email Sent", "Please check your email for password reset instructions.", "success");
+                // Optional: redirect to login after a delay
+                setTimeout(() => navigateTo('login'), 3000);
+            }).catch((error) => {
+                const friendlyMsg = getFirebaseErrorMessage(error);
+                showNotification("Reset Failed", friendlyMsg, "error");
             });
         }
 
@@ -2610,7 +2694,7 @@
 
         function updateHeaderForGuest() {
             const deskAuth = document.getElementById('desktopAuthLinks');
-            if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="navigateTo('login')" class="btn-glass" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-login-circle-fill"></i> Login</a>`;
+            if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="navigateTo('login')" class="btn-glass hidden md:flex" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-login-circle-fill"></i> Login</a>`;
             const mobAuth = document.getElementById('mobileAuthLinksContainer');
             if(mobAuth) mobAuth.innerHTML = `<a href="/login" onclick="navigateTo('login'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-login-circle-fill" style="margin-right:15px;"></i> Login</a><a href="/signup" onclick="navigateTo('signup'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-user-add-fill" style="margin-right:15px;"></i> Sign Up</a>`;
         }
@@ -3237,18 +3321,17 @@
         function loadHomePortfolio() {
             if(!db) return;
             const container = document.getElementById('home-portfolio-grid');
-            // Removed dependency on specific dummy element ID, we will build the grid fully via JS
             if(!container) return;
             
             // Clear container first to prevent build-up
             container.innerHTML = '';
             
-            // Add Dummy Item Hardcoded
+            // Add Dummy Item Hardcoded with requested image
             const dummyHtml = `
                 <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
-                    <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="E-Commerce Project" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="https://i.ibb.co/Y7yLkm5j/IMG-3157.png" alt="DDNetwork" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
                     <div class="p-6">
-                        <h4 class="font-bold text-slate-900 mb-2">DDNetwork One</h4>
+                        <h4 class="font-bold text-slate-900 mb-2">DDNetwork</h4>
                         <p class="text-slate-600 text-sm mb-4">A high-performance online store for a local Website & Hosting Services</p>
                         <button onclick="navigateTo('clients')" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</button>
                     </div>
@@ -3323,7 +3406,7 @@
                         name: "DDNetwork",
                         price: "Free",
                         desc: "Official DDNetwork Platform. Connect, manage, and grow your digital network seamlessly.",
-                        img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=400", 
+                        img: "https://i.ibb.co/Y7yLkm5j/IMG-3157.png", 
                         link: "https://ddnet.my"
                     };
                     
