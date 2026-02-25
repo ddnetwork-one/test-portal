@@ -85,9 +85,6 @@
                         'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'fade-in': 'fadeIn 0.6s ease-out forwards',
                         'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'stagger-1': 'fadeIn 0.5s ease-out 0.1s forwards',
-                        'stagger-2': 'fadeIn 0.5s ease-out 0.2s forwards',
-                        'stagger-3': 'fadeIn 0.5s ease-out 0.3s forwards',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
@@ -119,26 +116,8 @@
         /* Base Reset & Scroll */
         * { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; width: 100%; overflow-x: hidden; }
-        
-        /* 
-           FIX 2: BACKGROUND & GAP 
-           Applied bg-mesh to body to ensure continuous background behind fixed nav 
-        */
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
-            color: #0f172a; 
-            display: flex; 
-            flex-direction: column; 
-            
-            /* Mesh Background moved to Body for seamless look */
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, rgba(30, 41, 59, 0.05) 0, transparent 50%), 
-                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0, transparent 50%),
-                radial-gradient(at 0% 100%, rgba(30, 41, 59, 0.03) 0, transparent 50%);
-        }
-
+        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #0f172a; display: flex; flex-direction: column; }
+        /* REMOVED padding-top from main here to fix the white gap */
         main { flex: 1; width: 100%; position: relative; }
         
         /* Glassmorphism */
@@ -165,8 +144,14 @@
             background-clip: text;
         }
         
-        /* .bg-mesh class is now effectively handled by body, but keeping class for legacy elements if needed */
-        .bg-mesh { background: transparent; } 
+        .bg-mesh {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, rgba(30, 41, 59, 0.05) 0, transparent 50%), 
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(30, 41, 59, 0.03) 0, transparent 50%);
+        }
         
         /* Page Transition System */
         .page { 
@@ -436,13 +421,97 @@
         .marquee-container {
             overflow: hidden;
             white-space: nowrap;
+            display: flex;
+            width: 100%;
         }
+        
         .marquee-content {
             display: inline-flex;
+            width: max-content; /* Allows content to determine width */
             animation: marquee 40s linear infinite;
         }
+        
+        /* Optional: Pause on hover */
         .marquee-content:hover {
             animation-play-state: paused;
+        }
+
+        /* Define the animation */
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); } /* Moves left by 50% (half of the duplicated content) */
+        }
+
+        /* ==========================================
+           AGGRESSIVE MOBILE RESPONSIVE OPTIMIZATION
+           ========================================== */
+        @media (max-width: 768px) {
+            .blob { display: none; }
+            .package-popular { transform: scale(1); }
+            #globe-canvas { display: none; }
+            
+            body {
+                font-size: 14px;
+            }
+            
+            /* Section Spacing - Reduced for mobile */
+            section { padding-top: 3rem !important; padding-bottom: 3rem !important; }
+            .py-24 { padding-top: 3rem !important; padding-bottom: 3rem !important; }
+            
+            /* Typography - Tighter leading for mobile */
+            h1 { font-size: 2rem !important; line-height: 1.2 !important; }
+            h2 { font-size: 1.75rem !important; }
+            h3 { font-size: 1.4rem !important; }
+            .text-5xl { font-size: 2rem !important; }
+            .text-7xl { font-size: 2.5rem !important; }
+            
+            /* Grids */
+            .grid-cols-3, .grid-cols-4, .grid-cols-2 { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+            .lg\:col-span-2, .lg\:col-span-1 { grid-column: span 1 !important; }
+            
+            /* Modals */
+            .modal-content, .notification-content { 
+                padding: 1.5rem; 
+                width: 95%; 
+                margin: 0.5rem;
+                max-height: 85vh;
+                border-radius: 16px;
+            }
+            
+            /* Map */
+            #map { height: 300px !important; }
+            
+            /* Forms & Inputs on Mobile */
+            .input-field { font-size: 16px !important; /* Prevents zoom on iOS */ }
+            
+            /* Mobile Menu Links */
+            #mobile-menu a {
+                padding: 1rem;
+                display: block;
+                font-size: 1.1rem;
+                border-bottom: 1px solid #f1f5f9;
+                color: #1e293b;
+            }
+            #mobile-menu a:active { background: #f8fafc; }
+            
+            /* Checkout Mobile Fix */
+            .order-summary-mobile {
+                order: -1;
+                margin-bottom: 2rem;
+            }
+
+            /* Footer adjustments */
+            footer .grid { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
+            footer .flex { justify-content: center !important; }
+            
+            /* Hero specific adjustments */
+            .hero-badge { font-size: 0.8rem !important; padding: 0.25rem 0.75rem; }
+            .btn-primary { padding: 0.75rem 1.5rem; font-size: 1rem; }
+        }
+        
+        @keyframes scaleIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
         
         /* Map Styles */
@@ -603,86 +672,6 @@
             color: #6366f1;
             margin-top: 0.5rem;
         }
-
-        /* Marquee */
-        .marquee-container {
-            overflow: hidden;
-            white-space: nowrap; 
-            display: flex;
-            width: 100%;
-        }
-        
-        .marquee-content {
-            display: inline-flex;
-            width: max-content; 
-            animation: marquee 40s linear infinite;
-        }
-        
-        .marquee-content:hover {
-            animation-play-state: paused;
-        }
-
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); } 
-        }
-
-        /* ==========================================
-           AGGRESSIVE MOBILE RESPONSIVE OPTIMIZATION
-           ========================================== */
-        @media (max-width: 768px) {
-            .blob { display: none; }
-            .package-popular { transform: scale(1); }
-            #globe-canvas { display: none; }
-            
-            body {
-                font-size: 14px;
-            }
-            
-            section { padding-top: 4rem !important; padding-bottom: 4rem !important; }
-            .py-24 { padding-top: 4rem !important; padding-bottom: 4rem !important; }
-            
-            h1 { font-size: 2.2rem !important; line-height: 1.1 !important; }
-            h2 { font-size: 1.75rem !important; }
-            h3 { font-size: 1.4rem !important; }
-            .text-5xl { font-size: 2.2rem !important; }
-            .text-7xl { font-size: 2.8rem !important; }
-            
-            .grid-cols-3, .grid-cols-4, .grid-cols-2 { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
-            .lg\:col-span-2, .lg\:col-span-1 { grid-column: span 1 !important; }
-            
-            .modal-content, .notification-content { 
-                padding: 1.5rem; 
-                width: 95%; 
-                margin: 0.5rem;
-                max-height: 85vh;
-            }
-            
-            #map { height: 300px !important; }
-            .input-field { font-size: 16px !important; }
-            
-            #mobile-menu a {
-                padding: 1rem;
-                display: block;
-                font-size: 1.1rem;
-                border-bottom: 1px solid #f1f5f9;
-                color: #1e293b;
-            }
-            #mobile-menu a:active { background: #f8fafc; }
-            
-            .order-summary-mobile {
-                order: -1;
-                margin-bottom: 2rem;
-            }
-
-            footer .grid { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
-            footer .flex { justify-content: center !important; }
-        }
-        
-        @keyframes scaleIn {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
     </style>
 </head>
 <body class="bg-white antialiased">
@@ -816,29 +805,32 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="pt-20">
+    <!-- PT-20 REMOVED HERE to fix the white gap behind navbar. -->
+    <main class="">
 
         <!-- HOME PAGE -->
         <section id="page-home" class="page active">
             <!-- Hero -->
-            <div class="relative min-h-[90vh] flex items-center overflow-hidden">
-                <!-- Decorative Blobs -->
+            <!-- Added pt-20 to the hero container to push content below navbar, 
+                 while bg-mesh extends behind the navbar (fixing the 2-tone issue). -->
+            <div class="relative min-h-[90vh] md:min-h-screen flex items-center bg-mesh overflow-hidden pt-20">
                 <div class="blob bg-indigo-400 w-96 h-96 rounded-full top-0 left-0 -translate-x-1/2 -translate-y-1/2"></div>
                 <div class="blob bg-slate-400 w-96 h-96 rounded-full bottom-0 right:0 translate-x-1/2 translate-y-1/2" style="animation-delay: -5s;"></div>
                 <canvas id="globe-canvas"></canvas>
                 
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full pb-12 md:pb-0">
                     <div class="grid lg:grid-cols-2 gap-12 items-center">
                         <div class="animate-slide-up">
+                            <!-- Added 'hero-badge' class for mobile styling -->
                             <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-6 border border-indigo-200">
                                 <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
                                 <span class="text-sm font-medium text-slate-600">Malaysia's #1 Web Solutions</span>
                             </div>
-                            <h1 class="text-5xl md:text-7xl font-bold leading-[1.1] mb-6">
+                            <h1 class="text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.1] mb-6">
                                 <span class="block text-slate-900 mb-2">Custom Websites for</span>
                                 <span class="text-gradient">Malaysian Businesses</span>
                             </h1>
-                            <p class="text-xl text-slate-600 mb-8 max-w-lg leading-relaxed">
+                            <p class="text-lg md:text-xl text-slate-600 mb-8 max-w-lg leading-relaxed">
                                 Designed in Malaysia. Built for the world. Professional web design and AI solutions for modern businesses by DDNex.
                             </p>
                             <div class="flex flex-wrap gap-4 mb-12">
@@ -957,7 +949,7 @@
                             <div class="flex items-center gap-2 text-slate-700 font-semibold whitespace-nowrap text-sm md:text-base"><i class="ri-customer-service-2-line text-blue-500 text-xl"></i>24/7 Technical Support</div>
                             <div class="flex items-center gap-2 text-slate-700 font-semibold whitespace-nowrap text-sm md:text-base"><i class="ri-star-s-fill text-amber-500 text-xl"></i>5-Star Rated Services</div>
                         </div>
-                        <!-- Third Set -->
+                        <!-- Third Set (Optional, ensures enough width for very large screens) -->
                         <div class="flex gap-8 md:gap-16 px-8 items-center">
                             <div class="flex items-center gap-2 text-slate-700 font-semibold whitespace-nowrap text-sm md:text-base"><i class="ri-check-double-line text-green-500 text-xl"></i>Trusted by 10+ Clients</div>
                             <div class="flex items-center gap-2 text-slate-700 font-semibold whitespace-nowrap text-sm md:text-base"><i class="ri-global-line text-indigo-500 text-xl"></i>Global Standard Hosting</div>
@@ -1041,8 +1033,7 @@
                         <p class="text-slate-600 text-lg">Check out some of our latest completed projects.</p>
                     </div>
                     <div id="home-portfolio-grid" class="grid md:grid-cols-3 gap-8">
-                        <!-- Content Injected via JS -->
-                        <div class="col-span-3 text-center py-12 text-slate-400">Loading portfolio...</div>
+                        <!-- JS will inject items here. Empty initially for consistency -->
                     </div>
                     <div class="text-center mt-12">
                         <button onclick="navigateTo('clients')" class="px-8 py-4 rounded-full btn-primary text-white font-bold">View All Projects</button>
@@ -1151,10 +1142,8 @@
             </div>
 
             <!-- CTA -->
-            <div class="py-12 md:py-24 relative overflow-hidden">
-                <!-- Using bg-mesh logic handled by body, but added a gradient overlay here for contrast if needed -->
-                <div class="absolute inset-0 bg-gradient-to-r from-indigo-100/30 to-slate-100/30 pointer-events-none"></div>
-                
+            <div class="py-12 md:py-24 bg-mesh relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-r from-indigo-100/50 to-slate-100/50"></div>
                 <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
                     <h2 class="text-4xl md:text-6xl font-bold mb-6 text-slate-900">Ready to build your website?</h2>
                     <p class="text-xl text-slate-600 mb-10">Get started today with our affordable packages. No hidden fees, cancel anytime.</p>
@@ -1172,7 +1161,7 @@
 
         <!-- PRODUCTS SECTION (NEW) -->
         <section id="page-products" class="page">
-            <div class="py-12 md:py-24">
+            <div class="bg-mesh py-12 md:py-24">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mb-12 md:mb-16">
                         <h1 class="text-4xl md:text-5xl font-bold mb-6 text-slate-900">Our <span class="text-gradient">Products</span></h1>
@@ -1189,7 +1178,7 @@
 
         <!-- FEATURES/SERVICES PAGE (RENAMED ROUTE) -->
         <section id="page-features" class="page">
-            <div class="py-12 md:py-24">
+            <div class="bg-mesh py-12 md:py-24">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mb-12 md:mb-16">
                         <h1 class="text-5xl md:text-6xl font-bold mb-6 text-slate-900">Our <span class="text-gradient">Services</span></h1>
@@ -1303,7 +1292,7 @@
 
         <!-- PRICING PAGE -->
         <section id="page-pricing" class="page">
-            <div class="py-12 md:py-24">
+            <div class="bg-mesh py-12 md:py-24">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mb-12">
                         <h1 class="text-4xl md:text-6xl font-bold mb-6 text-slate-900">Simple, Transparent <span class="text-gradient">Pricing</span></h1>
@@ -1605,7 +1594,7 @@
 
         <!-- REVIEWS PAGE -->
         <section id="page-reviews" class="page">
-            <div class="py-12 md:py-24">
+            <div class="bg-mesh py-12 md:py-24">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mb-12 md:mb-16">
                         <h1 class="text-4xl md:text-5xl font-bold mb-6 text-slate-900">Customer <span class="text-gradient">Reviews</span></h1>
@@ -1664,7 +1653,7 @@
 
         <!-- PORTFOLIO PAGE (ROUTE /CLIENTS) -->
         <section id="page-portfolio" class="page">
-            <div class="py-12 md:py-24">
+            <div class="bg-mesh py-12 md:py-24">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mb-12 md:mb-16">
                         <h1 class="text-4xl md:text-5xl font-bold mb-6 text-slate-900">Our <span class="text-gradient">Portfolio</span></h1>
@@ -1680,7 +1669,7 @@
 
         <!-- CONTACT PAGE -->
         <section id="page-contact" class="page">
-            <div class="py-12 md:py-24">
+            <div class="bg-mesh py-12 md:py-24">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="grid lg:grid-cols-2 gap-8 md:gap-16">
                         <div>
@@ -2278,7 +2267,6 @@
             }
             if(targetSectionId === 'checkout' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
             if(targetSectionId === 'updates' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-            // FIX 1: Trigger portfolio load reliably on transition to home
             if(targetSectionId === 'home') {
                 loadHomePortfolio();
             }
@@ -2661,7 +2649,7 @@
                 }
             });
 
-            document.querySelectorAll('.maintenance-yes').forEach(el => el.classList.toggle('hidden', cycle === 'onetime')); 
+            document.querySelectorAll('.maintenance-yes').forEach(el => el.classList.toggle('hidden', cycle === 'onetime'));
             document.querySelectorAll('.maintenance-no').forEach(el => el.classList.toggle('hidden', cycle === 'monthly'));
 
             state.billingCycle = cycle;
@@ -2754,7 +2742,7 @@
                 if(document.getElementById('input-custom')) document.getElementById('input-custom').style.display = 'none';
                 state.domainPrice = 0; 
             } else {
-                if(document.getElementById('input-subdomain')) document.getElementById('input-subdomain').style.display = 'none';
+                                if(document.getElementById('input-subdomain')) document.getElementById('input-subdomain').style.display = 'none';
                 if(document.getElementById('input-custom')) document.getElementById('input-custom').style.display = 'block';
                 state.domainPrice = 0; 
             }
@@ -2988,6 +2976,7 @@
             orderData.razorpay_payment_id = paymentId;
             orderData.status = 'Paid';
 
+            // Ensure empty fields are saved as "-" or placeholders if they were empty in the form
             if(!orderData.name || orderData.name.trim() === " ") orderData.name = "-";
             if(!orderData.phone) orderData.phone = "-";
             
@@ -3115,6 +3104,7 @@
             const container = document.getElementById('reviews-list');
             if(!container) return;
             
+            // Only render if empty to prevent duplicates
             if(container.innerHTML.trim() !== '' && !container.innerHTML.includes('Danial Danish')) return;
 
             const dummyData = { 
@@ -3139,6 +3129,7 @@
                     <p class="review-text">"${dummyData.comment}"</p>
                 </div>`;
             
+            // Prepend dummy review
             container.innerHTML = html + container.innerHTML;
         }
 
@@ -3161,6 +3152,7 @@
                 { rating: 5, userName: 'Danial Danish (Owner)', comment: 'I built this site to help businesses grow. Let me know what you think!', timestamp: null }
             ];
             
+            // Combine 1 Dummy + DB Reviews
             let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
             
             if (allReviews.length === 0) {
@@ -3171,6 +3163,7 @@
             const isExpanded = container.classList.contains('expanded');
             const displayList = isExpanded ? allReviews : allReviews.slice(0, 3);
 
+            // Clear container first
             container.innerHTML = '';
             
             displayList.forEach(data => {
@@ -3242,14 +3235,15 @@
         // PORTFOLIO LOGIC (FIXED DUPLICATES)
         // ==========================================
         function loadHomePortfolio() {
-            // FIX 1: Ensure container exists immediately
+            if(!db) return;
             const container = document.getElementById('home-portfolio-grid');
+            // Removed dependency on specific dummy element ID, we will build the grid fully via JS
             if(!container) return;
             
-            // Clear container first
+            // Clear container first to prevent build-up
             container.innerHTML = '';
             
-            // Add Dummy Item Hardcoded (Shows immediately without DB)
+            // Add Dummy Item Hardcoded
             const dummyHtml = `
                 <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
                     <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="E-Commerce Project" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
@@ -3261,27 +3255,24 @@
                 </div>`;
             container.innerHTML += dummyHtml;
             
-            // Fetch DB items in background (only if db is ready)
-            if(db) {
-                db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
-                    .then((snapshot) => {
-                        if(!snapshot.empty) {
-                            snapshot.forEach((doc) => {
-                                const data = doc.data();
-                                const html = `
-                                    <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
-                                        <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                                        <div class="p-6">
-                                            <h4 class="font-bold text-slate-900 mb-2">${data.name}</h4>
-                                            <p class="text-slate-600 text-sm mb-4">${data.desc || 'View project'}</p>
-                                            <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site &rarr;</a>
-                                        </div>
-                                    </div>`;
-                                container.innerHTML += html;
-                            });
-                        }
-                    });
-            }
+            db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
+                .then((snapshot) => {
+                    if(!snapshot.empty) {
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const html = `
+                                <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
+                                    <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                                    <div class="p-6">
+                                        <h4 class="font-bold text-slate-900 mb-2">${data.name}</h4>
+                                        <p class="text-slate-600 text-sm mb-4">${data.desc || 'View project'}</p>
+                                        <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site &rarr;</a>
+                                    </div>
+                                </div>`;
+                            container.innerHTML += html;
+                        });
+                    }
+                });
         }
 
         function loadPortfolio() {
@@ -3325,7 +3316,9 @@
                     let products = [];
                     snapshot.forEach(doc => products.push(doc.data()));
 
+                    // ==========================
                     // INJECT REQUESTED PRODUCT: DDNetwork
+                    // ==========================
                     const ddnetProduct = {
                         name: "DDNetwork",
                         price: "Free",
@@ -3334,7 +3327,9 @@
                         link: "https://ddnet.my"
                     };
                     
+                    // Add DDNetwork to the beginning of the list
                     products.unshift(ddnetProduct);
+                    // ==========================
 
                     grid.innerHTML = '';
                     if(products.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No products available yet.</div>'; return; }
@@ -3492,12 +3487,15 @@
                 return;
             }
 
+            // Create map instance centered on Malaysia
             const map = L.map('map').setView([4.2105, 101.9758], 6); 
 
+            // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
+            // Sample Data for "Global Clients"
             const clients = [
                 { name: "KL Tech Hub", location: [3.1390, 101.6869], desc: "E-commerce Platform", link: "#" },
                 { name: "Penang Digital", location: [5.4141, 100.3288], desc: "Corporate Site", link: "#" },
@@ -3508,6 +3506,7 @@
                 { name: "Tokyo Client", location: [35.6762, 139.6503], desc: "Consultancy", link: "#" }
             ];
 
+            // Custom Icon (Green Pin)
             const pinIcon = L.divIcon({
                 className: 'custom-marker',
                 html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
@@ -3515,9 +3514,11 @@
                 iconAnchor: [18, 36]
             });
 
+            // Add markers to map
             clients.forEach(client => {
                 const marker = L.marker(client.location, { icon: pinIcon }).addTo(map);
                 
+                // Popup content
                 const popupContent = `
                     <div class="popup-content">
                         <div class="popup-title">${client.name}</div>
@@ -3533,6 +3534,7 @@
         // ==========================================
         // GLOBE ANIMATION (HOME DECORATION)
         // ==========================================
+        // Simple implementation to prevent errors if canvas exists
         const canvas = document.getElementById('globe-canvas');
         if (canvas) {
             // Placeholder logic or 3D library integration would go here
