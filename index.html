@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- CORE SEO META TAGS -->
     <title>DDNex | Cheap & Professional Website Services Malaysia</title>
@@ -153,21 +153,22 @@
                 radial-gradient(at 0% 100%, rgba(30, 41, 59, 0.03) 0, transparent 50%);
         }
         
-        /* IMPROVED Page Transition System */
+        /* Page Transition System */
         .page { 
             display: none; 
             opacity: 0; 
-            min-height: 100vh; /* Ensures full page feel */
+            min-height: 100%;
             width: 100%;
-            /* Prevents layout shift during animation */
-            transform: translateY(10px); 
-            transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
         }
-        
         .page.active { 
             display: block; 
             opacity: 1; 
-            transform: translateY(0);
+            animation: fadeInPage 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes fadeInPage {
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); }
         }
         
         /* Interactions */
@@ -452,9 +453,6 @@
             
             body {
                 font-size: 14px;
-                /* Ensure full screen utilization on mobile */
-                height: 100vh;
-                overflow-y: auto; 
             }
             
             /* Section Spacing - Reduced for mobile */
@@ -2285,9 +2283,6 @@
             if (isTransitioning) return;
             isTransitioning = true;
 
-            // 1. SCROLL TO TOP IMMEDIATELY (Fixes issue #2)
-            window.scrollTo({ top: 0, behavior: isInstant ? 'auto' : 'smooth' });
-
             const currentSection = document.querySelector('.page.active');
             const targetSection = document.getElementById(`page-${targetSectionId}`);
 
@@ -2296,34 +2291,34 @@
                 return;
             }
 
+            // 1. Scroll to top immediately to prevent "jumping" visual
+            window.scrollTo(0, 0);
+
             // 2. Fade out current section if it exists
             if (currentSection) {
                 currentSection.style.opacity = '0';
+                currentSection.style.transition = 'opacity 0.3s ease';
+                
                 // Wait for fade out to finish before hiding
                 setTimeout(() => {
                     currentSection.classList.remove('active');
-                    currentSection.style.display = 'none'; // Fix #3: Hard hide
-                    currentSection.style.transform = 'translateY(10px)'; // Reset transform
+                    currentSection.style.display = 'none';
+                    currentSection.style.transition = ''; // Reset transition
                     
                     // 3. Show new section
                     targetSection.style.display = 'block';
-                    // Force reflow to ensure animation plays
+                    // Force reflow
                     void targetSection.offsetWidth; 
-                    
-                    targetSection.style.opacity = '1';
-                    targetSection.style.transform = 'translateY(0)';
                     targetSection.classList.add('active');
                     
                     // 4. Page specific logic
                     handlePageLogic(targetSectionId);
                     
                     isTransitioning = false;
-                }, 400); // Matches CSS transition duration
+                }, 300); // Matches CSS fade time
             } else {
                 // No current section (initial load)
                 targetSection.style.display = 'block';
-                targetSection.style.opacity = '1';
-                targetSection.style.transform = 'translateY(0)';
                 targetSection.classList.add('active');
                 handlePageLogic(targetSectionId);
                 isTransitioning = false;
@@ -2411,7 +2406,7 @@
         }
 
         // ==========================================
-        // AUTH LOGIC (UPDATED FOR REDIRECT)
+        // AUTH LOGIC
         // ==========================================
         function handleLogin(e) {
             e.preventDefault();
@@ -2487,21 +2482,7 @@
         function handleGoogleAuth() {
             if(!auth) return showNotification("Error", "Auth not initialized", "error");
             const provider = new firebase.auth.GoogleAuthProvider();
-            // UPDATED: Changed from signInWithPopup to signInWithRedirect
-            auth.signInWithRedirect(provider).then((result) => {
-                // This part usually happens on page load via getRedirectResult
-                return result.user;
-            }).catch((error) => {
-                console.error(error);
-                const friendlyMsg = getFirebaseErrorMessage(error);
-                showNotification("Google Auth Failed", friendlyMsg, "error");
-            });
-        }
-
-        // Listen for redirect result (for Google Auth Redirect Flow)
-        auth.getRedirectResult().then((result) => {
-            if (result.user) {
-                // User just signed in via redirect
+            auth.signInWithPopup(provider).then((result) => {
                 const user = result.user;
                 db.collection("users").doc(user.uid).get().then((doc) => {
                     if (!doc.exists) {
@@ -2521,12 +2502,12 @@
                         }
                     }, name);
                 });
-            }
-        }).catch((error) => {
-            console.error("Redirect result error:", error);
-            // No need to show error here if user cancelled, or handle silently
-        });
-
+            }).catch((error) => {
+                console.error(error);
+                const friendlyMsg = getFirebaseErrorMessage(error);
+                showNotification("Google Auth Failed", friendlyMsg, "error");
+            });
+        }
 
         function triggerLoginSuccessAnimation(onCompleteCallback, userName) {
             showNotification("Welcome", `Welcome back, ${userName}!`, "success");
@@ -2766,7 +2747,8 @@
 
         function attemptSelectPackage(name, type) {
             if (typeof auth === 'undefined' || auth === null) { showNotification("Error", "Authentication system initializing...", "error"); return; }
-                        if (auth.currentUser) { 
+            
+            if (auth.currentUser) { 
                 selectPackage(name, type); 
             } else { 
                 pendingPackage = { name, type };
