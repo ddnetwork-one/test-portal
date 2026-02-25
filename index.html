@@ -86,7 +86,7 @@
                         'fade-in': 'fadeIn 0.6s ease-out forwards',
                         'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'page-enter': 'pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'page-exit': 'pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards',
+                        'page-exit': 'pageExit 0.3s cubic-bezier(0.4, 0, 1, 1) forwards',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
@@ -185,15 +185,13 @@
         .page { 
             display: none; 
             opacity: 0; 
-            min-height: 100vh; /* Ensure page fills screen */
+            min-height: 100%;
             width: 100%;
             position: absolute; 
             top: 0;
             left: 0;
             z-index: 10;
             background: white; 
-            /* Added padding to top to clear fixed navbar */
-            padding-top: 80px; 
         }
         
         .page.active { 
@@ -206,17 +204,8 @@
 
         /* Animation classes for manual triggering */
         .anim-exit {
-            animation: pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+            animation: pageExit 0.3s cubic-bezier(0.4, 0, 1, 1) forwards !important;
             pointer-events: none; 
-            /* Ensure exiting page stays visible but fades out underneath */
-            position: absolute !important; 
-            top: 0; left: 0; width: 100%;
-            z-index: 10;
-        }
-        
-        /* Helper to ensure full height even if content is short */
-        .min-h-screen-minus-nav {
-            min-height: calc(100vh - 80px);
         }
 
         /* Interactions */
@@ -510,9 +499,6 @@
             
             section { padding-top: 3rem !important; padding-bottom: 3rem !important; }
             .py-24 { padding-top: 3rem !important; padding-bottom: 3rem !important; }
-            
-            /* Reduce page top padding on mobile to save screen space */
-            .page { padding-top: 70px !important; }
             
             h1 { font-size: 2rem !important; line-height: 1.2 !important; }
             h2 { font-size: 1.75rem !important; }
@@ -2125,7 +2111,6 @@
         <!-- PROFILE PAGE (UPDATED & IMPROVED) -->
         <section id="page-profile" class="page">
             <div class="bg-slate-50 py-12">
-                <!-- Added extra padding-top to ensure it clears the fixed navbar comfortably -->
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     
                     <!-- ACTIVE PLAN STATUS CARD (NEW) -->
@@ -2561,29 +2546,21 @@
             window.scrollTo(0, 0);
 
             if (currentSection) {
-                // Start exit animation immediately
                 currentSection.classList.add('anim-exit');
                 
-                // Prepare target section behind the current one
-                targetSection.style.display = 'block';
-                targetSection.style.zIndex = '5'; // Behind current
-                targetSection.classList.remove('active'); // Ensure no enter anim yet
-                
                 setTimeout(() => {
-                    // Hide old section completely
                     currentSection.classList.remove('active', 'anim-exit');
                     currentSection.style.display = 'none';
                     
-                    // Bring new section forward and animate in
-                    targetSection.style.zIndex = '20';
-                    targetSection.classList.add('active'); // Triggers pageEnter animation
+                    targetSection.style.display = 'block';
+                    void targetSection.offsetWidth; 
+                    targetSection.classList.add('active');
                     
                     handlePageLogic(targetSectionId);
                     
                     isTransitioning = false;
-                }, 300); // Matches CSS animation duration
+                }, 300); 
             } else {
-                // First load or no active section
                 targetSection.style.display = 'block';
                 targetSection.classList.add('active');
                 handlePageLogic(targetSectionId);
@@ -2823,84 +2800,82 @@
                     if(data.personalVoucher) { 
                         currentUserPersonalVoucher = data.personalVoucher; 
                         showVoucherCard(data.personalVoucher); 
-                } else {
-                    currentUserPersonalVoucher = null;
-                    hideVoucherCard();
+                    } else { 
+                        currentUserPersonalVoucher = null; 
+                        hideVoucherCard(); 
+                    }
                 }
-            }
-            
+            }).catch((error) => showNotification("Error", "Error loading profile data.", "error"));
+
             // 2. Fetch Orders to Determine Active Plan (NEW LOGIC)
             fetchAndRenderActivePlan(uid);
             
             // 3. Fetch Order History Table
             loadOrderHistory(uid);
-        }).catch((error) => {
-            showNotification("Error", "Error loading profile data.", "error");
-        });
-    }
+        }
 
-    // NEW: Function to determine and render Active Plan
-    function fetchAndRenderActivePlan(uid) {
-        if(!db) return;
-        const activeCard = document.getElementById('active-plan-card');
-        const noPlanCta = document.getElementById('no-plan-cta');
-        const planNameEl = document.getElementById('profile-plan-name');
-        const domainNameEl = document.getElementById('profile-domain-name');
-        const billingCycleEl = document.getElementById('profile-billing-cycle');
-        const statusBadge = document.getElementById('profile-status-badge');
+        // NEW: Function to determine and render Active Plan
+        function fetchAndRenderActivePlan(uid) {
+            if(!db) return;
+            const activeCard = document.getElementById('active-plan-card');
+            const noPlanCta = document.getElementById('no-plan-cta');
+            const planNameEl = document.getElementById('profile-plan-name');
+            const domainNameEl = document.getElementById('profile-domain-name');
+            const billingCycleEl = document.getElementById('profile-billing-cycle');
+            const statusBadge = document.getElementById('profile-status-badge');
 
-        // Reset UI
-        activeCard.classList.add('hidden');
-        noPlanCta.classList.add('hidden');
+            // Reset UI
+            activeCard.classList.add('hidden');
+            noPlanCta.classList.add('hidden');
 
-        db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(1)
-            .get()
-            .then((snapshot) => {
-                if (!snapshot.empty) {
-                    // Find the most recent order
-                    const orderData = snapshot.docs[0].data();
-                    
-                    // Logic: Consider a plan active if the status is 'Paid' or 'Completed'
-                    // In a real app, you would check if subscription is still valid based on date.
-                    if (orderData.status === 'Paid' || orderData.status === 'Completed') {
+            db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(1)
+                .get()
+                .then((snapshot) => {
+                    if (!snapshot.empty) {
+                        // Find the most recent order
+                        const orderData = snapshot.docs[0].data();
                         
-                        // Show Active Card
-                        activeCard.classList.remove('hidden');
-                        
-                        planNameEl.textContent = orderData.package || 'Website Package';
-                        
-                        // Handle Domain
-                        if(orderData.domainName && orderData.domainName.length > 0) {
-                            domainNameEl.textContent = orderData.domainName;
-                        } else {
-                            domainNameEl.textContent = "Pending Configuration";
-                        }
+                        // Logic: Consider a plan active if the status is 'Paid' or 'Completed'
+                        // In a real app, you would check if subscription is still valid based on date.
+                        if (orderData.status === 'Paid' || orderData.status === 'Completed') {
+                            
+                            // Show Active Card
+                            activeCard.classList.remove('hidden');
+                            
+                            planNameEl.textContent = orderData.package || 'Website Package';
+                            
+                            // Handle Domain
+                            if(orderData.domainName && orderData.domainName.length > 0) {
+                                domainNameEl.textContent = orderData.domainName;
+                            } else {
+                                domainNameEl.textContent = "Pending Configuration";
+                            }
 
-                        // Handle Billing Cycle
-                        const cycle = orderData.billingCycle || 'Monthly';
-                        billingCycleEl.textContent = cycle === 'One-Time' ? 'One-time Payment' : `Recurring (${cycle})`;
+                            // Handle Billing Cycle
+                            const cycle = orderData.billingCycle || 'Monthly';
+                            billingCycleEl.textContent = cycle === 'One-Time' ? 'One-time Payment' : `Recurring (${cycle})`;
 
-                        // Set Status Color
-                        statusBadge.className = "px-4 py-1.5 rounded-full font-bold text-sm border";
-                        if(orderData.status === 'Paid') {
-                            statusBadge.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-200');
-                            statusBadge.textContent = 'Active';
-                        } else if (orderData.status === 'Completed') {
-                            statusBadge.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-200');
-                            statusBadge.textContent = 'Completed';
-                        }
-                    } else {
-                        // User has orders, but the latest one is not Paid/Completed (e.g., Pending or Cancelled)
-                        noPlanCta.classList.remove('hidden');
-                    }
+                            // Set Status Color
+                            statusBadge.className = "px-4 py-1.5 rounded-full font-bold text-sm border";
+                            if(orderData.status === 'Paid') {
+                                statusBadge.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-200');
+                statusBadge.textContent = 'Active';
+            } else if (orderData.status === 'Completed') {
+                statusBadge.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-200');
+                statusBadge.textContent = 'Completed';
+            }
                 } else {
-                    // No orders found at all
+                    // User has orders, but the latest one is not Paid/Completed (e.g., Pending or Cancelled)
                     noPlanCta.classList.remove('hidden');
                 }
-            }).catch((error) => {
-                console.error("Error fetching active plan:", error);
+            } else {
+                // No orders found at all
                 noPlanCta.classList.remove('hidden');
-            });
+            }
+        }).catch((error) => {
+            console.error("Error fetching active plan:", error);
+            noPlanCta.classList.remove('hidden');
+        });
     }
 
     function loadOrderHistory(uid) {
