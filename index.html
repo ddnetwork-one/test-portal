@@ -2108,79 +2108,157 @@
             </div>
         </section>
 
-        <!-- PROFILE PAGE -->
+        <!-- PROFILE PAGE (UPDATED & IMPROVED) -->
         <section id="page-profile" class="page">
             <div class="bg-slate-50 py-12">
-                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="glass rounded-2xl p-6 md:p-8 border border-slate-200 bg-white mb-8">
-                        <div class="flex items-center gap-4 mb-6">
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-2xl font-bold text-white">
-                                <i class="ri-user-line"></i>
-                            </div>
-                            <div>
-                                <h2 class="text-2xl font-bold text-slate-900">My Profile</h2>
-                                <p class="text-slate-600">Manage your account and orders</p>
-                            </div>
-                        </div>
-
-                        <form onsubmit="handleProfileUpdate(event)" class="space-y-6">
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-600 mb-2">Full Name</label>
-                                    <input type="text" id="prof-name" class="input-field w-full px-4 py-3 rounded-lg text-slate-800">
+                <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    
+                    <!-- ACTIVE PLAN STATUS CARD (NEW) -->
+                    <!-- Shown if user has a paid plan -->
+                    <div id="active-plan-card" class="glass rounded-2xl p-8 border border-indigo-200 bg-white mb-8 relative overflow-hidden hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+                        <div class="absolute bottom-0 left-0 w-24 h-24 bg-emerald-50 rounded-full translate-y-1/2 -translate-x-1/2 opacity-50"></div>
+                        
+                        <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div class="flex items-start gap-4">
+                                <div class="w-14 h-14 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg">
+                                    <i class="ri-rocket-line text-2xl"></i>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-600 mb-2">Email</label>
-                                    <input type="email" id="prof-email" readonly class="input-field w-full px-4 py-3 rounded-lg text-slate-800 bg-slate-100">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-600 mb-2">Phone</label>
-                                    <input type="tel" id="prof-phone" class="input-field w-full px-4 py-3 rounded-lg text-slate-800">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-600 mb-2">Company</label>
-                                    <input type="text" id="prof-company" class="input-field w-full px-4 py-3 rounded-lg text-slate-800" placeholder="Optional">
+                                    <h2 class="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-1">Current Plan</h2>
+                                    <h3 id="profile-plan-name" class="text-2xl font-bold text-slate-900">Loading...</h3>
+                                    <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-slate-600">
+                                        <div class="flex items-center gap-1"><i class="ri-globe-line text-indigo-500"></i> <span id="profile-domain-name">...</span></div>
+                                        <div class="flex items-center gap-1"><i class="ri-bill-line text-emerald-500"></i> <span id="profile-billing-cycle">...</span></div>
+                                    </div>
                                 </div>
                             </div>
-                            <button type="submit" class="px-6 py-3 rounded-lg btn-primary text-white font-semibold">Update Profile</button>
-                        </form>
-
-                        <!-- Voucher Section -->
-                        <div id="profile-voucher-section" class="hidden mt-8 pt-8 border-t border-slate-200">
-                            <h3 class="text-lg font-bold text-slate-900 mb-4">Your Voucher</h3>
-                            <div class="glass rounded-xl p-4 border border-slate-200 bg-emerald-50 flex justify-between items-center">
-                                <div>
-                                    <div class="text-sm text-slate-600">Available Voucher</div>
-                                    <div class="text-lg font-bold text-emerald-700" id="profile-voucher-text">-</div>
-                                </div>
-                                <button onclick="deletePersonalVoucher()" class="text-red-600 hover:text-red-700 text-sm font-medium">Remove</button>
+                            
+                            <div class="flex flex-col items-start md:items-end gap-3">
+                                <span id="profile-status-badge" class="px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm border border-emerald-200">Active</span>
+                                <button onclick="navigateTo('contact')" class="text-sm font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                                    Need Support? <i class="ri-arrow-right-line"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Order History -->
-                    <div class="glass rounded-2xl p-6 md:p-8 border border-slate-200 bg-white">
-                        <h3 class="text-lg font-bold text-slate-900 mb-4">Order History</h3>
-                        <div id="order-history-container" class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead>
-                                    <tr class="border-b border-slate-200">
-                                        <th class="pb-3 text-sm font-medium text-slate-600">Date</th>
-                                        <th class="pb-3 text-sm font-medium text-slate-600">Package</th>
-                                        <th class="pb-3 text-sm font-medium text-slate-600">Total</th>
-                                        <th class="pb-3 text-sm font-medium text-slate-600">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="order-history-body" class="text-sm">
-                                    <!-- Orders loaded dynamically -->
-                                </tbody>
-                            </table>
-                            <div id="no-orders" class="text-center py-8 text-slate-500 hidden">No orders yet</div>
+                    <!-- NO PLAN CTA (NEW) -->
+                    <!-- Shown if user has NO paid plans -->
+                    <div id="no-plan-cta" class="glass rounded-2xl p-8 border border-dashed border-slate-300 bg-slate-50 mb-8 text-center hidden">
+                        <div class="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
+                            <i class="ri-shopping-cart-2-line text-3xl"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold text-slate-900 mb-2">No Active Plan</h2>
+                        <p class="text-slate-600 mb-6 max-w-md mx-auto">You haven't purchased any website packages yet. Start your digital journey today with our affordable plans.</p>
+                        <button onclick="navigateTo('pricing')" class="px-8 py-3 rounded-full btn-primary text-white font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+                            Buy Your Plan Now
+                        </button>
+                    </div>
+
+                    <!-- PROFILE INFO & EDIT -->
+                    <div class="grid lg:grid-cols-3 gap-8 mb-8">
+                        <div class="lg:col-span-1">
+                            <div class="glass rounded-2xl p-6 border border-slate-200 bg-white text-center">
+                                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-3xl font-bold text-white mx-auto mb-4 shadow-md">
+                                    <i class="ri-user-line"></i>
+                                </div>
+                                <h2 class="text-xl font-bold text-slate-900" id="prof-display-name">User Name</h2>
+                                <p class="text-slate-500 text-sm mb-4" id="prof-display-email">user@example.com</p>
+                                <div class="border-t border-slate-100 pt-4">
+                                    <div class="text-xs text-slate-400 uppercase font-semibold tracking-wide mb-2">Account Type</div>
+                                    <div class="text-sm font-medium text-slate-700" id="prof-role">Standard Client</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-2">
+                            <div class="glass rounded-2xl p-6 md:p-8 border border-slate-200 bg-white">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h3 class="text-lg font-bold text-slate-900">Edit Profile</h3>
+                                    <button onclick="document.getElementById('profile-form').requestSubmit()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors">Save Changes</button>
+                                </div>
+                                
+                                <form id="profile-form" onsubmit="handleProfileUpdate(event)" class="space-y-6">
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-600 mb-2">Full Name</label>
+                                            <input type="text" id="prof-name" class="input-field w-full px-4 py-3 rounded-lg text-slate-800">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-600 mb-2">Phone</label>
+                                            <input type="tel" id="prof-phone" class="input-field w-full px-4 py-3 rounded-lg text-slate-800">
+                                        </div>
+                                    </div>
+                                    <div class="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-600 mb-2">Email</label>
+                                            <input type="email" id="prof-email" readonly class="input-field w-full px-4 py-3 rounded-lg text-slate-800 bg-slate-50 cursor-not-allowed">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-slate-600 mb-2">Company</label>
+                                            <input type="text" id="prof-company" class="input-field w-full px-4 py-3 rounded-lg text-slate-800" placeholder="Optional">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VOUCHER & HISTORY CONTAINER -->
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <!-- Voucher Section -->
+                        <div id="profile-voucher-section" class="hidden">
+                            <div class="glass rounded-2xl p-6 border border-slate-200 bg-white h-full flex flex-col">
+                                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-gift-line text-pink-500"></i> Your Vouchers
+                                </h3>
+                                <div class="flex-1 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl p-5 border border-pink-100 flex flex-col justify-center items-center text-center">
+                                    <div class="text-4xl mb-2">🎟️</div>
+                                    <div class="font-bold text-slate-800 text-lg mb-1" id="profile-voucher-code">PROMO10</div>
+                                    <div class="text-sm text-slate-600 mb-4" id="profile-voucher-desc">10% Discount on next purchase</div>
+                                    <button onclick="deletePersonalVoucher()" class="text-xs text-red-500 hover:text-red-700 underline font-medium">Remove Voucher</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Empty state for voucher if none exist -->
+                        <div id="no-voucher-section" class="hidden lg:block">
+                            <div class="glass rounded-2xl p-6 border border-dashed border-slate-300 bg-slate-50 h-full flex flex-col justify-center items-center text-center">
+                                <i class="ri-coupon-3-line text-3xl text-slate-300 mb-2"></i>
+                                <p class="text-sm text-slate-500">No active vouchers</p>
+                            </div>
+                        </div>
+
+                        <!-- Order History -->
+                        <div class="lg:col-span-1"> <!-- Takes full width if no voucher, else 1 col -->
+                            <div class="glass rounded-2xl p-6 border border-slate-200 bg-white h-full">
+                                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                    <i class="ri-history-line text-blue-500"></i> Order History
+                                </h3>
+                                <div id="order-history-container" class="overflow-x-auto">
+                                    <table class="w-full text-left">
+                                        <thead>
+                                            <tr class="border-b border-slate-200">
+                                                <th class="pb-3 text-xs font-medium text-slate-500 uppercase">Date</th>
+                                                <th class="pb-3 text-xs font-medium text-slate-500 uppercase">Package</th>
+                                                <th class="pb-3 text-xs font-medium text-slate-500 uppercase text-right">Total</th>
+                                                <th class="pb-3 text-xs font-medium text-slate-500 uppercase text-right">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="order-history-body" class="text-sm">
+                                            <!-- Orders loaded dynamically -->
+                                        </tbody>
+                                    </table>
+                                    <div id="no-orders" class="text-center py-8 text-slate-400 hidden">
+                                        <p>No order history found.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="mt-8 text-center">
-                        <button onclick="handleLogout()" class="text-red-600 hover:text-red-700 font-medium">Sign Out</button>
+                        <button onclick="handleLogout()" class="text-red-500 hover:text-red-700 font-medium px-6 py-2 rounded-lg border border-transparent hover:bg-red-50 transition-colors">Sign Out</button>
                     </div>
                 </div>
             </div>
@@ -2689,1041 +2767,1132 @@
         }
 
         // ==========================================
-        // PROFILE & AUTH STATE LISTENER
+        // PROFILE & AUTH STATE LISTENER (UPDATED)
         // ==========================================
         function loadProfilePageData() {
             if(!auth || !auth.currentUser) return;
+            
+            const uid = auth.currentUser.uid;
             const profFields = ['prof-name', 'prof-phone', 'prof-email', 'prof-company'];
-            profFields.forEach(id => document.getElementById(id).value = "Loading...");
-            db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    if(data.name) document.getElementById('prof-name').value = data.name;
-                    if(data.phone) document.getElementById('prof-phone').value = data.phone;
-                    if(data.email) document.getElementById('prof-email').value = data.email || auth.currentUser.email;
-                    if(data.company) document.getElementById('prof-company').value = data.company;
-                    if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; showVoucherCard(data.personalVoucher); } 
-                    else { currentUserPersonalVoucher = null; hideVoucherCard(); }
-                    loadOrderHistory(auth.currentUser.uid);
-                }
-            }).catch((error) => showNotification("Error", "Error loading profile data.", "error"));
-        }
-
-        function loadOrderHistory(uid) {
-            if(!db) return;
-            const tbody = document.getElementById('order-history-body');
-            const noMsg = document.getElementById('no-orders');
+            const displayFields = ['prof-display-name', 'prof-display-email'];
             
-            if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+            profFields.forEach(id => { const el = document.getElementById(id); if(el) el.value = "Loading..."; });
+            displayFields.forEach(id => { const el = document.getElementById(id); if(el) el.textContent = "Loading..."; });
 
-            db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(10)
-                .onSnapshot((snapshot) => {
-                    if(tbody) tbody.innerHTML = '';
-                    if (snapshot.empty) {
-                        if(noMsg) noMsg.classList.remove('hidden');
-                        if(tbody) tbody.parentElement.style.display = 'none';
-                    } else {
-                        if(noMsg) noMsg.classList.add('hidden');
-                        if(tbody) tbody.parentElement.style.display = 'table';
-                        snapshot.forEach((doc) => {
-                            const data = doc.data();
-                            const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
-                            const total = data.total || 'RM 0';
-                            const pkg = data.package || 'Unknown Package';
-                            const status = data.status || 'Pending';
-                            let statusClass = 'status-pending';
-                            if(status === 'Paid') statusClass = 'status-paid';
-                            if(status === 'Completed') statusClass = 'status-completed';
-                            if(status === 'Cancelled') statusClass = 'status-cancelled';
-                            
-                            const row = `<tr><td>${date}</td><td style="font-weight:600; color:var(--text-main);">${pkg}</td><td>${total}</td><td><span class="status-badge ${statusClass}">${status}</span></td></tr>`;
-                            if(tbody) tbody.innerHTML += row;
-                        });
-                    }
-                });
-        }
-
-        function showVoucherCard(voucher) {
-            const section = document.getElementById('profile-voucher-section');
-            const text = document.getElementById('profile-voucher-text');
-            if(!section || !text) return;
-
-            section.style.display = 'block';
-            const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
-            let expiryText = voucher.expiryDate ? ` | Exp: ${voucher.expiryDate.toDate().toLocaleDateString()}` : "";
-            text.innerText = `Code: ${voucher.code} | Value: ${displayVal}${expiryText}`;
-            if (voucher.status === 'redeemed') {
-                document.getElementById('profile-voucher-title').innerText = "Voucher Redeemed";
-                text.style.textDecoration = 'line-through';
-            } else {
-                document.getElementById('profile-voucher-title').innerText = "You have a Gift Voucher!";
-            }
-        }
-
-        function hideVoucherCard() {
-            const section = document.getElementById('profile-voucher-section');
-            if(section) section.style.display = 'none';
-        }
-
-        function handleProfileUpdate(e) {
-            e.preventDefault();
-            if(!auth || !auth.currentUser) return;
-            const name = document.getElementById('prof-name').value;
-            const phone = document.getElementById('prof-phone').value;
-            const company = document.getElementById('prof-company').value;
-            db.collection("users").doc(auth.currentUser.uid).update({ name: name, phone: phone, company: company })
-            .then(() => {
-                showNotification("Success", "Profile Updated Successfully!", "success");
-                fetchAndSyncUserData(auth.currentUser.uid);
-            }).catch((error) => showNotification("Error", error.message, "error"));
-        }
-
-        function deletePersonalVoucher() {
-            if(!auth || !auth.currentUser) return;
-            if(confirm("Are you sure you want to remove this voucher?")) {
-                db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
-                    currentUserPersonalVoucher = null; 
-                    loadProfilePageData();
-                    fetchAndSyncUserData(auth.currentUser.uid);
-                    showNotification("Voucher Removed", "Voucher removed from account.", "success");
-                });
-            }
-        }
-
-        function handleLogout() {
-            if(auth) { 
-                currentUserPersonalVoucher = null; 
-                auth.signOut().then(() => { 
-                    showNotification("Logged Out", "See you again soon!", "success"); 
-                    navigateTo('/'); 
-                }); 
-            }
-        }
-
-        // Auth State Listener
-        if(auth) {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    db.collection("users").doc(user.uid).get().then((doc) => {
-                        if (doc.exists) {
-                            const data = doc.data();
-                            currentUserRole = data.role || 'user'; 
-                            updateHeaderForUser(user); 
-                            if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; showVoucherCard(data.personalVoucher); } 
-                            else { currentUserPersonalVoucher = null; hideVoucherCard(); }
-                            fetchAndSyncUserData(user.uid);
-                            if(!data.phone) {
-                                showNotification("Attention", "Please complete your profile (Phone Number).", "warning");
-                                if(window.location.pathname !== '/profile') setTimeout(() => navigateTo('/profile'), 1000);
-                            }
-                        }
-                    });
-                } else {
-                    updateHeaderForGuest(); 
-                    clearUserData(); 
-                    hideVoucherCard();
-                }
-            });
-        }
-
-        function updateHeaderForUser(user) {
-            const isAdmin = currentUserRole === 'admin';
-            const deskAuth = document.getElementById('desktopAuthLinks');
-            if(deskAuth) {
-                let userControls = `<a href="#" onclick="navigateTo('/profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="ri-user-line"></i> Profile</a><span class="logout-btn hidden md:block text-slate-600 cursor-pointer transition: 0.2s white-space-nowrap;" onclick="handleLogout()">Logout</span>`;
-                if (isAdmin) userControls = `<a href="admin.html" target="_blank" class="admin-link" title="Admin Portal"><i class="ri-shield-user-fill"></i></a><span style="color:var(--text-tertiary); margin: 0 10px;">|</span>${userControls}`;
-                deskAuth.innerHTML = userControls;
-            }
-            
-            const mobAuth = document.getElementById('mobileAuthLinksContainer');
-            if(mobAuth) {
-                let authButtons = `<a href="/profile" onclick="routeLink(event, '/profile'); toggleMobileMenu()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-user-fill" style="margin-right:15px;"></i> Profile</a>`;
-                if (isAdmin) authButtons += `<a href="admin.html" target="_blank" onclick="toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-shield-user-fill" style="margin-right:15px; color:var(--accent-warn);"></i> Admin</a>`;
-                authButtons += `<a href="#" onclick="handleLogout(); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; color: var(--accent-warn);"><i class="ri-logout-box-r-fill" style="margin-right:15px;"></i> Logout</a>`;
-                mobAuth.innerHTML = authButtons;
-            }
-        }
-
-        function updateHeaderForGuest() {
-            const deskAuth = document.getElementById('desktopAuthLinks');
-            if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="navigateTo('login')" class="btn-glass hidden md:flex" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-login-circle-fill"></i> Login</a>`;
-            const mobAuth = document.getElementById('mobileAuthLinksContainer');
-            if(mobAuth) mobAuth.innerHTML = `<a href="/login" onclick="navigateTo('login'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-login-circle-fill" style="margin-right:15px;"></i> Login</a><a href="/signup" onclick="navigateTo('signup'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-user-add-fill" style="margin-right:15px;"></i> Sign Up</a>`;
-        }
-
-        function clearUserData() {
-            const inputs = ['prof-name', 'prof-phone', 'prof-email', 'prof-company', 'co-firstname', 'co-lastname', 'co-email', 'co-company'];
-            inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-            const label = document.getElementById('auto-fill-label'); if(label) label.style.display = 'none';
-        }
-
-        // ==========================================
-        // PRICING LOGIC
-        // ==========================================
-        function setBilling(cycle) {
-            billingCycle = cycle;
-            const btnMonthly = document.getElementById('btn-monthly');
-            const btnOnetime = document.getElementById('btn-onetime');
-
-            if(btnMonthly && btnOnetime) {
-                if(cycle === 'monthly') { 
-                    btnMonthly.classList.add('bg-slate-800', 'text-white'); 
-                    btnOnetime.classList.remove('bg-slate-800', 'text-white'); 
-                } else { 
-                    btnMonthly.classList.remove('bg-slate-800', 'text-white'); 
-                    btnOnetime.classList.add('bg-slate-800', 'text-white'); 
-                }
-            }
-
-            document.querySelectorAll('.price-display').forEach(el => {
-                const monthly = el.dataset.monthly;
-                const onetime = el.dataset.onetime;
-                if (monthly && onetime) {
-                    el.textContent = 'RM ' + (cycle === 'monthly' ? monthly : onetime);
-                    el.parentElement.querySelector('.price-period').textContent = cycle === 'monthly' ? '/month' : ' one-time';
-                }
-            });
-
-            document.querySelectorAll('.maintenance-yes').forEach(el => el.classList.toggle('hidden', cycle === 'onetime'));
-            document.querySelectorAll('.maintenance-no').forEach(el => el.classList.toggle('hidden', cycle === 'monthly'));
-
-            state.billingCycle = cycle;
-            state.isOneTime = (cycle === 'onetime');
-            
-            if(selectedPackageType && PRICING_DATA[selectedPackageType]) {
-                state.packagePrice =                cycle === 'monthly' ? PRICING_DATA[selectedPackageType].monthly : PRICING_DATA[selectedPackageType].oneTime;
-                updateTotal();
-            }
-        }
-
-        function attemptSelectPackage(name, type) {
-            if (typeof auth === 'undefined' || auth === null) { 
-                showNotification("Error", "Authentication system initializing...", "error"); 
-                return; 
-            }
-            
-            if (auth.currentUser) { 
-                selectPackage(name, type); 
-            } else { 
-                pendingPackage = { name, type };
-                showAuthModal(); 
-            }
-        }
-
-        // ==========================================
-        // NEW 3-STEP CHECKOUT LOGIC
-        // ==========================================
-        
-        function selectPackage(name, type) {
-            selectedPackage = name;
-            selectedPackageType = type;
-            state.packageType = type;
-            
-            // Use global billing cycle, defaulting to monthly if not set
-            state.billingCycle = billingCycle || 'monthly';
-            state.isOneTime = (billingCycle === 'onetime');
-            state.paymentMode = 'full';
-            
-            // Get prices from data
-            state.setupFee = PRICING_DATA[type].setupFee;
-            state.packagePrice = billingCycle === 'monthly' ? PRICING_DATA[type].monthly : PRICING_DATA[type].oneTime;
-
-            // Reset Step to 1
-            currentCheckoutStep = 1;
-            
-            // Populate Step 1 Data
-            document.getElementById('s1-plan-name').innerText = name;
-            document.getElementById('s1-plan-price').innerText = 'RM ' + state.packagePrice;
-            document.getElementById('s1-setup-price').innerText = 'RM ' + state.setupFee;
-            
-            const firstTotal = state.setupFee + state.packagePrice;
-            document.getElementById('s1-first-total').innerText = 'RM ' + firstTotal;
-            document.getElementById('s1-recurring-price').innerText = 'RM ' + state.packagePrice + '/mo';
-            
-            // Populate Features List
-            const featureContainer = document.getElementById('s1-features-list');
-            featureContainer.innerHTML = '';
-            if(PRICING_DATA[type].features) {
-                PRICING_DATA[type].features.forEach(feature => {
-                    featureContainer.innerHTML += `<li><i class="ri-checkbox-circle-fill text-emerald-500"></i> ${feature}</li>`;
-                });
-            }
-
-            // Reset Steps UI
-            updateStepUI(1);
-            
-            if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-            else { clearUserData(); hideVoucherCard(); }
-
-            // Navigate to checkout
-            navigateTo('checkout');
-        }
-
-        function updateStepUI(step) {
-            // Hide all steps
-            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-            // Show current step
-            document.getElementById(`step-${step}`).classList.add('active');
-            
-            // Update dots
-            for(let i=1; i<=3; i++) {
-                const dot = document.getElementById(`dot-${i}`);
-                dot.classList.remove('active', 'completed');
-                if(i < step) dot.classList.add('completed');
-                if(i === step) dot.classList.add('active');
-            }
-            
-            window.scrollTo(0, 0);
-        }
-
-        function goToStep(step) {
-            currentCheckoutStep = step;
-            updateStepUI(step);
-        }
-
-        function selectDomainType(type, element) {
-            state.domainType = type;
-            
-            // UI Update
-            const options = document.querySelectorAll('.radio-option');
-            options.forEach(opt => opt.classList.remove('selected'));
-            element.classList.add('selected');
-            const input = element.querySelector('input');
-            if(input) input.checked = true;
-            
-            // Input Visibility
-            const subInput = document.getElementById('subdomain-input');
-            const customInput = document.getElementById('custom-domain-input');
-            
-            if(type === 'sub') {
-                subInput.disabled = false;
-                customInput.disabled = true;
-                customInput.value = '';
-                state.domainPrice = 0;
-                updateDomainPreview();
-            } else {
-                subInput.disabled = true;
-                subInput.value = '';
-                customInput.disabled = false;
-                state.domainPrice = 0;
-                updateDomainPreview();
-            }
-        }
-
-        function updateDomainPreview() {
-            const text = document.getElementById('subdomain-input').value;
-            const preview = document.getElementById('preview-text');
-            if(preview) {
-                preview.innerText = text.length > 0 ? text : "yourname";
-                state.domainName = text.length > 0 ? `${text}.ddnex.my` : '';
-                state.domainNameValid = text.length > 0;
-            }
-        }
-
-        function applyPromo() {
-            if(!auth || !auth.currentUser) return showNotification("Login Required", "Please login to use Promo Codes.", "warning");
-            const input = document.getElementById('promo-input');
-            const code = input ? input.value.trim().toUpperCase() : '';
-            
-            if(!code || code === "") {
-                showNotification("Missing Code", "Please enter a voucher code first.", "error");
-                return;
-            }
-            
-            // Mock Promo Logic (Replace with real DB check)
-            if(code === "WELCOME10") {
-                state.discountType = 'percent';
-                state.discountRate = 0.10;
-                state.discountCode = code;
-                showNotification("Promo Applied", "10% discount applied!", "success");
-                const msg = document.getElementById('promo-msg');
-                msg.innerText = "10% Discount Applied";
-                msg.classList.remove('hidden', 'text-red-600');
-                msg.classList.add('text-emerald-600');
-            } else {
-                showNotification("Invalid Code", "Invalid code. Please check and try again.", "error");
-                const msg = document.getElementById('promo-msg');
-                msg.innerText = "Invalid Code";
-                msg.classList.remove('hidden', 'text-emerald-600');
-                msg.classList.add('text-red-600');
-            }
-        }
-
-        function validateAndGoToStep3() {
-            const form = document.getElementById('checkout-form-step2');
-            if(!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            // Validate Domain
-            if(state.domainType === 'sub') {
-                if(!state.domainNameValid) {
-                    showNotification("Domain Required", "Please enter a valid subdomain name.", "error");
-                    return;
-                }
-            } else {
-                const custom = document.getElementById('custom-domain-input').value;
-                if(!custom) {
-                    showNotification("Domain Required", "Please enter your custom domain.", "error");
-                    return;
-                }
-                state.domainName = custom;
-            }
-
-            // Populate Step 3 Summary
-            document.getElementById('s3-plan-name').innerText = selectedPackage;
-            document.getElementById('s3-sub-price').innerText = 'RM ' + state.packagePrice;
-            document.getElementById('s3-setup-price').innerText = 'RM ' + state.setupFee;
-            document.getElementById('s3-domain-price').innerText = state.domainPrice > 0 ? 'RM ' + state.domainPrice : 'Free';
-            
-            let subtotal = state.packagePrice + state.setupFee + state.domainPrice;
-            let discountAmt = 0;
-            
-            if(state.discountType === 'percent') {
-                discountAmt = subtotal * state.discountRate;
-                document.getElementById('s3-discount-row').classList.remove('hidden');
-                document.getElementById('s3-discount-code').innerText = state.discountCode;
-                document.getElementById('s3-discount-val').innerText = '-RM ' + Math.round(discountAmt);
-            } else {
-                document.getElementById('s3-discount-row').classList.add('hidden');
-            }
-
-            const total = Math.round(subtotal - discountAmt);
-            document.getElementById('s3-total').innerText = 'RM ' + total;
-            document.getElementById('s3-recurring').innerText = 'RM ' + state.packagePrice + '/mo';
-
-            goToStep(3);
-        }
-
-        function fetchAndSyncUserData(uid) {
-            if(!db) return;
+            // 1. Fetch User Data
             db.collection("users").doc(uid).get().then((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
-                    if(document.getElementById('co-firstname')) document.getElementById('co-firstname').value = data.name || '';
-                    if(document.getElementById('co-lastname')) document.getElementById('co-lastname').value = ''; 
-                    if(document.getElementById('co-email')) {
-                        document.getElementById('co-email').value = data.email || auth.currentUser.email;
-                        document.getElementById('co-email').readOnly = true;
+                    // Form Fields
+                    if(data.name) document.getElementById('prof-name').value = data.name;
+                    if(data.phone) document.getElementById('prof-phone').value = data.phone;
+                    if(data.email) {
+                        document.getElementById('prof-email').value = data.email || auth.currentUser.email;
+                        document.getElementById('prof-display-email').textContent = data.email || auth.currentUser.email;
                     }
-                    if(document.getElementById('co-phone')) document.getElementById('co-phone').value = data.phone || '';
-                    if(document.getElementById('co-company')) document.getElementById('co-company').value = data.company || '';
+                    if(data.company) document.getElementById('prof-company').value = data.company;
+                    
+                    // Display Fields
+                    document.getElementById('prof-display-name').textContent = data.name || 'User';
+                    document.getElementById('prof-role').textContent = data.role === 'admin' ? 'Admin' : 'Standard Client';
+                    
+                    // Voucher Logic
+                    if(data.personalVoucher) { 
+                        currentUserPersonalVoucher = data.personalVoucher; 
+                        showVoucherCard(data.personalVoucher); 
+                    } else { 
+                        currentUserPersonalVoucher = null; 
+                        hideVoucherCard(); 
+                    }
+                }
+            }).catch((error) => showNotification("Error", "Error loading profile data.", "error"));
+
+            // 2. Fetch Orders to Determine Active Plan (NEW LOGIC)
+            fetchAndRenderActivePlan(uid);
+            
+            // 3. Fetch Order History Table
+            loadOrderHistory(uid);
+        }
+
+        // NEW: Function to determine and render Active Plan
+        function fetchAndRenderActivePlan(uid) {
+            if(!db) return;
+            const activeCard = document.getElementById('active-plan-card');
+            const noPlanCta = document.getElementById('no-plan-cta');
+            const planNameEl = document.getElementById('profile-plan-name');
+            const domainNameEl = document.getElementById('profile-domain-name');
+            const billingCycleEl = document.getElementById('profile-billing-cycle');
+            const statusBadge = document.getElementById('profile-status-badge');
+
+            // Reset UI
+            activeCard.classList.add('hidden');
+            noPlanCta.classList.add('hidden');
+
+            db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(1)
+                .get()
+                .then((snapshot) => {
+                    if (!snapshot.empty) {
+                        // Find the most recent order
+                        const orderData = snapshot.docs[0].data();
+                        
+                        // Logic: Consider a plan active if the status is 'Paid' or 'Completed'
+                        // In a real app, you would check if subscription is still valid based on date.
+                        if (orderData.status === 'Paid' || orderData.status === 'Completed') {
+                            
+                            // Show Active Card
+                            activeCard.classList.remove('hidden');
+                            
+                            planNameEl.textContent = orderData.package || 'Website Package';
+                            
+                            // Handle Domain
+                            if(orderData.domainName && orderData.domainName.length > 0) {
+                                domainNameEl.textContent = orderData.domainName;
+                            } else {
+                                domainNameEl.textContent = "Pending Configuration";
+                            }
+
+                            // Handle Billing Cycle
+                            const cycle = orderData.billingCycle || 'Monthly';
+                            billingCycleEl.textContent = cycle === 'One-Time' ? 'One-time Payment' : `Recurring (${cycle})`;
+
+                            // Set Status Color
+                            statusBadge.className = "px-4 py-1.5 rounded-full font-bold text-sm border";
+                            if(orderData.status === 'Paid') {
+                                statusBadge.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-200');
+                statusBadge.textContent = 'Active';
+            } else if (orderData.status === 'Completed') {
+                statusBadge.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-200');
+                statusBadge.textContent = 'Completed';
+            }
+                } else {
+                    // User has orders, but the latest one is not Paid/Completed (e.g., Pending or Cancelled)
+                    noPlanCta.classList.remove('hidden');
+                }
+            } else {
+                // No orders found at all
+                noPlanCta.classList.remove('hidden');
+            }
+        }).catch((error) => {
+            console.error("Error fetching active plan:", error);
+            noPlanCta.classList.remove('hidden');
+        });
+    }
+
+    function loadOrderHistory(uid) {
+        if(!db) return;
+        const tbody = document.getElementById('order-history-body');
+        const noMsg = document.getElementById('no-orders');
+        
+        if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+
+        db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(10)
+            .onSnapshot((snapshot) => {
+                if(tbody) tbody.innerHTML = '';
+                if (snapshot.empty) {
+                    if(noMsg) noMsg.classList.remove('hidden');
+                    if(tbody) tbody.parentElement.style.display = 'none';
+                } else {
+                    if(noMsg) noMsg.classList.add('hidden');
+                    if(tbody) tbody.parentElement.style.display = 'table';
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
+                        const total = data.total || 'RM 0';
+                        const pkg = data.package || 'Unknown Package';
+                        const status = data.status || 'Pending';
+                        let statusClass = 'status-pending';
+                        if(status === 'Paid') statusClass = 'status-paid';
+                        if(status === 'Completed') statusClass = 'status-completed';
+                        if(status === 'Cancelled') statusClass = 'status-cancelled';
+                        
+                        const row = `<tr><td>${date}</td><td style="font-weight:600; color:var(--text-main);">${pkg}</td><td>${total}</td><td class="text-right"><span class="status-badge ${statusClass}">${status}</span></td></tr>`;
+                        if(tbody) tbody.innerHTML += row;
+                    });
                 }
             });
+    }
+
+    function showVoucherCard(voucher) {
+        const section = document.getElementById('profile-voucher-section');
+        const text = document.getElementById('profile-voucher-text');
+        if(!section || !text) return;
+
+        section.style.display = 'block';
+        const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
+        let expiryText = voucher.expiryDate ? ` | Exp: ${voucher.expiryDate.toDate().toLocaleDateString()}` : "";
+        text.innerText = `Code: ${voucher.code} | Value: ${displayVal}${expiryText}`;
+        if (voucher.status === 'redeemed') {
+            document.getElementById('profile-voucher-title').innerText = "Voucher Redeemed";
+            text.style.textDecoration = 'line-through';
+        } else {
+            document.getElementById('profile-voucher-title').innerText = "You have a Gift Voucher!";
         }
+    }
 
-        function removeVoucher() {
-            state.discountCode = ''; state.discountRate = 0; state.discountFixed = 0;
-            showNotification("Voucher Removed", "Voucher code removed from order.", "info");
-            // Re-calculate totals if needed
-            validateAndGoToStep3(); 
+    function hideVoucherCard() {
+        const section = document.getElementById('profile-voucher-section');
+        if(section) section.style.display = 'none';
+    }
+
+    function handleProfileUpdate(e) {
+        e.preventDefault();
+        if(!auth || !auth.currentUser) return;
+        const name = document.getElementById('prof-name').value;
+        const phone = document.getElementById('prof-phone').value;
+        const company = document.getElementById('prof-company').value;
+        db.collection("users").doc(auth.currentUser.uid).update({ name: name, phone: phone, company: company })
+        .then(() => {
+            showNotification("Success", "Profile Updated Successfully!", "success");
+            fetchAndSyncUserData(auth.currentUser.uid);
+        }).catch((error) => showNotification("Error", error.message, "error"));
+    }
+
+    function deletePersonalVoucher() {
+        if(!auth || !auth.currentUser) return;
+        if(confirm("Are you sure you want to remove this voucher?")) {
+            db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
+                currentUserPersonalVoucher = null; 
+                loadProfilePageData();
+                fetchAndSyncUserData(auth.currentUser.uid);
+                showNotification("Voucher Removed", "Voucher removed from account.", "success");
+            });
         }
+    }
 
-        function updateTotal() {
-            // Placeholder for legacy support if needed
-            console.log("Total updated");
+    function handleLogout() {
+        if(auth) { 
+            currentUserPersonalVoucher = null; 
+            auth.signOut().then(() => { 
+                showNotification("Logged Out", "See you again soon!", "success"); 
+                navigateTo('/'); 
+            }); 
         }
+    }
 
-        // ==========================================
-        // RAZORPAY INTEGRATION
-        // ==========================================
-        function initiateRazorpayPayment() {
-            const firstName = document.getElementById('co-firstname') ? document.getElementById('co-firstname').value : '';
-            const lastName = document.getElementById('co-lastname') ? document.getElementById('co-lastname').value : '';
-            const name = (firstName || ' ') + ' ' + (lastName || ' ');
-            const phone = document.getElementById('co-phone') ? document.getElementById('co-phone').value : '';
-            const email = document.getElementById('co-email') ? document.getElementById('co-email').value : '';
-            
-            if(!name.trim() || !phone || !email) return showNotification("Missing Info", "Please ensure all details are correct.", "error");
-
-            const totalText = document.getElementById('s3-total') ? document.getElementById('s3-total').innerText : 'RM 0';
-            const amountNumeric = parseFloat(totalText.replace('RM ', ''));
-            const amountInSubunits = Math.round(amountNumeric * 100);
-
-            const pendingOrder = {
-                userId: auth.currentUser ? auth.currentUser.uid : null,
-                name: name, phone: phone, email: email, 
-                package: selectedPackage, 
-                domainType: state.domainType, domainName: state.domainName, domainPrice: state.domainPrice,
-                packagePrice: state.packagePrice, setupFee: state.setupFee, maintenancePrice: state.maintenancePrice,
-                total: `RM ${amountNumeric}`, 
-                discountCode: state.discountCode || null, paymentMethod: 'Razorpay (Curlec)',
-                paymentMode: state.paymentMode, billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
-                status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
-
-            const options = {
-                "key": RAZORPAY_KEY_ID, "amount": amountInSubunits, "currency": RAZORPAY_CURRENCY, 
-                "name": "DDNex",
-                "description": selectedPackage + (state.paymentMode === 'deposit' ? " (Deposit)" : ""),
-                "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
-                "handler": function(response){ 
-                    handlePaymentSuccess(response.razorpay_payment_id);
-                },
-                "modal": { 
-                    "ondismiss": function(){ 
-                        console.log('Checkout form closed/cancelled by user');
-                        showNotification("Payment Cancelled", "You have cancelled the payment process.", "warning");
+    // Auth State Listener
+    if(auth) {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        currentUserRole = data.role || 'user'; 
+                        updateHeaderForUser(user); 
+                        if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; showVoucherCard(data.personalVoucher); } 
+                        else { currentUserPersonalVoucher = null; hideVoucherCard(); }
+                        fetchAndSyncUserData(user.uid);
+                        if(!data.phone) {
+                            showNotification("Attention", "Please complete your profile (Phone Number).", "warning");
+                            if(window.location.pathname !== '/profile') setTimeout(() => navigateTo('/profile'), 1000);
+                        }
                     }
-                },
-                "prefill": { "name": name, "email": email, "contact": phone },
-                "notes": { "address": document.getElementById('co-company').value || "Malaysia", "package": selectedPackage, "domain": state.domainName, "payment_mode": state.paymentMode },
-                "theme": { "color": "#1e293b" }
-            };
+                });
+            } else {
+                updateHeaderForGuest(); 
+                clearUserData(); 
+                hideVoucherCard();
+            }
+        });
+    }
 
-            try {
-                const rzp1 = new Razorpay(options);
-                rzp1.open(); 
+    function updateHeaderForUser(user) {
+        const isAdmin = currentUserRole === 'admin';
+        const deskAuth = document.getElementById('desktopAuthLinks');
+        if(deskAuth) {
+            let userControls = `<a href="#" onclick="navigateTo('/profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"><i class="ri-user-line"></i> Profile</a><span class="logout-btn hidden md:block text-slate-600 cursor-pointer transition: 0.2s white-space-nowrap;" onclick="handleLogout()">Logout</span>`;
+            if (isAdmin) userControls = `<a href="admin.html" target="_blank" class="admin-link" title="Admin Portal"><i class="ri-shield-user-fill"></i></a><span style="color:var(--text-tertiary); margin: 0 10px;">|</span>${userControls}`;
+            deskAuth.innerHTML = userControls;
+        }
+        
+        const mobAuth = document.getElementById('mobileAuthLinksContainer');
+        if(mobAuth) {
+            let authButtons = `<a href="/profile" onclick="routeLink(event, '/profile'); toggleMobileMenu()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-user-fill" style="margin-right:15px;"></i> Profile</a>`;
+            if (isAdmin) authButtons += `<a href="admin.html" target="_blank" onclick="toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-shield-user-fill" style="margin-right:15px; color:var(--accent-warn);"></i> Admin</a>`;
+            authButtons += `<a href="#" onclick="handleLogout(); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; color: var(--accent-warn);"><i class="ri-logout-box-r-fill" style="margin-right:15px;"></i> Logout</a>`;
+            mobAuth.innerHTML = authButtons;
+        }
+    }
 
-            } catch (error) {
-                console.error("Razorpay Error:", error);
-                showNotification("Payment Error", "Payment Gateway Error. Please contact support.", "error");
+    function updateHeaderForGuest() {
+        const deskAuth = document.getElementById('desktopAuthLinks');
+        if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="navigateTo('login')" class="btn-glass hidden md:flex" style="padding: 0.6rem 1.2rem; border-radius: 50px; background: white; color: var(--text-main); border:1px solid var(--border-glass);"><i class="ri-login-circle-fill"></i> Login</a>`;
+        const mobAuth = document.getElementById('mobileAuthLinksContainer');
+        if(mobAuth) mobAuth.innerHTML = `<a href="/login" onclick="navigateTo('login'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start; border-top:1px solid var(--border-glass);"><i class="ri-login-circle-fill" style="margin-right:15px;"></i> Login</a><a href="/signup" onclick="navigateTo('signup'); toggleDrawer()" class="mobile-nav-link" style="justify-content: flex-start;"><i class="ri-user-add-fill" style="margin-right:15px;"></i> Sign Up</a>`;
+    }
+
+    function clearUserData() {
+        const inputs = ['prof-name', 'prof-phone', 'prof-email', 'prof-company', 'co-firstname', 'co-lastname', 'co-email', 'co-company'];
+        inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+        const label = document.getElementById('auto-fill-label'); if(label) label.style.display = 'none';
+    }
+
+    // ==========================================
+    // PRICING LOGIC
+    // ==========================================
+    function setBilling(cycle) {
+        billingCycle = cycle;
+        const btnMonthly = document.getElementById('btn-monthly');
+        const btnOnetime = document.getElementById('btn-onetime');
+
+        if(btnMonthly && btnOnetime) {
+            if(cycle === 'monthly') { 
+                btnMonthly.classList.add('bg-slate-800', 'text-white'); 
+                btnOnetime.classList.remove('bg-slate-800', 'text-white'); 
+            } else { 
+                btnMonthly.classList.remove('bg-slate-800', 'text-white'); 
+                btnOnetime.classList.add('bg-slate-800', 'text-white'); 
             }
         }
 
-        function handlePaymentSuccess(paymentId) {
-            const pendingOrderStr = localStorage.getItem('pendingOrder');
-            if(!pendingOrderStr) {
-                showNotification("Order Error", "Order data missing. Contact support.", "error");
+        document.querySelectorAll('.price-display').forEach(el => {
+            const monthly = el.dataset.monthly;
+            const onetime = el.dataset.onetime;
+            if (monthly && onetime) {
+                el.textContent = 'RM ' + (cycle === 'monthly' ? monthly : onetime);
+                el.parentElement.querySelector('.price-period').textContent = cycle === 'monthly' ? '/month' : ' one-time';
+            }
+        });
+
+        document.querySelectorAll('.maintenance-yes').forEach(el => el.classList.toggle('hidden', cycle === 'onetime'));
+        document.querySelectorAll('.maintenance-no').forEach(el => el.classList.toggle('hidden', cycle === 'monthly'));
+
+        state.billingCycle = cycle;
+        state.isOneTime = (cycle === 'onetime');
+        
+        if(selectedPackageType && PRICING_DATA[selectedPackageType]) {
+            state.packagePrice = cycle === 'monthly' ? PRICING_DATA[selectedPackageType].monthly : PRICING_DATA[selectedPackageType].oneTime;
+            updateTotal();
+        }
+    }
+
+    function attemptSelectPackage(name, type) {
+        if (typeof auth === 'undefined' || auth === null) { 
+            showNotification("Error", "Authentication system initializing...", "error"); 
+            return; 
+        }
+        
+        if (auth.currentUser) { 
+            selectPackage(name, type); 
+        } else { 
+            pendingPackage = { name, type };
+            showAuthModal(); 
+        }
+    }
+
+    // ==========================================
+    // NEW 3-STEP CHECKOUT LOGIC
+    // ==========================================
+    
+    function selectPackage(name, type) {
+        selectedPackage = name;
+        selectedPackageType = type;
+        state.packageType = type;
+        
+        // Use global billing cycle, defaulting to monthly if not set
+        state.billingCycle = billingCycle || 'monthly';
+        state.isOneTime = (billingCycle === 'onetime');
+        state.paymentMode = 'full';
+        
+        // Get prices from data
+        state.setupFee = PRICING_DATA[type].setupFee;
+        state.packagePrice = billingCycle === 'monthly' ? PRICING_DATA[type].monthly : PRICING_DATA[type].oneTime;
+
+        // Reset Step to 1
+        currentCheckoutStep = 1;
+        
+        // Populate Step 1 Data
+        document.getElementById('s1-plan-name').innerText = name;
+        document.getElementById('s1-plan-price').innerText = 'RM ' + state.packagePrice;
+        document.getElementById('s1-setup-price').innerText = 'RM ' + state.setupFee;
+        
+        const firstTotal = state.setupFee + state.packagePrice;
+        document.getElementById('s1-first-total').innerText = 'RM ' + firstTotal;
+        document.getElementById('s1-recurring-price').innerText = 'RM ' + state.packagePrice + '/mo';
+        
+        // Populate Features List
+        const featureContainer = document.getElementById('s1-features-list');
+        featureContainer.innerHTML = '';
+        if(PRICING_DATA[type].features) {
+            PRICING_DATA[type].features.forEach(feature => {
+                featureContainer.innerHTML += `<li><i class="ri-checkbox-circle-fill text-emerald-500"></i> ${feature}</li>`;
+            });
+        }
+
+        // Reset Steps UI
+        updateStepUI(1);
+        
+        if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+        else { clearUserData(); hideVoucherCard(); }
+
+        // Navigate to checkout
+        navigateTo('checkout');
+    }
+
+    function updateStepUI(step) {
+        // Hide all steps
+        document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+        // Show current step
+        document.getElementById(`step-${step}`).classList.add('active');
+        
+        // Update dots
+        for(let i=1; i<=3; i++) {
+            const dot = document.getElementById(`dot-${i}`);
+            dot.classList.remove('active', 'completed');
+            if(i < step) dot.classList.add('completed');
+            if(i === step) dot.classList.add('active');
+        }
+        
+        window.scrollTo(0, 0);
+    }
+
+    function goToStep(step) {
+        currentCheckoutStep = step;
+        updateStepUI(step);
+    }
+
+    function selectDomainType(type, element) {
+        state.domainType = type;
+        
+        // UI Update
+        const options = document.querySelectorAll('.radio-option');
+        options.forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+        const input = element.querySelector('input');
+        if(input) input.checked = true;
+        
+        // Input Visibility
+        const subInput = document.getElementById('subdomain-input');
+        const customInput = document.getElementById('custom-domain-input');
+        
+        if(type === 'sub') {
+            subInput.disabled = false;
+            customInput.disabled = true;
+            customInput.value = '';
+            state.domainPrice = 0;
+            updateDomainPreview();
+        } else {
+            subInput.disabled = true;
+            subInput.value = '';
+            customInput.disabled = false;
+            state.domainPrice = 0;
+            updateDomainPreview();
+        }
+    }
+
+    function updateDomainPreview() {
+        const text = document.getElementById('subdomain-input').value;
+        const preview = document.getElementById('preview-text');
+        if(preview) {
+            preview.innerText = text.length > 0 ? text : "yourname";
+            state.domainName = text.length > 0 ? `${text}.ddnex.my` : '';
+            state.domainNameValid = text.length > 0;
+        }
+    }
+
+    function applyPromo() {
+        if(!auth || !auth.currentUser) return showNotification("Login Required", "Please login to use Promo Codes.", "warning");
+        const input = document.getElementById('promo-input');
+        const code = input ? input.value.trim().toUpperCase() : '';
+        
+        if(!code || code === "") {
+            showNotification("Missing Code", "Please enter a voucher code first.", "error");
+            return;
+        }
+        
+        // Mock Promo Logic (Replace with real DB check)
+        if(code === "WELCOME10") {
+            state.discountType = 'percent';
+            state.discountRate = 0.10;
+            state.discountCode = code;
+            showNotification("Promo Applied", "10% discount applied!", "success");
+            const msg = document.getElementById('promo-msg');
+            msg.innerText = "10% Discount Applied";
+            msg.classList.remove('hidden', 'text-red-600');
+            msg.classList.add('text-emerald-600');
+        } else {
+            showNotification("Invalid Code", "Invalid code. Please check and try again.", "error");
+            const msg = document.getElementById('promo-msg');
+            msg.innerText = "Invalid Code";
+            msg.classList.remove('hidden', 'text-emerald-600');
+            msg.classList.add('text-red-600');
+        }
+    }
+
+    function validateAndGoToStep3() {
+        const form = document.getElementById('checkout-form-step2');
+        if(!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        // Validate Domain
+        if(state.domainType === 'sub') {
+            if(!state.domainNameValid) {
+                showNotification("Domain Required", "Please enter a valid subdomain name.", "error");
                 return;
             }
-
-            const orderData = JSON.parse(pendingOrderStr);
-            
-            orderData.razorpay_payment_id = paymentId;
-            orderData.status = 'Paid';
-
-            // Ensure empty fields are saved
-            if(!orderData.name || orderData.name.trim() === " ") orderData.name = "-";
-            if(!orderData.phone) orderData.phone = "-";
-            
-            const overlay = document.getElementById('processing-overlay');
-            if(overlay) {
-                overlay.style.display = 'flex';
-                const msgEl = document.getElementById('process-message');
-                if(msgEl) msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Payment...`;
+        } else {
+            const custom = document.getElementById('custom-domain-input').value;
+            if(!custom) {
+                showNotification("Domain Required", "Please enter your custom domain.", "error");
+                return;
             }
-
-            let voucherUpdatePromise = Promise.resolve();
-            if (orderData.discountCode && auth.currentUser && auth.currentUser.uid) {
-                // Assuming personal voucher redemption logic here if needed
-            }
-
-            voucherUpdatePromise.then(() => {
-                const firebaseOrderData = {
-                    adminNote: "OWN COMPANY CREATED", companyName: orderData.companyName || "DDNex One",
-                    customerEmail: orderData.email, customerName: orderData.name, customerPhone: orderData.phone,
-                    domain: orderData.domainName, internalNotes: "",
-                    maintenance: orderData.maintenancePrice > 0 ? (orderData.maintenancePrice === 50 ? "Basic" : "Business") : "None",
-                    package: orderData.package, paymentMethod: "Razorpay (Curlec)", promo: orderData.discountCode || "",
-                    razorpay_payment_id: paymentId,
-                    salesRepIds: [], salesTeamIds: [], salesTeamNames: [], status: "Paid",
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), total: orderData.total, userId: orderData.userId || ""
-                };
-                return db.collection("orders").add(firebaseOrderData);
-            }).then(() => {
-                localStorage.removeItem('pendingOrder');
-                showNotification("Success!", "Payment Successful!", "success");
-                if(overlay) overlay.style.display = 'none';
-                navigateTo('thank-you');
-            }).catch((error) => {
-                console.error("Order Error:", error);
-                showNotification("Processing Error", "Order processing failed. Please contact support.", "error");
-                if(overlay) overlay.style.display = 'none';
-            });
+            state.domainName = custom;
         }
 
-        // ==========================================
-        // UTILITIES & HELPERS
-        // ==========================================
-        function checkPasswordStrength() {
-            const p = document.getElementById('signup-password').value;
-            if(!p) return;
-            
-            const upper = /[A-Z]/.test(p);
-            const lower = /[a-z]/.test(p);
-            const num = /[0-9]/.test(p);
-            const len = p.length >= 6;
-            
-            toggleReq('req-upper', upper);
-            toggleReq('req-lower', lower);
-            toggleReq('req-num', num);
-            toggleReq('req-len', len);
+        // Populate Step 3 Summary
+        document.getElementById('s3-plan-name').innerText = selectedPackage;
+        document.getElementById('s3-sub-price').innerText = 'RM ' + state.packagePrice;
+        document.getElementById('s3-setup-price').innerText = 'RM ' + state.setupFee;
+        document.getElementById('s3-domain-price').innerText = state.domainPrice > 0 ? 'RM ' + state.domainPrice : 'Free';
+        
+        let subtotal = state.packagePrice + state.setupFee + state.domainPrice;
+        let discountAmt = 0;
+        
+        if(state.discountType === 'percent') {
+            discountAmt = subtotal * state.discountRate;
+            document.getElementById('s3-discount-row').classList.remove('hidden');
+            document.getElementById('s3-discount-code').innerText = state.discountCode;
+            document.getElementById('s3-discount-val').innerText = '-RM ' + Math.round(discountAmt);
+        } else {
+            document.getElementById('s3-discount-row').classList.add('hidden');
         }
 
-        function toggleReq(id, isValid) {
-            const el = document.getElementById(id);
-            if(el) {
-                if(isValid) {
-                    el.classList.add('valid');
-                    el.querySelector('i').className = 'ri-checkbox-circle-fill';
-                } else {
-                    el.classList.remove('valid');
-                    el.querySelector('i').className = 'ri-close-circle-line';
+        const total = Math.round(subtotal - discountAmt);
+        document.getElementById('s3-total').innerText = 'RM ' + total;
+        document.getElementById('s3-recurring').innerText = 'RM ' + state.packagePrice + '/mo';
+
+        goToStep(3);
+    }
+
+    function fetchAndSyncUserData(uid) {
+        if(!db) return;
+        db.collection("users").doc(uid).get().then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                if(document.getElementById('co-firstname')) document.getElementById('co-firstname').value = data.name || '';
+                if(document.getElementById('co-lastname')) document.getElementById('co-lastname').value = ''; 
+                if(document.getElementById('co-email')) {
+                    document.getElementById('co-email').value = data.email || auth.currentUser.email;
+                    document.getElementById('co-email').readOnly = true;
                 }
+                if(document.getElementById('co-phone')) document.getElementById('co-phone').value = data.phone || '';
+                if(document.getElementById('co-company')) document.getElementById('co-company').value = data.company || '';
+            }
+        });
+    }
+
+    function removeVoucher() {
+        state.discountCode = ''; state.discountRate = 0; state.discountFixed = 0;
+        showNotification("Voucher Removed", "Voucher code removed from order.", "info");
+        // Re-calculate totals if needed
+        validateAndGoToStep3(); 
+    }
+
+    function updateTotal() {
+        // Placeholder for legacy support if needed
+        console.log("Total updated");
+    }
+
+    // ==========================================
+    // RAZORPAY INTEGRATION
+    // ==========================================
+    function initiateRazorpayPayment() {
+        const firstName = document.getElementById('co-firstname') ? document.getElementById('co-firstname').value : '';
+        const lastName = document.getElementById('co-lastname') ? document.getElementById('co-lastname').value : '';
+        const name = (firstName || ' ') + ' ' + (lastName || ' ');
+        const phone = document.getElementById('co-phone') ? document.getElementById('co-phone').value : '';
+        const email = document.getElementById('co-email') ? document.getElementById('co-email').value : '';
+        
+        if(!name.trim() || !phone || !email) return showNotification("Missing Info", "Please ensure all details are correct.", "error");
+
+        const totalText = document.getElementById('s3-total') ? document.getElementById('s3-total').innerText : 'RM 0';
+        const amountNumeric = parseFloat(totalText.replace('RM ', ''));
+        const amountInSubunits = Math.round(amountNumeric * 100);
+
+        const pendingOrder = {
+            userId: auth.currentUser ? auth.currentUser.uid : null,
+            name: name, phone: phone, email: email, 
+            package: selectedPackage, 
+            domainType: state.domainType, domainName: state.domainName, domainPrice: state.domainPrice,
+            packagePrice: state.packagePrice, setupFee: state.setupFee, maintenancePrice: state.maintenancePrice,
+            total: `RM ${amountNumeric}`, 
+            discountCode: state.discountCode || null, paymentMethod: 'Razorpay (Curlec)',
+            paymentMode: state.paymentMode, billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
+            status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+
+        const options = {
+            "key": RAZORPAY_KEY_ID, "amount": amountInSubunits, "currency": RAZORPAY_CURRENCY, 
+            "name": "DDNex",
+            "description": selectedPackage + (state.paymentMode === 'deposit' ? " (Deposit)" : ""),
+            "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
+            "handler": function(response){ 
+                handlePaymentSuccess(response.razorpay_payment_id);
+            },
+            "modal": { 
+                "ondismiss": function(){ 
+                    console.log('Checkout form closed/cancelled by user');
+                    showNotification("Payment Cancelled", "You have cancelled the payment process.", "warning");
+                }
+            },
+            "prefill": { "name": name, "email": email, "contact": phone },
+            "notes": { "address": document.getElementById('co-company').value || "Malaysia", "package": selectedPackage, "domain": state.domainName, "payment_mode": state.paymentMode },
+            "theme": { "color": "#1e293b" }
+        };
+
+        try {
+            const rzp1 = new Razorpay(options);
+            rzp1.open(); 
+
+        } catch (error) {
+            console.error("Razorpay Error:", error);
+            showNotification("Payment Error", "Payment Gateway Error. Please contact support.", "error");
+        }
+    }
+
+    function handlePaymentSuccess(paymentId) {
+        const pendingOrderStr = localStorage.getItem('pendingOrder');
+        if(!pendingOrderStr) {
+            showNotification("Order Error", "Order data missing. Contact support.", "error");
+            return;
+        }
+
+        const orderData = JSON.parse(pendingOrderStr);
+        
+        orderData.razorpay_payment_id = paymentId;
+        orderData.status = 'Paid';
+
+        // Ensure empty fields are saved
+        if(!orderData.name || orderData.name.trim() === " ") orderData.name = "-";
+        if(!orderData.phone) orderData.phone = "-";
+        
+        const overlay = document.getElementById('processing-overlay');
+        if(overlay) {
+            overlay.style.display = 'flex';
+            const msgEl = document.getElementById('process-message');
+            if(msgEl) msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Payment...`;
+        }
+
+        let voucherUpdatePromise = Promise.resolve();
+        if (orderData.discountCode && auth.currentUser && auth.currentUser.uid) {
+            // Assuming personal voucher redemption logic here if needed
+        }
+
+        voucherUpdatePromise.then(() => {
+            const firebaseOrderData = {
+                adminNote: "OWN COMPANY CREATED", companyName: orderData.companyName || "DDNex One",
+                customerEmail: orderData.email, customerName: orderData.name, customerPhone: orderData.phone,
+                domain: orderData.domainName, internalNotes: "",
+                maintenance: orderData.maintenancePrice > 0 ? (orderData.maintenancePrice === 50 ? "Basic" : "Business") : "None",
+                package: orderData.package, paymentMethod: "Razorpay (Curlec)", promo: orderData.discountCode || "",
+                razorpay_payment_id: paymentId,
+                salesRepIds: [], salesTeamIds: [], salesTeamNames: [], status: "Paid",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(), total: orderData.total, userId: orderData.userId || ""
+            };
+            return db.collection("orders").add(firebaseOrderData);
+        }).then(() => {
+            localStorage.removeItem('pendingOrder');
+            showNotification("Success!", "Payment Successful!", "success");
+            if(overlay) overlay.style.display = 'none';
+            navigateTo('thank-you');
+        }).catch((error) => {
+            console.error("Order Error:", error);
+            showNotification("Processing Error", "Order processing failed. Please contact support.", "error");
+            if(overlay) overlay.style.display = 'none';
+        });
+    }
+
+    // ==========================================
+    // UTILITIES & HELPERS
+    // ==========================================
+    function checkPasswordStrength() {
+        const p = document.getElementById('signup-password').value;
+        if(!p) return;
+        
+        const upper = /[A-Z]/.test(p);
+        const lower = /[a-z]/.test(p);
+        const num = /[0-9]/.test(p);
+        const len = p.length >= 6;
+        
+        toggleReq('req-upper', upper);
+        toggleReq('req-lower', lower);
+        toggleReq('req-num', num);
+        toggleReq('req-len', len);
+    }
+
+    function toggleReq(id, isValid) {
+        const el = document.getElementById(id);
+        if(el) {
+            if(isValid) {
+                el.classList.add('valid');
+                el.querySelector('i').className = 'ri-checkbox-circle-fill';
+            } else {
+                el.classList.remove('valid');
+                el.querySelector('i').className = 'ri-close-circle-line';
             }
         }
+    }
 
-        // ==========================================
-        // REVIEWS LOGIC
-        // ==========================================
-        function setupStarRating() {
-            const container = document.getElementById('star-input-container');
-            if(!container) return;
-            const stars = container.querySelectorAll('.star-icon');
-            const hiddenInput = document.getElementById('rating-value');
+    // ==========================================
+    // REVIEWS LOGIC
+    // ==========================================
+    function setupStarRating() {
+        const container = document.getElementById('star-input-container');
+        if(!container) return;
+        const stars = container.querySelectorAll('.star-icon');
+        const hiddenInput = document.getElementById('rating-value');
 
-            stars.forEach(star => {
-                star.addEventListener('mouseover', function() {
-                    highlightStars(parseInt(this.getAttribute('data-val')));
-                });
-                
-                star.addEventListener('click', function() {
-                    selectedRating = parseInt(this.getAttribute('data-val'));
-                    if(hiddenInput) hiddenInput.value = selectedRating;
-                    highlightStars(selectedRating);
-                    if(document.getElementById('rating-error')) document.getElementById('rating-error').style.display = 'none';
-                });
+        stars.forEach(star => {
+            star.addEventListener('mouseover', function() {
+                highlightStars(parseInt(this.getAttribute('data-val')));
             });
-
-            container.addEventListener('mouseleave', function() {
+            
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.getAttribute('data-val'));
+                if(hiddenInput) hiddenInput.value = selectedRating;
                 highlightStars(selectedRating);
+                if(document.getElementById('rating-error')) document.getElementById('rating-error').style.display = 'none';
             });
+        });
+
+        container.addEventListener('mouseleave', function() {
+            highlightStars(selectedRating);
+        });
+    }
+
+    function highlightStars(count) {
+        const container = document.getElementById('star-input-container');
+        if(!container) return;
+        const stars = container.querySelectorAll('.star-icon');
+        stars.forEach(star => {
+            star.classList.toggle('selected', parseInt(star.getAttribute('data-val')) <= count);
+        });
+    }
+
+    function renderDummyReview() {
+        const container = document.getElementById('reviews-list');
+        if(!container) return;
+        
+        if(container.innerHTML.trim() !== '' && !container.innerHTML.includes('Danial Danish')) return;
+
+        const dummyData = { 
+            rating: 5, 
+            userName: 'Danial Danish (Owner)', 
+            comment: 'I built this site to help businesses grow. Let me know what you think!', 
+            timestamp: null 
+        };
+        
+        const date = 'Recently';
+        const initials = (dummyData.userName || 'User').substring(0, 2).toUpperCase();
+        let starsHtml = '';
+        for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= dummyData.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=dummyData.rating?'var(--star)':'#cbd5e1'}"></i>`;
+        
+        const html = `
+            <div class="review-card glass rounded-2xl p-6 border border-slate-200 bg-white hover-lift">
+                <div class="review-header">
+                    <div class="review-avatar">${initials}</div>
+                    <div class="review-info"><h4>${dummyData.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
+                </div>
+                <div class="review-stars">${starsHtml}</div>
+                <p class="review-text">"${dummyData.comment}"</p>
+            </div>`;
+        
+        container.innerHTML = html + container.innerHTML;
+    }
+
+    function listenToReviews() {
+        if(!db) return;
+        db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20)
+            .onSnapshot((snapshot) => {
+                reviewsCache = []; 
+                snapshot.forEach(doc => reviewsCache.push(doc.data()));
+                
+                const reviewsList = document.getElementById('reviews-list');
+                if(reviewsList) {
+                    renderReviewsList(reviewsList);
+                }
+            }, (error) => console.error("Error syncing reviews:", error));
+    }
+
+    function renderReviewsList(container) {
+        const DUMMY_REVIEWS = [
+            { rating: 5, userName: 'Danial Danish (Owner)', comment: 'I built this site to help businesses grow. Let me know what you think!', timestamp: null }
+        ];
+        
+        let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
+        
+        if (allReviews.length === 0) {
+            container.innerHTML = '<div class="col-span-2 text-center py-8 text-slate-500">No reviews yet.</div>';
+            return;
         }
 
-        function highlightStars(count) {
-            const container = document.getElementById('star-input-container');
-            if(!container) return;
-            const stars = container.querySelectorAll('.star-icon');
-            stars.forEach(star => {
-                star.classList.toggle('selected', parseInt(star.getAttribute('data-val')) <= count);
-            });
-        }
+        const isExpanded = container.classList.contains('expanded');
+        const displayList = isExpanded ? allReviews : allReviews.slice(0, 3);
 
-        function renderDummyReview() {
-            const container = document.getElementById('reviews-list');
-            if(!container) return;
-            
-            if(container.innerHTML.trim() !== '' && !container.innerHTML.includes('Danial Danish')) return;
-
-            const dummyData = { 
-                rating: 5, 
-                userName: 'Danial Danish (Owner)', 
-                comment: 'I built this site to help businesses grow. Let me know what you think!', 
-                timestamp: null 
-            };
-            
-            const date = 'Recently';
-            const initials = (dummyData.userName || 'User').substring(0, 2).toUpperCase();
+        container.innerHTML = '';
+        
+        displayList.forEach(data => {
+            const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
+            const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
             let starsHtml = '';
-            for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= dummyData.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=dummyData.rating?'var(--star)':'#cbd5e1'}"></i>`;
+            for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--star)':'#cbd5e1'}"></i>`;
             
             const html = `
                 <div class="review-card glass rounded-2xl p-6 border border-slate-200 bg-white hover-lift">
                     <div class="review-header">
                         <div class="review-avatar">${initials}</div>
-                        <div class="review-info"><h4>${dummyData.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
+                        <div class="review-info"><h4>${data.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
                     </div>
                     <div class="review-stars">${starsHtml}</div>
-                    <p class="review-text">"${dummyData.comment}"</p>
+                    <p class="review-text">"${data.comment}"</p>
                 </div>`;
-            
-            container.innerHTML = html + container.innerHTML;
-        }
+            container.innerHTML += html;
+        });
+    }
 
-        function listenToReviews() {
-            if(!db) return;
-            db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20)
-                .onSnapshot((snapshot) => {
-                    reviewsCache = []; 
-                    snapshot.forEach(doc => reviewsCache.push(doc.data()));
-                    
-                    const reviewsList = document.getElementById('reviews-list');
-                    if(reviewsList) {
-                        renderReviewsList(reviewsList);
-                    }
-                }, (error) => console.error("Error syncing reviews:", error));
+    function toggleFullReviews() {
+        const list = document.getElementById('reviews-list');
+        const btn = event.target;
+        if(!list) return;
+        
+        list.classList.toggle('expanded');
+        renderReviewsList(list);
+        
+        if (list.classList.contains('expanded')) {
+            if(btn) btn.innerText = "Show Less";
+        } else {
+            if(btn) btn.innerText = "View All Reviews";
         }
+    }
 
-        function renderReviewsList(container) {
-            const DUMMY_REVIEWS = [
-                { rating: 5, userName: 'Danial Danish (Owner)', comment: 'I built this site to help businesses grow. Let me know what you think!', timestamp: null }
-            ];
-            
-            let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
-            
-            if (allReviews.length === 0) {
-                container.innerHTML = '<div class="col-span-2 text-center py-8 text-slate-500">No reviews yet.</div>';
-                return;
+    function handleReviewSubmit(e) {
+        e.preventDefault();
+        if(!auth || !auth.currentUser) return showNotification("Login Required", "You must be logged in to submit a review.", "warning");
+
+        if(selectedRating === 0) return showNotification("Rating Missing", "Please select a star rating.", "warning");
+
+        const comment = document.getElementById('review-comment') ? document.getElementById('review-comment').value : '';
+        const user = auth.currentUser;
+        let displayName = user.email.split('@')[0];
+        
+        db.collection("users").doc(user.uid).get().then(doc => {
+            if(doc.exists && doc.data().name) displayName = doc.data().name;
+            const reviewData = { 
+                userId: user.uid, userName: displayName, userEmail: user.email, rating: selectedRating, comment: comment, 
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'approved' 
+            };
+            return db.collection("customer_reviews").add(reviewData);
+        }).then(() => {
+            showNotification("Success", "Review submitted successfully!", "success");
+            if(document.getElementById('review-form')) document.getElementById('review-form').reset();
+            selectedRating = 0;
+            highlightStars(0);
+            if(document.getElementById('reviews-list') && !document.getElementById('reviews-list').classList.contains('hidden')) {
+                toggleFullReviews(); 
             }
+        }).catch(err => {
+            console.error(err); 
+            showNotification("Error", "Failed to submit review.", "error");
+        });
+    }
 
-            const isExpanded = container.classList.contains('expanded');
-            const displayList = isExpanded ? allReviews : allReviews.slice(0, 3);
-
-            container.innerHTML = '';
-            
-            displayList.forEach(data => {
-                const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
-                const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
-                let starsHtml = '';
-                for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--star)':'#cbd5e1'}"></i>`;
-                
-                const html = `
-                    <div class="review-card glass rounded-2xl p-6 border border-slate-200 bg-white hover-lift">
-                        <div class="review-header">
-                            <div class="review-avatar">${initials}</div>
-                            <div class="review-info"><h4>${data.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
-                        </div>
-                        <div class="review-stars">${starsHtml}</div>
-                        <p class="review-text">"${data.comment}"</p>
-                    </div>`;
-                container.innerHTML += html;
-            });
-        }
-
-        function toggleFullReviews() {
-            const list = document.getElementById('reviews-list');
-            const btn = event.target;
-            if(!list) return;
-            
-            list.classList.toggle('expanded');
-            renderReviewsList(list);
-            
-            if (list.classList.contains('expanded')) {
-                if(btn) btn.innerText = "Show Less";
-            } else {
-                if(btn) btn.innerText = "View All Reviews";
-            }
-        }
-
-        function handleReviewSubmit(e) {
-            e.preventDefault();
-            if(!auth || !auth.currentUser) return showNotification("Login Required", "You must be logged in to submit a review.", "warning");
-
-            if(selectedRating === 0) return showNotification("Rating Missing", "Please select a star rating.", "warning");
-
-            const comment = document.getElementById('review-comment') ? document.getElementById('review-comment').value : '';
-            const user = auth.currentUser;
-            let displayName = user.email.split('@')[0];
-            
-            db.collection("users").doc(user.uid).get().then(doc => {
-                if(doc.exists && doc.data().name) displayName = doc.data().name;
-                const reviewData = { 
-                    userId: user.uid, userName: displayName, userEmail: user.email, rating: selectedRating, comment: comment, 
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'approved' 
-                };
-                return db.collection("customer_reviews").add(reviewData);
-            }).then(() => {
-                showNotification("Success", "Review submitted successfully!", "success");
-                if(document.getElementById('review-form')) document.getElementById('review-form').reset();
-                selectedRating = 0;
-                highlightStars(0);
-                if(document.getElementById('reviews-list') && !document.getElementById('reviews-list').classList.contains('hidden')) {
-                    toggleFullReviews(); 
-                }
-            }).catch(err => {
-                console.error(err); 
-                showNotification("Error", "Failed to submit review.", "error");
-            });
-        }
-
-        // ==========================================
-        // PORTFOLIO LOGIC
-        // ==========================================
-        function loadHomePortfolio() {
-            if(!db) return;
-            const container = document.getElementById('home-portfolio-grid');
-            if(!container) return;
-            
-            container.innerHTML = '';
-            
-            // Dummy Item
-            const dummyHtml = `
-                <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
-                    <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="https://i.ibb.co/Y7yLkm5j/IMG-3157.png" alt="DDNetwork" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                    <div class="p-6">
-                        <h4 class="font-bold text-slate-900 mb-2">DDNetwork</h4>
-                        <p class="text-slate-600 text-sm mb-4">A high-performance online store for a local Website & Hosting Services</p>
-                        <button onclick="navigateTo('clients')" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</button>
-                    </div>
-                </div>`;
-            container.innerHTML += dummyHtml;
-            
-            db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
-                .then((snapshot) => {
-                    if(!snapshot.empty) {
-                        snapshot.forEach((doc) => {
-                            const data = doc.data();
-                            const html = `
-                                <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
-                                    <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                                    <div class="p-6">
-                                        <h4 class="font-bold text-slate-900 mb-2">${data.name}</h4>
-                                        <p class="text-slate-600 text-sm mb-4">${data.desc || 'View project'}</p>
-                                        <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site &rarr;</a>
-                                    </div>
-                                </div>`;
-                            container.innerHTML += html;
-                        });
-                    }
-                });
-        }
-
-        function loadPortfolio() {
-            if(!db) return;
-            const grid = document.getElementById('portfolio-grid');
-            if(!grid) return;
-            grid.innerHTML = '';
-            
-            db.collection("clients_portfolio").where("status", "==", true).get()
-                .then((snapshot) => {
-                    if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No projects yet</div>'; return; }
-                    
+    // ==========================================
+    // PORTFOLIO LOGIC
+    // ==========================================
+    function loadHomePortfolio() {
+        if(!db) return;
+        const container = document.getElementById('home-portfolio-grid');
+        if(!container) return;
+        
+        container.innerHTML = '';
+        
+        // Dummy Item
+        const dummyHtml = `
+            <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
+                <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="https://i.ibb.co/Y7yLkm5j/IMG-3157.png" alt="DDNetwork" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                <div class="p-6">
+                    <h4 class="font-bold text-slate-900 mb-2">DDNetwork</h4>
+                    <p class="text-slate-600 text-sm mb-4">A high-performance online store for a local Website & Hosting Services</p>
+                    <button onclick="navigateTo('clients')" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</button>
+                </div>
+            </div>`;
+        container.innerHTML += dummyHtml;
+        
+        db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
+            .then((snapshot) => {
+                if(!snapshot.empty) {
                     snapshot.forEach((doc) => {
                         const data = doc.data();
-                        grid.innerHTML += `
-                            <div class="group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
-                                <div class="h-56 overflow-hidden"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                                <div class="p-6">
-                                    <h4 class="font-bold text-slate-900 mb-2 text-lg">${data.name}</h4>
-                                    <p class="text-slate-600 text-sm mb-4">${data.desc || 'Professional website solution'}</p>
-                                    <a href="${data.link}" target="_blank" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</a>
-                                </div>
-                            </div>
-                        `;
-                    });
-                });
-        }
-
-        // ==========================================
-        // PRODUCTS LOGIC
-        // ==========================================
-        function loadProducts() {
-            if(!db) return;
-            const grid = document.getElementById('products-grid');
-            if(!grid) return;
-
-            grid.innerHTML = '<div class="col-span-3 text-center py-12 text-slate-400">Loading products...</div>';
-
-            db.collection("products").where("status", "==", true).get()
-                .then((snapshot) => {
-                    let products = [];
-                    snapshot.forEach(doc => products.push(doc.data()));
-
-                    const ddnetProduct = {
-                        name: "DDNetwork",
-                        price: "Free",
-                        desc: "Official DDNetwork Platform. Connect, manage, and grow your digital network seamlessly.",
-                        img: "https://i.ibb.co/Y7yLkm5j/IMG-3157.png", 
-                        link: "https://ddnet.my"
-                    };
-                    
-                    products.unshift(ddnetProduct);
-
-                    grid.innerHTML = '';
-                    if(products.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No products available yet.</div>'; return; }
-
-                    products.forEach((p) => {
                         const html = `
-                            <div class="product-card hover-lift">
-                                <img src="${p.img || 'https://via.placeholder.com/400'}" alt="${p.name}" class="product-image">
-                                <div class="product-body">
-                                    <h3 class="text-xl font-bold text-slate-900">${p.name}</h3>
-                                    <p class="text-sm text-slate-500 mb-2">by DDNex</p>
-                                    <p class="text-slate-600 text-sm mb-4 line-clamp-3">${p.desc}</p>
-                                    <div class="mt-auto">
-                                        <div class="product-price">${p.price}</div>
-                                        <a href="${p.link || '#'}" target="_blank" class="block w-full mt-4 text-center py-2 rounded-lg bg-slate-900 text-white font-medium hover:bg-slate-700 transition-colors">View Product</a>
-                                    </div>
+                            <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
+                                <div class="h-56 overflow-hidden bg-slate-200 relative"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                                <div class="p-6">
+                                    <h4 class="font-bold text-slate-900 mb-2">${data.name}</h4>
+                                    <p class="text-slate-600 text-sm mb-4">${data.desc || 'View project'}</p>
+                                    <a href="${data.link}" target="_blank" class="text-indigo-600 font-medium text-sm hover:underline">View Live Site &rarr;</a>
+                                </div>
+                            </div>`;
+                        container.innerHTML += html;
+                    });
+                }
+            });
+    }
+
+    function loadPortfolio() {
+        if(!db) return;
+        const grid = document.getElementById('portfolio-grid');
+        if(!grid) return;
+        grid.innerHTML = '';
+        
+        db.collection("clients_portfolio").where("status", "==", true).get()
+            .then((snapshot) => {
+                if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No projects yet</div>'; return; }
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    grid.innerHTML += `
+                        <div class="group glass rounded-2xl overflow-hidden border border-slate-200 bg-white hover-lift">
+                            <div class="h-56 overflow-hidden"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                            <div class="p-6">
+                                <h4 class="font-bold text-slate-900 mb-2 text-lg">${data.name}</h4>
+                                <p class="text-slate-600 text-sm mb-4">${data.desc || 'Professional website solution'}</p>
+                                <a href="${data.link}" target="_blank" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">View Project</a>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+    }
+
+    // ==========================================
+    // PRODUCTS LOGIC
+    // ==========================================
+    function loadProducts() {
+        if(!db) return;
+        const grid = document.getElementById('products-grid');
+        if(!grid) return;
+
+        grid.innerHTML = '<div class="col-span-3 text-center py-12 text-slate-400">Loading products...</div>';
+
+        db.collection("products").where("status", "==", true).get()
+            .then((snapshot) => {
+                let products = [];
+                snapshot.forEach(doc => products.push(doc.data()));
+
+                const ddnetProduct = {
+                    name: "DDNetwork",
+                    price: "Free",
+                    desc: "Official DDNetwork Platform. Connect, manage, and grow your digital network seamlessly.",
+                    img: "https://i.ibb.co/Y7yLkm5j/IMG-3157.png", 
+                    link: "https://ddnet.my"
+                };
+                
+                products.unshift(ddnetProduct);
+
+                grid.innerHTML = '';
+                if(products.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No products available yet.</div>'; return; }
+
+                products.forEach((p) => {
+                    const html = `
+                        <div class="product-card hover-lift">
+                            <img src="${p.img || 'https://via.placeholder.com/400'}" alt="${p.name}" class="product-image">
+                            <div class="product-body">
+                                <h3 class="text-xl font-bold text-slate-900">${p.name}</h3>
+                                <p class="text-sm text-slate-500 mb-2">by DDNex</p>
+                                <p class="text-slate-600 text-sm mb-4 line-clamp-3">${p.desc}</p>
+                                <div class="mt-auto">
+                                    <div class="product-price">${p.price}</div>
+                                    <a href="${p.link || '#'}" target="_blank" class="block w-full mt-4 text-center py-2 rounded-lg bg-slate-900 text-white font-medium hover:bg-slate-700 transition-colors">View Product</a>
                                 </div>
                             </div>
-                        `;
-                        grid.innerHTML += html;
-                    });
-                })
-                .catch(err => {
-                    console.error(err);
-                    grid.innerHTML = '<div class="col-span-3 text-center py-8 text-red-500">Error loading products.</div>';
+                        </div>
+                    `;
+                    grid.innerHTML += html;
                 });
+            })
+            .catch(err => {
+                console.error(err);
+                grid.innerHTML = '<div class="col-span-3 text-center py-8 text-red-500">Error loading products.</div>';
+            });
+    }
+
+    // ==========================================
+    // CONTACT FORM LOGIC
+    // ==========================================
+    function handleContactSubmit(e) {
+        e.preventDefault();
+        const name = document.getElementById('contact-name') ? document.getElementById('contact-name').value : '';
+        const lastname = document.getElementById('contact-lastname') ? document.getElementById('contact-lastname').value : '';
+        const email = document.getElementById('contact-email') ? document.getElementById('contact-email').value : '';
+        const subject = document.getElementById('contact-subject') ? document.getElementById('contact-subject').value : '';
+        const source = document.getElementById('contact-source') ? document.getElementById('contact-source').value : '';
+        const message = document.getElementById('contact-message') ? document.getElementById('contact-message').value : '';
+        
+        if(!name || !lastname || !email || !message) return showNotification("Missing Fields", "Please fill in all required fields.", "error");
+
+        const btn = e.target ? e.target.querySelector('button') : null;
+        const originalText = btn ? btn.innerText : 'Send Message';
+        if(btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
         }
 
-        // ==========================================
-        // CONTACT FORM LOGIC
-        // ==========================================
-        function handleContactSubmit(e) {
-            e.preventDefault();
-            const name = document.getElementById('contact-name') ? document.getElementById('contact-name').value : '';
-            const lastname = document.getElementById('contact-lastname') ? document.getElementById('contact-lastname').value : '';
-            const email = document.getElementById('contact-email') ? document.getElementById('contact-email').value : '';
-            const subject = document.getElementById('contact-subject') ? document.getElementById('contact-subject').value : '';
-            const source = document.getElementById('contact-source') ? document.getElementById('contact-source').value : '';
-            const message = document.getElementById('contact-message') ? document.getElementById('contact-message').value : '';
-            
-            if(!name || !lastname || !email || !message) return showNotification("Missing Fields", "Please fill in all required fields.", "error");
+        const data = {
+            name: name + " " + lastname, email: email, subject: subject, source: source, message: message, type: 'Contact Inquiry', status: 'Pending',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            userId: auth.currentUser ? auth.currentUser.uid : null, sourceForm: 'Contact Page'
+        };
 
-            const btn = e.target ? e.target.querySelector('button') : null;
-            const originalText = btn ? btn.innerText : 'Send Message';
-            if(btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
-            }
-
-            const data = {
-                name: name + " " + lastname, email: email, subject: subject, source: source, message: message, type: 'Contact Inquiry', status: 'Pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                userId: auth.currentUser ? auth.currentUser.uid : null, sourceForm: 'Contact Page'
-            };
-
-            if(db) {
-                db.collection("customer_requests").add(data)
-                    .then(() => {
-                        showNotification("Sent!", "Thank you for your interest!", "success");
-                        if(e.target) e.target.reset();
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                        showNotification("Error", "Failed to send message. Please try again.", "error");
-                    })
-                    .finally(() => {
-                        if(btn) {
-                            btn.disabled = false;
-                            btn.innerText = originalText;
-                        }
-                    });
-            } else {
-                showNotification("Offline", "System offline. Please try again later.", "error");
-                if(btn) {
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                }
-            }
-        }
-
-        // ==========================================
-        // MOBILE MENU LOGIC
-        // ==========================================
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            const icon = document.getElementById('mobile-menu-icon');
-            const body = document.body;
-
-            if(menu && icon) {
-                const isActive = menu.classList.contains('active');
-                
-                if(isActive) {
-                    menu.classList.remove('active');
-                    icon.classList.remove('ri-close-line');
-                    icon.classList.add('ri-menu-4-line');
-                    body.style.overflow = ''; 
-                } else {
-                    menu.classList.add('active');
-                    icon.classList.remove('ri-menu-4-line');
-                    icon.classList.add('ri-close-line');
-                    body.style.overflow = 'hidden'; 
-                }
-            }
-        }
-
-        // ==========================================
-        // MAP & GLOBE (INIT)
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', () => {
-            setupStarRating();
-            loadHomePortfolio();
-            if(window.location.pathname === '/reviews') renderDummyReview(); 
-            listenToReviews();
-            initMap(); 
-            
-            // SCROLL ANIMATION OBSERVER
-            const observerOptions = {
-                root: null,
-                rootMargin: '0px',
-                threshold: 0.1
-            };
-
-            const observer = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('animate-slide-up');
-                        observer.unobserve(entry.target); 
+        if(db) {
+            db.collection("customer_requests").add(data)
+                .then(() => {
+                    showNotification("Sent!", "Thank you for your interest!", "success");
+                    if(e.target) e.target.reset();
+                })
+                .catch((error) => {
+                    console.error(error);
+                    showNotification("Error", "Failed to send message. Please try again.", "error");
+                })
+                .finally(() => {
+                    if(btn) {
+                        btn.disabled = false;
+                        btn.innerText = originalText;
                     }
                 });
-            }, observerOptions);
-
-            setTimeout(() => {
-                document.querySelectorAll('.glass, .hover-lift, h1, h2, h3, p').forEach(el => {
-                    el.style.opacity = '0'; 
-                    observer.observe(el);
-                });
-            }, 500);
-        });
-
-        window.addEventListener('scroll', () => {
-            const nav = document.getElementById('navbar');
-            if(nav) {
-                if(window.scrollY > 50) nav.classList.add('shadow-lg');
-                else nav.classList.remove('shadow-lg');
+        } else {
+            showNotification("Offline", "System offline. Please try again later.", "error");
+            if(btn) {
+                btn.disabled = false;
+                btn.innerText = originalText;
             }
-        });
+        }
+    }
 
-        // ==========================================
-        // INIT MAP FUNCTION
-        // ==========================================
-        function initMap() {
-            const mapContainer = document.getElementById('map');
-            if (typeof L === 'undefined' || !mapContainer) {
-                console.warn("Leaflet or Map container not found.");
-                return;
+    // ==========================================
+    // MOBILE MENU LOGIC
+    // ==========================================
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobile-menu');
+        const icon = document.getElementById('mobile-menu-icon');
+        const body = document.body;
+
+        if(menu && icon) {
+            const isActive = menu.classList.contains('active');
+            
+            if(isActive) {
+                menu.classList.remove('active');
+                icon.classList.remove('ri-close-line');
+                icon.classList.add('ri-menu-4-line');
+                body.style.overflow = ''; 
+            } else {
+                menu.classList.add('active');
+                icon.classList.remove('ri-menu-4-line');
+                icon.classList.add('ri-close-line');
+                body.style.overflow = 'hidden'; 
             }
+        }
+    }
 
-            const map = L.map('map').setView([4.2105, 101.9758], 6); 
+    // ==========================================
+    // MAP & GLOBE (INIT)
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', () => {
+        setupStarRating();
+        loadHomePortfolio();
+        if(window.location.pathname === '/reviews') renderDummyReview(); 
+        listenToReviews();
+        initMap(); 
+        
+        // SCROLL ANIMATION OBSERVER
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
-            const clients = [
-                { name: "KL Tech Hub", location: [3.1390, 101.6869], desc: "E-commerce Platform", link: "#" },
-                { name: "Penang Digital", location: [5.4141, 100.3288], desc: "Corporate Site", link: "#" },
-                { name: "Johor SME", location: [1.4927, 103.7414], desc: "Landing Page", link: "#" },
-                { name: "Singapore Partner", location: [1.3521, 103.8198], desc: "Regional Portal", link: "#" },
-                { name: "Bali Resort", location: [-8.4095, 115.1889], desc: "Hotel Booking", link: "#" },
-                { name: "Jakarta Startup", location: [-6.2088, 106.8456], desc: "Fintech App", link: "#" },
-                { name: "Tokyo Client", location: [35.6762, 139.6503], desc: "Consultancy", link: "#" }
-            ];
-
-            const pinIcon = L.divIcon({
-                className: 'custom-marker',
-                html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
-                iconSize: [36, 36],
-                iconAnchor: [18, 36]
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-slide-up');
+                    observer.unobserve(entry.target); 
+                }
             });
+        }, observerOptions);
 
-            clients.forEach(client => {
-                const marker = L.marker(client.location, { icon: pinIcon }).addTo(map);
-                
-                const popupContent = `
-                    <div class="popup-content">
-                        <div class="popup-title">${client.name}</div>
-                        <div class="popup-stats">${client.desc}</div>
-                        <a href="${client.link}" target="_blank" class="popup-link">Visit Site</a>
-                    </div>
-                `;
-                
-                marker.bindPopup(popupContent);
+        setTimeout(() => {
+            document.querySelectorAll('.glass, .hover-lift, h1, h2, h3, p').forEach(el => {
+                el.style.opacity = '0'; 
+                observer.observe(el);
             });
+        }, 500);
+    });
+
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('navbar');
+        if(nav) {
+            if(window.scrollY > 50) nav.classList.add('shadow-lg');
+            else nav.classList.remove('shadow-lg');
+        }
+    });
+
+    // ==========================================
+    // INIT MAP FUNCTION
+    // ==========================================
+    function initMap() {
+        const mapContainer = document.getElementById('map');
+        if (typeof L === 'undefined' || !mapContainer) {
+            console.warn("Leaflet or Map container not found.");
+            return;
         }
 
-        // ==========================================
-        // GLOBE ANIMATION (HOME DECORATION)
-        // ==========================================
-        const canvas = document.getElementById('globe-canvas');
-        if (canvas) {
-            // Placeholder logic
-        }
+        const map = L.map('map').setView([4.2105, 101.9758], 6); 
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const clients = [
+            { name: "KL Tech Hub", location: [3.1390, 101.6869], desc: "E-commerce Platform", link: "#" },
+            { name: "Penang Digital", location: [5.4141, 100.3288], desc: "Corporate Site", link: "#" },
+            { name: "Johor SME", location: [1.4927, 103.7414], desc: "Landing Page", link: "#" },
+            { name: "Singapore Partner", location: [1.3521, 103.8198], desc: "Regional Portal", link: "#" },
+            { name: "Bali Resort", location: [-8.4095, 115.1889], desc: "Hotel Booking", link: "#" },
+            { name: "Jakarta Startup", location: [-6.2088, 106.8456], desc: "Fintech App", link: "#" },
+            { name: "Tokyo Client", location: [35.6762, 139.6503], desc: "Consultancy", link: "#" }
+        ];
+
+        const pinIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
+            iconSize: [36, 36],
+            iconAnchor: [18, 36]
+        });
+
+        clients.forEach(client => {
+            const marker = L.marker(client.location, { icon: pinIcon }).addTo(map);
+            
+            const popupContent = `
+                <div class="popup-content">
+                    <div class="popup-title">${client.name}</div>
+                    <div class="popup-stats">${client.desc}</div>
+                    <a href="${client.link}" target="_blank" class="popup-link">Visit Site</a>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+        });
+    }
+
+    // ==========================================
+    // GLOBE ANIMATION (HOME DECORATION)
+    // ==========================================
+    const canvas = document.getElementById('globe-canvas');
+    if (canvas) {
+        // Placeholder logic
+    }
 
     </script>
 
