@@ -96,13 +96,14 @@
                         slideUp: { '0%': { opacity: 0, transform: 'translateY(40px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
                         fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
                         scaleIn: { '0%': { opacity: 0, transform: 'scale(0.95)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
+                        // Updated Transition Animations for Smoother Feel
                         pageEnter: {
-                            '0%': { opacity: 0, transform: 'translateY(15px)' },
-                            '100%': { opacity: 1, transform: 'translateY(0)' }
+                            '0%': { opacity: 0, transform: 'scale(1.05) translateY(20px)', filter: 'blur(8px)' },
+                            '100%': { opacity: 1, transform: 'scale(1) translateY(0)', filter: 'blur(0)' }
                         },
                         pageExit: {
-                            '0%': { opacity: 1, transform: 'translateY(0)' },
-                            '100%': { opacity: 0, transform: 'translateY(-15px)' }
+                            '0%': { opacity: 1, transform: 'scale(1)' },
+                            '100%': { opacity: 0, transform: 'scale(0.95)' }
                         }
                     }
                 }
@@ -184,7 +185,7 @@
         }
         
         /* ==========================================
-           PAGE TRANSITION SYSTEM (UPGRADED)
+           SMOOTH PAGE TRANSITION SYSTEM
            ========================================== */
         .page { 
             display: none; 
@@ -196,6 +197,9 @@
             left: 0;
             z-index: 10;
             background: #0A0A0A; 
+            /* Ensure content doesn't shift during scale transform */
+            transform-origin: center center; 
+            will-change: transform, opacity, filter;
         }
         
         .page.active { 
@@ -203,15 +207,18 @@
             opacity: 1; 
             position: relative; 
             z-index: 20;
-            animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            /* Updated Animation Class */
+            animation: pageEnter 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
         /* Exit animation class */
         .page.anim-exit {
+            /* Updated Animation Class */
             animation: pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards !important;
             pointer-events: none; /* Prevent clicks during exit */
-            z-index: 5;
+            z-index: 10; /* Ensure it's on top of the 'incoming' page initially if they overlap */
             position: absolute; /* Ensure it doesn't push layout */
+            width: 100%;
         }
 
         /* Interactions */
@@ -2475,7 +2482,7 @@
         }
 
         // ==========================================
-        // ROUTER
+        // ROUTER (UPDATED SMOOTH TRANSITIONS)
         // ==========================================
         const routes = {
             '/': 'home', 
@@ -2556,28 +2563,38 @@
 
             window.scrollTo(0, 0);
 
+            // SMOOTH CROSS-FADE LOGIC
             if (currentSection) {
-                // 1. Add exit animation class
-                currentSection.classList.add('anim-exit');
+                // 1. Prepare new page (display block, opacity 0 initially)
+                targetSection.style.display = 'block';
+                targetSection.style.opacity = '0';
+                targetSection.style.zIndex = '5'; // Underneath the exiting page initially
                 
-                // 2. Wait for exit animation to finish
+                // 2. Animate current page out
+                currentSection.classList.remove('active');
+                currentSection.classList.add('anim-exit'); // Triggers scale down/fade out
+
+                // 3. Trigger browser reflow to ensure animations restart correctly
+                void targetSection.offsetWidth;
+
+                // 4. Animate new page in (immediately after reflow)
+                // We add 'active' which triggers the scale up/fade in + blur
+                targetSection.classList.add('active');
+                targetSection.style.zIndex = '10'; // Bring to top
+
+                // 5. Cleanup old page after animation completes (400ms matches CSS)
                 setTimeout(() => {
-                    currentSection.classList.remove('active', 'anim-exit');
+                    currentSection.classList.remove('anim-exit');
                     currentSection.style.display = 'none';
                     
-                    // 3. Prepare and enter new section
-                    targetSection.style.display = 'block';
-                    void targetSection.offsetWidth; 
-                    targetSection.classList.add('active');
-                    
-                    // 4. Handle page specific logic
                     handlePageLogic(targetSectionId);
-                    
                     isTransitioning = false;
-                }, 400); // 400ms matches the CSS animation duration
+                }, 400);
+
             } else {
-                // First load or no previous section
+                // First load or no previous section (Instant Fade In)
                 targetSection.style.display = 'block';
+                void targetSection.offsetWidth;
                 targetSection.classList.add('active');
                 handlePageLogic(targetSectionId);
                 isTransitioning = false;
@@ -2665,7 +2682,7 @@
             
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-            
+
             auth.signInWithEmailAndPassword(email, password).then(() => {
                 const user = auth.currentUser;
                 triggerLoginSuccessAnimation(() => {
