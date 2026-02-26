@@ -87,6 +87,7 @@
                         'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'fade-in': 'fadeIn 0.6s ease-out forwards',
                         'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        // TRANSITION KEYFRAMES (OPTIMIZED)
                         'page-enter': 'pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'page-exit': 'pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards',
                     },
@@ -96,6 +97,7 @@
                         slideUp: { '0%': { opacity: 0, transform: 'translateY(40px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
                         fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
                         scaleIn: { '0%': { opacity: 0, transform: 'scale(0.95)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
+                        // SPECIFIC TRANSITION ANIMATIONS
                         pageEnter: {
                             '0%': { opacity: 0, transform: 'translateY(15px)' },
                             '100%': { opacity: 1, transform: 'translateY(0)' }
@@ -2840,22 +2842,21 @@
                     name: name, phone: phone, email: email, role: 'user',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp() 
                 });
-            }).then(() => {
-                triggerLoginSuccessAnimation(() => {
-                     if (pendingPackage) {
-                        selectPackage(pendingPackage.name, pendingPackage.type);
-                        pendingPackage = null;
-                    } else {
-                        navigateTo('/');
-                    }
-                }, name);
-            }).catch((error) => {
-                const friendlyMsg = getFirebaseErrorMessage(error);
-                showNotification("Signup Failed", friendlyMsg, "error");
-            });
+                }).then(() => {
+                    triggerLoginSuccessAnimation(() => {
+                        if (pendingPackage) {
+                            selectPackage(pendingPackage.name, pendingPackage.type);
+                            pendingPackage = null;
+                        } else {
+                            navigateTo('/');
+                        }
+                    }, name);
+                }).catch((error) => {
+                    const friendlyMsg = getFirebaseErrorMessage(error);
+                    showNotification("Signup Failed", friendlyMsg, "error");
+                });
         }
-
-        function handleGoogleAuth() {
+                function handleGoogleAuth() {
             if(!auth) return showNotification("Error", "Auth not initialized", "error");
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).then((result) => {
@@ -2987,7 +2988,7 @@
                             planNameEl.textContent = orderData.package || 'Website Package';
                             
                             // Handle Domain
-                            if(orderData.domain && orderData.domain.length > 0) { // Changed to domain based on earlier code logic
+                            if(orderData.domain && orderData.domain.length > 0) { 
                                 domainNameEl.textContent = orderData.domain;
                             } else if (orderData.domainName) {
                                 domainNameEl.textContent = orderData.domainName;
