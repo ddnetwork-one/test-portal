@@ -87,6 +87,8 @@
                         'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'fade-in': 'fadeIn 0.6s ease-out forwards',
                         'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'page-enter': 'pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'page-exit': 'pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
@@ -94,6 +96,14 @@
                         slideUp: { '0%': { opacity: 0, transform: 'translateY(40px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
                         fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
                         scaleIn: { '0%': { opacity: 0, transform: 'scale(0.95)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
+                        pageEnter: {
+                            '0%': { opacity: 0, transform: 'translateY(15px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' }
+                        },
+                        pageExit: {
+                            '0%': { opacity: 1, transform: 'translateY(0)' },
+                            '100%': { opacity: 0, transform: 'translateY(-15px)' }
+                        }
                     }
                 }
             }
@@ -174,59 +184,37 @@
         }
         
         /* ==========================================
-           ADVANCED PAGE TRANSITION SYSTEM (SMOOTH)
+           PAGE TRANSITION SYSTEM (OPTIMIZED)
            ========================================== */
-        /* Container for pages ensures height is maintained during transitions */
-        .page-container {
-            position: relative;
-            width: 100%;
-            min-height: 100vh;
-            overflow: hidden; /* Prevent scrollbars during slide animations */
-        }
-
         .page { 
             display: none; 
-            opacity: 0;
+            opacity: 0; 
+            min-height: 100%;
             width: 100%;
             position: absolute; 
             top: 0;
             left: 0;
-            background: #0A0A0A; 
-            transform: translateY(20px);
-            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            will-change: transform, opacity;
-            /* Allow content scrolling within the page */
-            overflow-y: auto;
-            height: 100%;
-            scrollbar-width: none; /* Firefox */
-        }
-        .page::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-
-        /* Active State: The page currently visible */
-        .page.active { 
-            display: block;
-            opacity: 1; 
-            transform: translateY(0);
-            position: relative; /* Returns to flow so scrollbar works natively */
             z-index: 10;
-        }
-
-        /* Exit Animation State */
-        .page.page-exit {
-            display: block; /* Keep visible for animation */
-            opacity: 0;
-            transform: translateY(-20px) scale(0.98);
-            position: absolute; /* Take out of flow so new page can slide in underneath */
-            z-index: 5;
-            pointer-events: none;
-        }
-
-        /* Loading State */
-        .page.page-loading {
-            opacity: 0.5;
-            pointer-events: none;
+            background: #0A0A0A; 
         }
         
+        .page.active { 
+            display: block; 
+            opacity: 1; 
+            position: relative; 
+            z-index: 20;
+            animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Exit animation class */
+        .page.anim-exit {
+            animation: pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+            pointer-events: none; /* Prevent clicks during exit */
+            z-index: 5;
+            position: absolute; /* Ensure it doesn't push layout */
+            will-change: transform, opacity; /* Hardware accel */
+        }
+
         /* Interactions */
         .hover-lift { 
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease; 
@@ -438,6 +426,24 @@
             box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
         }
 
+        /* FAQ accordion */
+        .faq-item { border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .faq-question {
+            padding: 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .faq-answer {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s;
+            padding: 0 1.5rem;
+        }
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding: 0 1.5rem 1.5rem;
+        }
+
         /* Status badges */
         .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
         .status-pending { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
@@ -481,46 +487,87 @@
         }
 
         /* ==========================================
-           TERMS & PRIVACY STYLING (NEW)
+           LEADERSHIP STYLES (NEW)
            ========================================== */
-        .legal-container {
-            max-width: 4xl; /* 56rem */
-            margin: 0 auto;
+        .leader-card {
+            background: #141414;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.05);
         }
-        .legal-header {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            background: rgba(10, 10, 10, 0.9);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding: 1.5rem 0;
-            margin-bottom: 2rem;
+        
+        .leader-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #10B981, #059669);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
         }
-        .legal-section h2 {
+        
+        .leader-card:hover::before { transform: scaleX(1); }
+
+        .leader-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.2);
+        }
+
+        .leader-img-wrapper {
+            position: relative;
+            padding-top: 120%; /* Aspect Ratio */
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+
+        .leader-img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+            filter: grayscale(50%);
+        }
+
+        .leader-card:hover .leader-img {
+            transform: scale(1.05);
+            filter: grayscale(0%);
+        }
+
+        .leader-content {
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            background: #141414;
+        }
+
+        .leader-role {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: #34D399;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .leader-name {
             font-size: 1.5rem;
-            color: #10B981;
-            margin-top: 3rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        .legal-section p {
-            color: #cbd5e1;
-            line-height: 1.8;
-            margin-bottom: 1rem;
-        }
-        .legal-section ul {
-            list-style-type: disc;
-            padding-left: 1.5rem;
-            color: #cbd5e1;
-            margin-bottom: 1.5rem;
-        }
-        .legal-section ul li {
+            font-weight: 800;
+            color: #FFFFFF;
             margin-bottom: 0.5rem;
         }
-        .legal-section strong {
-            color: white;
+
+        .leader-bio {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
         /* ==========================================
@@ -589,6 +636,7 @@
             
             #desktopAuthLinks { display: none !important; }
             .page { position: absolute; width: 100%; left: 0; }
+            .leader-card { margin-bottom: 1rem; }
         }
         
         @keyframes scaleIn {
@@ -865,8 +913,7 @@
     </nav>
 
     <!-- Main Content -->
-    <!-- Using a container to manage absolute positioning of pages smoothly -->
-    <main class="page-container">
+    <main class="">
 
         <!-- HOME PAGE -->
         <section id="page-home" class="page active">
@@ -1216,7 +1263,7 @@
             </div>
         </section>
 
-        <!-- LEADERSHIP SECTION -->
+        <!-- LEADERSHIP SECTION (NEW) -->
         <section id="page-leadership" class="page">
             <div class="bg-mesh py-12 md:py-24">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1245,6 +1292,7 @@
                         <!-- Bella -->
                         <div class="leader-card">
                             <div class="leader-img-wrapper">
+                                <!-- Using a placeholder icon/image for Bella since no URL was provided -->
                                 <img src="https://ui-avatars.com/api/?name=Bella+Manager&background=0D0D0D&color=10B981&size=512" alt="Bella" class="leader-img bg-slate-800">
                             </div>
                             <div class="leader-content">
@@ -1259,6 +1307,7 @@
                         <!-- Putri -->
                         <div class="leader-card">
                             <div class="leader-img-wrapper">
+                                <!-- Using a placeholder icon/image for Putri since no URL was provided -->
                                 <img src="https://ui-avatars.com/api/?name=Putri+Marketing&background=0D0D0D&color=10B981&size=512" alt="Putri" class="leader-img bg-slate-800">
                             </div>
                             <div class="leader-content">
@@ -2245,52 +2294,67 @@
 
         <!-- TERMS OF SERVICE PAGE (NEW) -->
         <section id="page-terms" class="page">
-            <div class="bg-dark py-12">
-                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 legal-container">
-                    
-                    <!-- Header -->
-                    <div class="legal-header">
-                        <h1 class="text-4xl font-bold text-white mb-2">Terms of Service</h1>
-                        <p class="text-slate-400">Last Updated: January 1, 2025</p>
-                    </div>
+            <div class="bg-mesh py-12 md:py-24 min-h-screen">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="glass rounded-2xl p-8 md:p-12 border border-slate-800 bg-dark shadow-xl">
+                        <h1 class="text-4xl md:text-5xl font-bold mb-6 text-white">Terms of <span class="text-gradient">Service</span></h1>
+                        <p class="text-slate-400 mb-8 text-lg">Last Updated: January 2025</p>
+                        
+                        <div class="prose prose-invert max-w-none space-y-8">
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">1. Introduction</h3>
+                                <p class="text-slate-300 leading-relaxed">
+                                    Welcome to DDNex. By accessing or using our services, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you must not access our service.
+                                </p>
+                            </div>
 
-                    <div class="legal-section">
-                        <p>Welcome to DDNex. By using our website, services, or purchasing our products, you agree to comply with and be bound by the following Terms of Service.</p>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">2. Hosting & Domain Services</h3>
+                                <p class="text-slate-300 leading-relaxed mb-4">
+                                    We offer free subdomain hosting for the first year. After the initial period, renewal fees apply at RM 55/year unless otherwise stated in a custom package.
+                                </p>
+                                <ul class="list-disc pl-5 text-slate-400 space-y-2">
+                                    <li>You must not use our hosting for illegal activities, spam, or malicious content.</li>
+                                    <li>We reserve the right to suspend or terminate accounts violating these policies.</li>
+                                </ul>
+                            </div>
 
-                        <h2>1. Services</h2>
-                        <p>DDNex provides web design, development, hosting, and AI integration services. We reserve the right to modify, suspend, or discontinue any service at any time without prior notice.</p>
-                        <ul>
-                            <li><strong>Static Websites:</strong> Delivered within 3-5 business days.</li>
-                            <li><strong>Interactive Websites:</strong> Delivered within 2-4 weeks depending on complexity.</li>
-                            <li><strong>AI Solutions:</strong> Delivered within 3-4 weeks including tuning.</li>
-                        </ul>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">3. Payments & Refunds</h3>
+                                <p class="text-slate-300 leading-relaxed mb-4">
+                                    All setup fees are non-refundable. Monthly plans are billed in advance.
+                                </p>
+                                <div class="bg-slate-900/50 p-4 rounded-lg border-l-4 border-emerald-500">
+                                    <p class="text-slate-300 font-medium">Refund Policy</p>
+                                    <p class="text-sm text-slate-400 mt-1">Due to the nature of digital work and upfront costs, all payments are non-refundable unless explicitly stated in writing by DDNex management.</p>
+                                </div>
+                            </div>
 
-                        <h2>2. Payment & Billing</h2>
-                        <p>All payments are processed securely via Razorpay. Setup fees are non-refundable. Monthly subscriptions are billed in advance.</p>
-                        <ul>
-                            <li><strong>Refund Policy:</strong> Setup fees are strictly non-refundable. Monthly fees can be prorated if cancellation occurs before the billing cycle, but this is at the discretion of management.</li>
-                            <li><strong>Failure to Pay:</strong> Services may be suspended if payments are not received within 7 days of the due date.</li>
-                        </ul>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">4. Project Delivery & Timelines</h3>
+                                <p class="text-slate-300 leading-relaxed">
+                                    Timelines provided are estimates based on standard requirements. Delays caused by client feedback, content provision, or external factors (e.g., third-party API changes) are not the responsibility of DDNex and may extend the delivery timeline.
+                                </p>
+                            </div>
 
-                        <h2>3. Hosting & Domains</h2>
-                        <p>We offer free subdomains (e.g., yourname.ddnex.my) for the first year. After the first year, a renewal fee applies. Clients using custom domains are responsible for their domain registration and renewal fees.</p>
-                        <ul>
-                            <li>DDNex is not responsible for domain expiration if the client manages their own domain.</li>
-                            <li>Content hosted on our servers must comply with Malaysian laws.</li>
-                        </ul>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">5. Intellectual Property</h3>
+                                <p class="text-slate-300 leading-relaxed">
+                                    Upon full payment, you own the design and code specific to your website. However, DDNex retains the right to use underlying frameworks, libraries, and proprietary code. You grant DDNex the right to display your website in our portfolio.
+                                </p>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">6. Limitation of Liability</h3>
+                                <p class="text-slate-300 leading-relaxed">
+                                    DDNex shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the service.
+                                </p>
+                            </div>
+                        </div>
 
-                        <h2>4. Client Responsibilities</h2>
-                        <p>Clients agree to provide accurate information, images, and text required for the website. Delays caused by the client waiting for content do not extend the delivery timeline guarantee.</p>
-
-                        <h2>5. Intellectual Property</h2>
-                        <p>Upon full payment, the client owns the final website code and design. However, DDNex retains the right to display the project in our portfolio. Third-party assets (fonts, stock images) remain the property of their respective licensors.</p>
-
-                        <h2>6. Limitation of Liability</h2>
-                        <p>DDNex shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.</p>
-                    </div>
-
-                    <div class="mt-12 text-center">
-                        <button onclick="navigateTo('home')" class="px-6 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors">Back to Home</button>
+                        <div class="mt-12 pt-8 border-t border-slate-800 text-center">
+                            <button onclick="navigateTo('home')" class="px-8 py-3 rounded-lg glass text-slate-200 font-semibold hover:bg-white/10 transition-all">Back to Home</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2298,52 +2362,55 @@
 
         <!-- PRIVACY POLICY PAGE (NEW) -->
         <section id="page-privacy" class="page">
-            <div class="bg-dark py-12">
-                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 legal-container">
-                    
-                    <!-- Header -->
-                    <div class="legal-header">
-                        <h1 class="text-4xl font-bold text-white mb-2">Privacy Policy</h1>
-                        <p class="text-slate-400">Last Updated: January 1, 2025</p>
-                    </div>
+            <div class="bg-mesh py-12 md:py-24 min-h-screen">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="glass rounded-2xl p-8 md:p-12 border border-slate-800 bg-dark shadow-xl">
+                        <h1 class="text-4xl md:text-5xl font-bold mb-6 text-white">Privacy <span class="text-gradient">Policy</span></h1>
+                        <p class="text-slate-400 mb-8 text-lg">Your privacy is important to us. This policy explains how we handle your data.</p>
+                        
+                        <div class="prose prose-invert max-w-none space-y-8">
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">1. Data Collection</h3>
+                                <p class="text-slate-300 leading-relaxed">
+                                    We collect basic profile information (Name, Email, Phone Number, Company) necessary to process your orders, provide technical support, and communicate with you regarding your project.
+                                </p>
+                            </div>
 
-                    <div class="legal-section">
-                        <p>At DDNex, we value your privacy. This policy outlines how we collect, use, and protect your personal information.</p>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">2. Use of Information</h3>
+                                <ul class="list-disc pl-5 text-slate-400 space-y-2">
+                                    <li>To process payments and fulfill website development orders.</li>
+                                    <li>To send updates regarding your project status.</li>
+                                    <li>To provide customer support.</li>
+                                    <li>To send periodic newsletters or marketing communications (you can opt-out at any time).</li>
+                                </ul>
+                            </div>
 
-                        <h2>1. Information We Collect</h2>
-                        <p>We collect information to provide better services to all our users.</p>
-                        <ul>
-                            <li><strong>Account Information:</strong> Name, email address, phone number, and company details when you create an account.</li>
-                            <li><strong>Payment Information:</strong> Processed securely via Razorpay. We do not store your credit card details.</li>
-                            <li><strong>Project Data:</strong> Content, images, and files you upload for your website project.</li>
-                            <li><strong>Communications:</strong> Emails, chat logs, and support tickets.</li>
-                        </ul>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">3. Data Sharing</h3>
+                                <p class="text-slate-300 leading-relaxed">
+                                    We <strong>do not sell</strong> your personal data to third parties. We may share your data with trusted third parties who assist us in operating our website, conducting our business, or servicing you, so long as those parties agree to keep this information confidential.
+                                </p>
+                            </div>
 
-                        <h2>2. How We Use Your Information</h2>
-                        <p>We use the information we collect to:</p>
-                        <ul>
-                            <li>Provide, maintain, and improve our services.</li>
-                            <li>Process transactions and send you related information.</li>
-                            <li>Send technical notices, updates, security alerts, and support messages.</li>
-                            <li>Respond to your comments, questions, and customer service requests.</li>
-                        </ul>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">4. Payment Security</h3>
+                                <p class="text-slate-300 leading-relaxed">
+                                    We use Razorpay as our payment gateway. We do not store your credit card details on our servers. All payment information is processed securely by Razorpay.
+                                </p>
+                            </div>
 
-                        <h2>3. Sharing of Information</h2>
-                        <p>We do not sell, trade, or otherwise transfer your personal information to outside parties. We may share your information only in the following cases:</p>
-                        <ul>
-                            <li><strong>Service Providers:</strong> We may share information with trusted third parties who perform services on our behalf (e.g., Firebase, Razorpay, Google Analytics).</li>
-                            <li><strong>Legal Requirements:</strong> We may disclose information where we believe it is necessary to investigate, prevent, or take action regarding illegal activities, suspected fraud, or potential threats to the physical safety of any person.</li>
-                        </ul>
+                            <div>
+                                <h3 class="text-2xl font-bold text-white mb-3">5. Your Rights</h3>
+                                <p class="text-slate-300 leading-relaxed">
+                                    You have the right to access, correct, or delete your personal data. You can do this by logging into your profile or contacting us directly at sales@ddnex.my.
+                                </p>
+                            </div>
+                        </div>
 
-                        <h2>4. Data Security</h2>
-                        <p>We implement a variety of security measures to maintain the safety of your personal information. However, no method of transmission over the Internet is 100% secure. While we strive to protect your personal information, we cannot guarantee its absolute security.</p>
-
-                        <h2>5. Your Rights</h2>
-                        <p>You have the right to access, correct, or delete your personal data. You can do this by logging into your profile or contacting us directly at sales@ddnex.my.</p>
-                    </div>
-
-                    <div class="mt-12 text-center">
-                        <button onclick="navigateTo('home')" class="px-6 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors">Back to Home</button>
+                        <div class="mt-12 pt-8 border-t border-slate-800 text-center">
+                            <button onclick="navigateTo('home')" class="px-8 py-3 rounded-lg glass text-slate-200 font-semibold hover:bg-white/10 transition-all">Back to Home</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2533,7 +2600,7 @@
         }
 
         // ==========================================
-        // ROUTER & SMOOTH TRANSITIONS
+        // ROUTER (UPDATED FOR TERMS/PRIVACY)
         // ==========================================
         const routes = {
             '/': 'home', 
@@ -2562,12 +2629,13 @@
             '/leadership': 'leadership'
         };
 
-        let isTransitioning = false;
+        function routeLink(event, path) { event.preventDefault(); navigateTo(path); }
 
         function navigateTo(path) {
-            if (isTransitioning) return; // Prevent double clicks causing lag
-            
+            window.scrollTo(0, 0);
+
             if (!path.startsWith('/')) path = '/' + path;
+
             const sectionId = routes[path];
             if (!sectionId) return console.warn(`Route not found for path: ${path}`);
             
@@ -2578,10 +2646,12 @@
 
         window.addEventListener('popstate', (event) => {
             if (event.state && event.state.path) {
+                window.scrollTo(0, 0);
                 performTransition(routes[event.state.path]);
                 updatePageSEO(event.state.path);
             } else {
                 const path = window.location.pathname;
+                window.scrollTo(0, 0);
                 const target = routes[path] || 'home'; 
                 performTransition(target);
                 updatePageSEO(path);
@@ -2595,6 +2665,9 @@
             updatePageSEO(path); 
         }
 
+        let isTransitioning = false;
+
+        // OPTIMIZED SMOOTH TRANSITION
         function performTransition(targetSectionId, isInstant = false) {
             if (isTransitioning) return;
             isTransitioning = true;
@@ -2607,55 +2680,33 @@
                 return;
             }
 
-            // 1. PREPARE NEW PAGE (Hide it initially to prevent flash)
-            if(targetSection) {
-                targetSection.classList.remove('page-exit');
-                targetSection.style.opacity = '0';
-                targetSection.style.transform = 'translateY(20px)';
-                // Ensure display block is set via JS logic to trigger transition
-            }
+            window.scrollTo(0, 0);
 
-            // 2. EXIT ANIMATION FOR CURRENT PAGE
             if (currentSection) {
-                currentSection.classList.add('page-exit');
+                // 1. Add exit animation class
+                currentSection.classList.add('anim-exit');
                 
-                // Wait for exit animation (CSS handles the fade/slide out)
+                // 2. Wait for exit animation to finish (400ms matches CSS)
                 setTimeout(() => {
-                    currentSection.classList.remove('active');
+                    currentSection.classList.remove('active', 'anim-exit');
                     currentSection.style.display = 'none';
                     
-                    // 3. ENTER ANIMATION FOR NEW PAGE
-                    if(targetSection) {
-                        targetSection.style.display = 'block';
-                        // Force reflow
-                        void targetSection.offsetWidth; 
-                        
-                        // Add active class to trigger CSS transition (opacity 0->1, transform 20px->0)
-                        targetSection.classList.add('active');
-                        
-                        // Handle page specific logic
-                        handlePageLogic(targetSectionId);
-                    }
+                    // 3. Prepare and enter new section
+                    targetSection.style.display = 'block';
+                    void targetSection.offsetWidth; // Trigger reflow
+                    targetSection.classList.add('active');
+                    
+                    // 4. Handle page specific logic (re-init map on home, etc)
+                    handlePageLogic(targetSectionId);
                     
                     isTransitioning = false;
-                }, 300); // Slightly faster than CSS (300ms) for snappier feel
-            } else
-                            // First load or no previous section
-                if(targetSection) {
-                    targetSection.style.display = 'block';
-                    void targetSection.offsetWidth; 
-                    targetSection.classList.add('active');
-                    handlePageLogic(targetSectionId);
-                }
+                }, 400); 
+            } else {
+                // First load or no previous section
+                targetSection.style.display = 'block';
+                targetSection.classList.add('active');
+                handlePageLogic(targetSectionId);
                 isTransitioning = false;
-            }
-
-        function updatePageSEO(path) {
-            const config = SEO_CONFIG[path];
-            if(config) {
-                document.title = config.title;
-                document.querySelector('meta[name="description"]').setAttribute("content", config.desc);
-                document.querySelector('link[rel="canonical"]').setAttribute("href", config.canonical);
             }
         }
 
@@ -2673,7 +2724,17 @@
             if(targetSectionId === 'products') loadProducts();
         }
     
+        // Initial route check
         setTimeout(handleInitialRoute, 100);
+
+        function updatePageSEO(path) {
+            const config = SEO_CONFIG[path];
+            if(config) {
+                document.title = config.title;
+                document.querySelector('meta[name="description"]').setAttribute("content", config.desc);
+                document.querySelector('link[rel="canonical"]').setAttribute("href", config.canonical);
+            }
+        }
 
         // ==========================================
         // MODALS & ALERTS
