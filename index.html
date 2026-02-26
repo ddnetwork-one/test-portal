@@ -84,16 +84,25 @@
                         'float': 'float 6s ease-in-out infinite',
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'marquee': 'marquee 40s linear infinite',
-                        'blob': 'blob 7s infinite',
+                        'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'fade-in': 'fadeIn 0.6s ease-out forwards',
+                        'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'page-enter': 'pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'page-exit': 'pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
                         marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        slideUp: { '0%': { opacity: 0, transform: 'translateY(40px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+                        scaleIn: { '0%': { opacity: 0, transform: 'scale(0.95)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
+                        pageEnter: {
+                            '0%': { opacity: 0, transform: 'translateY(15px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' }
+                        },
+                        pageExit: {
+                            '0%': { opacity: 1, transform: 'translateY(0)' },
+                            '100%': { opacity: 0, transform: 'translateY(-15px)' }
                         }
                     }
                 }
@@ -175,54 +184,36 @@
         }
         
         /* ==========================================
-           SMOOTH PAGE TRANSITION SYSTEM (UPDATED)
+           PAGE TRANSITION SYSTEM (UPGRADED)
            ========================================== */
         .page { 
-            display: none; /* Hidden by default */
-            opacity: 0;
-            position: absolute; /* Allows overlap during transition */
+            display: none; 
+            opacity: 0; 
+            min-height: 100%;
+            width: 100%;
+            position: absolute; 
             top: 0;
             left: 0;
-            width: 100%;
-            min-height: 100vh;
-            z-index: 5;
-            background: #0A0A0A; 
-            transform: translateY(10px); /* Start slightly lower for entrance */
-            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-            will-change: opacity, transform;
-        }
-
-        /* The Active State (Fully Visible & In Flow) */
-        .page.active { 
-            display: block; 
-            position: relative; /* Returns to document flow */
-            opacity: 1; 
-            transform: translateY(0);
-            z-index: 10; 
-        }
-
-        /* The Exiting State (Old Page) */
-        /* We fade it out and push it down slightly */
-        .page.exiting {
-            display: block; /* Keep it in DOM to be seen fading out */
-            position: absolute; /* Take out of flow so new page can slide over */
-            opacity: 0;
-            transform: scale(0.98) translateY(10px);
-            z-index: 1; /* Behind the new page */
-            pointer-events: none; /* Prevent clicks */
-            transition: opacity 0.3s ease-in, transform 0.3s ease-in;
-        }
-
-        /* The Entering State (New Page - Initial) */
-        /* Used briefly in JS to trigger the transition */
-        .page.entering {
-            display: block;
-            position: relative;
-            opacity: 0;
-            transform: translateY(20px);
             z-index: 10;
+            background: #0A0A0A; 
         }
         
+        .page.active { 
+            display: block; 
+            opacity: 1; 
+            position: relative; 
+            z-index: 20;
+            animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Exit animation class */
+        .page.anim-exit {
+            animation: pageExit 0.4s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+            pointer-events: none; /* Prevent clicks during exit */
+            z-index: 5;
+            position: absolute; /* Ensure it doesn't push layout */
+        }
+
         /* Interactions */
         .hover-lift { 
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease; 
@@ -282,7 +273,6 @@
             animation: float 10s ease-in-out infinite;
             will-change: transform;
             z-index: 0;
-            pointer-events: none;
         }
         
         /* Custom scrollbar */
@@ -370,15 +360,10 @@
             z-index: 40; 
             overflow-y: auto;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            transform: translateY(-10px);
-            opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease;
         }
-        #mobile-menu.active { 
-            display: block; 
-            transform: translateY(0); 
-            opacity: 1; 
-        }
+        #mobile-menu.active { display: block; animation: slideDown 0.3s ease; }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Password requirements */
         .password-requirements {
@@ -2490,7 +2475,7 @@
         }
 
         // ==========================================
-        // ROUTER (SMOOTH TRANSITIONS)
+        // ROUTER
         // ==========================================
         const routes = {
             '/': 'home', 
@@ -2522,7 +2507,8 @@
         function routeLink(event, path) { event.preventDefault(); navigateTo(path); }
 
         function navigateTo(path) {
-            // Ensure leading slash
+            window.scrollTo(0, 0);
+
             if (!path.startsWith('/')) path = '/' + path;
 
             const sectionId = routes[path];
@@ -2535,10 +2521,12 @@
 
         window.addEventListener('popstate', (event) => {
             if (event.state && event.state.path) {
+                window.scrollTo(0, 0);
                 performTransition(routes[event.state.path]);
                 updatePageSEO(event.state.path);
             } else {
                 const path = window.location.pathname;
+                window.scrollTo(0, 0);
                 const target = routes[path] || 'home'; 
                 performTransition(target);
                 updatePageSEO(path);
@@ -2569,43 +2557,45 @@
             window.scrollTo(0, 0);
 
             if (currentSection) {
-                // 1. EXIT ANIMATION
-                // We keep it in DOM but add 'exiting' class (absolute, opacity 0, scale 0.98)
-                currentSection.classList.remove('active');
-                currentSection.classList.add('exiting');
-
-                // Wait for CSS transition to finish (400ms matches CSS)
+                // 1. Add exit animation class
+                currentSection.classList.add('anim-exit');
+                
+                // 2. Wait for exit animation to finish
                 setTimeout(() => {
+                    currentSection.classList.remove('active', 'anim-exit');
                     currentSection.style.display = 'none';
-                    currentSection.classList.remove('exiting');
                     
-                    // 2. ENTER ANIMATION
+                    // 3. Prepare and enter new section
                     targetSection.style.display = 'block';
-                    
-                    // Force reflow to ensure browser registers the 'display: block' before we start the opacity transition
                     void targetSection.offsetWidth; 
+                    targetSection.classList.add('active');
                     
-                    // Start entering (opacity 0 -> 1, translateY 20px -> 0)
-                    targetSection.classList.add('entering');
+                    // 4. Handle page specific logic
+                    handlePageLogic(targetSectionId);
                     
-                    // Use requestAnimationFrame for smooth 60fps transition trigger
-                    requestAnimationFrame(() => {
-                        targetSection.classList.remove('entering');
-                        targetSection.classList.add('active');
-                        
-                        // Execute page specific logic
-                        handlePageLogic(targetSectionId);
-                        isTransitioning = false;
-                    });
-
-                }, 400); // Duration of the 'exiting' transition
+                    isTransitioning = false;
+                }, 400); // 400ms matches the CSS animation duration
             } else {
-                // First load or no previous section (Instant load)
+                // First load or no previous section
                 targetSection.style.display = 'block';
                 targetSection.classList.add('active');
                 handlePageLogic(targetSectionId);
                 isTransitioning = false;
             }
+        }
+
+        function handlePageLogic(targetSectionId) {
+            if(targetSectionId === 'profile') loadProfilePageData();
+            if(targetSectionId === 'reviews' || targetSectionId === 'home') {
+                renderDummyReview(); 
+                if(reviewsCache.length === 0) listenToReviews(); 
+                else renderReviewsList(document.getElementById('reviews-list'));
+            }
+            if(targetSectionId === 'checkout' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+            if(targetSectionId === 'updates' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+            if(targetSectionId === 'home') loadHomePortfolio();
+            if(targetSectionId === 'portfolio') loadPortfolio();
+            if(targetSectionId === 'products') loadProducts();
         }
     
         setTimeout(handleInitialRoute, 100);
@@ -2672,7 +2662,8 @@
         function handleLogin(e) {
             e.preventDefault();
             if(!auth) return showNotification("Error", "Authentication system initializing...", "error");
-                        const email = document.getElementById('login-email').value;
+            
+            const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             
             auth.signInWithEmailAndPassword(email, password).then(() => {
@@ -2869,7 +2860,7 @@
                             planNameEl.textContent = orderData.package || 'Website Package';
                             
                             // Handle Domain
-                            if(orderData.domain && orderData.domain.length > 0) { 
+                            if(orderData.domain && orderData.domain.length > 0) { // Changed to domain based on earlier code logic
                                 domainNameEl.textContent = orderData.domain;
                             } else if (orderData.domainName) {
                                 domainNameEl.textContent = orderData.domainName;
