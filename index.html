@@ -84,10 +84,16 @@
                         'float': 'float 6s ease-in-out infinite',
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'marquee': 'marquee 40s linear infinite',
+                        'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'fade-in': 'fadeIn 0.6s ease-out forwards',
+                        'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
                         marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
+                        slideUp: { '0%': { opacity: 0, transform: 'translateY(40px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+                        fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+                        scaleIn: { '0%': { opacity: 0, transform: 'scale(0.95)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
                     }
                 }
             }
@@ -168,79 +174,59 @@
         }
         
         /* ==========================================
-           UPDATED PAGE TRANSITION SYSTEM (GPU ACCELERATED)
+           ADVANCED PAGE TRANSITION SYSTEM (SMOOTH)
            ========================================== */
-        /* Container for pages */
-        main {
-            perspective: 1000px; /* Adds 3D depth */
+        /* Container for pages ensures height is maintained during transitions */
+        .page-container {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            overflow: hidden; /* Prevent scrollbars during slide animations */
         }
 
         .page { 
-            /* Default State: Hidden */
             display: none; 
-            opacity: 0; 
+            opacity: 0;
             width: 100%;
-            min-height: 100vh; /* Ensure full height */
-            position: relative; 
+            position: absolute; 
             top: 0;
             left: 0;
-            z-index: 10;
             background: #0A0A0A; 
-            padding-bottom: 2rem; /* Space for footer */
-            will-change: opacity, transform; /* Hint to browser */
+            transform: translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform, opacity;
+            /* Allow content scrolling within the page */
+            overflow-y: auto;
+            height: 100%;
+            scrollbar-width: none; /* Firefox */
+        }
+        .page::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        /* Active State: The page currently visible */
+        .page.active { 
+            display: block;
+            opacity: 1; 
+            transform: translateY(0);
+            position: relative; /* Returns to flow so scrollbar works natively */
+            z-index: 10;
+        }
+
+        /* Exit Animation State */
+        .page.page-exit {
+            display: block; /* Keep visible for animation */
+            opacity: 0;
+            transform: translateY(-20px) scale(0.98);
+            position: absolute; /* Take out of flow so new page can slide in underneath */
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* Loading State */
+        .page.page-loading {
+            opacity: 0.5;
+            pointer-events: none;
         }
         
-        /* The page currently visible to the user */
-        .page.active { 
-            display: block; 
-            opacity: 1; 
-            position: relative; 
-            z-index: 20;
-            transform: translate3d(0, 0, 0); /* Reset transform */
-            transition: none; /* No transition on static active state */
-        }
-
-        /* === EXIT ANIMATION STATES === */
-        .page.is-exiting {
-            display: block; /* Make it block so we can animate it out */
-            position: absolute; /* Take it out of flow so new page can slide in */
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 10;
-            pointer-events: none; /* Prevent clicks during exit */
-            
-            /* Animation Properties */
-            opacity: 1;
-            transform: scale(1);
-            transition: opacity 0.4s ease-out, transform 0.4s ease-out, filter 0.4s ease-out;
-            filter: blur(0px);
-        }
-
-        .page.is-exiting.active-exit {
-            /* Trigger the exit visual */
-            opacity: 0;
-            transform: scale(0.98) translateY(-10px); /* Slight shrink and move up */
-            filter: blur(4px); /* Depth of field effect */
-        }
-
-        /* === ENTER ANIMATION STATES === */
-        .page.is-entering {
-            display: block;
-            position: relative; /* Start taking flow space immediately */
-            z-index: 30;
-            opacity: 0;
-            transform: translateY(20px) scale(0.98);
-            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            pointer-events: none; /* Prevent interaction until done */
-        }
-
-        .page.is-entering.active-enter {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto; /* Enable interaction */
-        }
-
         /* Interactions */
         .hover-lift { 
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease; 
@@ -452,24 +438,6 @@
             box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
         }
 
-        /* FAQ accordion */
-        .faq-item { border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .faq-question {
-            padding: 1.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .faq-answer {
-            max-height: 0; overflow: hidden;
-            transition: max-height 0.4s ease, padding 0.4s;
-            padding: 0 1.5rem;
-        }
-        .faq-item.active .faq-answer {
-            max-height: 500px;
-            padding: 0 1.5rem 1.5rem;
-        }
-
         /* Status badges */
         .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
         .status-pending { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
@@ -513,87 +481,46 @@
         }
 
         /* ==========================================
-           LEADERSHIP STYLES
+           TERMS & PRIVACY STYLING (NEW)
            ========================================== */
-        .leader-card {
-            background: #141414;
-            border-radius: 1.5rem;
-            overflow: hidden;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            border: 1px solid rgba(255,255,255,0.05);
+        .legal-container {
+            max-width: 4xl; /* 56rem */
+            margin: 0 auto;
         }
-        
-        .leader-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, #10B981, #059669);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.4s ease;
+        .legal-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
         }
-        
-        .leader-card:hover::before { transform: scaleX(1); }
-
-        .leader-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.2);
-        }
-
-        .leader-img-wrapper {
-            position: relative;
-            padding-top: 120%; /* Aspect Ratio */
-            overflow: hidden;
-            background-color: #1a1a1a;
-        }
-
-        .leader-img {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover;
-            transition: transform 0.6s ease;
-            filter: grayscale(50%);
-        }
-
-        .leader-card:hover .leader-img {
-            transform: scale(1.05);
-            filter: grayscale(0%);
-        }
-
-        .leader-content {
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-            z-index: 2;
-            background: #141414;
-        }
-
-        .leader-role {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            background: rgba(16, 185, 129, 0.1);
-            color: #34D399;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .leader-name {
+        .legal-section h2 {
             font-size: 1.5rem;
-            font-weight: 800;
-            color: #FFFFFF;
+            color: #10B981;
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .legal-section p {
+            color: #cbd5e1;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+        .legal-section ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+        }
+        .legal-section ul li {
             margin-bottom: 0.5rem;
         }
-
-        .leader-bio {
-            color: #94a3b8;
-            font-size: 0.95rem;
-            line-height: 1.6;
+        .legal-section strong {
+            color: white;
         }
 
         /* ==========================================
@@ -661,8 +588,7 @@
             }
             
             #desktopAuthLinks { display: none !important; }
-            .page { position: relative; width: 100%; left: 0; }
-            .leader-card { margin-bottom: 1rem; }
+            .page { position: absolute; width: 100%; left: 0; }
         }
         
         @keyframes scaleIn {
@@ -939,7 +865,8 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="">
+    <!-- Using a container to manage absolute positioning of pages smoothly -->
+    <main class="page-container">
 
         <!-- HOME PAGE -->
         <section id="page-home" class="page active">
@@ -1318,7 +1245,6 @@
                         <!-- Bella -->
                         <div class="leader-card">
                             <div class="leader-img-wrapper">
-                                <!-- Using a placeholder icon/image for Bella since no URL was provided -->
                                 <img src="https://ui-avatars.com/api/?name=Bella+Manager&background=0D0D0D&color=10B981&size=512" alt="Bella" class="leader-img bg-slate-800">
                             </div>
                             <div class="leader-content">
@@ -1333,7 +1259,6 @@
                         <!-- Putri -->
                         <div class="leader-card">
                             <div class="leader-img-wrapper">
-                                <!-- Using a placeholder icon/image for Putri since no URL was provided -->
                                 <img src="https://ui-avatars.com/api/?name=Putri+Marketing&background=0D0D0D&color=10B981&size=512" alt="Putri" class="leader-img bg-slate-800">
                             </div>
                             <div class="leader-content">
@@ -1595,7 +1520,7 @@
             </div>
         </section>
 
-        <!-- CHECKOUT PAGE -->
+        <!-- CHECKOUT PAGE (REDESIGNED 3-STEP FLOW) -->
         <section id="page-checkout" class="page">
             <div class="bg-slate-900/20 py-12">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2145,12 +2070,13 @@
             </div>
         </section>
 
-        <!-- PROFILE PAGE -->
+        <!-- PROFILE PAGE (UPDATED & IMPROVED) -->
         <section id="page-profile" class="page">
             <div class="bg-slate-900/20 py-12">
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     
-                    <!-- ACTIVE PLAN STATUS CARD -->
+                    <!-- ACTIVE PLAN STATUS CARD (NEW) -->
+                    <!-- Shown if user has a paid plan -->
                     <div id="active-plan-card" class="glass rounded-2xl p-8 border border-emerald-900/50 bg-dark mb-8 relative overflow-hidden hidden">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-600/10 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50"></div>
                         <div class="absolute bottom-0 left:0 w-24 h-24 bg-emerald-800/10 rounded-full translate-y-1/2 -translate-x-1/2 opacity-50"></div>
@@ -2179,7 +2105,8 @@
                         </div>
                     </div>
 
-                    <!-- NO PLAN CTA -->
+                    <!-- NO PLAN CTA (NEW) -->
+                    <!-- Shown if user has NO paid plans -->
                     <div id="no-plan-cta" class="glass rounded-2xl p-8 border border-dashed border-slate-700 bg-dark mb-8 text-center hidden">
                         <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
                             <i class="ri-shopping-cart-2-line text-3xl"></i>
@@ -2265,7 +2192,7 @@
                         </div>
 
                         <!-- Order History -->
-                        <div class="lg:col-span-1">
+                        <div class="lg:col-span-1"> <!-- Takes full width if no voucher, else 1 col -->
                             <div class="glass rounded-2xl p-6 border border-slate-800 bg-dark h-full">
                                 <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <i class="ri-history-line text-blue-400"></i> Order History
@@ -2311,6 +2238,112 @@
                     <div class="flex flex-col gap-3">
                         <button onclick="navigateTo('home')" class="w-full py-3 rounded-lg btn-primary text-white font-semibold">Return Home</button>
                         <button onclick="navigateTo('profile')" class="w-full py-3 rounded-lg border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800">View Profile</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TERMS OF SERVICE PAGE (NEW) -->
+        <section id="page-terms" class="page">
+            <div class="bg-dark py-12">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 legal-container">
+                    
+                    <!-- Header -->
+                    <div class="legal-header">
+                        <h1 class="text-4xl font-bold text-white mb-2">Terms of Service</h1>
+                        <p class="text-slate-400">Last Updated: January 1, 2025</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <p>Welcome to DDNex. By using our website, services, or purchasing our products, you agree to comply with and be bound by the following Terms of Service.</p>
+
+                        <h2>1. Services</h2>
+                        <p>DDNex provides web design, development, hosting, and AI integration services. We reserve the right to modify, suspend, or discontinue any service at any time without prior notice.</p>
+                        <ul>
+                            <li><strong>Static Websites:</strong> Delivered within 3-5 business days.</li>
+                            <li><strong>Interactive Websites:</strong> Delivered within 2-4 weeks depending on complexity.</li>
+                            <li><strong>AI Solutions:</strong> Delivered within 3-4 weeks including tuning.</li>
+                        </ul>
+
+                        <h2>2. Payment & Billing</h2>
+                        <p>All payments are processed securely via Razorpay. Setup fees are non-refundable. Monthly subscriptions are billed in advance.</p>
+                        <ul>
+                            <li><strong>Refund Policy:</strong> Setup fees are strictly non-refundable. Monthly fees can be prorated if cancellation occurs before the billing cycle, but this is at the discretion of management.</li>
+                            <li><strong>Failure to Pay:</strong> Services may be suspended if payments are not received within 7 days of the due date.</li>
+                        </ul>
+
+                        <h2>3. Hosting & Domains</h2>
+                        <p>We offer free subdomains (e.g., yourname.ddnex.my) for the first year. After the first year, a renewal fee applies. Clients using custom domains are responsible for their domain registration and renewal fees.</p>
+                        <ul>
+                            <li>DDNex is not responsible for domain expiration if the client manages their own domain.</li>
+                            <li>Content hosted on our servers must comply with Malaysian laws.</li>
+                        </ul>
+
+                        <h2>4. Client Responsibilities</h2>
+                        <p>Clients agree to provide accurate information, images, and text required for the website. Delays caused by the client waiting for content do not extend the delivery timeline guarantee.</p>
+
+                        <h2>5. Intellectual Property</h2>
+                        <p>Upon full payment, the client owns the final website code and design. However, DDNex retains the right to display the project in our portfolio. Third-party assets (fonts, stock images) remain the property of their respective licensors.</p>
+
+                        <h2>6. Limitation of Liability</h2>
+                        <p>DDNex shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.</p>
+                    </div>
+
+                    <div class="mt-12 text-center">
+                        <button onclick="navigateTo('home')" class="px-6 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors">Back to Home</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRIVACY POLICY PAGE (NEW) -->
+        <section id="page-privacy" class="page">
+            <div class="bg-dark py-12">
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 legal-container">
+                    
+                    <!-- Header -->
+                    <div class="legal-header">
+                        <h1 class="text-4xl font-bold text-white mb-2">Privacy Policy</h1>
+                        <p class="text-slate-400">Last Updated: January 1, 2025</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <p>At DDNex, we value your privacy. This policy outlines how we collect, use, and protect your personal information.</p>
+
+                        <h2>1. Information We Collect</h2>
+                        <p>We collect information to provide better services to all our users.</p>
+                        <ul>
+                            <li><strong>Account Information:</strong> Name, email address, phone number, and company details when you create an account.</li>
+                            <li><strong>Payment Information:</strong> Processed securely via Razorpay. We do not store your credit card details.</li>
+                            <li><strong>Project Data:</strong> Content, images, and files you upload for your website project.</li>
+                            <li><strong>Communications:</strong> Emails, chat logs, and support tickets.</li>
+                        </ul>
+
+                        <h2>2. How We Use Your Information</h2>
+                        <p>We use the information we collect to:</p>
+                        <ul>
+                            <li>Provide, maintain, and improve our services.</li>
+                            <li>Process transactions and send you related information.</li>
+                            <li>Send technical notices, updates, security alerts, and support messages.</li>
+                            <li>Respond to your comments, questions, and customer service requests.</li>
+                        </ul>
+
+                        <h2>3. Sharing of Information</h2>
+                        <p>We do not sell, trade, or otherwise transfer your personal information to outside parties. We may share your information only in the following cases:</p>
+                        <ul>
+                            <li><strong>Service Providers:</strong> We may share information with trusted third parties who perform services on our behalf (e.g., Firebase, Razorpay, Google Analytics).</li>
+                            <li><strong>Legal Requirements:</strong> We may disclose information where we believe it is necessary to investigate, prevent, or take action regarding illegal activities, suspected fraud, or potential threats to the physical safety of any person.</li>
+                        </ul>
+
+                        <h2>4. Data Security</h2>
+                        <p>We implement a variety of security measures to maintain the safety of your personal information. However, no method of transmission over the Internet is 100% secure. While we strive to protect your personal information, we cannot guarantee its absolute security.</p>
+
+                        <h2>5. Your Rights</h2>
+                        <p>You have the right to access, correct, or delete your personal data. You can do this by logging into your profile or contacting us directly at sales@ddnex.my.</p>
+                    </div>
+
+                    <div class="mt-12 text-center">
+                        <button onclick="navigateTo('home')" class="px-6 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors">Back to Home</button>
                     </div>
                 </div>
             </div>
@@ -2442,6 +2475,25 @@
             }
         } catch(e) { console.error("Firebase init error:", e); }
 
+        function initializeDatabase() {
+            if(!db) return;
+            const configRef = db.collection("config").doc("site_settings");
+            const doc = configRef.get();
+            if (!doc.exists) {
+                configRef.set({ maintenance_active: false, payment_methods: [] });
+            }
+        }
+
+        function listenToConfig() {
+            if(!db) return;
+            db.collection("config").doc("site_settings").onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Maintenance logic can go here
+                }
+            });
+        }
+
         // ==========================================
         // NOTIFICATION SYSTEM (CUSTOM MODAL)
         // ==========================================
@@ -2481,7 +2533,7 @@
         }
 
         // ==========================================
-        // ROUTER & TRANSITION SYSTEM (UPDATED)
+        // ROUTER & SMOOTH TRANSITIONS
         // ==========================================
         const routes = {
             '/': 'home', 
@@ -2510,29 +2562,24 @@
             '/leadership': 'leadership'
         };
 
-        function routeLink(event, path) { event.preventDefault(); navigateTo(path); }
+        let isTransitioning = false;
 
         function navigateTo(path) {
-            // 1. Determine Target
+            if (isTransitioning) return; // Prevent double clicks causing lag
+            
             if (!path.startsWith('/')) path = '/' + path;
             const sectionId = routes[path];
             if (!sectionId) return console.warn(`Route not found for path: ${path}`);
             
-            // 2. Update History & SEO
             window.history.pushState({ path: path }, "", path);
             updatePageSEO(path);
-
-            // 3. Perform Smooth Transition
             performTransition(sectionId);
         }
 
         window.addEventListener('popstate', (event) => {
             if (event.state && event.state.path) {
-                const target = routes[event.state.path];
-                if(target) {
-                    performTransition(target);
-                    updatePageSEO(event.state.path);
-                }
+                performTransition(routes[event.state.path]);
+                updatePageSEO(event.state.path);
             } else {
                 const path = window.location.pathname;
                 const target = routes[path] || 'home'; 
@@ -2544,20 +2591,13 @@
         function handleInitialRoute() {
             const path = window.location.pathname;
             const target = routes[path] || 'home'; 
-            performTransition(target, true); // true = instant
+            performTransition(target, true);
             updatePageSEO(path); 
         }
 
-        let isTransitioning = false;
-
-        // IMPROVED TRANSITION LOGIC
         function performTransition(targetSectionId, isInstant = false) {
-            if (isTransitioning && !isInstant) return;
-            if (isInstant) {
-                isTransitioning = false; // Force clear
-            } else {
-                isTransitioning = true;
-            }
+            if (isTransitioning) return;
+            isTransitioning = true;
 
             const currentSection = document.querySelector('.page.active');
             const targetSection = document.getElementById(`page-${targetSectionId}`);
@@ -2567,75 +2607,48 @@
                 return;
             }
 
-            // Scroll to top smoothly
-            window.scrollTo({ top: 0, behavior: isInstant ? 'auto' : 'smooth' });
-
-            // Scenario A: First Load (No Current Section)
-            if (!currentSection) {
-                targetSection.style.display = 'block';
-                targetSection.classList.add('active');
-                handlePageLogic(targetSectionId);
-                isTransitioning = false;
-                return;
+            // 1. PREPARE NEW PAGE (Hide it initially to prevent flash)
+            if(targetSection) {
+                targetSection.classList.remove('page-exit');
+                targetSection.style.opacity = '0';
+                targetSection.style.transform = 'translateY(20px)';
+                // Ensure display block is set via JS logic to trigger transition
             }
 
-            // Scenario B: Normal Transition
-            // 1. Setup "Entering" State for New Page
-            // We use requestAnimationFrame to ensure the browser paints the initial state (opacity 0) 
-            // before adding the class that triggers the transition (opacity 1).
-            targetSection.style.display = 'block'; // Make it part of the DOM
-            targetSection.classList.add('is-entering'); // Add initial animation class (opacity: 0, translate Y)
-            
-            // Force Reflow (browser needs this to recognize the start state before transitioning)
-            void targetSection.offsetWidth; 
-
-            // 2. Trigger Exit Animation on Current Page
-            currentSection.classList.add('is-exiting'); // Prepares exit styles (absolute, etc)
-            
-            // Small delay to allow layout to settle if needed, then trigger CSS transition
-            requestAnimationFrame(() => {
-                currentSection.classList.add('active-exit'); // Triggers fade out/shrink
-                targetSection.classList.add('active-enter'); // Triggers fade in/slide up
+            // 2. EXIT ANIMATION FOR CURRENT PAGE
+            if (currentSection) {
+                currentSection.classList.add('page-exit');
                 
-                // 3. Cleanup after transition duration (matches CSS)
+                // Wait for exit animation (CSS handles the fade/slide out)
                 setTimeout(() => {
-                    // Clean up Old Page
-                    currentSection.classList.remove('active', 'is-exiting', 'active-exit');
-                    currentSection.style.display = 'none'; // Remove from DOM flow
+                    currentSection.classList.remove('active');
+                    currentSection.style.display = 'none';
                     
-                    // Clean up New Page (Make it permanent)
-                    targetSection.classList.remove('is-entering', 'active-enter');
-                    targetSection.classList.add('active'); // Mark as active/stable
-                    
-                    // 4. Handle Logic (Data loading) AFTER animation starts to prevent UI freeze
-                    // Use a very short timeout to let the main thread breathe
-                    setTimeout(() => {
+                    // 3. ENTER ANIMATION FOR NEW PAGE
+                    if(targetSection) {
+                        targetSection.style.display = 'block';
+                        // Force reflow
+                        void targetSection.offsetWidth; 
+                        
+                        // Add active class to trigger CSS transition (opacity 0->1, transform 20px->0)
+                        targetSection.classList.add('active');
+                        
+                        // Handle page specific logic
                         handlePageLogic(targetSectionId);
-                        isTransitioning = false;
-                    }, 50);
-
-                }, 500); // 500ms matches the longest CSS transition in the styles
-            });
-        }
-
-        function handlePageLogic(targetSectionId) {
-            // We use a slight defer for heavy operations to keep the transition smooth
-            requestAnimationFrame(() => {
-                if(targetSectionId === 'profile') loadProfilePageData();
-                if(targetSectionId === 'reviews' || targetSectionId === 'home') {
-                    renderDummyReview(); 
-                    if(reviewsCache.length === 0) listenToReviews(); 
-                    else renderReviewsList(document.getElementById('reviews-list'));
+                    }
+                    
+                    isTransitioning = false;
+                }, 300); // Slightly faster than CSS (300ms) for snappier feel
+            } else
+                            // First load or no previous section
+                if(targetSection) {
+                    targetSection.style.display = 'block';
+                    void targetSection.offsetWidth; 
+                    targetSection.classList.add('active');
+                    handlePageLogic(targetSectionId);
                 }
-                if(targetSectionId === 'checkout' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-                if(targetSectionId === 'updates' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-                if(targetSectionId === 'home') loadHomePortfolio();
-                if(targetSectionId === 'portfolio') loadPortfolio();
-                if(targetSectionId === 'products') loadProducts();
-            });
-        }
-    
-        setTimeout(handleInitialRoute, 100);
+                isTransitioning = false;
+            }
 
         function updatePageSEO(path) {
             const config = SEO_CONFIG[path];
@@ -2645,6 +2658,22 @@
                 document.querySelector('link[rel="canonical"]').setAttribute("href", config.canonical);
             }
         }
+
+        function handlePageLogic(targetSectionId) {
+            if(targetSectionId === 'profile') loadProfilePageData();
+            if(targetSectionId === 'reviews' || targetSectionId === 'home') {
+                renderDummyReview(); 
+                if(reviewsCache.length === 0) listenToReviews(); 
+                else renderReviewsList(document.getElementById('reviews-list'));
+            }
+            if(targetSectionId === 'checkout' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+            if(targetSectionId === 'updates' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+            if(targetSectionId === 'home') loadHomePortfolio();
+            if(targetSectionId === 'portfolio') loadPortfolio();
+            if(targetSectionId === 'products') loadProducts();
+        }
+    
+        setTimeout(handleInitialRoute, 100);
 
         // ==========================================
         // MODALS & ALERTS
@@ -2696,89 +2725,15 @@
         // ==========================================
         // AUTH LOGIC
         // ==========================================
-            function handleLogin(e) {
-        e.preventDefault();
-        if(!auth) return showNotification("Error", "Authentication system initializing...", "error");
-        
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        
-        auth.signInWithEmailAndPassword(email, password).then(() => {
-            const user = auth.currentUser;
-            triggerLoginSuccessAnimation(() => {
-                if (pendingPackage) {
-                    selectPackage(pendingPackage.name, pendingPackage.type);
-                    pendingPackage = null;
-                } else {
-                    navigateTo('/');
-                }
-            }, user.displayName || user.email.split('@')[0]);
-        }).catch((error) => {
-            const friendlyMsg = getFirebaseErrorMessage(error);
-            showNotification("Login Failed", friendlyMsg, "error");
-        });
-    }
-    
-    function handleForgotPassword(e) {
-        e.preventDefault();
-        if(!auth) return showNotification("Error", "Authentication system initializing...", "error");
-        
-        const email = document.getElementById('forgot-email').value;
-        
-        if(!email) return showNotification("Error", "Please enter your email address.", "error");
-
-        auth.sendPasswordResetEmail(email).then(() => {
-            showNotification("Email Sent", "Please check your email for password reset instructions.", "success");
-            setTimeout(() => navigateTo('login'), 3000);
-        }).catch((error) => {
-            const friendlyMsg = getFirebaseErrorMessage(error);
-            showNotification("Reset Failed", friendlyMsg, "error");
-        });
-    }
-
-    function handleSignup(e) {
-        e.preventDefault();
-        if(!auth) return showNotification("Error", "Firebase not configured", "error");
-        
-        const name = document.getElementById('signup-name').value;
-        const phone = document.getElementById('signup-phone').value;
-        const email = document.getElementById('signup-email').value;
-        const password = document.getElementById('signup-password').value;
-        
-        auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
-            return db.collection("users").doc(userCredential.user.uid).set({ 
-                name: name, phone: phone, email: email, role: 'user',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp() 
-            });
-        }).then(() => {
-            triggerLoginSuccessAnimation(() => {
-                 if (pendingPackage) {
-                    selectPackage(pendingPackage.name, pendingPackage.type);
-                    pendingPackage = null;
-                } else {
-                    navigateTo('/');
-                }
-            }, name);
-        }).catch((error) => {
-            const friendlyMsg = getFirebaseErrorMessage(error);
-            showNotification("Signup Failed", friendlyMsg, "error");
-        });
-    }
-
-    function handleGoogleAuth() {
-        if(!auth) return showNotification("Error", "Auth not initialized", "error");
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).then((result) => {
-            const user = result.user;
-            db.collection("users").doc(user.uid).get().then((doc) => {
-                if (!doc.exists) {
-                    return db.collection("users").doc(user.uid).set({
-                        name: user.displayName || 'Google User', email: user.email, phone: '', role: 'user',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-            }).then(() => {
-                const name = user.displayName || user.email.split('@')[0];
+        function handleLogin(e) {
+            e.preventDefault();
+            if(!auth) return showNotification("Error", "Authentication system initializing...", "error");
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            auth.signInWithEmailAndPassword(email, password).then(() => {
+                const user = auth.currentUser;
                 triggerLoginSuccessAnimation(() => {
                     if (pendingPackage) {
                         selectPackage(pendingPackage.name, pendingPackage.type);
@@ -2786,1135 +2741,1215 @@
                     } else {
                         navigateTo('/');
                     }
-                }, name);
+                }, user.displayName || user.email.split('@')[0]);
+            }).catch((error) => {
+                const friendlyMsg = getFirebaseErrorMessage(error);
+                showNotification("Login Failed", friendlyMsg, "error");
             });
-        }).catch((error) => {
-            console.error(error);
-            const friendlyMsg = getFirebaseErrorMessage(error);
-            showNotification("Google Auth Failed", friendlyMsg, "error");
-        });
-    }
-
-    function triggerLoginSuccessAnimation(onCompleteCallback, userName) {
-        showNotification("Welcome", `Welcome back, ${userName}!`, "success");
-        if(onCompleteCallback) {
-            setTimeout(() => onCompleteCallback(), 1000);
         }
-    }
+        
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            if(!auth) return showNotification("Error", "Authentication system initializing...", "error");
+            
+            const email = document.getElementById('forgot-email').value;
+            
+            if(!email) return showNotification("Error", "Please enter your email address.", "error");
 
-    function getFirebaseErrorMessage(error) {
-        switch (error.code) {
-            case 'auth/user-not-found': return "No account found with this email address.";
-            case 'auth/wrong-password': return "Incorrect password. Please try again.";
-            case 'auth/invalid-login-credentials': return "Invalid email or password. Please try again.";
-            case 'auth/invalid-credential': return "The provided credentials are invalid.";
-            case 'auth/email-already-in-use': return "This email is already registered. Please login.";
-            case 'auth/weak-password': return "Password should be at least 6 characters.";
-            case 'auth/invalid-email': return "Please enter a valid email address.";
-            case 'auth/too-many-requests': return "Access temporarily disabled due to many failed attempts. Reset password or try later.";
-            case 'auth/user-disabled': return "This account has been disabled. Contact support.";
-            case 'auth/popup-closed-by-user': return "Sign-in process was cancelled.";
-            case 'auth/network-request-failed': return "Network error. Please check your connection.";
-            default: return "An unexpected error occurred. Please try again.";
+            auth.sendPasswordResetEmail(email).then(() => {
+                showNotification("Email Sent", "Please check your email for password reset instructions.", "success");
+                setTimeout(() => navigateTo('login'), 3000);
+            }).catch((error) => {
+                const friendlyMsg = getFirebaseErrorMessage(error);
+                showNotification("Reset Failed", friendlyMsg, "error");
+            });
         }
-    }
 
-    // ==========================================
-    // PROFILE & AUTH STATE LISTENER
-    // ==========================================
-    function loadProfilePageData() {
-        if(!auth || !auth.currentUser) return;
-        
-        const uid = auth.currentUser.uid;
-        const profFields = ['prof-name', 'prof-phone', 'prof-email', 'prof-company'];
-        const displayFields = ['prof-display-name', 'prof-display-email'];
-        
-        profFields.forEach(id => { const el = document.getElementById(id); if(el) el.value = "Loading..."; });
-        displayFields.forEach(id => { const el = document.getElementById(id); if(el) el.textContent = "Loading..."; });
+        function handleSignup(e) {
+            e.preventDefault();
+            if(!auth) return showNotification("Error", "Firebase not configured", "error");
+            
+            const name = document.getElementById('signup-name').value;
+            const phone = document.getElementById('signup-phone').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
+                return db.collection("users").doc(userCredential.user.uid).set({ 
+                    name: name, phone: phone, email: email, role: 'user',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                });
+            }).then(() => {
+                triggerLoginSuccessAnimation(() => {
+                     if (pendingPackage) {
+                        selectPackage(pendingPackage.name, pendingPackage.type);
+                        pendingPackage = null;
+                    } else {
+                        navigateTo('/');
+                    }
+                }, name);
+            }).catch((error) => {
+                const friendlyMsg = getFirebaseErrorMessage(error);
+                showNotification("Signup Failed", friendlyMsg, "error");
+            });
+        }
 
-        // 1. Fetch User Data
-        db.collection("users").doc(uid).get().then((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                // Form Fields
-                if(data.name) document.getElementById('prof-name').value = data.name;
-                if(data.phone) document.getElementById('prof-phone').value = data.phone;
-                if(data.email) {
-                    document.getElementById('prof-email').value = data.email || auth.currentUser.email;
-                    document.getElementById('prof-display-email').textContent = data.email || auth.currentUser.email;
-                }
-                if(data.company) document.getElementById('prof-company').value = data.company;
-                
-                // Display Fields
-                document.getElementById('prof-display-name').textContent = data.name || 'User';
-                document.getElementById('prof-role').textContent = data.role === 'admin' ? 'Admin' : 'Standard Client';
-                
-                // Voucher Logic
-                if(data.personalVoucher) { 
-                    currentUserPersonalVoucher = data.personalVoucher; 
-                    showVoucherCard(data.personalVoucher); 
-                } else { 
-                    currentUserPersonalVoucher = null; 
-                    hideVoucherCard(); 
-                }
-            }
-        }).catch((error) => showNotification("Error", "Error loading profile data.", "error"));
-
-        // 2. Fetch Orders to Determine Active Plan
-        fetchAndRenderActivePlan(uid);
-        
-        // 3. Fetch Order History Table
-        loadOrderHistory(uid);
-    }
-
-    // Function to determine and render Active Plan
-    function fetchAndRenderActivePlan(uid) {
-        if(!db) return;
-        const activeCard = document.getElementById('active-plan-card');
-        const noPlanCta = document.getElementById('no-plan-cta');
-        const planNameEl = document.getElementById('profile-plan-name');
-        const domainNameEl = document.getElementById('profile-domain-name');
-        const billingCycleEl = document.getElementById('profile-billing-cycle');
-        const statusBadge = document.getElementById('profile-status-badge');
-
-        // Reset UI
-        activeCard.classList.add('hidden');
-        noPlanCta.classList.add('hidden');
-
-        db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(1)
-            .get()
-            .then((snapshot) => {
-                if (!snapshot.empty) {
-                    // Find the most recent order
-                    const orderData = snapshot.docs[0].data();
-                    
-                    // Logic: Consider a plan active if the status is 'Paid' or 'Completed'
-                    if (orderData.status === 'Paid' || orderData.status === 'Completed') {
-                        
-                        // Show Active Card
-                        activeCard.classList.remove('hidden');
-                        
-                        planNameEl.textContent = orderData.package || 'Website Package';
-                        
-                        // Handle Domain
-                        if(orderData.domain && orderData.domain.length > 0) {
-                            domainNameEl.textContent = orderData.domain;
-                        } else if (orderData.domainName) {
-                            domainNameEl.textContent = orderData.domainName;
+        function handleGoogleAuth() {
+            if(!auth) return showNotification("Error", "Auth not initialized", "error");
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then((result) => {
+                const user = result.user;
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if (!doc.exists) {
+                        return db.collection("users").doc(user.uid).set({
+                            name: user.displayName || 'Google User', email: user.email, phone: '', role: 'user',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }).then(() => {
+                    const name = user.displayName || user.email.split('@')[0];
+                    triggerLoginSuccessAnimation(() => {
+                        if (pendingPackage) {
+                            selectPackage(pendingPackage.name, pendingPackage.type);
+                            pendingPackage = null;
                         } else {
-                            domainNameEl.textContent = "Pending Configuration";
+                            navigateTo('/');
                         }
+                    }, name);
+                });
+            }).catch((error) => {
+                console.error(error);
+                const friendlyMsg = getFirebaseErrorMessage(error);
+                showNotification("Google Auth Failed", friendlyMsg, "error");
+            });
+        }
 
-                        // Handle Billing Cycle
-                        const cycle = orderData.billingCycle || 'Monthly';
-                        billingCycleEl.textContent = cycle === 'One-Time' ? 'One-time Payment' : `Recurring (${cycle})`;
+        function triggerLoginSuccessAnimation(onCompleteCallback, userName) {
+            showNotification("Welcome", `Welcome back, ${userName}!`, "success");
+            if(onCompleteCallback) {
+                setTimeout(() => onCompleteCallback(), 1000);
+            }
+        }
 
-                        // Set Status Color
-                        statusBadge.className = "px-4 py-1.5 rounded-full font-bold text-sm border";
-                        if(orderData.status === 'Paid') {
-                            statusBadge.classList.add('bg-emerald-900/50', 'text-emerald-400', 'border-emerald-700/30');
-                            statusBadge.textContent = 'Active';
-                        } else if (orderData.status === 'Completed') {
-                            statusBadge.classList.add('bg-blue-900/50', 'text-blue-400', 'border-blue-700/30');
-                            statusBadge.textContent = 'Completed';
+        function getFirebaseErrorMessage(error) {
+            switch (error.code) {
+                case 'auth/user-not-found': return "No account found with this email address.";
+                case 'auth/wrong-password': return "Incorrect password. Please try again.";
+                case 'auth/invalid-login-credentials': return "Invalid email or password. Please try again.";
+                case 'auth/invalid-credential': return "The provided credentials are invalid.";
+                case 'auth/email-already-in-use': return "This email is already registered. Please login.";
+                case 'auth/weak-password': return "Password should be at least 6 characters.";
+                case 'auth/invalid-email': return "Please enter a valid email address.";
+                case 'auth/too-many-requests': return "Access temporarily disabled due to many failed attempts. Reset password or try later.";
+                case 'auth/user-disabled': return "This account has been disabled. Contact support.";
+                case 'auth/popup-closed-by-user': return "Sign-in process was cancelled.";
+                case 'auth/network-request-failed': return "Network error. Please check your connection.";
+                default: return "An unexpected error occurred. Please try again.";
+            }
+        }
+
+        // ==========================================
+        // PROFILE & AUTH STATE LISTENER (UPDATED)
+        // ==========================================
+        function loadProfilePageData() {
+            if(!auth || !auth.currentUser) return;
+            
+            const uid = auth.currentUser.uid;
+            const profFields = ['prof-name', 'prof-phone', 'prof-email', 'prof-company'];
+            const displayFields = ['prof-display-name', 'prof-display-email'];
+            
+            profFields.forEach(id => { const el = document.getElementById(id); if(el) el.value = "Loading..."; });
+            displayFields.forEach(id => { const el = document.getElementById(id); if(el) el.textContent = "Loading..."; });
+
+            // 1. Fetch User Data
+            db.collection("users").doc(uid).get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Form Fields
+                    if(data.name) document.getElementById('prof-name').value = data.name;
+                    if(data.phone) document.getElementById('prof-phone').value = data.phone;
+                    if(data.email) {
+                        document.getElementById('prof-email').value = data.email || auth.currentUser.email;
+                        document.getElementById('prof-display-email').textContent = data.email || auth.currentUser.email;
+                    }
+                    if(data.company) document.getElementById('prof-company').value = data.company;
+                    
+                    // Display Fields
+                    document.getElementById('prof-display-name').textContent = data.name || 'User';
+                    document.getElementById('prof-role').textContent = data.role === 'admin' ? 'Admin' : 'Standard Client';
+                    
+                    // Voucher Logic
+                    if(data.personalVoucher) { 
+                        currentUserPersonalVoucher = data.personalVoucher; 
+                        showVoucherCard(data.personalVoucher); 
+                    } else { 
+                        currentUserPersonalVoucher = null; 
+                        hideVoucherCard(); 
+                    }
+                }
+            }).catch((error) => showNotification("Error", "Error loading profile data.", "error"));
+
+            // 2. Fetch Orders to Determine Active Plan (NEW LOGIC)
+            fetchAndRenderActivePlan(uid);
+            
+            // 3. Fetch Order History Table
+            loadOrderHistory(uid);
+        }
+
+        // NEW: Function to determine and render Active Plan
+        function fetchAndRenderActivePlan(uid) {
+            if(!db) return;
+            const activeCard = document.getElementById('active-plan-card');
+            const noPlanCta = document.getElementById('no-plan-cta');
+            const planNameEl = document.getElementById('profile-plan-name');
+            const domainNameEl = document.getElementById('profile-domain-name');
+            const billingCycleEl = document.getElementById('profile-billing-cycle');
+            const statusBadge = document.getElementById('profile-status-badge');
+
+            // Reset UI
+            activeCard.classList.add('hidden');
+            noPlanCta.classList.add('hidden');
+
+            db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(1)
+                .get()
+                .then((snapshot) => {
+                    if (!snapshot.empty) {
+                        // Find the most recent order
+                        const orderData = snapshot.docs[0].data();
+                        
+                        // Logic: Consider a plan active if the status is 'Paid' or 'Completed'
+                        if (orderData.status === 'Paid' || orderData.status === 'Completed') {
+                            
+                            // Show Active Card
+                            activeCard.classList.remove('hidden');
+                            
+                            planNameEl.textContent = orderData.package || 'Website Package';
+                            
+                            // Handle Domain
+                            if(orderData.domain && orderData.domain.length > 0) { // Changed to domain based on earlier code logic
+                                domainNameEl.textContent = orderData.domain;
+                            } else if (orderData.domainName) {
+                                domainNameEl.textContent = orderData.domainName;
+                            }
+                             else {
+                                domainNameEl.textContent = "Pending Configuration";
+                            }
+
+                            // Handle Billing Cycle
+                            const cycle = orderData.billingCycle || 'Monthly';
+                            billingCycleEl.textContent = cycle === 'One-Time' ? 'One-time Payment' : `Recurring (${cycle})`;
+
+                            // Set Status Color
+                            statusBadge.className = "px-4 py-1.5 rounded-full font-bold text-sm border";
+                            if(orderData.status === 'Paid') {
+                                statusBadge.classList.add('bg-emerald-900/50', 'text-emerald-400', 'border-emerald-700/30');
+                                statusBadge.textContent = 'Active';
+                            } else if (orderData.status === 'Completed') {
+                                statusBadge.classList.add('bg-blue-900/50', 'text-blue-400', 'border-blue-700/30');
+                                statusBadge.textContent = 'Completed';
+                            }
+                        } else {
+                            // User has orders, but the latest one is not Paid/Completed
+                            noPlanCta.classList.remove('hidden');
                         }
                     } else {
-                        // User has orders, but the latest one is not Paid/Completed
+                        // No orders found at all
                         noPlanCta.classList.remove('hidden');
                     }
-                } else {
-                    // No orders found at all
+                }).catch((error) => {
+                    console.error("Error fetching active plan:", error);
                     noPlanCta.classList.remove('hidden');
-                }
-            }).catch((error) => {
-                console.error("Error fetching active plan:", error);
-                noPlanCta.classList.remove('hidden');
-            });
-    }
+                });
+        }
 
-    function loadOrderHistory(uid) {
-        if(!db) return;
-        const tbody = document.getElementById('order-history-body');
-        const noMsg = document.getElementById('no-orders');
-        
-        if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
-
-        db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(10)
-            .onSnapshot((snapshot) => {
-                if(tbody) tbody.innerHTML = '';
-                if (snapshot.empty) {
-                    if(noMsg) noMsg.classList.remove('hidden');
-                    if(tbody) tbody.parentElement.style.display = 'none';
-                } else {
-                    if(noMsg) noMsg.classList.add('hidden');
-                    if(tbody) tbody.parentElement.style.display = 'table';
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
-                        const total = data.total || 'RM 0';
-                        const pkg = data.package || 'Unknown Package';
-                        const status = data.status || 'Pending';
-                        let statusClass = 'status-pending';
-                        if(status === 'Paid') statusClass = 'status-paid';
-                        if(status === 'Completed') statusClass = 'status-completed';
-                        if(status === 'Cancelled') statusClass = 'status-cancelled';
-                        
-                        const row = `<tr><td>${date}</td><td style="font-weight:600;">${pkg}</td><td class="text-right">${total}</td><td class="text-right"><span class="status-badge ${statusClass}">${status}</span></td></tr>`;
-                        if(tbody) tbody.innerHTML += row;
-                    });
-                }
-            });
-    }
-
-    function showVoucherCard(voucher) {
-        const section = document.getElementById('profile-voucher-section');
-        const codeEl = document.getElementById('profile-voucher-code');
-        const descEl = document.getElementById('profile-voucher-desc');
-        const noVoucher = document.getElementById('no-voucher-section');
-        
-        if(section && codeEl && descEl) {
-            section.classList.remove('hidden');
-            if(noVoucher) noVoucher.classList.add('hidden');
+        function loadOrderHistory(uid) {
+            if(!db) return;
+            const tbody = document.getElementById('order-history-body');
+            const noMsg = document.getElementById('no-orders');
             
-            codeEl.innerText = voucher.code;
-            const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
-            descEl.innerText = `${displayVal} Discount`;
-        }
-    }
+            if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
 
-    function hideVoucherCard() {
-        const section = document.getElementById('profile-voucher-section');
-        const noVoucher = document.getElementById('no-voucher-section');
-        if(section) section.classList.add('hidden');
-        if(noVoucher) noVoucher.classList.remove('hidden');
-    }
-
-    function handleProfileUpdate(e) {
-        e.preventDefault();
-        if(!auth || !auth.currentUser) return;
-        const name = document.getElementById('prof-name').value;
-        const phone = document.getElementById('prof-phone').value;
-        const company = document.getElementById('prof-company').value;
-        db.collection("users").doc(auth.currentUser.uid).update({ name: name, phone: phone, company: company })
-        .then(() => {
-            showNotification("Success", "Profile Updated Successfully!", "success");
-            fetchAndSyncUserData(auth.currentUser.uid);
-            document.getElementById('prof-display-name').textContent = name; // Quick update
-        }).catch((error) => showNotification("Error", error.message, "error"));
-    }
-
-    function deletePersonalVoucher() {
-        if(!auth || !auth.currentUser) return;
-        if(confirm("Are you sure you want to remove this voucher?")) {
-            db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
-                currentUserPersonalVoucher = null; 
-                hideVoucherCard();
-                showNotification("Voucher Removed", "Voucher removed from account.", "success");
-            });
-        }
-    }
-
-    function handleLogout() {
-        if(auth) { 
-            currentUserPersonalVoucher = null; 
-            auth.signOut().then(() => { 
-                showNotification("Logged Out", "See you again soon!", "success"); 
-                navigateTo('/'); 
-            }); 
-        }
-    }
-
-    // Auth State Listener
-    if(auth) {
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                db.collection("users").doc(user.uid).get().then((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        currentUserRole = data.role || 'user'; 
-                        updateHeaderForUser(user); 
-                        if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; } 
-                        else { currentUserPersonalVoucher = null; }
+            db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(10)
+                .onSnapshot((snapshot) => {
+                    if(tbody) tbody.innerHTML = '';
+                    if (snapshot.empty) {
+                        if(noMsg) noMsg.classList.remove('hidden');
+                        if(tbody) tbody.parentElement.style.display = 'none';
+                    } else {
+                        if(noMsg) noMsg.classList.add('hidden');
+                        if(tbody) tbody.parentElement.style.display = 'table';
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
+                            const total = data.total || 'RM 0';
+                            const pkg = data.package || 'Unknown Package';
+                            const status = data.status || 'Pending';
+                            let statusClass = 'status-pending';
+                            if(status === 'Paid') statusClass = 'status-paid';
+                            if(status === 'Completed') statusClass = 'status-completed';
+                            if(status === 'Cancelled') statusClass = 'status-cancelled';
+                            
+                            const row = `<tr><td>${date}</td><td style="font-weight:600;">${pkg}</td><td class="text-right">${total}</td><td class="text-right"><span class="status-badge ${statusClass}">${status}</span></td></tr>`;
+                            if(tbody) tbody.innerHTML += row;
+                        });
                     }
                 });
-            } else {
-                updateHeaderForGuest(); 
-            }
-        });
-    }
-
-    function updateHeaderForUser(user) {
-        const isAdmin = currentUserRole === 'admin';
-        const deskAuth = document.getElementById('desktopAuthLinks');
-        if(deskAuth) {
-            let userControls = `<a href="#" onclick="navigateTo('/profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white"><i class="ri-user-line"></i> Profile</a><span class="logout-btn hidden md:block text-slate-400 cursor-pointer transition: 0.2s white-space-nowrap;" onclick="handleLogout()">Logout</span>`;
-            if (isAdmin) userControls = `<a href="admin.html" target="_blank" class="admin-link text-emerald-400 mr-4" title="Admin Portal"><i class="ri-shield-user-fill"></i></a>${userControls}`;
-            deskAuth.innerHTML = userControls;
-        }
-        
-        const mobAuth = document.getElementById('mobileAuthLinksContainer');
-        if(mobAuth) {
-            let authButtons = `<a href="/profile" onclick="routeLink(event, '/profile'); toggleMobileMenu()" class="block text-slate-300 hover:text-white py-4 font-medium border-b border-slate-800">Profile</a>`;
-            if (isAdmin) authButtons += `<a href="admin.html" target="_blank" onclick="toggleMobileMenu()" class="block text-emerald-400 hover:text-white py-4 font-medium border-b border-slate-800">Admin Portal</a>`;
-            authButtons += `<a href="#" onclick="handleLogout(); toggleMobileMenu()" class="block text-red-400 hover:text-red-300 py-4 font-medium">Logout</a>`;
-            mobAuth.innerHTML = authButtons;
-        }
-    }
-
-    function updateHeaderForGuest() {
-        const deskAuth = document.getElementById('desktopAuthLinks');
-        if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="navigateTo('login')" class="px-6 py-2 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-sm font-medium">Login</a>`;
-        const mobAuth = document.getElementById('mobileAuthLinksContainer');
-        if(mobAuth) mobAuth.innerHTML = `<a href="/login" onclick="navigateTo('login'); toggleMobileMenu()" class="block text-slate-300 hover:text-white py-4 font-medium border-b border-slate-800">Login</a><a href="/signup" onclick="navigateTo('signup'); toggleMobileMenu()" class="block text-slate-300 hover:text-white py-4 font-medium border-b border-slate-800">Sign Up</a>`;
-    }
-
-    function clearUserData() {
-        const inputs = ['prof-name', 'prof-phone', 'prof-email', 'prof-company', 'co-firstname', 'co-lastname', 'co-email', 'co-company'];
-        inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-    }
-
-    // ==========================================
-    // PRICING LOGIC
-    // ==========================================
-    function setBilling(cycle) {
-        billingCycle = cycle;
-        const btnMonthly = document.getElementById('btn-monthly');
-        const btnOnetime = document.getElementById('btn-onetime');
-
-        if(btnMonthly && btnOnetime) {
-            if(cycle === 'monthly') { 
-                btnMonthly.classList.add('bg-emerald-600', 'text-white'); 
-                btnMonthly.classList.remove('text-slate-400');
-                btnOnetime.classList.remove('bg-emerald-600', 'text-white'); 
-                btnOnetime.classList.add('text-slate-400');
-            } else { 
-                btnMonthly.classList.remove('bg-emerald-600', 'text-white'); 
-                btnMonthly.classList.add('text-slate-400');
-                btnOnetime.classList.add('bg-emerald-600', 'text-white'); 
-                btnOnetime.classList.remove('text-slate-400');
-            }
         }
 
-        document.querySelectorAll('.price-display').forEach(el => {
-            const monthly = el.dataset.monthly;
-            const onetime = el.dataset.onetime;
-            if (monthly && onetime) {
-                el.textContent = 'RM ' + (cycle === 'monthly' ? monthly : onetime);
-                const periodEl = el.parentElement.querySelector('.price-period');
-                if(periodEl) periodEl.textContent = cycle === 'monthly' ? '/month' : ' one-time';
-            }
-        });
-
-        document.querySelectorAll('.maintenance-yes').forEach(el => el.classList.toggle('hidden', cycle === 'onetime'));
-        document.querySelectorAll('.maintenance-no').forEach(el => el.classList.toggle('hidden', cycle === 'monthly'));
-
-        state.billingCycle = cycle;
-        state.isOneTime = (cycle === 'onetime');
-        
-        if(selectedPackageType && PRICING_DATA[selectedPackageType]) {
-            state.packagePrice = cycle === 'monthly' ? PRICING_DATA[selectedPackageType].monthly : PRICING_DATA[selectedPackageType].oneTime;
-            updateTotal();
-        }
-    }
-
-    function attemptSelectPackage(name, type) {
-        if (typeof auth === 'undefined' || auth === null) { 
-            showNotification("Error", "Authentication system initializing...", "error"); 
-            return; 
-        }
-        
-        if (auth.currentUser) { 
-            selectPackage(name, type); 
-        } else { 
-            pendingPackage = { name, type };
-            showAuthModal(); 
-        }
-    }
-
-    // ==========================================
-    // CHECKOUT LOGIC
-    // ==========================================
-    
-    function selectPackage(name, type) {
-        selectedPackage = name;
-        selectedPackageType = type;
-        state.packageType = type;
-        
-        // Use global billing cycle, defaulting to monthly if not set
-        state.billingCycle = billingCycle || 'monthly';
-        state.isOneTime = (billingCycle === 'onetime');
-        state.paymentMode = 'full';
-        
-        // Get prices from data
-        state.setupFee = PRICING_DATA[type].setupFee;
-        state.packagePrice = billingCycle === 'monthly' ? PRICING_DATA[type].monthly : PRICING_DATA[type].oneTime;
-
-        // Reset Step to 1
-        currentCheckoutStep = 1;
-        
-        // Populate Step 1 Data
-        document.getElementById('s1-plan-name').innerText = name;
-        document.getElementById('s1-plan-price').innerText = 'RM ' + state.packagePrice;
-        document.getElementById('s1-setup-price').innerText = 'RM ' + state.setupFee;
-        
-        const firstTotal = state.setupFee + state.packagePrice;
-        document.getElementById('s1-first-total').innerText = 'RM ' + firstTotal;
-        document.getElementById('s1-recurring-price').innerText = 'RM ' + state.packagePrice + '/mo';
-        
-        // Populate Features List
-        const featureContainer = document.getElementById('s1-features-list');
-        featureContainer.innerHTML = '';
-        if(PRICING_DATA[type].features) {
-            PRICING_DATA[type].features.forEach(feature => {
-                featureContainer.innerHTML += `<li><i class="ri-checkbox-circle-fill text-emerald-500"></i> ${feature}</li>`;
-            });
-        }
-
-        // Reset Steps UI
-        updateStepUI(1);
-        
-        if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
-        else { clearUserData(); hideVoucherCard(); }
-
-        // Navigate to checkout
-        navigateTo('checkout');
-    }
-
-    function updateStepUI(step) {
-        // Hide all steps
-        document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-        // Show current step
-        document.getElementById(`step-${step}`).classList.add('active');
-        
-        // Update dots
-        for(let i=1; i<=3; i++) {
-            const dot = document.getElementById(`dot-${i}`);
-            dot.classList.remove('active', 'completed');
-            if(i < step) dot.classList.add('completed');
-            if(i === step) dot.classList.add('active');
-        }
-        
-        window.scrollTo(0, 0);
-    }
-
-    function goToStep(step) {
-        currentCheckoutStep = step;
-        updateStepUI(step);
-    }
-
-    function selectDomainType(type, element) {
-        state.domainType = type;
-        
-        // UI Update
-        const options = document.querySelectorAll('.radio-option');
-        options.forEach(opt => opt.classList.remove('selected'));
-        element.classList.add('selected');
-        const input = element.querySelector('input');
-        if(input) input.checked = true;
-        
-        // Input Visibility
-        const subInput = document.getElementById('subdomain-input');
-        const customInput = document.getElementById('custom-domain-input');
-        
-        if(type === 'sub') {
-            subInput.disabled = false;
-            customInput.disabled = true;
-            customInput.value = '';
-            state.domainPrice = 0;
-            updateDomainPreview();
-        } else {
-            subInput.disabled = true;
-            subInput.value = '';
-            customInput.disabled = false;
-            state.domainPrice = 0;
-            updateDomainPreview();
-        }
-    }
-
-    function updateDomainPreview() {
-        const text = document.getElementById('subdomain-input').value;
-        const preview = document.getElementById('preview-text');
-        if(preview) {
-            preview.innerText = text.length > 0 ? text : "yourname";
-            state.domainName = text.length > 0 ? `${text}.ddnex.my` : '';
-            state.domainNameValid = text.length > 0;
-        }
-    }
-
-    function applyPromo() {
-        if(!auth || !auth.currentUser) return showNotification("Login Required", "Please login to use Promo Codes.", "warning");
-        const input = document.getElementById('promo-input');
-        const code = input ? input.value.trim().toUpperCase() : '';
-        
-        if(!code || code === "") {
-            showNotification("Missing Code", "Please enter a voucher code first.", "error");
-            return;
-        }
-        
-        // Mock Promo Logic
-        if(code === "WELCOME10") {
-            state.discountType = 'percent';
-            state.discountRate = 0.10;
-            state.discountCode = code;
-            showNotification("Promo Applied", "10% discount applied!", "success");
-            const msg = document.getElementById('promo-msg');
-            msg.innerText = "10% Discount Applied";
-            msg.classList.remove('hidden', 'text-red-400');
-            msg.classList.add('text-emerald-400');
-        } else {
-            showNotification("Invalid Code", "Invalid code. Please check and try again.", "error");
-            const msg = document.getElementById('promo-msg');
-            msg.innerText = "Invalid Code";
-            msg.classList.remove('hidden', 'text-emerald-400');
-            msg.classList.add('text-red-400');
-        }
-    }
-
-    function validateAndGoToStep3() {
-        const form = document.getElementById('checkout-form-step2');
-        if(!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
-
-        // Validate Domain
-        if(state.domainType === 'sub') {
-            if(!state.domainNameValid) {
-                showNotification("Domain Required", "Please enter a valid subdomain name.", "error");
-                return;
-            }
-        } else {
-            const custom = document.getElementById('custom-domain-input').value;
-            if(!custom) {
-                showNotification("Domain Required", "Please enter your custom domain.", "error");
-                return;
-            }
-            state.domainName = custom;
-        }
-
-        // Populate Step 3 Summary
-        document.getElementById('s3-plan-name').innerText = selectedPackage;
-        document.getElementById('s3-sub-price').innerText = 'RM ' + state.packagePrice;
-        document.getElementById('s3-setup-price').innerText = 'RM ' + state.setupFee;
-        document.getElementById('s3-domain-price').innerText = state.domainPrice > 0 ? 'RM ' + state.domainPrice : 'Free';
-        
-        let subtotal = state.packagePrice + state.setupFee + state.domainPrice;
-        let discountAmt = 0;
-        
-        if(state.discountType === 'percent') {
-            discountAmt = subtotal * state.discountRate;
-            document.getElementById('s3-discount-row').classList.remove('hidden');
-            document.getElementById('s3-discount-code').innerText = state.discountCode;
-            document.getElementById('s3-discount-val').innerText = '-RM ' + Math.round(discountAmt);
-        } else {
-            document.getElementById('s3-discount-row').classList.add('hidden');
-        }
-
-        const total = Math.round(subtotal - discountAmt);
-        document.getElementById('s3-total').innerText = 'RM ' + total;
-        document.getElementById('s3-recurring').innerText = 'RM ' + state.packagePrice + '/mo';
-
-        goToStep(3);
-    }
-
-    function fetchAndSyncUserData(uid) {
-        if(!db) return;
-        db.collection("users").doc(uid).get().then((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                if(document.getElementById('co-firstname')) document.getElementById('co-firstname').value = data.name || '';
-                if(document.getElementById('co-lastname')) document.getElementById('co-lastname').value = ''; 
-                if(document.getElementById('co-email')) {
-                    document.getElementById('co-email').value = data.email || auth.currentUser.email;
-                    document.getElementById('co-email').readOnly = true;
-                }
-                if(document.getElementById('co-phone')) document.getElementById('co-phone').value = data.phone || '';
-                if(document.getElementById('co-company')) document.getElementById('co-company').value = data.company || '';
-            }
-        });
-    }
-
-    function removeVoucher() {
-        state.discountCode = ''; state.discountRate = 0; state.discountFixed = 0;
-        showNotification("Voucher Removed", "Voucher code removed from order.", "info");
-        validateAndGoToStep3(); 
-    }
-
-    function updateTotal() {
-        console.log("Total updated");
-    }
-
-    // ==========================================
-    // RAZORPAY INTEGRATION
-    // ==========================================
-    function initiateRazorpayPayment() {
-        const firstName = document.getElementById('co-firstname') ? document.getElementById('co-firstname').value : '';
-        const lastName = document.getElementById('co-lastname') ? document.getElementById('co-lastname').value : '';
-        const name = (firstName || ' ') + ' ' + (lastName || ' ');
-        const phone = document.getElementById('co-phone') ? document.getElementById('co-phone').value : '';
-        const email = document.getElementById('co-email') ? document.getElementById('co-email').value : '';
-        
-        if(!name.trim() || !phone || !email) return showNotification("Missing Info", "Please ensure all details are correct.", "error");
-
-        const totalText = document.getElementById('s3-total') ? document.getElementById('s3-total').innerText : 'RM 0';
-        const amountNumeric = parseFloat(totalText.replace('RM ', ''));
-        const amountInSubunits = Math.round(amountNumeric * 100);
-
-        const pendingOrder = {
-            userId: auth.currentUser ? auth.currentUser.uid : null,
-            name: name, phone: phone, email: email, 
-            package: selectedPackage, 
-            domainType: state.domainType, domainName: state.domainName, domainPrice: state.domainPrice,
-            packagePrice: state.packagePrice, setupFee: state.setupFee, maintenancePrice: state.maintenancePrice,
-            total: `RM ${amountNumeric}`, 
-            discountCode: state.discountCode || null, paymentMethod: 'Razorpay (Curlec)',
-            paymentMode: state.paymentMode, billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
-            status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
-
-        const options = {
-            "key": RAZORPAY_KEY_ID, "amount": amountInSubunits, "currency": RAZORPAY_CURRENCY, 
-            "name": "DDNex",
-            "description": selectedPackage + (state.paymentMode === 'deposit' ? " (Deposit)" : ""),
-            "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
-            "handler": function(response){ 
-                handlePaymentSuccess(response.razorpay_payment_id);
-            },
-            "modal": { 
-                "ondismiss": function(){ 
-                    console.log('Checkout form closed/cancelled by user');
-                    showNotification("Payment Cancelled", "You have cancelled the payment process.", "warning");
-                }
-            },
-            "prefill": { "name": name, "email": email, "contact": phone },
-            "notes": { "address": document.getElementById('co-company').value || "Malaysia", "package": selectedPackage, "domain": state.domainName, "payment_mode": state.paymentMode },
-            "theme": { "color": "#10B981" } // Emerald theme
-        };
-
-        try {
-            const rzp1 = new Razorpay(options);
-            rzp1.open(); 
-
-        } catch (error) {
-            console.error("Razorpay Error:", error);
-            showNotification("Payment Error", "Payment Gateway Error. Please contact support.", "error");
-        }
-    }
-
-    function handlePaymentSuccess(paymentId) {
-        const pendingOrderStr = localStorage.getItem('pendingOrder');
-        if(!pendingOrderStr) {
-            showNotification("Order Error", "Order data missing. Contact support.", "error");
-            return;
-        }
-
-        const orderData = JSON.parse(pendingOrderStr);
-        
-        orderData.razorpay_payment_id = paymentId;
-        orderData.status = 'Paid';
-
-        // Ensure empty fields are saved
-        if(!orderData.name || orderData.name.trim() === " ") orderData.name = "-";
-        if(!orderData.phone) orderData.phone = "-";
-        
-        const overlay = document.getElementById('processing-overlay');
-        if(overlay) {
-            overlay.style.display = 'flex';
-            const msgEl = document.getElementById('process-message');
-            if(msgEl) msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Payment...`;
-        }
-
-        let voucherUpdatePromise = Promise.resolve();
-        if (orderData.discountCode && auth.currentUser && auth.currentUser.uid) {
-            // Assuming personal voucher redemption logic here if needed
-        }
-
-        voucherUpdatePromise.then(() => {
-            const firebaseOrderData = {
-                adminNote: "OWN COMPANY CREATED", companyName: orderData.companyName || "DDNex One",
-                customerEmail: orderData.email, customerName: orderData.name, customerPhone: orderData.phone,
-                domain: orderData.domainName, internalNotes: "",
-                maintenance: orderData.maintenancePrice > 0 ? (orderData.maintenancePrice === 50 ? "Basic" : "Business") : "None",
-                package: orderData.package, paymentMethod: "Razorpay (Curlec)", promo: orderData.discountCode || "",
-                razorpay_payment_id: paymentId,
-                salesRepIds: [], salesTeamIds: [], salesTeamNames: [], status: "Paid",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(), total: orderData.total, userId: orderData.userId || ""
-            };
-            return db.collection("orders").add(firebaseOrderData);
-        }).then(() => {
-            localStorage.removeItem('pendingOrder');
-            showNotification("Success!", "Payment Successful!", "success");
-            if(overlay) overlay.style.display = 'none';
-            navigateTo('thank-you');
-        }).catch((error) => {
-            console.error("Order Error:", error);
-            showNotification("Processing Error", "Order processing failed. Please contact support.", "error");
-            if(overlay) overlay.style.display = 'none';
-        });
-    }
-
-    // ==========================================
-    // UTILITIES & HELPERS
-    // ==========================================
-    function checkPasswordStrength() {
-        const p = document.getElementById('signup-password').value;
-        if(!p) return;
-        
-        const upper = /[A-Z]/.test(p);
-        const lower = /[a-z]/.test(p);
-        const num = /[0-9]/.test(p);
-        const len = p.length >= 6;
-        
-        toggleReq('req-upper', upper);
-        toggleReq('req-lower', lower);
-        toggleReq('req-num', num);
-        toggleReq('req-len', len);
-    }
-
-    function toggleReq(id, isValid) {
-        const el = document.getElementById(id);
-        if(el) {
-            if(isValid) {
-                el.classList.add('valid');
-                el.querySelector('i').className = 'ri-checkbox-circle-fill';
-            } else {
-                el.classList.remove('valid');
-                el.querySelector('i').className = 'ri-close-circle-line';
-            }
-        }
-    }
-
-    // ==========================================
-    // REVIEWS LOGIC
-    // ==========================================
-    function setupStarRating() {
-        const container = document.getElementById('star-input-container');
-        if(!container) return;
-        const stars = container.querySelectorAll('.star-icon');
-        const hiddenInput = document.getElementById('rating-value');
-
-        stars.forEach(star => {
-            star.addEventListener('mouseover', function() {
-                highlightStars(parseInt(this.getAttribute('data-val')));
-            });
+        function showVoucherCard(voucher) {
+            const section = document.getElementById('profile-voucher-section');
+            const codeEl = document.getElementById('profile-voucher-code');
+            const descEl = document.getElementById('profile-voucher-desc');
+            const noVoucher = document.getElementById('no-voucher-section');
             
-            star.addEventListener('click', function() {
-                selectedRating = parseInt(this.getAttribute('data-val'));
-                if(hiddenInput) hiddenInput.value = selectedRating;
-                highlightStars(selectedRating);
-                if(document.getElementById('rating-error')) document.getElementById('rating-error').style.display = 'none';
-            });
-        });
-
-        container.addEventListener('mouseleave', function() {
-            highlightStars(selectedRating);
-        });
-    }
-
-    function highlightStars(count) {
-        const container = document.getElementById('star-input-container');
-        if(!container) return;
-        const stars = container.querySelectorAll('.star-icon');
-        stars.forEach(star => {
-            star.classList.toggle('selected', parseInt(star.getAttribute('data-val')) <= count);
-        });
-    }
-
-    function renderDummyReview() {
-        const container = document.getElementById('reviews-list');
-        if(!container) return;
-        
-        if(container.innerHTML.trim() !== '' && !container.innerHTML.includes('Danial Danish')) return;
-
-        const dummyData = { 
-            rating: 5, 
-            userName: 'Danial Danish (Owner)', 
-            comment: 'I built this site to help businesses grow. Let me know what you think!', 
-            timestamp: null 
-        };
-        
-        const date = 'Recently';
-        const initials = (dummyData.userName || 'User').substring(0, 2).toUpperCase();
-        let starsHtml = '';
-        for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= dummyData.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=dummyData.rating?'var(--star)':'#334155'}"></i>`;
-        
-        const html = `
-            <div class="review-card glass rounded-2xl p-6 border border-slate-800 bg-dark hover-lift">
-                <div class="review-header">
-                    <div class="review-avatar">${initials}</div>
-                    <div class="review-info"><h4>${dummyData.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
-                </div>
-                <div class="review-stars">${starsHtml}</div>
-                <p class="review-text">"${dummyData.comment}"</p>
-            </div>`;
-        
-        container.innerHTML = html + container.innerHTML;
-    }
-
-    function listenToReviews() {
-        if(!db) return;
-        db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20)
-            .onSnapshot((snapshot) => {
-                reviewsCache = []; 
-                snapshot.forEach(doc => reviewsCache.push(doc.data()));
+            if(section && codeEl && descEl) {
+                section.classList.remove('hidden');
+                if(noVoucher) noVoucher.classList.add('hidden');
                 
-                const reviewsList = document.getElementById('reviews-list');
-                if(reviewsList) {
-                    renderReviewsList(reviewsList);
-                }
-            }, (error) => console.error("Error syncing reviews:", error));
-    }
-
-    function renderReviewsList(container) {
-        const DUMMY_REVIEWS = [
-            { rating: 5, userName: 'Danial Danish (Owner)', comment: 'I built this site to help businesses grow. Let me know what you think!', timestamp: null }
-        ];
-        
-        let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
-        
-        if (allReviews.length === 0) {
-            container.innerHTML = '<div class="col-span-2 text-center py-8 text-slate-500">No reviews yet.</div>';
-            return;
+                codeEl.innerText = voucher.code;
+                const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
+                descEl.innerText = `${displayVal} Discount`;
+            }
         }
 
-        const isExpanded = container.classList.contains('expanded');
-        const displayList = isExpanded ? allReviews : allReviews.slice(0, 3);
+        function hideVoucherCard() {
+            const section = document.getElementById('profile-voucher-section');
+            const noVoucher = document.getElementById('no-voucher-section');
+            if(section) section.classList.add('hidden');
+            if(noVoucher) noVoucher.classList.remove('hidden');
+        }
 
-        container.innerHTML = '';
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            if(!auth || !auth.currentUser) return;
+            const name = document.getElementById('prof-name').value;
+            const phone = document.getElementById('prof-phone').value;
+            const company = document.getElementById('prof-company').value;
+            db.collection("users").doc(auth.currentUser.uid).update({ name: name, phone: phone, company: company })
+            .then(() => {
+                showNotification("Success", "Profile Updated Successfully!", "success");
+                fetchAndSyncUserData(auth.currentUser.uid);
+                document.getElementById('prof-display-name').textContent = name; // Quick update
+            }).catch((error) => showNotification("Error", error.message, "error"));
+        }
+
+        function deletePersonalVoucher() {
+            if(!auth || !auth.currentUser) return;
+            if(confirm("Are you sure you want to remove this voucher?")) {
+                db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
+                    currentUserPersonalVoucher = null; 
+                    hideVoucherCard();
+                    showNotification("Voucher Removed", "Voucher removed from account.", "success");
+                });
+            }
+        }
+
+        function handleLogout() {
+            if(auth) { 
+                currentUserPersonalVoucher = null; 
+                auth.signOut().then(() => { 
+                    showNotification("Logged Out", "See you again soon!", "success"); 
+                    navigateTo('/'); 
+                }); 
+            }
+        }
+
+        // Auth State Listener
+        if(auth) {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    db.collection("users").doc(user.uid).get().then((doc) => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            currentUserRole = data.role || 'user'; 
+                            updateHeaderForUser(user); 
+                            if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; } 
+                            else { currentUserPersonalVoucher = null; }
+                            
+                            // Only redirect if on login page
+                            if(window.location.pathname === '/login' || window.location.pathname === '/signup') {
+                                // Optional: navigateTo('/');
+                            }
+                        }
+                    });
+                } else {
+                    updateHeaderForGuest(); 
+                }
+            });
+        }
+
+        function updateHeaderForUser(user) {
+            const isAdmin = currentUserRole === 'admin';
+            const deskAuth = document.getElementById('desktopAuthLinks');
+            if(deskAuth) {
+                let userControls = `<a href="#" onclick="navigateTo('/profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white"><i class="ri-user-line"></i> Profile</a><span class="logout-btn hidden md:block text-slate-400 cursor-pointer transition: 0.2s white-space-nowrap;" onclick="handleLogout()">Logout</span>`;
+                if (isAdmin) userControls = `<a href="admin.html" target="_blank" class="admin-link text-emerald-400 mr-4" title="Admin Portal"><i class="ri-shield-user-fill"></i></a>${userControls}`;
+                deskAuth.innerHTML = userControls;
+            }
+            
+            const mobAuth = document.getElementById('mobileAuthLinksContainer');
+            if(mobAuth) {
+                let authButtons = `<a href="/profile" onclick="routeLink(event, '/profile'); toggleMobileMenu()" class="block text-slate-300 hover:text-white py-4 font-medium border-b border-slate-800">Profile</a>`;
+                if (isAdmin) authButtons += `<a href="admin.html" target="_blank" onclick="toggleMobileMenu()" class="block text-emerald-400 hover:text-white py-4 font-medium border-b border-slate-800">Admin Portal</a>`;
+                authButtons += `<a href="#" onclick="handleLogout(); toggleMobileMenu()" class="block text-red-400 hover:text-red-300 py-4 font-medium">Logout</a>`;
+                mobAuth.innerHTML = authButtons;
+            }
+        }
+
+        function updateHeaderForGuest() {
+            const deskAuth = document.getElementById('desktopAuthLinks');
+            if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="navigateTo('login')" class="px-6 py-2 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-sm font-medium">Login</a>`;
+            const mobAuth = document.getElementById('mobileAuthLinksContainer');
+            if(mobAuth) mobAuth.innerHTML = `<a href="/login" onclick="navigateTo('login'); toggleMobileMenu()" class="block text-slate-300 hover:text-white py-4 font-medium border-b border-slate-800">Login</a><a href="/signup" onclick="navigateTo('signup'); toggleMobileMenu()" class="block text-slate-300 hover:text-white py-4 font-medium border-b border-slate-800">Sign Up</a>`;
+        }
+
+        function clearUserData() {
+            const inputs = ['prof-name', 'prof-phone', 'prof-email', 'prof-company', 'co-firstname', 'co-lastname', 'co-email', 'co-company'];
+            inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+        }
+
+        // ==========================================
+        // PRICING LOGIC
+        // ==========================================
+        function setBilling(cycle) {
+            billingCycle = cycle;
+            const btnMonthly = document.getElementById('btn-monthly');
+            const btnOnetime = document.getElementById('btn-onetime');
+
+            if(btnMonthly && btnOnetime) {
+                if(cycle === 'monthly') { 
+                    btnMonthly.classList.add('bg-emerald-600', 'text-white'); 
+                    btnMonthly.classList.remove('text-slate-400');
+                    btnOnetime.classList.remove('bg-emerald-600', 'text-white'); 
+                    btnOnetime.classList.add('text-slate-400');
+                } else { 
+                    btnMonthly.classList.remove('bg-emerald-600', 'text-white'); 
+                    btnMonthly.classList.add('text-slate-400');
+                    btnOnetime.classList.add('bg-emerald-600', 'text-white'); 
+                    btnOnetime.classList.remove('text-slate-400');
+                }
+            }
+
+            document.querySelectorAll('.price-display').forEach(el => {
+                const monthly = el.dataset.monthly;
+                const onetime = el.dataset.onetime;
+                if (monthly && onetime) {
+                    el.textContent = 'RM ' + (cycle === 'monthly' ? monthly : onetime);
+                    const periodEl = el.parentElement.querySelector('.price-period');
+                    if(periodEl) periodEl.textContent = cycle === 'monthly' ? '/month' : ' one-time';
+                }
+            });
+
+            document.querySelectorAll('.maintenance-yes').forEach(el => el.classList.toggle('hidden', cycle === 'onetime'));
+            document.querySelectorAll('.maintenance-no').forEach(el => el.classList.toggle('hidden', cycle === 'monthly'));
+
+            state.billingCycle = cycle;
+            state.isOneTime = (cycle === 'onetime');
+            
+            if(selectedPackageType && PRICING_DATA[selectedPackageType]) {
+                state.packagePrice = cycle === 'monthly' ? PRICING_DATA[selectedPackageType].monthly : PRICING_DATA[selectedPackageType].oneTime;
+                updateTotal();
+            }
+        }
+
+        function attemptSelectPackage(name, type) {
+            if (typeof auth === 'undefined' || auth === null) { 
+                showNotification("Error", "Authentication system initializing...", "error"); 
+                return; 
+            }
+            
+            if (auth.currentUser) { 
+                selectPackage(name, type); 
+            } else { 
+                pendingPackage = { name, type };
+                showAuthModal(); 
+            }
+        }
+
+        // ==========================================
+        // NEW 3-STEP CHECKOUT LOGIC
+        // ==========================================
         
-        displayList.forEach(data => {
-            const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
-            const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
+        function selectPackage(name, type) {
+            selectedPackage = name;
+            selectedPackageType = type;
+            state.packageType = type;
+            
+            // Use global billing cycle, defaulting to monthly if not set
+            state.billingCycle = billingCycle || 'monthly';
+            state.isOneTime = (billingCycle === 'onetime');
+            state.paymentMode = 'full';
+            
+            // Get prices from data
+            state.setupFee = PRICING_DATA[type].setupFee;
+            state.packagePrice = billingCycle === 'monthly' ? PRICING_DATA[type].monthly : PRICING_DATA[type].oneTime;
+
+            // Reset Step to 1
+            currentCheckoutStep = 1;
+            
+            // Populate Step 1 Data
+            document.getElementById('s1-plan-name').innerText = name;
+            document.getElementById('s1-plan-price').innerText = 'RM ' + state.packagePrice;
+            document.getElementById('s1-setup-price').innerText = 'RM ' + state.setupFee;
+            
+            const firstTotal = state.setupFee + state.packagePrice;
+            document.getElementById('s1-first-total').innerText = 'RM ' + firstTotal;
+            document.getElementById('s1-recurring-price').innerText = 'RM ' + state.packagePrice + '/mo';
+            
+            // Populate Features List
+            const featureContainer = document.getElementById('s1-features-list');
+            featureContainer.innerHTML = '';
+            if(PRICING_DATA[type].features) {
+                PRICING_DATA[type].features.forEach(feature => {
+                    featureContainer.innerHTML += `<li><i class="ri-checkbox-circle-fill text-emerald-500"></i> ${feature}</li>`;
+                });
+            }
+
+            // Reset Steps UI
+            updateStepUI(1);
+            
+            if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+            else { clearUserData(); hideVoucherCard(); }
+
+            // Navigate to checkout
+            navigateTo('checkout');
+        }
+
+        function updateStepUI(step) {
+            // Hide all steps
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            // Show current step
+            document.getElementById(`step-${step}`).classList.add('active');
+            
+            // Update dots
+            for(let i=1; i<=3; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                dot.classList.remove('active', 'completed');
+                if(i < step) dot.classList.add('completed');
+                if(i === step) dot.classList.add('active');
+            }
+            
+            window.scrollTo(0, 0);
+        }
+
+        function goToStep(step) {
+            currentCheckoutStep = step;
+            updateStepUI(step);
+        }
+
+        function selectDomainType(type, element) {
+            state.domainType = type;
+            
+            // UI Update
+            const options = document.querySelectorAll('.radio-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            const input = element.querySelector('input');
+            if(input) input.checked = true;
+            
+            // Input Visibility
+            const subInput = document.getElementById('subdomain-input');
+            const customInput = document.getElementById('custom-domain-input');
+            
+            if(type === 'sub') {
+                subInput.disabled = false;
+                customInput.disabled = true;
+                customInput.value = '';
+                state.domainPrice = 0;
+                updateDomainPreview();
+            } else {
+                subInput.disabled = true;
+                subInput.value = '';
+                customInput.disabled = false;
+                state.domainPrice = 0;
+                updateDomainPreview();
+            }
+        }
+
+        function updateDomainPreview() {
+            const text = document.getElementById('subdomain-input').value;
+            const preview = document.getElementById('preview-text');
+            if(preview) {
+                preview.innerText = text.length > 0 ? text : "yourname";
+                state.domainName = text.length > 0 ? `${text}.ddnex.my` : '';
+                state.domainNameValid = text.length > 0;
+            }
+        }
+
+        function applyPromo() {
+            if(!auth || !auth.currentUser) return showNotification("Login Required", "Please login to use Promo Codes.", "warning");
+            const input = document.getElementById('promo-input');
+            const code = input ? input.value.trim().toUpperCase() : '';
+            
+            if(!code || code === "") {
+                showNotification("Missing Code", "Please enter a voucher code first.", "error");
+                return;
+            }
+            
+            // Mock Promo Logic
+            if(code === "WELCOME10") {
+                state.discountType = 'percent';
+                state.discountRate = 0.10;
+                state.discountCode = code;
+                showNotification("Promo Applied", "10% discount applied!", "success");
+                const msg = document.getElementById('promo-msg');
+                msg.innerText = "10% Discount Applied";
+                msg.classList.remove('hidden', 'text-red-400');
+                msg.classList.add('text-emerald-400');
+            } else {
+                showNotification("Invalid Code", "Invalid code. Please check and try again.", "error");
+                const msg = document.getElementById('promo-msg');
+                msg.innerText = "Invalid Code";
+                msg.classList.remove('hidden', 'text-emerald-400');
+                msg.classList.add('text-red-400');
+            }
+        }
+
+        function validateAndGoToStep3() {
+            const form = document.getElementById('checkout-form-step2');
+            if(!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Validate Domain
+            if(state.domainType === 'sub') {
+                if(!state.domainNameValid) {
+                    showNotification("Domain Required", "Please enter a valid subdomain name.", "error");
+                    return;
+                }
+            } else {
+                const custom = document.getElementById('custom-domain-input').value;
+                if(!custom) {
+                    showNotification("Domain Required", "Please enter your custom domain.", "error");
+                    return;
+                }
+                state.domainName = custom;
+            }
+
+            // Populate Step 3 Summary
+            document.getElementById('s3-plan-name').innerText = selectedPackage;
+            document.getElementById('s3-sub-price').innerText = 'RM ' + state.packagePrice;
+            document.getElementById('s3-setup-price').innerText = 'RM ' + state.setupFee;
+            document.getElementById('s3-domain-price').innerText = state.domainPrice > 0 ? 'RM ' + state.domainPrice : 'Free';
+            
+            let subtotal = state.packagePrice + state.setupFee + state.domainPrice;
+            let discountAmt = 0;
+            
+            if(state.discountType === 'percent') {
+                discountAmt = subtotal * state.discountRate;
+                document.getElementById('s3-discount-row').classList.remove('hidden');
+                document.getElementById('s3-discount-code').innerText = state.discountCode;
+                document.getElementById('s3-discount-val').innerText = '-RM ' + Math.round(discountAmt);
+            } else {
+                document.getElementById('s3-discount-row').classList.add('hidden');
+            }
+
+            const total = Math.round(subtotal - discountAmt);
+            document.getElementById('s3-total').innerText = 'RM ' + total;
+            document.getElementById('s3-recurring').innerText = 'RM ' + state.packagePrice + '/mo';
+
+            goToStep(3);
+        }
+
+        function fetchAndSyncUserData(uid) {
+            if(!db) return;
+            db.collection("users").doc(uid).get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    if(document.getElementById('co-firstname')) document.getElementById('co-firstname').value = data.name || '';
+                    if(document.getElementById('co-lastname')) document.getElementById('co-lastname').value = ''; 
+                    if(document.getElementById('co-email')) {
+                        document.getElementById('co-email').value = data.email || auth.currentUser.email;
+                        document.getElementById('co-email').readOnly = true;
+                    }
+                    if(document.getElementById('co-phone')) document.getElementById('co-phone').value = data.phone || '';
+                    if(document.getElementById('co-company')) document.getElementById('co-company').value = data.company || '';
+                }
+            });
+        }
+
+        function removeVoucher() {
+            state.discountCode = ''; state.discountRate = 0; state.discountFixed = 0;
+            showNotification("Voucher Removed", "Voucher code removed from order.", "info");
+            validateAndGoToStep3(); 
+        }
+
+        function updateTotal() {
+            console.log("Total updated");
+        }
+
+        // ==========================================
+        // RAZORPAY INTEGRATION
+        // ==========================================
+        function initiateRazorpayPayment() {
+            const firstName = document.getElementById('co-firstname') ? document.getElementById('co-firstname').value : '';
+            const lastName = document.getElementById('co-lastname') ? document.getElementById('co-lastname').value : '';
+            const name = (firstName || ' ') + ' ' + (lastName || ' ');
+            const phone = document.getElementById('co-phone') ? document.getElementById('co-phone').value : '';
+            const email = document.getElementById('co-email') ? document.getElementById('co-email').value : '';
+            
+            if(!name.trim() || !phone || !email) return showNotification("Missing Info", "Please ensure all details are correct.", "error");
+
+            const totalText = document.getElementById('s3-total') ? document.getElementById('s3-total').innerText : 'RM 0';
+            const amountNumeric = parseFloat(totalText.replace('RM ', ''));
+            const amountInSubunits = Math.round(amountNumeric * 100);
+
+            const pendingOrder = {
+                userId: auth.currentUser ? auth.currentUser.uid : null,
+                name: name, phone: phone, email: email, 
+                package: selectedPackage, 
+                domainType: state.domainType, domainName: state.domainName, domainPrice: state.domainPrice,
+                packagePrice: state.packagePrice, setupFee: state.setupFee, maintenancePrice: state.maintenancePrice,
+                total: `RM ${amountNumeric}`, 
+                discountCode: state.discountCode || null, paymentMethod: 'Razorpay (Curlec)',
+                paymentMode: state.paymentMode, billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
+                status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+
+            const options = {
+                "key": RAZORPAY_KEY_ID, "amount": amountInSubunits, "currency": RAZORPAY_CURRENCY, 
+                "name": "DDNex",
+                "description": selectedPackage + (state.paymentMode === 'deposit' ? " (Deposit)" : ""),
+                "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
+                "handler": function(response){ 
+                    handlePaymentSuccess(response.razorpay_payment_id);
+                },
+                "modal": { 
+                    "ondismiss": function(){ 
+                        console.log('Checkout form closed/cancelled by user');
+                        showNotification("Payment Cancelled", "You have cancelled the payment process.", "warning");
+                    }
+                },
+                "prefill": { "name": name, "email": email, "contact": phone },
+                "notes": { "address": document.getElementById('co-company').value || "Malaysia", "package": selectedPackage, "domain": state.domainName, "payment_mode": state.paymentMode },
+                "theme": { "color": "#10B981" } // Emerald theme
+            };
+
+            try {
+                const rzp1 = new Razorpay(options);
+                rzp1.open(); 
+
+            } catch (error) {
+                console.error("Razorpay Error:", error);
+                showNotification("Payment Error", "Payment Gateway Error. Please contact support.", "error");
+            }
+        }
+
+        function handlePaymentSuccess(paymentId) {
+            const pendingOrderStr = localStorage.getItem('pendingOrder');
+            if(!pendingOrderStr) {
+                showNotification("Order Error", "Order data missing. Contact support.", "error");
+                return;
+            }
+
+            const orderData = JSON.parse(pendingOrderStr);
+            
+            orderData.razorpay_payment_id = paymentId;
+            orderData.status = 'Paid';
+
+            // Ensure empty fields are saved
+            if(!orderData.name || orderData.name.trim() === " ") orderData.name = "-";
+            if(!orderData.phone) orderData.phone = "-";
+            
+            const overlay = document.getElementById('processing-overlay');
+            if(overlay) {
+                overlay.style.display = 'flex';
+                const msgEl = document.getElementById('process-message');
+                if(msgEl) msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Payment...`;
+            }
+
+            let voucherUpdatePromise = Promise.resolve();
+            if (orderData.discountCode && auth.currentUser && auth.currentUser.uid) {
+                // Assuming personal voucher redemption logic here if needed
+            }
+
+            voucherUpdatePromise.then(() => {
+                const firebaseOrderData = {
+                    adminNote: "OWN COMPANY CREATED", companyName: orderData.companyName || "DDNex One",
+                    customerEmail: orderData.email, customerName: orderData.name, customerPhone: orderData.phone,
+                    domain: orderData.domainName, internalNotes: "",
+                    maintenance: orderData.maintenancePrice > 0 ? (orderData.maintenancePrice === 50 ? "Basic" : "Business") : "None",
+                    package: orderData.package, paymentMethod: "Razorpay (Curlec)", promo: orderData.discountCode || "",
+                    razorpay_payment_id: paymentId,
+                    salesRepIds: [], salesTeamIds: [], salesTeamNames: [], status: "Paid",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), total: orderData.total, userId: orderData.userId || ""
+                };
+                return db.collection("orders").add(firebaseOrderData);
+            }).then(() => {
+                localStorage.removeItem('pendingOrder');
+                showNotification("Success!", "Payment Successful!", "success");
+                if(overlay) overlay.style.display = 'none';
+                navigateTo('thank-you');
+            }).catch((error) => {
+                console.error("Order Error:", error);
+                showNotification("Processing Error", "Order processing failed. Please contact support.", "error");
+                if(overlay) overlay.style.display = 'none';
+            });
+        }
+
+        // ==========================================
+        // UTILITIES & HELPERS
+        // ==========================================
+        function checkPasswordStrength() {
+            const p = document.getElementById('signup-password').value;
+            if(!p) return;
+            
+            const upper = /[A-Z]/.test(p);
+            const lower = /[a-z]/.test(p);
+            const num = /[0-9]/.test(p);
+            const len = p.length >= 6;
+            
+            toggleReq('req-upper', upper);
+            toggleReq('req-lower', lower);
+            toggleReq('req-num', num);
+            toggleReq('req-len', len);
+        }
+
+        function toggleReq(id, isValid) {
+            const el = document.getElementById(id);
+            if(el) {
+                if(isValid) {
+                    el.classList.add('valid');
+                    el.querySelector('i').className = 'ri-checkbox-circle-fill';
+                } else {
+                    el.classList.remove('valid');
+                    el.querySelector('i').className = 'ri-close-circle-line';
+                }
+            }
+        }
+
+        // ==========================================
+        // REVIEWS LOGIC
+        // ==========================================
+        function setupStarRating() {
+            const container = document.getElementById('star-input-container');
+            if(!container) return;
+            const stars = container.querySelectorAll('.star-icon');
+            const hiddenInput = document.getElementById('rating-value');
+
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    highlightStars(parseInt(this.getAttribute('data-val')));
+                });
+                
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.getAttribute('data-val'));
+                    if(hiddenInput) hiddenInput.value = selectedRating;
+                    highlightStars(selectedRating);
+                    if(document.getElementById('rating-error')) document.getElementById('rating-error').style.display = 'none';
+                });
+            });
+
+            container.addEventListener('mouseleave', function() {
+                highlightStars(selectedRating);
+            });
+        }
+
+        function highlightStars(count) {
+            const container = document.getElementById('star-input-container');
+            if(!container) return;
+            const stars = container.querySelectorAll('.star-icon');
+            stars.forEach(star => {
+                star.classList.toggle('selected', parseInt(star.getAttribute('data-val')) <= count);
+            });
+        }
+
+        function renderDummyReview() {
+            const container = document.getElementById('reviews-list');
+            if(!container) return;
+            
+            if(container.innerHTML.trim() !== '' && !container.innerHTML.includes('Danial Danish')) return;
+
+            const dummyData = { 
+                rating: 5, 
+                userName: 'Danial Danish (Owner)', 
+                comment: 'I built this site to help businesses grow. Let me know what you think!', 
+                timestamp: null 
+            };
+            
+            const date = 'Recently';
+            const initials = (dummyData.userName || 'User').substring(0, 2).toUpperCase();
             let starsHtml = '';
-            for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--star)':'#334155'}"></i>`;
+            for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= dummyData.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=dummyData.rating?'var(--star)':'#334155'}"></i>`;
             
             const html = `
                 <div class="review-card glass rounded-2xl p-6 border border-slate-800 bg-dark hover-lift">
                     <div class="review-header">
                         <div class="review-avatar">${initials}</div>
-                        <div class="review-info"><h4>${data.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
+                        <div class="review-info"><h4>${dummyData.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
                     </div>
                     <div class="review-stars">${starsHtml}</div>
-                    <p class="review-text">"${data.comment}"</p>
+                    <p class="review-text">"${dummyData.comment}"</p>
                 </div>`;
-            container.innerHTML += html;
-        });
-    }
-
-    function toggleFullReviews() {
-        const list = document.getElementById('reviews-list');
-        const btn = event.target;
-        if(!list) return;
-        
-        list.classList.toggle('expanded');
-        renderReviewsList(list);
-        
-        if (list.classList.contains('expanded')) {
-            if(btn) btn.innerText = "Show Less";
-        } else {
-            if(btn) btn.innerText = "View All Reviews";
+            
+            container.innerHTML = html + container.innerHTML;
         }
-    }
 
-    function handleReviewSubmit(e) {
-        e.preventDefault();
-        if(!auth || !auth.currentUser) return showNotification("Login Required", "You must be logged in to submit a review.", "warning");
+        function listenToReviews() {
+            if(!db) return;
+            db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20)
+                .onSnapshot((snapshot) => {
+                    reviewsCache = []; 
+                    snapshot.forEach(doc => reviewsCache.push(doc.data()));
+                    
+                    const reviewsList = document.getElementById('reviews-list');
+                    if(reviewsList) {
+                        renderReviewsList(reviewsList);
+                    }
+                }, (error) => console.error("Error syncing reviews:", error));
+        }
 
-        if(selectedRating === 0) return showNotification("Rating Missing", "Please select a star rating.", "warning");
-
-        const comment = document.getElementById('review-comment') ? document.getElementById('review-comment').value : '';
-        const user = auth.currentUser;
-        let displayName = user.email.split('@')[0];
-        
-        db.collection("users").doc(user.uid).get().then(doc => {
-            if(doc.exists && doc.data().name) displayName = doc.data().name;
-            const reviewData = { 
-                userId: user.uid, userName: displayName, userEmail: user.email, rating: selectedRating, comment: comment, 
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'approved' 
-            };
-            return db.collection("customer_reviews").add(reviewData);
-        }).then(() => {
-            showNotification("Success", "Review submitted successfully!", "success");
-            if(document.getElementById('review-form')) document.getElementById('review-form').reset();
-            selectedRating = 0;
-            highlightStars(0);
-            if(document.getElementById('reviews-list') && !document.getElementById('reviews-list').classList.contains('hidden')) {
-                toggleFullReviews(); 
+        function renderReviewsList(container) {
+            const DUMMY_REVIEWS = [
+                { rating: 5, userName: 'Danial Danish (Owner)', comment: 'I built this site to help businesses grow. Let me know what you think!', timestamp: null }
+            ];
+            
+            let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
+            
+            if (allReviews.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-slate-500">No reviews yet.</div>';
+                return;
             }
-        }).catch(err => {
-            console.error(err); 
-            showNotification("Error", "Failed to submit review.", "error");
-        });
-    }
 
-    // ==========================================
-    // PORTFOLIO LOGIC
-    // ==========================================
-    function loadHomePortfolio() {
-        if(!db) return;
-        const container = document.getElementById('home-portfolio-grid');
-        if(!container) return;
-        
-        container.innerHTML = '';
-        
-        // Dummy Item
-        const dummyHtml = `
-            <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-800 bg-dark hover-lift">
-                <div class="h-56 overflow-hidden bg-slate-800 relative"><img src="https://i.ibb.co/Y7yLkm5j/IMG-3157.png" alt="DDNetwork" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                <div class="p-6">
-                    <h4 class="font-bold text-white mb-2">DDNetwork</h4>
-                    <p class="text-slate-400 text-sm mb-4">A high-performance online store for a local Website & Hosting Services</p>
-                    <button onclick="navigateTo('clients')" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-800 text-slate-200 font-medium text-sm hover:bg-slate-700 transition-colors">View Project</button>
-                </div>
-            </div>`;
-        container.innerHTML += dummyHtml;
-        
-        db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
-            .then((snapshot) => {
-                if(!snapshot.empty) {
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        const html = `
-                            <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-800 bg-dark hover-lift">
-                                <div class="h-56 overflow-hidden bg-slate-800 relative"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                                <div class="p-6">
-                                    <h4 class="font-bold text-white mb-2">${data.name}</h4>
-                                    <p class="text-slate-400 text-sm mb-4">${data.desc || 'View project'}</p>
-                                    <a href="${data.link}" target="_blank" class="text-emerald-400 font-medium text-sm hover:underline">View Live Site &rarr;</a>
-                                </div>
-                            </div>`;
-                        container.innerHTML += html;
-                    });
-                }
-            });
-    }
+            const isExpanded = container.classList.contains('expanded');
+            const displayList = isExpanded ? allReviews : allReviews.slice(0, 3);
 
-    function loadPortfolio() {
-        if(!db) return;
-        const grid = document.getElementById('portfolio-grid');
-        if(!grid) return;
-        grid.innerHTML = '';
-        
-        db.collection("clients_portfolio").where("status", "==", true).get()
-            .then((snapshot) => {
-                if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No projects yet</div>'; return; }
+            container.innerHTML = '';
+            
+            displayList.forEach(data => {
+                const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
+                const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
+                let starsHtml = '';
+                for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--star)':'#334155'}"></i>`;
                 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    grid.innerHTML += `
-                        <div class="group glass rounded-2xl overflow-hidden border border-slate-800 bg-dark hover-lift">
-                            <div class="h-56 overflow-hidden"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
-                            <div class="p-6">
-                                <h4 class="font-bold text-white mb-2 text-lg">${data.name}</h4>
-                                <p class="text-slate-400 text-sm mb-4">${data.desc || 'Professional website solution'}</p>
-                                <a href="${data.link}" target="_blank" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-800 text-slate-200 font-medium text-sm hover:bg-slate-700 transition-colors">View Project</a>
-                            </div>
+                const html = `
+                    <div class="review-card glass rounded-2xl p-6 border border-slate-800 bg-dark hover-lift">
+                        <div class="review-header">
+                            <div class="review-avatar">${initials}</div>
+                            <div class="review-info"><h4>${data.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
                         </div>
-                    `;
-                });
+                        <div class="review-stars">${starsHtml}</div>
+                        <p class="review-text">"${data.comment}"</p>
+                    </div>`;
+                container.innerHTML += html;
             });
-    }
-
-    // ==========================================
-    // PRODUCTS LOGIC
-    // ==========================================
-    function loadProducts() {
-        if(!db) return;
-        const grid = document.getElementById('products-grid');
-        if(!grid) return;
-
-        grid.innerHTML = '<div class="col-span-3 text-center py-12 text-slate-500">Loading products...</div>';
-
-        db.collection("products").where("status", "==", true).get()
-            .then((snapshot) => {
-                let products = [];
-                snapshot.forEach(doc => products.push(doc.data()));
-
-                const ddnetProduct = {
-                    name: "DDNetwork",
-                    price: "Free",
-                    desc: "Official DDNetwork Platform. Connect, manage, and grow your digital network seamlessly.",
-                    img: "https://i.ibb.co/Y7yLkm5j/IMG-3157.png", 
-                    link: "https://ddnet.my"
-                };
-                
-                products.unshift(ddnetProduct);
-
-                grid.innerHTML = '';
-                if(products.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No products available yet.</div>'; return; }
-
-                products.forEach((p) => {
-                    const html = `
-                        <div class="product-card hover-lift">
-                            <img src="${p.img || 'https://via.placeholder.com/400'}" alt="${p.name}" class="product-image">
-                            <div class="product-body">
-                                <h3 class="text-xl font-bold text-white">${p.name}</h3>
-                                <p class="text-sm text-slate-500 mb-2">by DDNex</p>
-                                <p class="text-slate-400 text-sm mb-4 line-clamp-3">${p.desc}</p>
-                                <div class="mt-auto">
-                                    <div class="product-price">${p.price}</div>
-                                    <a href="${p.link || '#'}" target="_blank" class="block w-full mt-4 text-center py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500 transition-colors">View Product</a>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    grid.innerHTML += html;
-                });
-            })
-            .catch(err => {
-                console.error(err);
-                grid.innerHTML = '<div class="col-span-3 text-center py-8 text-red-500">Error loading products.</div>';
-            });
-    }
-
-    // ==========================================
-    // CONTACT FORM LOGIC
-    // ==========================================
-    function handleContactSubmit(e) {
-        e.preventDefault();
-        const name = document.getElementById('contact-name') ? document.getElementById('contact-name').value : '';
-        const lastname = document.getElementById('contact-lastname') ? document.getElementById('contact-lastname').value : '';
-        const email = document.getElementById('contact-email') ? document.getElementById('contact-email').value : '';
-        const subject = document.getElementById('contact-subject') ? document.getElementById('contact-subject').value : '';
-        const source = document.getElementById('contact-source') ? document.getElementById('contact-source').value : '';
-        const message = document.getElementById('contact-message') ? document.getElementById('contact-message').value : '';
-        
-        if(!name || !lastname || !email || !message) return showNotification("Missing Fields", "Please fill in all required fields.", "error");
-
-        const btn = e.target ? e.target.querySelector('button') : null;
-        const originalText = btn ? btn.innerText : 'Send Message';
-        if(btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
         }
 
-        const data = {
-            name: name + " " + lastname, email: email, subject: subject, source: source, message: message, type: 'Contact Inquiry', status: 'Pending',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            userId: auth.currentUser ? auth.currentUser.uid : null, sourceForm: 'Contact Page'
-        };
+        function toggleFullReviews() {
+            const list = document.getElementById('reviews-list');
+            const btn = event.target;
+            if(!list) return;
+            
+            list.classList.toggle('expanded');
+            renderReviewsList(list);
+            
+            if (list.classList.contains('expanded')) {
+                if(btn) btn.innerText = "Show Less";
+            } else {
+                if(btn) btn.innerText = "View All Reviews";
+            }
+        }
 
-        if(db) {
-            db.collection("customer_requests").add(data)
-                .then(() => {
-                    showNotification("Sent!", "Thank you for your interest!", "success");
-                    if(e.target) e.target.reset();
-                })
-                .catch((error) => {
-                    console.error(error);
-                    showNotification("Error", "Failed to send message. Please try again.", "error");
-                })
-                .finally(() => {
-                    if(btn) {
-                        btn.disabled = false;
-                        btn.innerText = originalText;
+        function handleReviewSubmit(e) {
+            e.preventDefault();
+            if(!auth || !auth.currentUser) return showNotification("Login Required", "You must be logged in to submit a review.", "warning");
+
+            if(selectedRating === 0) return showNotification("Rating Missing", "Please select a star rating.", "warning");
+
+            const comment = document.getElementById('review-comment') ? document.getElementById('review-comment').value : '';
+            const user = auth.currentUser;
+            let displayName = user.email.split('@')[0];
+            
+            db.collection("users").doc(user.uid).get().then(doc => {
+                if(doc.exists && doc.data().name) displayName = doc.data().name;
+                const reviewData = { 
+                    userId: user.uid, userName: displayName, userEmail: user.email, rating: selectedRating, comment: comment, 
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'approved' 
+                };
+                return db.collection("customer_reviews").add(reviewData);
+            }).then(() => {
+                showNotification("Success", "Review submitted successfully!", "success");
+                if(document.getElementById('review-form')) document.getElementById('review-form').reset();
+                selectedRating = 0;
+                highlightStars(0);
+                if(document.getElementById('reviews-list') && !document.getElementById('reviews-list').classList.contains('hidden')) {
+                    toggleFullReviews(); 
+                }
+            }).catch(err => {
+                console.error(err); 
+                showNotification("Error", "Failed to submit review.", "error");
+            });
+        }
+
+        // ==========================================
+        // PORTFOLIO LOGIC
+        // ==========================================
+        function loadHomePortfolio() {
+            if(!db) return;
+            const container = document.getElementById('home-portfolio-grid');
+            if(!container) return;
+            
+            container.innerHTML = '';
+            
+            // Dummy Item
+            const dummyHtml = `
+                <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-800 bg-dark hover-lift">
+                    <div class="h-56 overflow-hidden bg-slate-800 relative"><img src="https://i.ibb.co/Y7yLkm5j/IMG-3157.png" alt="DDNetwork" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="p-6">
+                        <h4 class="font-bold text-white mb-2">DDNetwork</h4>
+                        <p class="text-slate-400 text-sm mb-4">A high-performance online store for a local Website & Hosting Services</p>
+                        <button onclick="navigateTo('clients')" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-800 text-slate-200 font-medium text-sm hover:bg-slate-700 transition-colors">View Project</button>
+                    </div>
+                </div>`;
+            container.innerHTML += dummyHtml;
+            
+            db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
+                .then((snapshot) => {
+                    if(!snapshot.empty) {
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const html = `
+                                <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-800 bg-dark hover-lift">
+                                    <div class="h-56 overflow-hidden bg-slate-800 relative"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                                    <div class="p-6">
+                                        <h4 class="font-bold text-white mb-2">${data.name}</h4>
+                                        <p class="text-slate-400 text-sm mb-4">${data.desc || 'View project'}</p>
+                                        <a href="${data.link}" target="_blank" class="text-emerald-400 font-medium text-sm hover:underline">View Live Site &rarr;</a>
+                                    </div>
+                                </div>`;
+                            container.innerHTML += html;
+                        });
                     }
                 });
-        } else {
-            showNotification("Offline", "System offline. Please try again later.", "error");
+        }
+
+        function loadPortfolio() {
+            if(!db) return;
+            const grid = document.getElementById('portfolio-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            
+            db.collection("clients_portfolio").where("status", "==", true).get()
+                .then((snapshot) => {
+                    if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No projects yet</div>'; return; }
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        grid.innerHTML += `
+                            <div class="group glass rounded-2xl overflow-hidden border border-slate-800 bg-dark hover-lift">
+                                <div class="h-56 overflow-hidden"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                                <div class="p-6">
+                                    <h4 class="font-bold text-white mb-2 text-lg">${data.name}</h4>
+                                    <p class="text-slate-400 text-sm mb-4">${data.desc || 'Professional website solution'}</p>
+                                    <a href="${data.link}" target="_blank" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-800 text-slate-200 font-medium text-sm hover:bg-slate-700 transition-colors">View Project</a>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+        }
+
+        // ==========================================
+        // PRODUCTS LOGIC
+        // ==========================================
+        function loadProducts() {
+            if(!db) return;
+            const grid = document.getElementById('products-grid');
+            if(!grid) return;
+
+            grid.innerHTML = '<div class="col-span-3 text-center py-12 text-slate-500">Loading products...</div>';
+
+            db.collection("products").where("status", "==", true).get()
+                .then((snapshot) => {
+                    let products = [];
+                    snapshot.forEach(doc => products.push(doc.data()));
+
+                    const ddnetProduct = {
+                        name: "DDNetwork",
+                        price: "Free",
+                        desc: "Official DDNetwork Platform. Connect, manage, and grow your digital network seamlessly.",
+                        img: "https://i.ibb.co/Y7yLkm5j/IMG-3157.png", 
+                        link: "https://ddnet.my"
+                    };
+                    
+                    products.unshift(ddnetProduct);
+
+                    grid.innerHTML = '';
+                    if(products.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No products available yet.</div>'; return; }
+
+                    products.forEach((p) => {
+                        const html = `
+                            <div class="product-card hover-lift">
+                                <img src="${p.img || 'https://via.placeholder.com/400'}" alt="${p.name}" class="product-image">
+                                <div class="product-body">
+                                    <h3 class="text-xl font-bold text-white">${p.name}</h3>
+                                    <p class="text-sm text-slate-500 mb-2">by DDNex</p>
+                                    <p class="text-slate-400 text-sm mb-4 line-clamp-3">${p.desc}</p>
+                                    <div class="mt-auto">
+                                        <div class="product-price">${p.price}</div>
+                                        <a href="${p.link || '#'}" target="_blank" class="block w-full mt-4 text-center py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500 transition-colors">View Product</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        grid.innerHTML += html;
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    grid.innerHTML = '<div class="col-span-3 text-center py-8 text-red-500">Error loading products.</div>';
+                });
+        }
+
+        // ==========================================
+        // CONTACT FORM LOGIC
+        // ==========================================
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('contact-name') ? document.getElementById('contact-name').value : '';
+            const lastname = document.getElementById('contact-lastname') ? document.getElementById('contact-lastname').value : '';
+            const email = document.getElementById('contact-email') ? document.getElementById('contact-email').value : '';
+            const subject = document.getElementById('contact-subject') ? document.getElementById('contact-subject').value : '';
+            const source = document.getElementById('contact-source') ? document.getElementById('contact-source').value : '';
+            const message = document.getElementById('contact-message') ? document.getElementById('contact-message').value : '';
+            
+            if(!name || !lastname || !email || !message) return showNotification("Missing Fields", "Please fill in all required fields.", "error");
+
+            const btn = e.target ? e.target.querySelector('button') : null;
+            const originalText = btn ? btn.innerText : 'Send Message';
             if(btn) {
-                btn.disabled = false;
-                btn.innerText = originalText;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
             }
-        }
-    }
 
-    // ==========================================
-    // MOBILE MENU LOGIC
-    // ==========================================
-    function toggleMobileMenu() {
-        const menu = document.getElementById('mobile-menu');
-        const icon = document.getElementById('mobile-menu-icon');
-        const body = document.body;
+            const data = {
+                name: name + " " + lastname, email: email, subject: subject, source: source, message: message, type: 'Contact Inquiry', status: 'Pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                userId: auth.currentUser ? auth.currentUser.uid : null, sourceForm: 'Contact Page'
+            };
 
-        if(menu && icon) {
-            const isActive = menu.classList.contains('active');
-            
-            if(isActive) {
-                menu.classList.remove('active');
-                icon.classList.remove('ri-close-line');
-                icon.classList.add('ri-menu-4-line');
-                body.style.overflow = ''; // Unlock scroll
+            if(db) {
+                db.collection("customer_requests").add(data)
+                    .then(() => {
+                        showNotification("Sent!", "Thank you for your interest!", "success");
+                        if(e.target) e.target.reset();
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        showNotification("Error", "Failed to send message. Please try again.", "error");
+                    })
+                    .finally(() => {
+                        if(btn) {
+                            btn.disabled = false;
+                            btn.innerText = originalText;
+                        }
+                    });
             } else {
-                menu.classList.add('active');
-                icon.classList.remove('ri-menu-4-line');
-                icon.classList.add('ri-close-line');
-                body.style.overflow = 'hidden'; // Lock scroll
+                showNotification("Offline", "System offline. Please try again later.", "error");
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
             }
         }
-    }
 
-    // ==========================================
-    // MAP & GLOBE (INIT)
-    // ==========================================
-    document.addEventListener('DOMContentLoaded', () => {
-        setupStarRating();
-        loadHomePortfolio();
-        if(window.location.pathname === '/reviews') renderDummyReview(); 
-        listenToReviews();
-        initMap(); 
-    });
+        // ==========================================
+        // MOBILE MENU LOGIC
+        // ==========================================
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('mobile-menu-icon');
+            const body = document.body;
 
-    window.addEventListener('scroll', () => {
-        const nav = document.getElementById('navbar');
-        if(nav) {
-            if(window.scrollY > 50) nav.classList.add('shadow-lg');
-            else nav.classList.remove('shadow-lg');
-        }
-    });
-
-    // ==========================================
-    // INIT MAP FUNCTION
-    // ==========================================
-    function initMap() {
-        const mapContainer = document.getElementById('map');
-        if (typeof L === 'undefined' || !mapContainer) {
-            console.warn("Leaflet or Map container not found.");
-            return;
+            if(menu && icon) {
+                const isActive = menu.classList.contains('active');
+                
+                if(isActive) {
+                    menu.classList.remove('active');
+                    icon.classList.remove('ri-close-line');
+                    icon.classList.add('ri-menu-4-line');
+                    body.style.overflow = ''; // Unlock scroll
+                } else {
+                    menu.classList.add('active');
+                    icon.classList.remove('ri-menu-4-line');
+                    icon.classList.add('ri-close-line');
+                    body.style.overflow = 'hidden'; // Lock scroll
+                }
+            }
         }
 
-        // Initialize map centered on Malaysia
-        const map = L.map('map').setView([4.2105, 101.9758], 6); 
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }).addTo(map);
-
-        const clients = [
-            { name: "KL Tech Hub", location: [3.1390, 101.6869], desc: "E-commerce Platform", link: "#" },
-            { name: "Penang Digital", location: [5.4141, 100.3288], desc: "Corporate Site", link: "#" },
-            { name: "Johor SME", location: [1.4927, 103.7414], desc: "Landing Page", link: "#" },
-            { name: "Singapore Partner", location: [1.3521, 103.8198], desc: "Regional Portal", link: "#" },
-            { name: "Bali Resort", location: [-8.4095, 115.1889], desc: "Hotel Booking", link: "#" },
-            { name: "Jakarta Startup", location: [-6.2088, 106.8456], desc: "Fintech App", link: "#" },
-            { name: "Tokyo Client", location: [35.6762, 139.6503], desc: "Consultancy", link: "#" }
-        ];
-
-        const pinIcon = L.divIcon({
-            className: 'custom-marker',
-            html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
-            iconSize: [36, 36],
-            iconAnchor: [18, 36]
+        // ==========================================
+        // MAP & GLOBE (INIT)
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setupStarRating();
+            loadHomePortfolio();
+            if(window.location.pathname === '/reviews') renderDummyReview(); 
+            listenToReviews();
+            initMap(); 
         });
 
-        clients.forEach(client => {
-            const marker = L.marker(client.location, { icon: pinIcon }).addTo(map);
-            
-            const popupContent = `
-                <div class="popup-content">
-                    <div class="popup-title">${client.name}</div>
-                    <div class="popup-stats">${client.desc}</div>
-                    <a href="${client.link}" target="_blank" class="popup-link">Visit Site</a>
-                </div>
-            `;
-            
-            marker.bindPopup(popupContent);
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if(nav) {
+                if(window.scrollY > 50) nav.classList.add('shadow-lg');
+                else nav.classList.remove('shadow-lg');
+            }
         });
-    }
+
+        // ==========================================
+        // INIT MAP FUNCTION
+        // ==========================================
+        function initMap() {
+            const mapContainer = document.getElementById('map');
+            if (typeof L === 'undefined' || !mapContainer) {
+                console.warn("Leaflet or Map container not found.");
+                return;
+            }
+
+            // Initialize map centered on Malaysia
+            const map = L.map('map').setView([4.2105, 101.9758], 6); 
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            const clients = [
+                { name: "KL Tech Hub", location: [3.1390, 101.6869], desc: "E-commerce Platform", link: "#" },
+                { name: "Penang Digital", location: [5.4141, 100.3288], desc: "Corporate Site", link: "#" },
+                { name: "Johor SME", location: [1.4927, 103.7414], desc: "Landing Page", link: "#" },
+                { name: "Singapore Partner", location: [1.3521, 103.8198], desc: "Regional Portal", link: "#" },
+                { name: "Bali Resort", location: [-8.4095, 115.1889], desc: "Hotel Booking", link: "#" },
+                { name: "Jakarta Startup", location: [-6.2088, 106.8456], desc: "Fintech App", link: "#" },
+                { name: "Tokyo Client", location: [35.6762, 139.6503], desc: "Consultancy", link: "#" }
+            ];
+
+            const pinIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
+                iconSize: [36, 36],
+                iconAnchor: [18, 36]
+            });
+
+            clients.forEach(client => {
+                const marker = L.marker(client.location, { icon: pinIcon }).addTo(map);
+                
+                const popupContent = `
+                    <div class="popup-content">
+                        <div class="popup-title">${client.name}</div>
+                        <div class="popup-stats">${client.desc}</div>
+                        <a href="${client.link}" target="_blank" class="popup-link">Visit Site</a>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+            });
+        }
     </script>
 
     <!-- UPDATED CHAT WIDGET SCRIPT -->
