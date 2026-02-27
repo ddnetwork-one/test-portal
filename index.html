@@ -87,10 +87,10 @@
                         'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'fade-in': 'fadeIn 0.6s ease-out forwards',
                         'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'shimmer': 'shimmer 2s linear infinite',
-                        // APPLE-STYLE PAGE TRANSITIONS
-                        'page-enter': 'pageEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        // PREMIUM TRANSITIONS
+                        'page-enter': 'pageEnter 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                         'page-exit': 'pageExit 0.5s cubic-bezier(0.4, 0, 1, 1) forwards',
+                        'shimmer': 'shimmer 2s linear infinite',
                     },
                     keyframes: {
                         float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } },
@@ -98,19 +98,19 @@
                         slideUp: { '0%': { opacity: 0, transform: 'translateY(40px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
                         fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
                         scaleIn: { '0%': { opacity: 0, transform: 'scale(0.95)' }, '100%': { opacity: 1, transform: 'scale(1)' } },
-                        // Premium Shimmer Effect
-                        shimmer: {
-                            '0%': { backgroundPosition: '-1000px 0' },
-                            '100%': { backgroundPosition: '1000px 0' }
-                        },
-                        // Optimized Page Transitions
+                        // APPLE-STYLE PAGE TRANSITIONS
                         pageEnter: {
-                            '0%': { opacity: 0, transform: 'scale(0.98) translateY(20px)', filter: 'blur(10px)' },
+                            '0%': { opacity: 0, transform: 'scale(0.96) translateY(10px)', filter: 'blur(10px)' },
                             '100%': { opacity: 1, transform: 'scale(1) translateY(0)', filter: 'blur(0)' }
                         },
                         pageExit: {
                             '0%': { opacity: 1, transform: 'scale(1) translateY(0)', filter: 'blur(0)' },
-                            '100%': { opacity: 0, transform: 'scale(1.02) translateY(-20px)', filter: 'blur(10px)' }
+                            '100%': { opacity: 0, transform: 'scale(1.04) translateY(-10px)', filter: 'blur(8px)' }
+                        },
+                        // SKELETON SHIMMER
+                        shimmer: {
+                            '0%': { backgroundPosition: '-1000px 0' },
+                            '100%': { backgroundPosition: '1000px 0' }
                         }
                     }
                 }
@@ -138,7 +138,6 @@
             scroll-behavior: smooth; 
             -webkit-tap-highlight-color: transparent; 
             box-sizing: border-box;
-            /* Smooth font rendering */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -164,17 +163,16 @@
         /* Glassmorphism - Dark Mode Optimized */
         .glass {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
         }
         
         .glass-strong {
-            background: rgba(20, 20, 20, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
@@ -196,60 +194,19 @@
         }
         
         /* ==========================================
-           PREMIUM SKELETON LOADING EFFECT
-           ========================================== */
-        .skeleton {
-            background: #1e293b;
-            border-radius: 0.5rem;
-            position: relative;
-            overflow: hidden;
-            /* Shimmer Effect */
-            background: linear-gradient(to right, #1e293b 8%, #334155 18%, #1e293b 33%);
-            background-size: 800px 104px;
-            animation: shimmer 2s linear infinite forwards;
-        }
-        
-        .skeleton-card {
-            height: 320px;
-            width: 100%;
-            border-radius: 1rem;
-        }
-        
-        .skeleton-text {
-            height: 1rem;
-            width: 80%;
-            margin-bottom: 0.5rem;
-            border-radius: 0.25rem;
-        }
-        
-        .skeleton-text-sm {
-            height: 0.75rem;
-            width: 60%;
-            border-radius: 0.25rem;
-        }
-
-        .skeleton-circle {
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-        }
-
-        /* ==========================================
-           SMOOTH PAGE TRANSITION SYSTEM
+           PREMIUM PAGE TRANSITION SYSTEM
            ========================================== */
         .page { 
             display: none; 
             opacity: 0; 
-            min-height: 100%;
+            min-height: 100vh; /* Ensure full height */
             width: 100%;
             position: absolute; 
             top: 0;
             left: 0;
             z-index: 10;
-            background: #0A0A0A; 
-            /* Hardware Acceleration */
-            will-change: transform, opacity, filter;
-            transform: translateZ(0);
+            background: #0A0A0A;
+            will-change: transform, opacity, filter; /* Hardware accel */
         }
         
         .page.active { 
@@ -257,21 +214,40 @@
             opacity: 1; 
             position: relative; 
             z-index: 20;
-            animation: pageEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            /* Animation handled by JS class addition */
         }
 
         /* Exit animation class */
         .page.anim-exit {
             animation: pageExit 0.5s cubic-bezier(0.4, 0, 1, 1) forwards !important;
-            pointer-events: none; /* Prevent clicks during exit */
+            pointer-events: none; 
             z-index: 5;
-            position: absolute; /* Ensure it doesn't push layout */
-            will-change: transform, opacity, filter; /* Hardware accel */
+            position: absolute; 
         }
 
-        /* Interactions - Apple-like Feel */
+        /* Enter animation class */
+        .page.anim-enter {
+            animation: pageEnter 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        }
+
+        /* ==========================================
+           PREMIUM SCROLL REVEAL (Apple Style)
+           ========================================== */
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+        
+        .reveal-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Interactions */
         .hover-lift { 
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease; 
             will-change: transform; 
         }
         .hover-lift:hover { 
@@ -281,14 +257,10 @@
         
         .btn-primary {
             background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
             touch-action: manipulation; 
-            /* Tactile feedback */
-        }
-        .btn-primary:active {
-            transform: scale(0.96);
         }
         .btn-primary:before {
             content: '';
@@ -306,7 +278,7 @@
         .input-field {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s ease;
             color: white;
         }
         .input-field:focus {
@@ -323,7 +295,7 @@
             position: absolute; bottom: -4px; left: 0;
             width: 0; height: 2px;
             background: linear-gradient(90deg, #10B981, #34D399);
-            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: width 0.3s ease;
         }
         .nav-link:hover:after, .nav-link.active:after { width: 100%; }
         
@@ -332,6 +304,7 @@
             animation: float 10s ease-in-out infinite;
             will-change: transform;
             z-index: 0;
+            pointer-events: none;
         }
         
         /* Custom scrollbar */
@@ -340,6 +313,44 @@
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #10B981; }
 
+        /* ==========================================
+           PREMIUM SKELETON LOADING SYSTEM
+           ========================================== */
+        .skeleton {
+            background: #1a1a1a;
+            background-image: linear-gradient(to right, #1a1a1a 0%, #2a2a2a 20%, #1a1a1a 40%, #1a1a1a 100%);
+            background-repeat: no-repeat;
+            background-size: 2000px 100%; 
+            animation: shimmer 2s infinite linear forwards;
+            border-radius: 8px;
+            color: transparent !important;
+        }
+        
+        .skeleton-text {
+            height: 1em;
+            width: 100%;
+            margin-bottom: 0.5em;
+            border-radius: 4px;
+        }
+        
+        .skeleton-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .skeleton-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 1rem;
+        }
+
+        /* Hide content initially if inside a skeleton-wrapper */
+        .skeleton-wrapper .real-content { display: none; }
+        .skeleton-wrapper.loaded .skeleton-placeholder { display: none; }
+        .skeleton-wrapper.loaded .real-content { display: block; animation: fadeIn 0.5s ease forwards; }
+
         /* CUSTOM NOTIFICATION MODAL */
         .notification-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -347,20 +358,20 @@
             backdrop-filter: blur(8px); /* Increased blur for premium feel */
             z-index: 100005; 
             display: none; justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0; transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .notification-modal.active { display: flex; opacity: 1; }
         .notification-content {
             background: #141414;
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 24px;
-            padding: 2rem;
+            padding: 2.5rem;
             max-width: 400px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
             transform: scale(0.9);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .notification-modal.active .notification-content { transform: scale(1); }
         
@@ -369,10 +380,10 @@
             margin: 0 auto 1.5rem;
             display: flex; align-items: center; justify-content: center;
         }
-        .notif-success { background: rgba(16, 185, 129, 0.1); color: #10B981; }
-        .notif-error { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
-        .notif-warning { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
-        .notif-info { background: rgba(59, 130, 246, 0.1); color: #3B82F6; }
+        .notif-success { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16,185,129,0.2); }
+        .notif-error { background: rgba(239, 68, 68, 0.15); color: #EF4444; border: 1px solid rgba(239,68,68,0.2); }
+        .notif-warning { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.2); }
+        .notif-info { background: rgba(59, 130, 246, 0.15); color: #3B82F6; border: 1px solid rgba(59,130,246,0.2); }
 
         /* Processing overlay */
         #processing-overlay {
@@ -390,7 +401,7 @@
             backdrop-filter: blur(8px);
             z-index: 100001;
             display: none; justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0; transition: opacity 0.3s ease;
         }
         .modal-overlay.active { display: flex; opacity: 1; }
         .modal-content {
@@ -403,7 +414,7 @@
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* Mobile menu */
@@ -419,19 +430,15 @@
             z-index: 40; 
             overflow-y: auto;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            /* Smooth slide down for mobile menu */
-            animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.4s ease, opacity 0.4s ease;
         }
-        #mobile-menu.active { display: block; }
-        #mobile-menu a {
-            transition: background-color 0.2s, padding-left 0.2s;
+        #mobile-menu.active { 
+            display: block; 
+            transform: translateY(0);
+            opacity: 1;
         }
-        #mobile-menu a:active {
-            background-color: rgba(255,255,255,0.05);
-            padding-left: 1.5rem;
-        }
-
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Password requirements */
         .password-requirements {
@@ -453,7 +460,7 @@
             font-size: 1.5rem; 
             color: #334155; 
             cursor: pointer; 
-            transition: color 0.2s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: color 0.2s, transform 0.2s;
             pointer-events: auto;
         }
         .star-icon:hover { transform: scale(1.2); }
@@ -483,7 +490,7 @@
             padding: 1rem 1.2rem;
             border-radius: 12px;
             display: flex; align-items: center; gap: 12px;
-            cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer; transition: all 0.2s;
             background: rgba(255,255,255,0.02);
         }
         .radio-option:hover { border-color: rgba(16,185,129,0.5); background: rgba(255,255,255,0.04); }
@@ -503,7 +510,7 @@
         }
         .faq-answer {
             max-height: 0; overflow: hidden;
-            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: max-height 0.4s ease, padding 0.4s;
             padding: 0 1.5rem;
         }
         .faq-item.active .faq-answer {
@@ -548,13 +555,8 @@
         
         .marquee-content:hover { animation-play-state: paused; }
 
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
         /* ==========================================
-           LEADERSHIP STYLES (NEW)
+           LEADERSHIP STYLES
            ========================================== */
         .leader-card {
             background: #141414;
@@ -573,7 +575,7 @@
             background: linear-gradient(90deg, #10B981, #059669);
             transform: scaleX(0);
             transform-origin: left;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.4s ease;
         }
         
         .leader-card:hover::before { transform: scaleX(1); }
@@ -594,7 +596,7 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.6s ease;
             filter: grayscale(50%);
         }
 
@@ -683,6 +685,7 @@
                 border-bottom: 1px solid rgba(255,255,255,0.05);
                 color: #FFFFFF;
             }
+            #mobile-menu a:active { background: rgba(255,255,255,0.05); }
             
             .order-summary-mobile {
                 order: -1;
@@ -703,11 +706,6 @@
             #desktopAuthLinks { display: none !important; }
             .page { position: absolute; width: 100%; left: 0; }
             .leader-card { margin-bottom: 1rem; }
-        }
-        
-        @keyframes scaleIn {
-            0% { transform: scale(0.9); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
         }
         
         /* Map Styles Dark Mode */
@@ -807,14 +805,14 @@
             background: rgba(255,255,255,0.1); color: #94a3b8;
             display: flex; align-items: center; justify-content: center;
             font-weight: 600; font-size: 0.9rem; position: relative; z-index: 1;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s ease;
         }
         .step-dot.active {
             background: #10B981; color: white;
             box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
         }
         .step-dot.completed { background: #059669; color: white; }
-        .step-content { display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .step-content { display: none; animation: fadeIn 0.4s ease; }
         .step-content.active { display: block; }
 
         .domain-preview-box {
@@ -991,7 +989,7 @@
                 
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full pb-12 md:pb-0">
                     <div class="grid lg:grid-cols-2 gap-12 items-center">
-                        <div class="animate-slide-up">
+                        <div class="animate-slide-up reveal-on-scroll">
                             <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-6 border border-emerald-900/50">
                                 <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                 <span class="text-sm font-medium text-slate-300">Malaysia's #1 Web Solutions</span>
@@ -1032,7 +1030,7 @@
                         </div>
 
                         <!-- Dashboard Preview -->
-                        <div class="relative animate-scale-in hidden lg:block">
+                        <div class="relative animate-scale-in hidden lg:block reveal-on-scroll">
                             <div class="absolute -inset-4 bg-gradient-to-r from-emerald-900/20 to-slate-900/20 rounded-3xl blur-2xl"></div>
                             <div class="relative glass rounded-2xl p-2 shadow-2xl border border-slate-800">
                                 <div class="bg-dark rounded-xl overflow-hidden border border-slate-800">
@@ -1135,14 +1133,14 @@
             <!-- Services Grid -->
             <div class="py-12 md:py-24 bg-dark relative">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-12 md:mb-16 animate-fade-in">
+                    <div class="text-center mb-12 md:mb-16 animate-fade-in reveal-on-scroll">
                         <h2 class="text-3xl md:text-5xl font-bold mb-4 text-white">Our <span class="text-gradient">Solutions</span></h2>
                         <p class="text-slate-400 text-lg max-w-2xl mx-auto">Designed in Malaysia. Built for the world. Choose the perfect package for your business needs.</p>
                     </div>
 
                     <div class="grid md:grid-cols-3 gap-8">
                         <!-- Static Website -->
-                        <div class="group glass rounded-2xl p-6 md:p-8 hover-lift cursor-pointer border border-slate-800" onclick="selectPackage('Basic HTML Website', 'html')">
+                        <div class="group glass rounded-2xl p-6 md:p-8 hover-lift cursor-pointer border border-slate-800 reveal-on-scroll" onclick="selectPackage('Basic HTML Website', 'html')">
                             <div class="w-14 h-14 rounded-2xl bg-emerald-900/50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                 <i class="ri-file-list-3-line text-2xl text-emerald-400"></i>
                             </div>
@@ -1159,7 +1157,7 @@
                         </div>
 
                         <!-- Interactive Website -->
-                        <div class="group glass rounded-2xl p-6 md:p-8 hover-lift cursor-pointer border border-slate-800" onclick="selectPackage('Front-End Website', 'frontend')">
+                        <div class="group glass rounded-2xl p-6 md:p-8 hover-lift cursor-pointer border border-slate-800 reveal-on-scroll" style="transition-delay: 100ms;" onclick="selectPackage('Front-End Website', 'frontend')">
                             <div class="w-14 h-14 rounded-2xl bg-emerald-900/50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                 <i class="ri-layout-masonry-line text-2xl text-emerald-400"></i>
                             </div>
@@ -1176,7 +1174,7 @@
                         </div>
 
                         <!-- AI Powered -->
-                        <div class="group glass rounded-2xl p-6 md:p-8 hover-lift cursor-pointer border border-slate-800" onclick="selectPackage('AI Powered Website', 'ai')">
+                        <div class="group glass rounded-2xl p-6 md:p-8 hover-lift cursor-pointer border border-slate-800 reveal-on-scroll" style="transition-delay: 200ms;" onclick="selectPackage('AI Powered Website', 'ai')">
                             <div class="w-14 h-14 rounded-2xl bg-emerald-900/50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                 <i class="ri-brain-line text-2xl text-emerald-400"></i>
                             </div>
@@ -1199,12 +1197,31 @@
             <div class="py-12 md:py-24 bg-slate-900/20">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mb-12">
-                        <h2 class="text-3xl md:text-5xl font-bold mb-4 text-white">Recent <span class="text-gradient">Work</span></h2>
+                        <h2 class="text-3xl md:text-5xl font-bold mb-4 text-white reveal-on-scroll">Recent <span class="text-gradient">Work</span></h2>
                         <p class="text-slate-400 text-lg">Check out some of our latest completed projects.</p>
                     </div>
-                    <div id="home-portfolio-grid" class="grid md:grid-cols-3 gap-8">
-                        <!-- JS will inject items here -->
+                    <!-- Skeleton Loader for Portfolio -->
+                    <div id="home-portfolio-grid-skeleton" class="grid md:grid-cols-3 gap-8">
+                        <div class="glass rounded-2xl p-4 border border-slate-800 h-80">
+                            <div class="skeleton h-48 rounded-xl mb-4"></div>
+                            <div class="skeleton skeleton-text h-6 w-3/4"></div>
+                            <div class="skeleton skeleton-text h-4 w-1/2"></div>
+                        </div>
+                        <div class="glass rounded-2xl p-4 border border-slate-800 h-80">
+                            <div class="skeleton h-48 rounded-xl mb-4"></div>
+                            <div class="skeleton skeleton-text h-6 w-3/4"></div>
+                            <div class="skeleton skeleton-text h-4 w-1/2"></div>
+                        </div>
+                        <div class="glass rounded-2xl p-4 border border-slate-800 h-80">
+                            <div class="skeleton h-48 rounded-xl mb-4"></div>
+                            <div class="skeleton skeleton-text h-6 w-3/4"></div>
+                            <div class="skeleton skeleton-text h-4 w-1/2"></div>
+                        </div>
                     </div>
+
+                    <!-- Real Content Container -->
+                    <div id="home-portfolio-grid" class="grid md:grid-cols-3 gap-8 hidden"></div>
+                    
                     <div class="text-center mt-12">
                         <button onclick="navigateTo('clients')" class="px-8 py-4 rounded-full btn-primary text-white font-bold">View All Projects</button>
                     </div>
@@ -1214,14 +1231,14 @@
             <!-- GLOBAL CLIENT MAP SECTION -->
             <section id="global-map-section" class="py-12 md:py-24 bg-dark relative overflow-hidden">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 class="text-4xl md:text-5xl font-bold mb-4 text-white">Global Client <span class="text-gradient">Reach</span></h2>
-                    <p class="text-xl text-slate-400 max-w-3xl mx-auto mb-12">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 text-white reveal-on-scroll">Global Client <span class="text-gradient">Reach</span></h2>
+                    <p class="text-xl text-slate-400 max-w-3xl mx-auto mb-12 reveal-on-scroll">
                         Interactive map of live websites – zoom, pan & click pins for details & direct visits.
                     </p>
 
-                    <div id="map" class="w-full h-[500px] rounded-2xl shadow-lg border border-slate-800 mb-16 z-10 relative bg-slate-900"></div>
+                    <div id="map" class="w-full h-[500px] rounded-2xl shadow-lg border border-slate-800 mb-16 z-10 relative bg-slate-900 reveal-on-scroll"></div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-5xl mx-auto">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-5xl mx-auto reveal-on-scroll">
                         <div class="text-center">
                             <div class="text-4xl md:text-5xl font-bold text-white mb-2">142</div>
                             <div class="text-sm md:text-lg text-slate-400 font-medium">Websites Live</div>
@@ -1246,33 +1263,33 @@
             <div class="py-12 md:py-24 bg-slate-900/20">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="text-center mb-12 md:mb-16">
-                        <h2 class="text-3xl md:text-5xl font-bold mb-4 text-white">Why Choose <span class="text-gradient">Us?</span></h2>
+                        <h2 class="text-3xl md:text-5xl font-bold mb-4 text-white reveal-on-scroll">Why Choose <span class="text-gradient">Us?</span></h2>
                         <p class="text-slate-400 text-lg max-w-2xl mx-auto">We combine technical expertise with a deep understanding of the local market.</p>
                     </div>
 
                     <div class="grid md:grid-cols-4 gap-8">
-                        <div class="text-center p-6">
+                        <div class="text-center p-6 reveal-on-scroll">
                             <div class="w-16 h-16 rounded-2xl bg-emerald-900/50 flex items-center justify-center mx-auto mb-4">
                                 <i class="ri-rocket-2-line text-3xl text-emerald-400"></i>
                             </div>
                             <h4 class="text-lg font-bold text-white mb-2">Fast Delivery</h4>
                             <p class="text-sm text-slate-400">3-5 days for static sites, 2-4 weeks for complex projects.</p>
                         </div>
-                        <div class="text-center p-6">
+                        <div class="text-center p-6 reveal-on-scroll" style="transition-delay: 100ms;">
                             <div class="w-16 h-16 rounded-2xl bg-emerald-900/50 flex items-center justify-center mx-auto mb-4">
                                 <i class="ri-smartphone-line text-3xl text-emerald-400"></i>
                             </div>
                             <h4 class="text-lg font-bold text-white mb-2">Mobile-First</h4>
                             <p class="text-sm text-slate-400">Perfectly responsive on all devices from day one.</p>
                         </div>
-                        <div class="text-center p-6">
+                        <div class="text-center p-6 reveal-on-scroll" style="transition-delay: 200ms;">
                             <div class="w-16 h-16 rounded-2xl bg-emerald-900/50 flex items-center justify-center mx-auto mb-4">
                                 <i class="ri-bar-chart-box-line text-3xl text-emerald-400"></i>
                             </div>
                             <h4 class="text-lg font-bold text-white mb-2">SEO & Analytics</h4>
                             <p class="text-sm text-slate-400">Built-in tools to help you rank higher on Google.</p>
                         </div>
-                        <div class="text-center p-6">
+                        <div class="text-center p-6 reveal-on-scroll" style="transition-delay: 300ms;">
                             <div class="w-16 h-16 rounded-2xl bg-emerald-900/50 flex items-center justify-center mx-auto mb-4">
                                 <i class="ri-robot-2-line text-3xl text-emerald-400"></i>
                             </div>
@@ -1286,11 +1303,11 @@
             <!-- Newsletter -->
             <div class="py-12 md:py-24 bg-slate-900/20">
                 <div class="max-w-4xl mx-auto px-4 text-center">
-                    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-white">Stay Updated</h2>
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-white reveal-on-scroll">Stay Updated</h2>
                     <p class="text-slate-400 mb-8">Subscribe to our newsletter for the latest news, tips, and exclusive offers.</p>
                     
                     <!-- Newsletter Form Container -->
-                    <div id="newsletter-wrapper">
+                    <div id="newsletter-wrapper" class="reveal-on-scroll">
                         <form id="newsletter-form" onsubmit="handleNewsletterSubmit(event)" class="max-w-md mx-auto">
                             <div class="flex gap-3">
                                 <input type="email" name="EMAIL" required placeholder="your@email.com" class="flex-1 input-field px-4 py-3 rounded-lg">
@@ -1315,7 +1332,7 @@
             <div class="py-12 md:py-24 bg-mesh relative overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-900/20 to-slate-900/20"></div>
                 <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
-                    <h2 class="text-4xl md:text-6xl font-bold mb-6 text-white">Ready to build your website?</h2>
+                    <h2 class="text-4xl md:text-6xl font-bold mb-6 text-white reveal-on-scroll">Ready to build your website?</h2>
                     <p class="text-xl text-slate-400 mb-10">Get started today with our affordable packages. No hidden fees, cancel anytime.</p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
                         <button onclick="navigateTo('pricing')" class="px-8 py-4 rounded-full btn-primary text-white font-bold text-lg shadow-xl shadow-emerald-900/20">
@@ -1329,7 +1346,7 @@
             </div>
         </section>
 
-        <!-- LEADERSHIP SECTION (NEW) -->
+        <!-- LEADERSHIP SECTION -->
         <section id="page-leadership" class="page">
             <div class="bg-mesh py-12 md:py-24">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1342,7 +1359,7 @@
                     <div class="grid md:grid-cols-3 gap-8 md:gap-12">
                         
                         <!-- Danial Danish -->
-                        <div class="leader-card">
+                        <div class="leader-card reveal-on-scroll">
                             <div class="leader-img-wrapper">
                                 <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="Danial Danish" class="leader-img bg-slate-800">
                             </div>
@@ -1356,9 +1373,8 @@
                         </div>
 
                         <!-- Bella -->
-                        <div class="leader-card">
+                        <div class="leader-card reveal-on-scroll" style="transition-delay: 100ms;">
                             <div class="leader-img-wrapper">
-                                <!-- Using a placeholder icon/image for Bella since no URL was provided -->
                                 <img src="https://ui-avatars.com/api/?name=Bella+Manager&background=0D0D0D&color=10B981&size=512" alt="Bella" class="leader-img bg-slate-800">
                             </div>
                             <div class="leader-content">
@@ -1371,9 +1387,8 @@
                         </div>
 
                         <!-- Putri -->
-                        <div class="leader-card">
+                        <div class="leader-card reveal-on-scroll" style="transition-delay: 200ms;">
                             <div class="leader-img-wrapper">
-                                <!-- Using a placeholder icon/image for Putri since no URL was provided -->
                                 <img src="https://ui-avatars.com/api/?name=Putri+Marketing&background=0D0D0D&color=10B981&size=512" alt="Putri" class="leader-img bg-slate-800">
                             </div>
                             <div class="leader-content">
@@ -1399,9 +1414,39 @@
                         <p class="text-xl text-slate-400 max-w-3xl mx-auto">Explore digital products and tools developed under the DDNex brand.</p>
                     </div>
 
-                    <div id="products-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div class="col-span-3 text-center py-12 text-slate-500">Loading products...</div>
+                    <!-- SKELETON LOADER -->
+                    <div id="products-grid-skeleton" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="product-card h-[350px]">
+                            <div class="skeleton product-image"></div>
+                            <div class="p-6 space-y-3">
+                                <div class="skeleton skeleton-text h-6 w-3/4"></div>
+                                <div class="skeleton skeleton-text h-4 w-1/2"></div>
+                                <div class="skeleton skeleton-text h-4 w-full"></div>
+                                <div class="skeleton skeleton-text h-8 w-1/3 mt-4"></div>
+                            </div>
+                        </div>
+                        <div class="product-card h-[350px]">
+                            <div class="skeleton product-image"></div>
+                            <div class="p-6 space-y-3">
+                                <div class="skeleton skeleton-text h-6 w-3/4"></div>
+                                <div class="skeleton skeleton-text h-4 w-1/2"></div>
+                                <div class="skeleton skeleton-text h-4 w-full"></div>
+                                <div class="skeleton skeleton-text h-8 w-1/3 mt-4"></div>
+                            </div>
+                        </div>
+                        <div class="product-card h-[350px]">
+                            <div class="skeleton product-image"></div>
+                            <div class="p-6 space-y-3">
+                                <div class="skeleton skeleton-text h-6 w-3/4"></div>
+                                <div class="skeleton skeleton-text h-4 w-1/2"></div>
+                                <div class="skeleton skeleton-text h-4 w-full"></div>
+                                <div class="skeleton skeleton-text h-8 w-1/3 mt-4"></div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- REAL CONTENT -->
+                    <div id="products-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 hidden"></div>
                 </div>
             </div>
         </section>
@@ -1417,7 +1462,7 @@
 
                     <!-- Service Details -->
                     <div class="grid md:grid-cols-2 gap-8 mb-16">
-                        <div class="glass rounded-2xl p-8 border border-slate-800 hover:border-emerald-900/50 transition-all">
+                        <div class="glass rounded-2xl p-8 border border-slate-800 hover:border-emerald-900/50 transition-all reveal-on-scroll">
                             <div class="flex items-start gap-4 mb-4">
                                 <div class="w-12 h-12 rounded-xl bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
                                     <i class="ri-file-list-3-line text-2xl text-emerald-400"></i>
@@ -1435,7 +1480,7 @@
                             </ul>
                         </div>
 
-                        <div class="glass rounded-2xl p-8 border border-slate-800 hover:border-emerald-900/50 transition-all">
+                        <div class="glass rounded-2xl p-8 border border-slate-800 hover:border-emerald-900/50 transition-all reveal-on-scroll" style="transition-delay: 100ms;">
                             <div class="flex items-start gap-4 mb-4">
                                 <div class="w-12 h-12 rounded-xl bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
                                     <i class="ri-layout-masonry-line text-2xl text-emerald-400"></i>
@@ -1453,7 +1498,7 @@
                             </ul>
                         </div>
 
-                        <div class="glass rounded-2xl p-8 border border-slate-800 hover:border-emerald-900/50 transition-all">
+                        <div class="glass rounded-2xl p-8 border border-slate-800 hover:border-emerald-900/50 transition-all reveal-on-scroll" style="transition-delay: 200ms;">
                             <div class="flex items-start gap-4 mb-4">
                                 <div class="w-12 h-12 rounded-xl bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
                                     <i class="ri-brain-line text-2xl text-emerald-400"></i>
@@ -1471,7 +1516,7 @@
                             </ul>
                         </div>
 
-                        <div class="glass rounded-2xl p-8 border border-slate-800 hover:border-emerald-900/50 transition-all">
+                        <div class="glass rounded-2xl p-8 border border-slate-800 hover:border-emerald-900/50 transition-all reveal-on-scroll" style="transition-delay: 300ms;">
                             <div class="flex items-start gap-4 mb-4">
                                 <div class="w-12 h-12 rounded-xl bg-emerald-900/50 flex items-center justify-center flex-shrink-0">
                                     <i class="ri-database-2-line text-2xl text-emerald-400"></i>
@@ -1491,7 +1536,7 @@
                     </div>
 
                     <!-- Process -->
-                    <div class="glass rounded-2xl p-8 md:p-12 border border-slate-800 bg-dark">
+                    <div class="glass rounded-2xl p-8 md:p-12 border border-slate-800 bg-dark reveal-on-scroll">
                         <h2 class="text-3xl font-bold text-center mb-12 text-white">Our Process</h2>
                         <div class="grid md:grid-cols-4 gap-8">
                             <div class="text-center">
@@ -1529,7 +1574,7 @@
                         <p class="text-xl text-slate-400 max-w-2xl mx-auto mb-8">Choose the perfect package for your business. All prices in Malaysian Ringgit (RM).</p>
                         
                         <!-- Billing Toggle -->
-                        <div class="inline-flex items-center gap-4 p-1 rounded-full glass border border-slate-800">
+                        <div class="inline-flex items-center gap-4 p-1 rounded-full glass border border-slate-800 reveal-on-scroll">
                             <button onclick="setBilling('monthly')" id="btn-monthly" class="px-6 py-2 rounded-full text-sm font-medium transition-all bg-emerald-600 text-white">Monthly</button>
                             <button onclick="setBilling('onetime')" id="btn-onetime" class="px-6 py-2 rounded-full text-sm font-medium transition-all text-slate-400 hover:text-white">
                                 One-Time <span class="text-amber-500 text-xs ml-1">No maintenance</span>
@@ -1540,7 +1585,7 @@
                     <!-- Pricing Cards -->
                     <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
                         <!-- Basic HTML -->
-                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 hover:border-emerald-900/50 transition-all hover:-translate-y-2">
+                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 hover:border-emerald-900/50 transition-all hover:-translate-y-2 reveal-on-scroll">
                             <div class="mb-6">
                                 <h3 class="text-xl font-semibold text-slate-300 mb-2">Basic HTML</h3>
                                 <div class="flex items-baseline gap-1">
@@ -1562,7 +1607,7 @@
                         </div>
 
                         <!-- Front-End (Popular) -->
-                        <div class="package-popular glass rounded-2xl p-6 md:p-8 border-2 border-emerald-600 shadow-xl shadow-emerald-900/10">
+                        <div class="package-popular glass rounded-2xl p-6 md:p-8 border-2 border-emerald-600 shadow-xl shadow-emerald-900/10 reveal-on-scroll" style="transition-delay: 100ms;">
                             <div class="mb-6">
                                 <h3 class="text-xl font-semibold text-slate-300 mb-2">Front-End</h3>
                                 <div class="flex items-baseline gap-1">
@@ -1584,7 +1629,7 @@
                         </div>
 
                         <!-- AI Powered -->
-                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 hover:border-emerald-900/50 transition-all hover:-translate-y-2">
+                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 hover:border-emerald-900/50 transition-all hover:-translate-y-2 reveal-on-scroll" style="transition-delay: 200ms;">
                             <div class="mb-6">
                                 <h3 class="text-xl font-semibold text-slate-300 mb-2">AI Powered</h3>
                                 <div class="flex items-baseline gap-1">
@@ -1608,7 +1653,7 @@
 
                     <!-- Bundle & Portal -->
                     <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 hover:border-emerald-900/50 transition-all">
+                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 hover:border-emerald-900/50 transition-all reveal-on-scroll">
                             <div class="flex items-center gap-3 mb-4">
                                 <span class="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-800 text-white text-xs font-bold">BEST VALUE</span>
                             </div>
@@ -1621,7 +1666,7 @@
                             <button onclick="attemptSelectPackage('Front-End + Portal', 'bundle')" class="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-800 text-white font-semibold hover:shadow-lg transition-all">Select Bundle</button>
                         </div>
 
-                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 hover:border-emerald-900/50 transition-all">
+                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 hover:border-emerald-900/50 transition-all reveal-on-scroll" style="transition-delay: 100ms;">
                             <h3 class="text-xl font-semibold text-slate-300 mb-2">Portal Standalone</h3>
                             <div class="flex items-baseline gap-1 mb-4">
                                 <span class="text-4xl font-bold text-white price-display" data-monthly="279" data-onetime="3999" data-setup="700">RM 279</span>
@@ -1658,7 +1703,7 @@
 
                         <!-- STEP 1: PLAN REVIEW -->
                         <div id="step-1" class="step-content active">
-                            <div class="glass rounded-2xl p-6 md:p-10 border border-slate-800 bg-dark text-center md:text-left">
+                            <div class="glass rounded-2xl p-6 md:p-10 border border-slate-800 bg-dark text-center md:text-left reveal-on-scroll">
                                 <h2 class="text-2xl font-bold text-white mb-6">Review Your Plan</h2>
                                 
                                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-8 border-b border-slate-800 gap-4">
@@ -1705,7 +1750,7 @@
 
                         <!-- STEP 2: DETAILS & DOMAIN -->
                         <div id="step-2" class="step-content">
-                            <div class="glass rounded-2xl p-6 md:p-10 border border-slate-800 bg-dark">
+                            <div class="glass rounded-2xl p-6 md:p-10 border border-slate-800 bg-dark reveal-on-scroll">
                                 <h2 class="text-2xl font-bold text-white mb-6">Your Details & Domain</h2>
                                 
                                 <form id="checkout-form-step2" onsubmit="return false;">
@@ -1793,7 +1838,7 @@
 
                         <!-- STEP 3: ORDER SUMMARY & PAYMENT -->
                         <div id="step-3" class="step-content">
-                            <div class="glass rounded-2xl p-6 md:p-10 border border-slate-800 bg-dark">
+                            <div class="glass rounded-2xl p-6 md:p-10 border border-slate-800 bg-dark reveal-on-scroll">
                                 <h2 class="text-2xl font-bold text-white mb-6">Order Summary</h2>
                                 
                                 <div class="summary-card mb-6">
@@ -1867,7 +1912,7 @@
                     <div class="grid lg:grid-cols-3 gap-8 mb-16">
                         <!-- Write Review Form -->
                         <div class="lg:col-span-1">
-                            <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 bg-dark h-full">
+                            <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 bg-dark h-full reveal-on-scroll">
                                 <h3 class="text-xl font-bold text-white mb-2">Write a Review</h3>
                                 <p class="text-slate-400 mb-6 text-sm">Share your experience with DDNex services.</p>
                                 
@@ -1903,9 +1948,31 @@
 
                         <!-- Reviews Grid -->
                         <div class="lg:col-span-2">
-                            <div id="reviews-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="col-span-2 text-center py-12 text-slate-500">Loading reviews...</div>
+                            <!-- SKELETON LOADER -->
+                            <div id="reviews-list-skeleton" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="glass rounded-2xl p-6 border border-slate-800 bg-dark h-48 flex gap-4">
+                                    <div class="skeleton skeleton-avatar"></div>
+                                    <div class="flex-1 space-y-2 pt-2">
+                                        <div class="skeleton skeleton-text h-5 w-1/3"></div>
+                                        <div class="skeleton skeleton-text h-4 w-1/4"></div>
+                                        <div class="skeleton skeleton-text h-4 w-full mt-2"></div>
+                                        <div class="skeleton skeleton-text h-4 w-3/4"></div>
+                                    </div>
+                                </div>
+                                <div class="glass rounded-2xl p-6 border border-slate-800 bg-dark h-48 flex gap-4">
+                                    <div class="skeleton skeleton-avatar"></div>
+                                    <div class="flex-1 space-y-2 pt-2">
+                                        <div class="skeleton skeleton-text h-5 w-1/3"></div>
+                                        <div class="skeleton skeleton-text h-4 w-1/4"></div>
+                                        <div class="skeleton skeleton-text h-4 w-full mt-2"></div>
+                                        <div class="skeleton skeleton-text h-4 w-3/4"></div>
+                                    </div>
+                                </div>
                             </div>
+
+                            <!-- REAL CONTENT -->
+                            <div id="reviews-list" class="grid grid-cols-1 md:grid-cols-2 gap-6 hidden"></div>
+                            
                             <div class="text-center mt-8"><button class="btn btn-primary px-6 py-2 rounded-full text-white font-semibold" onclick="toggleFullReviews()">View All Reviews</button></div>
                         </div>
                     </div>
@@ -1921,9 +1988,34 @@
                         <h1 class="text-4xl md:text-5xl font-bold mb-6 text-white">Our <span class="text-gradient">Portfolio</span></h1>
                         <p class="text-xl text-slate-400">Trusted by forward-thinking Malaysian businesses.</p>
                     </div>
-                    <div id="portfolio-grid" class="grid md:grid-cols-3 gap-8">
-                        <div class="col-span-3 text-center py-12 text-slate-500">Loading portfolio...</div>
+                    
+                    <!-- SKELETON LOADER -->
+                    <div id="portfolio-grid-skeleton" class="grid md:grid-cols-3 gap-8">
+                        <div class="glass rounded-2xl overflow-hidden border border-slate-800 bg-dark h-80">
+                            <div class="skeleton h-48 w-full"></div>
+                            <div class="p-6 space-y-3">
+                                <div class="skeleton skeleton-text h-6 w-3/4"></div>
+                                <div class="skeleton skeleton-text h-4 w-1/2"></div>
+                            </div>
+                        </div>
+                        <div class="glass rounded-2xl overflow-hidden border border-slate-800 bg-dark h-80">
+                            <div class="skeleton h-48 w-full"></div>
+                            <div class="p-6 space-y-3">
+                                <div class="skeleton skeleton-text h-6 w-3/4"></div>
+                                <div class="skeleton skeleton-text h-4 w-1/2"></div>
+                            </div>
+                        </div>
+                        <div class="glass rounded-2xl overflow-hidden border border-slate-800 bg-dark h-80">
+                            <div class="skeleton h-48 w-full"></div>
+                            <div class="p-6 space-y-3">
+                                <div class="skeleton skeleton-text h-6 w-3/4"></div>
+                                <div class="skeleton skeleton-text h-4 w-1/2"></div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- REAL CONTENT -->
+                    <div id="portfolio-grid" class="grid md:grid-cols-3 gap-8 hidden"></div>
                 </div>
             </div>
         </section>
@@ -1933,7 +2025,7 @@
             <div class="bg-mesh py-12 md:py-24">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="grid lg:grid-cols-2 gap-8 md:gap-16">
-                        <div>
+                        <div class="reveal-on-scroll">
                             <h1 class="text-4xl md:text-5xl font-bold mb-6 text-white">Get in <span class="text-gradient">Touch</span></h1>
                             <p class="text-xl text-slate-400 mb-8">Have questions? Our team is here to help. Reach out and we'll respond within 24 hours.</p>
                             
@@ -1986,7 +2078,7 @@
                             </div>
                         </div>
 
-                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 bg-dark">
+                        <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 bg-dark reveal-on-scroll" style="transition-delay: 100ms;">
                             <form onsubmit="handleContactSubmit(event)" class="space-y-6">
                                 <div class="grid md:grid-cols-2 gap-4">
                                     <div>
@@ -2046,7 +2138,7 @@
                 </div>
                 
                 <div class="max-w-md w-full relative z-10">
-                    <div class="text-center mb-8">
+                    <div class="text-center mb-8 reveal-on-scroll">
                         <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center mx-auto mb-4 shadow-lg animate-float">
                             <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNex" class="w-8 h-8 object-contain invert">
                         </div>
@@ -2054,7 +2146,7 @@
                         <p class="text-slate-400 mt-2">Sign in to your DDNex dashboard</p>
                     </div>
 
-                    <div class="glass-strong rounded-2xl p-8 border border-slate-800 bg-dark shadow-2xl">
+                    <div class="glass-strong rounded-2xl p-8 border border-slate-800 bg-dark shadow-2xl reveal-on-scroll" style="transition-delay: 100ms;">
                         <form onsubmit="handleLogin(event)" class="space-y-6">
                             <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-2">Email Address</label>
@@ -2102,7 +2194,7 @@
                 </div>
 
                 <div class="max-w-md w-full relative z-10">
-                    <div class="text-center mb-8">
+                    <div class="text-center mb-8 reveal-on-scroll">
                         <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center mx-auto mb-4 shadow-lg animate-float">
                             <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNex" class="w-8 h-8 object-contain invert">
                         </div>
@@ -2110,7 +2202,7 @@
                         <p class="text-slate-400 mt-2">Enter your email to receive a reset link.</p>
                     </div>
 
-                    <div class="glass-strong rounded-2xl p-8 border border-slate-800 bg-dark shadow-2xl">
+                    <div class="glass-strong rounded-2xl p-8 border border-slate-800 bg-dark shadow-2xl reveal-on-scroll">
                         <form onsubmit="handleForgotPassword(event)" class="space-y-6">
                             <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-2">Email Address</label>
@@ -2139,7 +2231,7 @@
                 </div>
 
                 <div class="max-w-md w-full relative z-10">
-                    <div class="text-center mb-8">
+                    <div class="text-center mb-8 reveal-on-scroll">
                         <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center mx-auto mb-4 shadow-lg animate-float">
                             <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNex" class="w-8 h-8 object-contain invert">
                         </div>
@@ -2147,7 +2239,7 @@
                         <p class="text-slate-400 mt-2">Join thousands of Malaysian businesses</p>
                     </div>
 
-                    <div class="glass-strong rounded-2xl p-8 border border-slate-800 bg-dark shadow-2xl">
+                    <div class="glass-strong rounded-2xl p-8 border border-slate-800 bg-dark shadow-2xl reveal-on-scroll">
                         <form onsubmit="handleSignup(event)" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-slate-400 mb-2">Full Name</label>
@@ -2190,9 +2282,9 @@
             <div class="bg-slate-900/20 py-12">
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     
-                    <!-- ACTIVE PLAN STATUS CARD (NEW) -->
+                    <!-- ACTIVE PLAN STATUS CARD -->
                     <!-- Shown if user has a paid plan -->
-                    <div id="active-plan-card" class="glass rounded-2xl p-8 border border-emerald-900/50 bg-dark mb-8 relative overflow-hidden hidden">
+                    <div id="active-plan-card" class="glass rounded-2xl p-8 border border-emerald-900/50 bg-dark mb-8 relative overflow-hidden hidden reveal-on-scroll">
                         <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-600/10 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50"></div>
                         <div class="absolute bottom-0 left:0 w-24 h-24 bg-emerald-800/10 rounded-full translate-y-1/2 -translate-x-1/2 opacity-50"></div>
                         
@@ -2220,9 +2312,9 @@
                         </div>
                     </div>
 
-                    <!-- NO PLAN CTA (NEW) -->
+                    <!-- NO PLAN CTA -->
                     <!-- Shown if user has NO paid plans -->
-                    <div id="no-plan-cta" class="glass rounded-2xl p-8 border border-dashed border-slate-700 bg-dark mb-8 text-center hidden">
+                    <div id="no-plan-cta" class="glass rounded-2xl p-8 border border-dashed border-slate-700 bg-dark mb-8 text-center hidden reveal-on-scroll">
                         <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
                             <i class="ri-shopping-cart-2-line text-3xl"></i>
                         </div>
@@ -2235,7 +2327,7 @@
 
                     <!-- PROFILE INFO & EDIT -->
                     <div class="grid lg:grid-cols-3 gap-8 mb-8">
-                        <div class="lg:col-span-1">
+                        <div class="lg:col-span-1 reveal-on-scroll">
                             <div class="glass rounded-2xl p-6 border border-slate-800 bg-dark text-center">
                                 <div class="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-700 to-emerald-900 flex items-center justify-center text-3xl font-bold text-white mx-auto mb-4 shadow-md">
                                     <i class="ri-user-line"></i>
@@ -2249,7 +2341,7 @@
                             </div>
                         </div>
 
-                        <div class="lg:col-span-2">
+                        <div class="lg:col-span-2 reveal-on-scroll" style="transition-delay: 100ms;">
                             <div class="glass rounded-2xl p-6 md:p-8 border border-slate-800 bg-dark">
                                 <div class="flex items-center justify-between mb-6">
                                     <h3 class="text-lg font-bold text-white">Edit Profile</h3>
@@ -2285,7 +2377,7 @@
                     <!-- VOUCHER & HISTORY CONTAINER -->
                     <div class="grid lg:grid-cols-2 gap-8">
                         <!-- Voucher Section -->
-                        <div id="profile-voucher-section" class="hidden">
+                        <div id="profile-voucher-section" class="hidden reveal-on-scroll">
                             <div class="glass rounded-2xl p-6 border border-slate-800 bg-dark h-full flex flex-col">
                                 <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <i class="ri-gift-line text-pink-400"></i> Your Vouchers
@@ -2299,7 +2391,7 @@
                             </div>
                         </div>
                         <!-- Empty state for voucher if none exist -->
-                        <div id="no-voucher-section" class="hidden lg:block">
+                        <div id="no-voucher-section" class="hidden lg:block reveal-on-scroll">
                             <div class="glass rounded-2xl p-6 border border-dashed border-slate-700 bg-dark h-full flex flex-col justify-center items-center text-center">
                                 <i class="ri-coupon-3-line text-3xl text-slate-600 mb-2"></i>
                                 <p class="text-sm text-slate-500">No active vouchers</p>
@@ -2307,7 +2399,7 @@
                         </div>
 
                         <!-- Order History -->
-                        <div class="lg:col-span-1"> <!-- Takes full width if no voucher, else 1 col -->
+                        <div class="lg:col-span-1 reveal-on-scroll"> <!-- Takes full width if no voucher, else 1 col -->
                             <div class="glass rounded-2xl p-6 border border-slate-800 bg-dark h-full">
                                 <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <i class="ri-history-line text-blue-400"></i> Order History
@@ -2344,7 +2436,7 @@
         <!-- THANK YOU PAGE -->
         <section id="page-thank-you" class="page">
             <div class="min-h-screen flex items-center justify-center bg-mesh py-12 px-4">
-                <div class="max-w-md w-full text-center">
+                <div class="max-w-md w-full text-center reveal-on-scroll">
                     <div class="w-24 h-24 rounded-full bg-emerald-900/30 flex items-center justify-center mx-auto mb-6">
                         <i class="ri-check-line text-5xl text-emerald-400"></i>
                     </div>
@@ -2358,11 +2450,11 @@
             </div>
         </section>
 
-        <!-- TERMS OF SERVICE PAGE (NEW) -->
+        <!-- TERMS OF SERVICE PAGE -->
         <section id="page-terms" class="page">
             <div class="bg-mesh py-12 md:py-24 min-h-screen">
                 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="glass rounded-2xl p-8 md:p-12 border border-slate-800 bg-dark shadow-xl">
+                    <div class="glass rounded-2xl p-8 md:p-12 border border-slate-800 bg-dark shadow-xl reveal-on-scroll">
                         <h1 class="text-4xl md:text-5xl font-bold mb-6 text-white">Terms of <span class="text-gradient">Service</span></h1>
                         <p class="text-slate-400 mb-8 text-lg">Last Updated: January 2025</p>
                         
@@ -2426,11 +2518,11 @@
             </div>
         </section>
 
-        <!-- PRIVACY POLICY PAGE (NEW) -->
+        <!-- PRIVACY POLICY PAGE -->
         <section id="page-privacy" class="page">
             <div class="bg-mesh py-12 md:py-24 min-h-screen">
                 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="glass rounded-2xl p-8 md:p-12 border border-slate-800 bg-dark shadow-xl">
+                    <div class="glass rounded-2xl p-8 md:p-12 border border-slate-800 bg-dark shadow-xl reveal-on-scroll">
                         <h1 class="text-4xl md:text-5xl font-bold mb-6 text-white">Privacy <span class="text-gradient">Policy</span></h1>
                         <p class="text-slate-400 mb-8 text-lg">Your privacy is important to us. This policy explains how we handle your data.</p>
                         
@@ -2569,4 +2661,1556 @@
             html: { oneTime: 249, monthly: 39, setupFee: 100, desc: "1 Static Landing Page. Mobile Responsive. Basic SEO.", features: ["1 Static Landing Page", "Mobile Responsive Design", "Basic SEO Tags", "Contact Form Integration", "Free ddnet.my subdomain (1st year)", "Maintenance included"] },
             frontend: { oneTime: 1399, monthly: 99, setupFee: 200, desc: "Up to 5 Pages. Animations & Interactive UI.", features: ["Up to 5 Pages", "Animations & Interactive UI", "Contact Forms & WhatsApp", "Basic SEO Setup", "Load Balancer Included", "Maintenance & updates"] },
             bundle: { oneTime: 3499, monthly: 249, setupFee: 700, desc: "Full website & internal management.", features: ["Full website & internal management", "Multi-User Internal Portal", "Database Management", "Advanced Analytics", "Custom Dashboards"] },
-            ai: { oneTime: 2499, monthly: 149, setupFee: 400, desc: "Advanced automation &
+            ai: { oneTime: 2499, monthly: 149, setupFee: 400, desc: "Advanced automation & chatbots.", features: ["All Front-End features", "AI Chatbot Integration", "Lead Auto-Response", "Smart Analytics", "AI Tuning & Support"] },
+            portal: { oneTime: 3999, monthly: 279, setupFee: 700, desc: "Internal portal for existing sites.", features: ["Internal portal for existing sites", "Multi-user access & database management"] }
+        };
+
+        // ==========================================
+        // STATE VARIABLES
+        // ==========================================
+        let db, auth;
+        let ADMIN_EMAIL = "ddnetwork.one@outlook.com";
+        let currentUserPersonalVoucher = null;
+        let pendingPackage = null; 
+        let currentCheckoutStep = 1; 
+
+        const state = {
+            packageType: null, packagePrice: 0, setupFee: 0, domainPrice: 0, maintenancePrice: 0,
+            discountRate: 0, discountFixed: 0, discountType: 'percent', discountCode: '',
+            domainType: 'sub', domainName: '', domainNameValid: false, billingCycle: 'monthly',
+            isOneTime: false, paymentMode: 'full'
+        };
+
+        let currentUserRole = 'user'; 
+        let selectedRating = 0;
+        let PROMO_CODES = {}; 
+        let reviewsCache = []; 
+        let billingCycle = 'monthly'; 
+        let selectedPackage = '';
+        let selectedPackageType = '';
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        try {
+            if(firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                auth = firebase.auth();
+            }
+        } catch(e) { console.error("Firebase init error:", e); }
+
+        function initializeDatabase() {
+            if(!db) return;
+            const configRef = db.collection("config").doc("site_settings");
+            const doc = configRef.get();
+            if (!doc.exists) {
+                configRef.set({ maintenance_active: false, payment_methods: [] });
+            }
+        }
+
+        function listenToConfig() {
+            if(!db) return;
+            db.collection("config").doc("site_settings").onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Maintenance logic can go here
+                }
+            });
+        }
+
+        // ==========================================
+        // NOTIFICATION SYSTEM (CUSTOM MODAL)
+        // ==========================================
+        function showNotification(title, message, type = 'info') {
+            const modal = document.getElementById('notification-modal');
+            const iconBox = document.getElementById('notif-icon-box');
+            const icon = document.getElementById('notif-icon');
+            const titleEl = document.getElementById('notif-title');
+            const msgEl = document.getElementById('notif-message');
+
+            iconBox.className = 'notif-icon-box';
+            icon.className = '';
+            
+            if (type === 'success') {
+                iconBox.classList.add('notif-success');
+                icon.className = 'ri-checkbox-circle-fill text-3xl';
+            } else if (type === 'error') {
+                iconBox.classList.add('notif-error');
+                icon.className = 'ri-close-circle-fill text-3xl';
+            } else if (type === 'warning') {
+                iconBox.classList.add('notif-warning');
+                icon.className = 'ri-error-warning-fill text-3xl';
+            } else {
+                iconBox.classList.add('notif-info');
+                icon.className = 'ri-information-fill text-3xl';
+            }
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+
+            modal.classList.add('active');
+        }
+
+        function closeNotification() {
+            const modal = document.getElementById('notification-modal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        // ==========================================
+        // ROUTER (UPDATED FOR TERMS/PRIVACY)
+        // ==========================================
+        const routes = {
+            '/': 'home', 
+            '/home': 'home', 
+            '/services': 'features',
+            '/features': 'features', 
+            '/pricing': 'pricing', 
+            '/reviews': 'reviews', 
+            '/order': 'checkout', 
+            '/checkout': 'checkout', 
+            '/clients': 'portfolio',
+            '/products': 'products', 
+            '/about': 'about',       
+            '/login': 'login', 
+            '/signup': 'signup', 
+            '/profile': 'profile',
+            '/contact': 'contact',   
+            '/forgot-password': 'forgot-password',
+            '/thank-you': 'thank-you', 
+            '/updates': 'updates', 
+            '/website-idea': 'website-idea',
+            '/about-company': 'about', 
+            '/terms': 'terms', 
+            '/faq': 'faq', 
+            '/privacy': 'privacy',
+            '/leadership': 'leadership'
+        };
+
+        function routeLink(event, path) { event.preventDefault(); navigateTo(path); }
+
+        function navigateTo(path) {
+            window.scrollTo(0, 0);
+
+            if (!path.startsWith('/')) path = '/' + path;
+
+            const sectionId = routes[path];
+            if (!sectionId) return console.warn(`Route not found for path: ${path}`);
+            
+            window.history.pushState({ path: path }, "", path);
+            updatePageSEO(path);
+            performTransition(sectionId);
+        }
+
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.path) {
+                window.scrollTo(0, 0);
+                performTransition(routes[event.state.path]);
+                updatePageSEO(event.state.path);
+            } else {
+                const path = window.location.pathname;
+                window.scrollTo(0, 0);
+                const target = routes[path] || 'home'; 
+                performTransition(target);
+                updatePageSEO(path);
+            }
+        });
+
+        function handleInitialRoute() {
+            const path = window.location.pathname;
+            const target = routes[path] || 'home'; 
+            performTransition(target, true);
+            updatePageSEO(path); 
+        }
+
+        let isTransitioning = false;
+
+        // PREMIUM SMOOTH TRANSITION
+        function performTransition(targetSectionId, isInstant = false) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+
+            const currentSection = document.querySelector('.page.active');
+            const targetSection = document.getElementById(`page-${targetSectionId}`);
+
+            if (currentSection === targetSection) {
+                isTransitioning = false;
+                return;
+            }
+
+            window.scrollTo(0, 0);
+
+            if (currentSection) {
+                // 1. Add exit animation class
+                currentSection.classList.add('anim-exit');
+                
+                // 2. Wait for exit animation to finish (500ms matches CSS)
+                setTimeout(() => {
+                    currentSection.classList.remove('active', 'anim-exit');
+                    currentSection.style.display = 'none';
+                    
+                    // 3. Prepare and enter new section
+                    targetSection.style.display = 'block';
+                    void targetSection.offsetWidth; // Trigger reflow
+                    targetSection.classList.add('active');
+                    targetSection.classList.add('anim-enter');
+                    
+                    // 4. Handle page specific logic (re-init map on home, etc)
+                    handlePageLogic(targetSectionId);
+                    
+                    isTransitioning = false;
+                }, 500); 
+            } else {
+                // First load or no previous section
+                targetSection.style.display = 'block';
+                targetSection.classList.add('active');
+                targetSection.classList.add('anim-enter');
+                handlePageLogic(targetSectionId);
+                isTransitioning = false;
+            }
+        }
+
+        function handlePageLogic(targetSectionId) {
+            if(targetSectionId === 'profile') loadProfilePageData();
+            if(targetSectionId === 'reviews' || targetSectionId === 'home') {
+                renderDummyReview(); 
+                if(reviewsCache.length === 0) listenToReviews(); 
+                else renderReviewsList(document.getElementById('reviews-list'));
+            }
+            if(targetSectionId === 'checkout' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+            if(targetSectionId === 'updates' && auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+            if(targetSectionId === 'home') loadHomePortfolio();
+            if(targetSectionId === 'portfolio') loadPortfolio();
+            if(targetSectionId === 'products') loadProducts();
+        }
+    
+        // Initial route check
+        setTimeout(handleInitialRoute, 100);
+
+        function updatePageSEO(path) {
+            const config = SEO_CONFIG[path];
+            if(config) {
+                document.title = config.title;
+                document.querySelector('meta[name="description"]').setAttribute("content", config.desc);
+                document.querySelector('link[rel="canonical"]').setAttribute("href", config.canonical);
+            }
+        }
+
+        // ==========================================
+        // MODALS & ALERTS
+        // ==========================================
+        function showAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if(modal) modal.classList.add('active');
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if(modal) modal.classList.remove('active');
+        }
+
+        function openQuoteForm(packageName) {
+            showNotification("Request Quote", `Redirecting to contact form for ${packageName}...`, "info");
+            setTimeout(() => navigateTo('contact'), 1500);
+        }
+
+        // ==========================================
+        // NEWSLETTER LOGIC
+        // ==========================================
+        function handleNewsletterSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const input = form.querySelector('input');
+            const btn = document.getElementById('newsletter-btn');
+            const email = input.value;
+
+            if (!email) {
+                showNotification("Error", "Please enter a valid email address.", "error");
+                return;
+            }
+
+            const originalBtnText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "Joining...";
+
+            setTimeout(() => {
+                document.getElementById('newsletter-form').classList.add('hidden');
+                document.getElementById('newsletter-success').classList.remove('hidden');
+                showNotification("Success", "Successfully subscribed!", "success");
+                
+                btn.disabled = false;
+                btn.innerText = originalBtnText;
+            }, 1500);
+        }
+
+        // ==========================================
+        // AUTH LOGIC
+        // ==========================================
+        function handleLogin(e) {
+            e.preventDefault();
+            if(!auth) return showNotification("Error", "Authentication system initializing...", "error");
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            auth.signInWithEmailAndPassword(email, password).then(() => {
+                const user = auth.currentUser;
+                triggerLoginSuccessAnimation(() => {
+                    if (pendingPackage) {
+                        selectPackage(pendingPackage.name, pendingPackage.type);
+                        pendingPackage = null;
+                    } else {
+                        navigateTo('/');
+                    }
+                }, user.displayName || user.email.split('@')[0]);
+            }).catch((error) => {
+                const friendlyMsg = getFirebaseErrorMessage(error);
+                showNotification("Login Failed", friendlyMsg, "error");
+            });
+        }
+        
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            if(!auth) return showNotification("Error", "Authentication system initializing...", "error");
+            
+            const email = document.getElementById('forgot-email').value;
+            
+            if(!email) return showNotification("Error", "Please enter your email address.", "error");
+
+            auth.sendPasswordResetEmail(email).then(() => {
+                showNotification("Email Sent", "Please check your email for password reset instructions.", "success");
+                setTimeout(() => navigateTo('login'), 3000);
+            }).catch((error) => {
+                const friendlyMsg = getFirebaseErrorMessage(error);
+                showNotification("Reset Failed", friendlyMsg, "error");
+            });
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            if(!auth) return showNotification("Error", "Firebase not configured", "error");
+            
+            const name = document.getElementById('signup-name').value;
+            const phone = document.getElementById('signup-phone').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
+                return db.collection("users").doc(userCredential.user.uid).set({ 
+                    name: name, phone: phone, email: email, role: 'user',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+                });
+                }).then(() => {
+                    triggerLoginSuccessAnimation(() => {
+                        if (pendingPackage) {
+                            selectPackage(pendingPackage.name, pendingPackage.type);
+                            pendingPackage = null;
+                        } else {
+                            navigateTo('/');
+                        }
+                    }, name);
+                }).catch((error) => {
+                    const friendlyMsg = getFirebaseErrorMessage(error);
+                    showNotification("Signup Failed", friendlyMsg, "error");
+                });
+        }
+                function handleGoogleAuth() {
+            if(!auth) return showNotification("Error", "Auth not initialized", "error");
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then((result) => {
+                const user = result.user;
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if (!doc.exists) {
+                        return db.collection("users").doc(user.uid).set({
+                            name: user.displayName || 'Google User', email: user.email, phone: '', role: 'user',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }).then(() => {
+                    const name = user.displayName || user.email.split('@')[0];
+                    triggerLoginSuccessAnimation(() => {
+                        if (pendingPackage) {
+                            selectPackage(pendingPackage.name, pendingPackage.type);
+                            pendingPackage = null;
+                        } else {
+                            navigateTo('/');
+                        }
+                    }, name);
+                });
+            }).catch((error) => {
+                console.error(error);
+                const friendlyMsg = getFirebaseErrorMessage(error);
+                showNotification("Google Auth Failed", friendlyMsg, "error");
+            });
+        }
+
+        function triggerLoginSuccessAnimation(onCompleteCallback, userName) {
+            showNotification("Welcome", `Welcome back, ${userName}!`, "success");
+            if(onCompleteCallback) {
+                setTimeout(() => onCompleteCallback(), 1000);
+            }
+        }
+
+        function getFirebaseErrorMessage(error) {
+            switch (error.code) {
+                case 'auth/user-not-found': return "No account found with this email address.";
+                case 'auth/wrong-password': return "Incorrect password. Please try again.";
+                case 'auth/invalid-login-credentials': return "Invalid email or password. Please try again.";
+                case 'auth/invalid-credential': return "The provided credentials are invalid.";
+                case 'auth/email-already-in-use': return "This email is already registered. Please login.";
+                case 'auth/weak-password': return "Password should be at least 6 characters.";
+                case 'auth/invalid-email': return "Please enter a valid email address.";
+                case 'auth/too-many-requests': return "Access temporarily disabled due to many failed attempts. Reset password or try later.";
+                case 'auth/user-disabled': return "This account has been disabled. Contact support.";
+                case 'auth/popup-closed-by-user': return "Sign-in process was cancelled.";
+                case 'auth/network-request-failed': return "Network error. Please check your connection.";
+                default: return "An unexpected error occurred. Please try again.";
+            }
+        }
+
+        // ==========================================
+        // PROFILE & AUTH STATE LISTENER (UPDATED)
+        // ==========================================
+        function loadProfilePageData() {
+            if(!auth || !auth.currentUser) return;
+            
+            const uid = auth.currentUser.uid;
+            const profFields = ['prof-name', 'prof-phone', 'prof-email', 'prof-company'];
+            const displayFields = ['prof-display-name', 'prof-display-email'];
+            
+            profFields.forEach(id => { const el = document.getElementById(id); if(el) el.value = "Loading..."; });
+            displayFields.forEach(id => { const el = document.getElementById(id); if(el) el.textContent = "Loading..."; });
+
+            // 1. Fetch User Data
+            db.collection("users").doc(uid).get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Form Fields
+                    if(data.name) document.getElementById('prof-name').value = data.name;
+                    if(data.phone) document.getElementById('prof-phone').value = data.phone;
+                    if(data.email) {
+                        document.getElementById('prof-email').value = data.email || auth.currentUser.email;
+                        document.getElementById('prof-display-email').textContent = data.email || auth.currentUser.email;
+                    }
+                    if(data.company) document.getElementById('prof-company').value = data.company;
+                    
+                    // Display Fields
+                    document.getElementById('prof-display-name').textContent = data.name || 'User';
+                    document.getElementById('prof-role').textContent = data.role === 'admin' ? 'Admin' : 'Standard Client';
+                    
+                    // Voucher Logic
+                    if(data.personalVoucher) { 
+                        currentUserPersonalVoucher = data.personalVoucher; 
+                        showVoucherCard(data.personalVoucher); 
+                    } else { 
+                        currentUserPersonalVoucher = null; 
+                        hideVoucherCard(); 
+                    }
+                }
+            }).catch((error) => showNotification("Error", "Error loading profile data.", "error"));
+
+            // 2. Fetch Orders to Determine Active Plan (NEW LOGIC)
+            fetchAndRenderActivePlan(uid);
+            
+            // 3. Fetch Order History Table
+            loadOrderHistory(uid);
+        }
+
+        // NEW: Function to determine and render Active Plan
+        function fetchAndRenderActivePlan(uid) {
+            if(!db) return;
+            const activeCard = document.getElementById('active-plan-card');
+            const noPlanCta = document.getElementById('no-plan-cta');
+            const planNameEl = document.getElementById('profile-plan-name');
+            const domainNameEl = document.getElementById('profile-domain-name');
+            const billingCycleEl = document.getElementById('profile-billing-cycle');
+            const statusBadge = document.getElementById('profile-status-badge');
+
+            // Reset UI
+            activeCard.classList.add('hidden');
+            noPlanCta.classList.add('hidden');
+
+            db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(1)
+                .get()
+                .then((snapshot) => {
+                    if (!snapshot.empty) {
+                        // Find the most recent order
+                        const orderData = snapshot.docs[0].data();
+                        
+                        // Logic: Consider a plan active if the status is 'Paid' or 'Completed'
+                        if (orderData.status === 'Paid' || orderData.status === 'Completed') {
+                            
+                            // Show Active Card
+                            activeCard.classList.remove('hidden');
+                            
+                            planNameEl.textContent = orderData.package || 'Website Package';
+                            
+                            // Handle Domain
+                            if(orderData.domain && orderData.domain.length > 0) { 
+                                domainNameEl.textContent = orderData.domain;
+                            } else if (orderData.domainName) {
+                                domainNameEl.textContent = orderData.domainName;
+                            }
+                             else {
+                                domainNameEl.textContent = "Pending Configuration";
+                            }
+
+                            // Handle Billing Cycle
+                            const cycle = orderData.billingCycle || 'Monthly';
+                            billingCycleEl.textContent = cycle === 'One-Time' ? 'One-time Payment' : `Recurring (${cycle})`;
+
+                            // Set Status Color
+                            statusBadge.className = "px-4 py-1.5 rounded-full font-bold text-sm border";
+                            if(orderData.status === 'Paid') {
+                                statusBadge.classList.add('bg-emerald-900/50', 'text-emerald-400', 'border-emerald-700/30');
+                                statusBadge.textContent = 'Active';
+                            } else if (orderData.status === 'Completed') {
+                                statusBadge.classList.add('bg-blue-900/50', 'text-blue-400', 'border-blue-700/30');
+                                statusBadge.textContent = 'Completed';
+                            }
+                        } else {
+                            // User has orders, but the latest one is not Paid/Completed
+                            noPlanCta.classList.remove('hidden');
+                        }
+                    } else {
+                        // No orders found at all
+                        noPlanCta.classList.remove('hidden');
+                    }
+                }).catch((error) => {
+                    console.error("Error fetching active plan:", error);
+                    noPlanCta.classList.remove('hidden');
+                });
+        }
+
+        function loadOrderHistory(uid) {
+            if(!db) return;
+            const tbody = document.getElementById('order-history-body');
+            const noMsg = document.getElementById('no-orders');
+            
+            if(tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+
+            db.collection("orders").where("userId", "==", uid).orderBy("timestamp", "desc").limit(10)
+                .onSnapshot((snapshot) => {
+                    if(tbody) tbody.innerHTML = '';
+                    if (snapshot.empty) {
+                        if(noMsg) noMsg.classList.remove('hidden');
+                        if(tbody) tbody.parentElement.style.display = 'none';
+                    } else {
+                        if(noMsg) noMsg.classList.add('hidden');
+                        if(tbody) tbody.parentElement.style.display = 'table';
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : '-';
+                            const total = data.total || 'RM 0';
+                            const pkg = data.package || 'Unknown Package';
+                            const status = data.status || 'Pending';
+                            let statusClass = 'status-pending';
+                            if(status === 'Paid') statusClass = 'status-paid';
+                            if(status === 'Completed') statusClass = 'status-completed';
+                            if(status === 'Cancelled') statusClass = 'status-cancelled';
+                            
+                            const row = `<tr><td>${date}</td><td style="font-weight:600;">${pkg}</td><td class="text-right">${total}</td><td class="text-right"><span class="status-badge ${statusClass}">${status}</span></td></tr>`;
+                            if(tbody) tbody.innerHTML += row;
+                        });
+                    }
+                });
+        }
+
+        function showVoucherCard(voucher) {
+            const section = document.getElementById('profile-voucher-section');
+            const codeEl = document.getElementById('profile-voucher-code');
+            const descEl = document.getElementById('profile-voucher-desc');
+            const noVoucher = document.getElementById('no-voucher-section');
+            
+            if(section && codeEl && descEl) {
+                section.classList.remove('hidden');
+                if(noVoucher) noVoucher.classList.add('hidden');
+                
+                codeEl.innerText = voucher.code;
+                const displayVal = voucher.type === 'fixed' ? `RM ${voucher.value}` : `${voucher.value * 100}%`;
+                descEl.innerText = `${displayVal} Discount`;
+            }
+        }
+
+        function hideVoucherCard() {
+            const section = document.getElementById('profile-voucher-section');
+            const noVoucher = document.getElementById('no-voucher-section');
+            if(section) section.classList.add('hidden');
+            if(noVoucher) noVoucher.classList.remove('hidden');
+        }
+
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            if(!auth || !auth.currentUser) return;
+            const name = document.getElementById('prof-name').value;
+            const phone = document.getElementById('prof-phone').value;
+            const company = document.getElementById('prof-company').value;
+            db.collection("users").doc(auth.currentUser.uid).update({ name: name, phone: phone, company: company })
+            .then(() => {
+                showNotification("Success", "Profile Updated Successfully!", "success");
+                fetchAndSyncUserData(auth.currentUser.uid);
+                document.getElementById('prof-display-name').textContent = name; // Quick update
+            }).catch((error) => showNotification("Error", error.message, "error"));
+        }
+
+        function deletePersonalVoucher() {
+            if(!auth || !auth.currentUser) return;
+            if(confirm("Are you sure you want to remove this voucher?")) {
+                db.collection("users").doc(auth.currentUser.uid).update({ personalVoucher: firebase.firestore.FieldValue.delete() }).then(() => {
+                    currentUserPersonalVoucher = null; 
+                    hideVoucherCard();
+                    showNotification("Voucher Removed", "Voucher removed from account.", "success");
+                });
+            }
+        }
+
+        function handleLogout() {
+            if(auth) { 
+                currentUserPersonalVoucher = null; 
+                auth.signOut().then(() => { 
+                    showNotification("Logged Out", "See you again soon!", "success"); 
+                    navigateTo('/'); 
+                }); 
+            }
+        }
+
+        // Auth State Listener
+        if(auth) {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    db.collection("users").doc(user.uid).get().then((doc) => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            currentUserRole = data.role || 'user'; 
+                            updateHeaderForUser(user); 
+                            if(data.personalVoucher) { currentUserPersonalVoucher = data.personalVoucher; } 
+                            else { currentUserPersonalVoucher = null; }
+                            
+                            // Only redirect if on login page
+                            if(window.location.pathname === '/login' || window.location.pathname === '/signup') {
+                                // Optional: navigateTo('/');
+                            }
+                        }
+                    });
+                } else {
+                    updateHeaderForGuest(); 
+                }
+            });
+        }
+
+        function updateHeaderForUser(user) {
+            const isAdmin = currentUserRole === 'admin';
+            const deskAuth = document.getElementById('desktopAuthLinks');
+            if(deskAuth) {
+                let userControls = `<a href="#" onclick="navigateTo('/profile')" class="hidden md:flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white"><i class="ri-user-line"></i> Profile</a><span class="logout-btn hidden md:block text-slate-400 cursor-pointer transition: 0.2s white-space-nowrap;" onclick="handleLogout()">Logout</span>`;
+                if (isAdmin) userControls = `<a href="admin.html" target="_blank" class="admin-link text-emerald-400 mr-4" title="Admin Portal"><i class="ri-shield-user-fill"></i></a>${userControls}`;
+                deskAuth.innerHTML = userControls;
+            }
+            
+            const mobAuth = document.getElementById('mobileAuthLinksContainer');
+            if(mobAuth) {
+                let authButtons = `<a href="/profile" onclick="routeLink(event, '/profile'); toggleMobileMenu()" class="block text-slate-300 hover:text-white py-4 font-medium border-b border-slate-800">Profile</a>`;
+                if (isAdmin) authButtons += `<a href="admin.html" target="_blank" onclick="toggleMobileMenu()" class="block text-emerald-400 hover:text-white py-4 font-medium border-b border-slate-800">Admin Portal</a>`;
+                authButtons += `<a href="#" onclick="handleLogout(); toggleMobileMenu()" class="block text-red-400 hover:text-red-300 py-4 font-medium">Logout</a>`;
+                mobAuth.innerHTML = authButtons;
+            }
+        }
+
+        function updateHeaderForGuest() {
+            const deskAuth = document.getElementById('desktopAuthLinks');
+            if(deskAuth) deskAuth.innerHTML = `<a href="/login" onclick="navigateTo('login')" class="px-6 py-2 rounded-full border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-sm font-medium">Login</a>`;
+            const mobAuth = document.getElementById('mobileAuthLinksContainer');
+            if(mobAuth) mobAuth.innerHTML = `<a href="/login" onclick="navigateTo('login'); toggleMobileMenu()" class="block text-slate-300 hover:text-white py-4 font-medium border-b border-slate-800">Login</a><a href="/signup" onclick="navigateTo('signup'); toggleMobileMenu()" class="block text-slate-300 hover:text-white py-4 font-medium border-b border-slate-800">Sign Up</a>`;
+        }
+
+        function clearUserData() {
+            const inputs = ['prof-name', 'prof-phone', 'prof-email', 'prof-company', 'co-firstname', 'co-lastname', 'co-email', 'co-company'];
+            inputs.forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+        }
+
+        // ==========================================
+        // PRICING LOGIC
+        // ==========================================
+        function setBilling(cycle) {
+            billingCycle = cycle;
+            const btnMonthly = document.getElementById('btn-monthly');
+            const btnOnetime = document.getElementById('btn-onetime');
+
+            if(btnMonthly && btnOnetime) {
+                if(cycle === 'monthly') { 
+                    btnMonthly.classList.add('bg-emerald-600', 'text-white'); 
+                    btnMonthly.classList.remove('text-slate-400');
+                    btnOnetime.classList.remove('bg-emerald-600', 'text-white'); 
+                    btnOnetime.classList.add('text-slate-400');
+                } else { 
+                    btnMonthly.classList.remove('bg-emerald-600', 'text-white'); 
+                    btnMonthly.classList.add('text-slate-400');
+                    btnOnetime.classList.add('bg-emerald-600', 'text-white'); 
+                    btnOnetime.classList.remove('text-slate-400');
+                }
+            }
+
+            document.querySelectorAll('.price-display').forEach(el => {
+                const monthly = el.dataset.monthly;
+                const onetime = el.dataset.onetime;
+                if (monthly && onetime) {
+                    el.textContent = 'RM ' + (cycle === 'monthly' ? monthly : onetime);
+                    const periodEl = el.parentElement.querySelector('.price-period');
+                    if(periodEl) periodEl.textContent = cycle === 'monthly' ? '/month' : ' one-time';
+                }
+            });
+
+            document.querySelectorAll('.maintenance-yes').forEach(el => el.classList.toggle('hidden', cycle === 'onetime'));
+            document.querySelectorAll('.maintenance-no').forEach(el => el.classList.toggle('hidden', cycle === 'monthly'));
+
+            state.billingCycle = cycle;
+            state.isOneTime = (cycle === 'onetime');
+            
+            if(selectedPackageType && PRICING_DATA[selectedPackageType]) {
+                state.packagePrice = cycle === 'monthly' ? PRICING_DATA[selectedPackageType].monthly : PRICING_DATA[selectedPackageType].oneTime;
+                updateTotal();
+            }
+        }
+
+        function attemptSelectPackage(name, type) {
+            if (typeof auth === 'undefined' || auth === null) { 
+                showNotification("Error", "Authentication system initializing...", "error"); 
+                return; 
+            }
+            
+            if (auth.currentUser) { 
+                selectPackage(name, type); 
+            } else { 
+                pendingPackage = { name, type };
+                showAuthModal(); 
+            }
+        }
+
+        // ==========================================
+        // NEW 3-STEP CHECKOUT LOGIC
+        // ==========================================
+        
+        function selectPackage(name, type) {
+            selectedPackage = name;
+            selectedPackageType = type;
+            state.packageType = type;
+            
+            // Use global billing cycle, defaulting to monthly if not set
+            state.billingCycle = billingCycle || 'monthly';
+            state.isOneTime = (billingCycle === 'onetime');
+            state.paymentMode = 'full';
+            
+            // Get prices from data
+            state.setupFee = PRICING_DATA[type].setupFee;
+            state.packagePrice = billingCycle === 'monthly' ? PRICING_DATA[type].monthly : PRICING_DATA[type].oneTime;
+
+            // Reset Step to 1
+            currentCheckoutStep = 1;
+            
+            // Populate Step 1 Data
+            document.getElementById('s1-plan-name').innerText = name;
+            document.getElementById('s1-plan-price').innerText = 'RM ' + state.packagePrice;
+            document.getElementById('s1-setup-price').innerText = 'RM ' + state.setupFee;
+            
+            const firstTotal = state.setupFee + state.packagePrice;
+            document.getElementById('s1-first-total').innerText = 'RM ' + firstTotal;
+            document.getElementById('s1-recurring-price').innerText = 'RM ' + state.packagePrice + '/mo';
+            
+            // Populate Features List
+            const featureContainer = document.getElementById('s1-features-list');
+            featureContainer.innerHTML = '';
+            if(PRICING_DATA[type].features) {
+                PRICING_DATA[type].features.forEach(feature => {
+                    featureContainer.innerHTML += `<li><i class="ri-checkbox-circle-fill text-emerald-500"></i> ${feature}</li>`;
+                });
+            }
+
+            // Reset Steps UI
+            updateStepUI(1);
+            
+            if(auth && auth.currentUser) fetchAndSyncUserData(auth.currentUser.uid);
+            else { clearUserData(); hideVoucherCard(); }
+
+            // Navigate to checkout
+            navigateTo('checkout');
+        }
+
+        function updateStepUI(step) {
+            // Hide all steps
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            // Show current step
+            document.getElementById(`step-${step}`).classList.add('active');
+            
+            // Update dots
+            for(let i=1; i<=3; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                dot.classList.remove('active', 'completed');
+                if(i < step) dot.classList.add('completed');
+                if(i === step) dot.classList.add('active');
+            }
+            
+            window.scrollTo(0, 0);
+        }
+
+        function goToStep(step) {
+            currentCheckoutStep = step;
+            updateStepUI(step);
+        }
+
+        function selectDomainType(type, element) {
+            state.domainType = type;
+            
+            // UI Update
+            const options = document.querySelectorAll('.radio-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            const input = element.querySelector('input');
+            if(input) input.checked = true;
+            
+            // Input Visibility
+            const subInput = document.getElementById('subdomain-input');
+            const customInput = document.getElementById('custom-domain-input');
+            
+            if(type === 'sub') {
+                subInput.disabled = false;
+                customInput.disabled = true;
+                customInput.value = '';
+                state.domainPrice = 0;
+                updateDomainPreview();
+            } else {
+                subInput.disabled = true;
+                subInput.value = '';
+                customInput.disabled = false;
+                state.domainPrice = 0;
+                updateDomainPreview();
+            }
+        }
+
+        function updateDomainPreview() {
+            const text = document.getElementById('subdomain-input').value;
+            const preview = document.getElementById('preview-text');
+            if(preview) {
+                preview.innerText = text.length > 0 ? text : "yourname";
+                state.domainName = text.length > 0 ? `${text}.ddnex.my` : '';
+                state.domainNameValid = text.length > 0;
+            }
+        }
+
+        function applyPromo() {
+            if(!auth || !auth.currentUser) return showNotification("Login Required", "Please login to use Promo Codes.", "warning");
+            const input = document.getElementById('promo-input');
+            const code = input ? input.value.trim().toUpperCase() : '';
+            
+            if(!code || code === "") {
+                showNotification("Missing Code", "Please enter a voucher code first.", "error");
+                return;
+            }
+            
+            // Mock Promo Logic
+            if(code === "WELCOME10") {
+                state.discountType = 'percent';
+                state.discountRate = 0.10;
+                state.discountCode = code;
+                showNotification("Promo Applied", "10% discount applied!", "success");
+                const msg = document.getElementById('promo-msg');
+                msg.innerText = "10% Discount Applied";
+                msg.classList.remove('hidden', 'text-red-400');
+                msg.classList.add('text-emerald-400');
+            } else {
+                showNotification("Invalid Code", "Invalid code. Please check and try again.", "error");
+                const msg = document.getElementById('promo-msg');
+                msg.innerText = "Invalid Code";
+                msg.classList.remove('hidden', 'text-emerald-400');
+                msg.classList.add('text-red-400');
+            }
+        }
+
+        function validateAndGoToStep3() {
+            const form = document.getElementById('checkout-form-step2');
+            if(!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Validate Domain
+            if(state.domainType === 'sub') {
+                if(!state.domainNameValid) {
+                    showNotification("Domain Required", "Please enter a valid subdomain name.", "error");
+                    return;
+                }
+            } else {
+                const custom = document.getElementById('custom-domain-input').value;
+                if(!custom) {
+                    showNotification("Domain Required", "Please enter your custom domain.", "error");
+                    return;
+                }
+                state.domainName = custom;
+            }
+
+            // Populate Step 3 Summary
+            document.getElementById('s3-plan-name').innerText = selectedPackage;
+            document.getElementById('s3-sub-price').innerText = 'RM ' + state.packagePrice;
+            document.getElementById('s3-setup-price').innerText = 'RM ' + state.setupFee;
+            document.getElementById('s3-domain-price').innerText = state.domainPrice > 0 ? 'RM ' + state.domainPrice : 'Free';
+            
+            let subtotal = state.packagePrice + state.setupFee + state.domainPrice;
+            let discountAmt = 0;
+            
+            if(state.discountType === 'percent') {
+                discountAmt = subtotal * state.discountRate;
+                document.getElementById('s3-discount-row').classList.remove('hidden');
+                document.getElementById('s3-discount-code').innerText = state.discountCode;
+                document.getElementById('s3-discount-val').innerText = '-RM ' + Math.round(discountAmt);
+            } else {
+                document.getElementById('s3-discount-row').classList.add('hidden');
+            }
+
+            const total = Math.round(subtotal - discountAmt);
+            document.getElementById('s3-total').innerText = 'RM ' + total;
+            document.getElementById('s3-recurring').innerText = 'RM ' + state.packagePrice + '/mo';
+
+            goToStep(3);
+        }
+
+        function fetchAndSyncUserData(uid) {
+            if(!db) return;
+            db.collection("users").doc(uid).get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    if(document.getElementById('co-firstname')) document.getElementById('co-firstname').value = data.name || '';
+                    if(document.getElementById('co-lastname')) document.getElementById('co-lastname').value = ''; 
+                    if(document.getElementById('co-email')) {
+                        document.getElementById('co-email').value = data.email || auth.currentUser.email;
+                        document.getElementById('co-email').readOnly = true;
+                    }
+                    if(document.getElementById('co-phone')) document.getElementById('co-phone').value = data.phone || '';
+                    if(document.getElementById('co-company')) document.getElementById('co-company').value = data.company || '';
+                }
+            });
+        }
+
+        function removeVoucher() {
+            state.discountCode = ''; state.discountRate = 0; state.discountFixed = 0;
+            showNotification("Voucher Removed", "Voucher code removed from order.", "info");
+            validateAndGoToStep3(); 
+        }
+
+        function updateTotal() {
+            console.log("Total updated");
+        }
+
+        // ==========================================
+        // RAZORPAY INTEGRATION
+        // ==========================================
+        function initiateRazorpayPayment() {
+            const firstName = document.getElementById('co-firstname') ? document.getElementById('co-firstname').value : '';
+            const lastName = document.getElementById('co-lastname') ? document.getElementById('co-lastname').value : '';
+            const name = (firstName || ' ') + ' ' + (lastName || ' ');
+            const phone = document.getElementById('co-phone') ? document.getElementById('co-phone').value : '';
+            const email = document.getElementById('co-email') ? document.getElementById('co-email').value : '';
+            
+            if(!name.trim() || !phone || !email) return showNotification("Missing Info", "Please ensure all details are correct.", "error");
+
+            const totalText = document.getElementById('s3-total') ? document.getElementById('s3-total').innerText : 'RM 0';
+            const amountNumeric = parseFloat(totalText.replace('RM ', ''));
+            const amountInSubunits = Math.round(amountNumeric * 100);
+
+            const pendingOrder = {
+                userId: auth.currentUser ? auth.currentUser.uid : null,
+                name: name, phone: phone, email: email, 
+                package: selectedPackage, 
+                domainType: state.domainType, domainName: state.domainName, domainPrice: state.domainPrice,
+                packagePrice: state.packagePrice, setupFee: state.setupFee, maintenancePrice: state.maintenancePrice,
+                total: `RM ${amountNumeric}`, 
+                discountCode: state.discountCode || null, paymentMethod: 'Razorpay (Curlec)',
+                paymentMode: state.paymentMode, billingCycle: state.isOneTime ? 'One-Time' : 'Monthly',
+                status: 'Pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+
+            const options = {
+                "key": RAZORPAY_KEY_ID, "amount": amountInSubunits, "currency": RAZORPAY_CURRENCY, 
+                "name": "DDNex",
+                "description": selectedPackage + (state.paymentMode === 'deposit' ? " (Deposit)" : ""),
+                "image": "https://raw.githubusercontent.com/ddnetwork-one/ddnetwork-store/refs/heads/main/crop_ddnlogo.png",
+                "handler": function(response){ 
+                    handlePaymentSuccess(response.razorpay_payment_id);
+                },
+                "modal": { 
+                    "ondismiss": function(){ 
+                        console.log('Checkout form closed/cancelled by user');
+                        showNotification("Payment Cancelled", "You have cancelled the payment process.", "warning");
+                    }
+                },
+                "prefill": { "name": name, "email": email, "contact": phone },
+                "notes": { "address": document.getElementById('co-company').value || "Malaysia", "package": selectedPackage, "domain": state.domainName, "payment_mode": state.paymentMode },
+                "theme": { "color": "#10B981" } // Emerald theme
+            };
+
+            try {
+                const rzp1 = new Razorpay(options);
+                rzp1.open(); 
+
+            } catch (error) {
+                console.error("Razorpay Error:", error);
+                showNotification("Payment Error", "Payment Gateway Error. Please contact support.", "error");
+            }
+        }
+
+        function handlePaymentSuccess(paymentId) {
+            const pendingOrderStr = localStorage.getItem('pendingOrder');
+            if(!pendingOrderStr) {
+                showNotification("Order Error", "Order data missing. Contact support.", "error");
+                return;
+            }
+
+            const orderData = JSON.parse(pendingOrderStr);
+            
+            orderData.razorpay_payment_id = paymentId;
+            orderData.status = 'Paid';
+
+            // Ensure empty fields are saved
+            if(!orderData.name || orderData.name.trim() === " ") orderData.name = "-";
+            if(!orderData.phone) orderData.phone = "-";
+            
+            const overlay = document.getElementById('processing-overlay');
+            if(overlay) {
+                overlay.style.display = 'flex';
+                const msgEl = document.getElementById('process-message');
+                if(msgEl) msgEl.innerHTML = `<div style="font-size:1.5rem; margin-bottom:1rem;"><i class="ri-loader-4-line ri-spin"></i></div> Processing Payment...`;
+            }
+
+            let voucherUpdatePromise = Promise.resolve();
+            if (orderData.discountCode && auth.currentUser && auth.currentUser.uid) {
+                // Assuming personal voucher redemption logic here if needed
+            }
+
+            voucherUpdatePromise.then(() => {
+                const firebaseOrderData = {
+                    adminNote: "OWN COMPANY CREATED", companyName: orderData.companyName || "DDNex One",
+                    customerEmail: orderData.email, customerName: orderData.name, customerPhone: orderData.phone,
+                    domain: orderData.domainName, internalNotes: "",
+                    maintenance: orderData.maintenancePrice > 0 ? (orderData.maintenancePrice === 50 ? "Basic" : "Business") : "None",
+                    package: orderData.package, paymentMethod: "Razorpay (Curlec)", promo: orderData.discountCode || "",
+                    razorpay_payment_id: paymentId,
+                    salesRepIds: [], salesTeamIds: [], salesTeamNames: [], status: "Paid",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), total: orderData.total, userId: orderData.userId || ""
+                };
+                return db.collection("orders").add(firebaseOrderData);
+            }).then(() => {
+                localStorage.removeItem('pendingOrder');
+                showNotification("Success!", "Payment Successful!", "success");
+                if(overlay) overlay.style.display = 'none';
+                navigateTo('thank-you');
+            }).catch((error) => {
+                console.error("Order Error:", error);
+                showNotification("Processing Error", "Order processing failed. Please contact support.", "error");
+                if(overlay) overlay.style.display = 'none';
+            });
+        }
+
+        // ==========================================
+        // UTILITIES & HELPERS
+        // ==========================================
+        function checkPasswordStrength() {
+            const p = document.getElementById('signup-password').value;
+            if(!p) return;
+            
+            const upper = /[A-Z]/.test(p);
+            const lower = /[a-z]/.test(p);
+            const num = /[0-9]/.test(p);
+            const len = p.length >= 6;
+            
+            toggleReq('req-upper', upper);
+            toggleReq('req-lower', lower);
+            toggleReq('req-num', num);
+            toggleReq('req-len', len);
+        }
+
+        function toggleReq(id, isValid) {
+            const el = document.getElementById(id);
+            if(el) {
+                if(isValid) {
+                    el.classList.add('valid');
+                    el.querySelector('i').className = 'ri-checkbox-circle-fill';
+                } else {
+                    el.classList.remove('valid');
+                    el.querySelector('i').className = 'ri-close-circle-line';
+                }
+            }
+        }
+
+        // ==========================================
+        // REVIEWS LOGIC
+        // ==========================================
+        function setupStarRating() {
+            const container = document.getElementById('star-input-container');
+            if(!container) return;
+            const stars = container.querySelectorAll('.star-icon');
+            const hiddenInput = document.getElementById('rating-value');
+
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    highlightStars(parseInt(this.getAttribute('data-val')));
+                });
+                
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.getAttribute('data-val'));
+                    if(hiddenInput) hiddenInput.value = selectedRating;
+                    highlightStars(selectedRating);
+                    if(document.getElementById('rating-error')) document.getElementById('rating-error').style.display = 'none';
+                });
+            });
+
+            container.addEventListener('mouseleave', function() {
+                highlightStars(selectedRating);
+            });
+        }
+
+        function highlightStars(count) {
+            const container = document.getElementById('star-input-container');
+            if(!container) return;
+            const stars = container.querySelectorAll('.star-icon');
+            stars.forEach(star => {
+                star.classList.toggle('selected', parseInt(star.getAttribute('data-val')) <= count);
+            });
+        }
+
+        function renderDummyReview() {
+            const container = document.getElementById('reviews-list');
+            if(!container) return;
+            
+            if(container.innerHTML.trim() !== '' && !container.innerHTML.includes('Danial Danish')) return;
+
+            const dummyData = { 
+                rating: 5, 
+                userName: 'Danial Danish (Owner)', 
+                comment: 'I built this site to help businesses grow. Let me know what you think!', 
+                timestamp: null 
+            };
+            
+            const date = 'Recently';
+            const initials = (dummyData.userName || 'User').substring(0, 2).toUpperCase();
+            let starsHtml = '';
+            for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= dummyData.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=dummyData.rating?'var(--star)':'#334155'}"></i>`;
+            
+            const html = `
+                <div class="review-card glass rounded-2xl p-6 border border-slate-800 bg-dark hover-lift">
+                    <div class="review-header">
+                        <div class="review-avatar">${initials}</div>
+                        <div class="review-info"><h4>${dummyData.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
+                    </div>
+                    <div class="review-stars">${starsHtml}</div>
+                    <p class="review-text">"${dummyData.comment}"</p>
+                </div>`;
+            
+            container.innerHTML = html + container.innerHTML;
+        }
+
+        function listenToReviews() {
+            if(!db) return;
+            db.collection("customer_reviews").orderBy("timestamp", "desc").limit(20)
+                .onSnapshot((snapshot) => {
+                    reviewsCache = []; 
+                    snapshot.forEach(doc => reviewsCache.push(doc.data()));
+                    
+                    const reviewsList = document.getElementById('reviews-list');
+                    if(reviewsList) {
+                        renderReviewsList(reviewsList);
+                    }
+                }, (error) => console.error("Error syncing reviews:", error));
+        }
+
+        function renderReviewsList(container) {
+            const DUMMY_REVIEWS = [
+                { rating: 5, userName: 'Danial Danish (Owner)', comment: 'I built this site to help businesses grow. Let me know what you think!', timestamp: null }
+            ];
+            
+            let allReviews = [...DUMMY_REVIEWS, ...reviewsCache];
+            
+            if (allReviews.length === 0) {
+                container.innerHTML = '<div class="col-span-2 text-center py-8 text-slate-500">No reviews yet.</div>';
+                return;
+            }
+
+            const isExpanded = container.classList.contains('expanded');
+            const displayList = isExpanded ? allReviews : allReviews.slice(0, 3);
+
+            container.innerHTML = '';
+            
+            displayList.forEach(data => {
+                const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString() : 'Recently';
+                const initials = (data.userName || 'User').substring(0, 2).toUpperCase();
+                let starsHtml = '';
+                for(let i=1; i<=5; i++) starsHtml += `<i class="${i <= data.rating ? 'ri-star-fill' : 'ri-star-line'}" style="color:${i<=data.rating?'var(--star)':'#334155'}"></i>`;
+                
+                const html = `
+                    <div class="review-card glass rounded-2xl p-6 border border-slate-800 bg-dark hover-lift">
+                        <div class="review-header">
+                            <div class="review-avatar">${initials}</div>
+                            <div class="review-info"><h4>${data.userName || 'Anonymous'}</h4><div class="review-date">${date}</div></div>
+                        </div>
+                        <div class="review-stars">${starsHtml}</div>
+                        <p class="review-text">"${data.comment}"</p>
+                    </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        function toggleFullReviews() {
+            const list = document.getElementById('reviews-list');
+            const btn = event.target;
+            if(!list) return;
+            
+            list.classList.toggle('expanded');
+            renderReviewsList(list);
+            
+            if (list.classList.contains('expanded')) {
+                if(btn) btn.innerText = "Show Less";
+            } else {
+                if(btn) btn.innerText = "View All Reviews";
+            }
+        }
+
+        function handleReviewSubmit(e) {
+            e.preventDefault();
+            if(!auth || !auth.currentUser) return showNotification("Login Required", "You must be logged in to submit a review.", "warning");
+
+            if(selectedRating === 0) return showNotification("Rating Missing", "Please select a star rating.", "warning");
+
+            const comment = document.getElementById('review-comment') ? document.getElementById('review-comment').value : '';
+            const user = auth.currentUser;
+            let displayName = user.email.split('@')[0];
+            
+            db.collection("users").doc(user.uid).get().then(doc => {
+                if(doc.exists && doc.data().name) displayName = doc.data().name;
+                const reviewData = { 
+                    userId: user.uid, userName: displayName, userEmail: user.email, rating: selectedRating, comment: comment, 
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'approved' 
+                };
+                return db.collection("customer_reviews").add(reviewData);
+            }).then(() => {
+                showNotification("Success", "Review submitted successfully!", "success");
+                if(document.getElementById('review-form')) document.getElementById('review-form').reset();
+                selectedRating = 0;
+                highlightStars(0);
+                if(document.getElementById('reviews-list') && !document.getElementById('reviews-list').classList.contains('hidden')) {
+                    toggleFullReviews(); 
+                }
+            }).catch(err => {
+                console.error(err); 
+                showNotification("Error", "Failed to submit review.", "error");
+            });
+        }
+
+        // ==========================================
+        // PORTFOLIO LOGIC
+        // ==========================================
+        function loadHomePortfolio() {
+            if(!db) return;
+            const container = document.getElementById('home-portfolio-grid');
+            const skeleton = document.getElementById('home-portfolio-grid-skeleton');
+            if(!container) return;
+            
+            // Show Skeleton
+            if(skeleton) skeleton.classList.remove('hidden');
+            container.innerHTML = '';
+            
+            db.collection("clients_portfolio").where("status", "==", true).limit(2).get()
+                .then((snapshot) => {
+                    // Hide Skeleton
+                    if(skeleton) skeleton.classList.add('hidden');
+                    
+                    if(!snapshot.empty) {
+                        snapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const html = `
+                                <div class="portfolio-item group glass rounded-2xl overflow-hidden border border-slate-800 bg-dark hover-lift reveal-on-scroll">
+                                    <div class="h-56 overflow-hidden bg-slate-800 relative"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                                    <div class="p-6">
+                                        <h4 class="font-bold text-white mb-2">${data.name}</h4>
+                                        <p class="text-slate-400 text-sm mb-4">${data.desc || 'View project'}</p>
+                                        <a href="${data.link}" target="_blank" class="text-emerald-400 font-medium text-sm hover:underline">View Live Site &rarr;</a>
+                                    </div>
+                                </div>`;
+                            container.innerHTML += html;
+                        });
+                    }
+                    
+                    // Trigger reveal for new elements
+                    initScrollReveal();
+                });
+        }
+
+        function loadPortfolio() {
+            if(!db) return;
+            const grid = document.getElementById('portfolio-grid');
+            const skeleton = document.getElementById('portfolio-grid-skeleton');
+            if(!grid) return;
+
+            // Show Skeleton
+            if(skeleton) skeleton.classList.remove('hidden');
+            grid.innerHTML = '';
+            
+            db.collection("clients_portfolio").where("status", "==", true).get()
+                .then((snapshot) => {
+                    // Hide Skeleton
+                    if(skeleton) skeleton.classList.add('hidden');
+
+                    if(snapshot.empty) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No projects yet</div>'; return; }
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        grid.innerHTML += `
+                            <div class="group glass rounded-2xl overflow-hidden border border-slate-800 bg-dark hover-lift reveal-on-scroll">
+                                <div class="h-56 overflow-hidden"><img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"></div>
+                                <div class="p-6">
+                                    <h4 class="font-bold text-white mb-2 text-lg">${data.name}</h4>
+                                    <p class="text-slate-400 text-sm mb-4">${data.desc || 'Professional website solution'}</p>
+                                    <a href="${data.link}" target="_blank" class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-800 text-slate-200 font-medium text-sm hover:bg-slate-700 transition-colors">View Project</a>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    initScrollReveal();
+                });
+        }
+
+        // ==========================================
+        // PRODUCTS LOGIC
+        // ==========================================
+        function loadProducts() {
+            if(!db) return;
+            const grid = document.getElementById('products-grid');
+            const skeleton = document.getElementById('products-grid-skeleton');
+            if(!grid) return;
+
+            // Show Skeleton
+            if(skeleton) skeleton.classList.remove('hidden');
+            grid.innerHTML = '';
+
+            db.collection("products").where("status", "==", true).get()
+                .then((snapshot) => {
+                    // Hide Skeleton
+                    if(skeleton) skeleton.classList.add('hidden');
+
+                    let products = [];
+                    snapshot.forEach(doc => products.push(doc.data()));
+
+                    const ddnetProduct = {
+                        name: "DDNetwork",
+                        price: "Free",
+                        desc: "Official DDNetwork Platform. Connect, manage, and grow your digital network seamlessly.",
+                        img: "https://i.ibb.co/Y7yLkm5j/IMG-3157.png", 
+                        link: "https://ddnet.my"
+                    };
+                    
+                    products.unshift(ddnetProduct);
+
+                    grid.innerHTML = '';
+                    if(products.length === 0) { grid.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">No products available yet.</div>'; return; }
+
+                    products.forEach((p) => {
+                        const html = `
+                            <div class="product-card hover-lift reveal-on-scroll">
+                                <img src="${p.img || 'https://via.placeholder.com/400'}" alt="${p.name}" class="product-image">
+                                <div class="product-body">
+                                    <h3 class="text-xl font-bold text-white">${p.name}</h3>
+                                    <p class="text-sm text-slate-500 mb-2">by DDNex</p>
+                                    <p class="text-slate-400 text-sm mb-4 line-clamp-3">${p.desc}</p>
+                                    <div class="mt-auto">
+                                        <div class="product-price">${p.price}</div>
+                                        <a href="${p.link || '#'}" target="_blank" class="block w-full mt-4 text-center py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500 transition-colors">View Product</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        grid.innerHTML += html;
+                    });
+                    initScrollReveal();
+                })
+                .catch(err => {
+                    console.error(err);
+                    grid.innerHTML = '<div class="col-span-3 text-center py-8 text-red-500">Error loading products.</div>';
+                });
+        }
+
+        // ==========================================
+        // CONTACT FORM LOGIC
+        // ==========================================
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('contact-name') ? document.getElementById('contact-name').value : '';
+            const lastname = document.getElementById('contact-lastname') ? document.getElementById('contact-lastname').value : '';
+            const email = document.getElementById('contact-email') ? document.getElementById('contact-email').value : '';
+            const subject = document.getElementById('contact-subject') ? document.getElementById('contact-subject').value : '';
+            const source = document.getElementById('contact-source') ? document.getElementById('contact-source').value : '';
+            const message = document.getElementById('contact-message') ? document.getElementById('contact-message').value : '';
+            
+            if(!name || !lastname || !email || !message) return showNotification("Missing Fields", "Please fill in all required fields.", "error");
+
+            const btn = e.target ? e.target.querySelector('button') : null;
+            const originalText = btn ? btn.innerText : 'Send Message';
+            if(btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
+            }
+
+            const data = {
+                name: name + " " + lastname, email: email, subject: subject, source: source, message: message, type: 'Contact Inquiry', status: 'Pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                userId: auth.currentUser ? auth.currentUser.uid : null, sourceForm: 'Contact Page'
+            };
+
+            if(db) {
+                db.collection("customer_requests").add(data)
+                    .then(() => {
+                        showNotification("Sent!", "Thank you for your interest!", "success");
+                        if(e.target) e.target.reset();
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        showNotification("Error", "Failed to send message. Please try again.", "error");
+                    })
+                    .finally(() => {
+                        if(btn) {
+                            btn.disabled = false;
+                            btn.innerText = originalText;
+                        }
+                    });
+            } else {
+                showNotification("Offline", "System offline. Please try again later.", "error");
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            }
+        }
+
+        // ==========================================
+        // MOBILE MENU LOGIC
+        // ==========================================
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('mobile-menu-icon');
+            const body = document.body;
+
+            if(menu && icon) {
+                const isActive = menu.classList.contains('active');
+                
+                if(isActive) {
+                    menu.classList.remove('active');
+                    icon.classList.remove('ri-close-line');
+                    icon.classList.add('ri-menu-4-line');
+                    body.style.overflow = ''; // Unlock scroll
+                } else {
+                    menu.classList.add('active');
+                    icon.classList.remove('ri-menu-4-line');
+                    icon.classList.add('ri-close-line');
+                    body.style.overflow = 'hidden'; // Lock scroll
+                }
+            }
+        }
+
+        // ==========================================
+        // MAP & GLOBE (INIT)
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setupStarRating();
+            loadHomePortfolio();
+            if(window.location.pathname === '/reviews') renderDummyReview(); 
+            listenToReviews();
+            initMap(); 
+            initScrollReveal(); // PREMIUM SCROLL EFFECT
+        });
+
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if(nav) {
+                if(window.scrollY > 50) nav.classList.add('shadow-lg');
+                else nav.classList.remove('shadow-lg');
+            }
+        });
+
+        // ==========================================
+        // INIT MAP FUNCTION
+        // ==========================================
+        function initMap() {
+            const mapContainer = document.getElementById('map');
+            if (typeof L === 'undefined' || !mapContainer) {
+                console.warn("Leaflet or Map container not found.");
+                return;
+            }
+
+            // Initialize map centered on Malaysia
+            const map = L.map('map').setView([4.2105, 101.9758], 6); 
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(map);
+
+            const clients = [
+                { name: "KL Tech Hub", location: [3.1390, 101.6869], desc: "E-commerce Platform", link: "#" },
+                { name: "Penang Digital", location: [5.4141, 100.3288], desc: "Corporate Site", link: "#" },
+                { name: "Johor SME", location: [1.4927, 103.7414], desc: "Landing Page", link: "#" },
+                { name: "Singapore Partner", location: [1.3521, 103.8198], desc: "Regional Portal", link: "#" },
+                { name: "Bali Resort", location: [-8.4095, 115.1889], desc: "Hotel Booking", link: "#" },
+                { name: "Jakarta Startup", location: [-6.2088, 106.8456], desc: "Fintech App", link: "#" },
+                { name: "Tokyo Client", location: [35.6762, 139.6503], desc: "Consultancy", link: "#" }
+            ];
+
+            const pinIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div class="pulse-ring"></div><div class="marker-pin"></div>',
+                iconSize: [36, 36],
+                iconAnchor: [18, 36]
+            });
+
+            clients.forEach(client => {
+                const marker = L.marker(client.location, { icon: pinIcon }).addTo(map);
+                
+                const popupContent = `
+                    <div class="popup-content">
+                        <div class="popup-title">${client.name}</div>
+                        <div class="popup-stats">${client.desc}</div>
+                        <a href="${client.link}" target="_blank" class="popup-link">Visit Site</a>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+            });
+        }
+
+        // ==========================================
+        // PREMIUM SCROLL REVEAL LOGIC
+        // ==========================================
+        function initScrollReveal() {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target); // Only animate once
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+    </script>
+
+    <!-- UPDATED CHAT WIDGET SCRIPT -->
+    <script src="https://app.livechatai.com/embed.js" data-id="cmlas1njr0001jj04hi5ygd18" async defer></script>
+</body>
+</html>
