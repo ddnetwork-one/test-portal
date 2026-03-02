@@ -2116,7 +2116,7 @@
             </div>
         </section>
 
-        <!-- PAGE: PROFILE -->
+        <!-- PAGE: PROFILE (UPDATED WITH PLAN STATUS) -->
         <section id="profile" class="page-section">
             <div class="auth-container" style="max-width: 900px;">
                 <div class="glass-card auth-card">
@@ -2571,6 +2571,7 @@
                         <button type="button" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;" onclick="handleManualConfirmation()">I have made payment</button>
                     </div>
 
+                    
                     <!-- PAYMENT FAILED SECTION -->
                     <div id="payment-failed-section">
                         <i class="ri-close-circle-fill failed-confirm-icon"></i>
@@ -2628,14 +2629,14 @@
         </section>
 
         <!-- PAGE: FOUNDER -->
-        <section id="founder" class="        page-section" class="page-section">
+        <section id="founder" class="page-section" class="page-section">
             <div class="glass-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1.5rem;">
                 <img src="https://raw.githubusercontent.com/ddnetwork-ent/DDN-One/refs/heads/main/DD.JPG" alt="Danial Danish" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid white; margin-bottom: 1.5rem;">
                 <h2 style="margin-bottom: 0.5rem;">Danial Danish</h2>
                 <p style="color: var(--soft-black); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 1.5rem;">Founder & Lead Developer</p>
                 <p style="color: var(--text-secondary); max-width: 600px; line-height: 1.7; margin-bottom: 1.5rem;">"My journey began with a curiosity for code. What started as late-night experiments grew into DD Cloud Network, a company built on simplicity, speed, and thoughtful digital design.<br><br>Through DD Cloud Network, I created DDNetwork as a dedicated brand to help local businesses build a strong, modern presence in the digital world."</p>
                 <div style="display: flex; gap: 1rem;">
-                    <a href="https://www.linkedin.com/in/muhammad-danial-danish-217bb82ba/" style="width:                 40px; height: 40px; background: var(--bg-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; border:1px solid var(--border-glass);"><i class="ri-linkedin-fill"></i></a>
+                    <a href="https://www.linkedin.com/in/muhammad-danial-danish-217bb82ba/" style="width: 40px; height: 40px; background: var(--bg-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; border:1px solid var(--border-glass);"><i class="ri-linkedin-fill"></i></a>
                     <a href="https://www.instagram.com/danialddanish/" style="width: 40px; height: 40px; background: var(--bg-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; border:1px solid var(--border-glass);"><i class="ri-instagram-line"></i></a>
                     <a href="https://www.tiktok.com/@ddnet.my/" style="width: 40px; height: 40px; background: var(--bg-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; border:1px solid var(--border-glass);"><i class="ri-tiktok-line"></i></a>
                 </div>
@@ -3653,17 +3654,26 @@
                 const data = doc.data();
                 const status = data.status || 'Pending';
                 const pkgName = data.package || 'Unknown Package';
+                const billingCycle = data.billingCycle || 'Monthly'; // "Monthly" or "One-Time"
 
                 // Determine if active or expired based on simple status logic
                 // Since we don't have real expiry dates in the order doc, we infer from status or assume last order is active if Paid
                 if (status === 'Paid' || status === 'Completed') {
                     // Show Active
                     document.getElementById('active-plan-name').innerText = pkgName;
-                    // Fake expiry date for visual purposes (e.g. 1 year from now)
-                    // In a real app, calculate based on timestamp
-                    const nextYear = new Date();
-                    nextYear.setFullYear(nextYear.getFullYear() + 1);
-                    document.getElementById('active-plan-expiry').innerText = `Renews on ${nextYear.toLocaleDateString()}`;
+                    
+                    // Calculate Renewal Date or Type
+                    let expiryText = "";
+                    if (billingCycle === 'One-Time' || billingCycle === 'One-Time') {
+                        expiryText = "Active License (One-Time)";
+                    } else {
+                        // Monthly: Add 30 days to today as next renewal
+                        const nextRenewal = new Date();
+                        nextRenewal.setDate(nextRenewal.getDate() + 30);
+                        expiryText = `Next Renewal: ${nextRenewal.toLocaleDateString()}`;
+                    }
+
+                    document.getElementById('active-plan-expiry').innerText = expiryText;
                     
                     activePlanBox.classList.remove('hidden');
                 } else if (status === 'Cancelled' || status === 'Expired') {
@@ -4809,3 +4819,5 @@
     initializeDatabase();
     
 </script>
+</body>
+</html>
