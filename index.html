@@ -1556,7 +1556,7 @@
         }
         
         /* ========================================== */
-        /* PROFILE PLAN STYLES (NEW)                  */
+        /* PROFILE PLAN STYLES (NEW & UPDATED)        */
         /* ========================================== */
         .profile-plan-status {
             margin-top: 2rem;
@@ -1577,11 +1577,18 @@
             transition: 0.3s;
         }
         
+        /* Style for Active Monthly Subscription */
         .status-card.active-plan {
             border-left: 4px solid var(--accent-success);
             background: #f0fdf4; /* Very light green */
         }
         
+        /* Style for Active One-Time Purchase */
+        .status-card.active-onetime {
+            border-left: 4px solid #6366f1; /* Indigo/Purple for Lifetime */
+            background: #eef2ff; /* Very light indigo */
+        }
+
         .status-card.expired-plan {
             border-left: 4px solid var(--accent-danger);
             background: #fef2f2; /* Very light red */
@@ -1602,6 +1609,15 @@
             margin: 0;
         }
         
+        /* Specific styling for renewal dates */
+        .status-info .renewal-date {
+            color: var(--accent-success);
+            font-weight: 600;
+            margin-top: 0.25rem;
+            display: block;
+            font-size: 0.85rem;
+        }
+        
         .status-action {
             display: flex;
             flex-direction: column;
@@ -1618,6 +1634,7 @@
         }
         
         .badge-active { background: #dcfce7; color: #166534; }
+        .badge-lifetime { background: #e0e7ff; color: #3730a3; }
         .badge-expired { background: #fee2e2; color: #991b1b; }
 
         /* ========================================== */
@@ -2116,7 +2133,7 @@
             </div>
         </section>
 
-        <!-- PAGE: PROFILE (UPDATED WITH PLAN STATUS) -->
+        <!-- PAGE: PROFILE -->
         <section id="profile" class="page-section">
             <div class="auth-container" style="max-width: 900px;">
                 <div class="glass-card auth-card">
@@ -2138,13 +2155,13 @@
                         <!-- Active Plans Box -->
                         <div id="active-plan-box" class="status-card active-plan hidden">
                             <div class="status-info">
-                                <h4><i class="ri-checkbox-circle-line" style="color:var(--accent-success); margin-right:8px;"></i>Active Plan</h4>
+                                <h4 id="active-plan-title"><i class="ri-checkbox-circle-line" style="color:var(--accent-success); margin-right:8px;"></i>Active Plan</h4>
                                 <p id="active-plan-name">Loading...</p>
                                 <p id="active-plan-expiry" style="font-size:0.8rem; color:var(--text-tertiary);">Loading...</p>
                             </div>
                             <div class="status-action">
-                                <span class="status-badge badge-active">Active</span>
-                                <button class="btn btn-glass" style="padding: 0.4rem 1rem; font-size: 0.75rem;">Manage</button>
+                                <span id="active-plan-badge" class="status-badge badge-active">Active</span>
+                                <button id="active-plan-btn" class="btn btn-glass" style="padding: 0.4rem 1rem; font-size: 0.75rem;">Manage</button>
                             </div>
                         </div>
 
@@ -2558,7 +2575,7 @@
                             <input type="checkbox" id="terms-check" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--soft-black);">
                             <span style="color: var(--text-secondary);">I have read and agreed to <span class="auth-link" onclick="openTermsModal()">Terms & Conditions</span>.</span>
                         </label>
-                    </div>
+    </div>
                     <div class="form-group" style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary); background: #f8fafc; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border-glass);"><i class="ri-secure-payment-line" style="color: var(--accent-success);"></i> <strong>Secure Payment via Razorpay (Curlec)</strong></div>
                     
                     <div id="checkout-actions"><button type="button" id="btn-pay-now" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;" onclick="initiateRazorpayPayment()"><i class="ri-credit-card-2-fill" style="margin-right:8px;"></i> Pay Now</button></div>
@@ -2571,7 +2588,6 @@
                         <button type="button" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;" onclick="handleManualConfirmation()">I have made payment</button>
                     </div>
 
-                    
                     <!-- PAYMENT FAILED SECTION -->
                     <div id="payment-failed-section">
                         <i class="ri-close-circle-fill failed-confirm-icon"></i>
@@ -2629,7 +2645,7 @@
         </section>
 
         <!-- PAGE: FOUNDER -->
-        <section id="founder" class="page-section" class="page-section">
+        <section id="founder" class="page-section">
             <div class="glass-card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1.5rem;">
                 <img src="https://raw.githubusercontent.com/ddnetwork-ent/DDN-One/refs/heads/main/DD.JPG" alt="Danial Danish" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid white; margin-bottom: 1.5rem;">
                 <h2 style="margin-bottom: 0.5rem;">Danial Danish</h2>
@@ -3654,28 +3670,52 @@
                 const data = doc.data();
                 const status = data.status || 'Pending';
                 const pkgName = data.package || 'Unknown Package';
-                const billingCycle = data.billingCycle || 'Monthly'; // "Monthly" or "One-Time"
+                const billingCycle = data.billingCycle || 'One-Time'; // Check if Monthly or One-Time
 
                 // Determine if active or expired based on simple status logic
-                // Since we don't have real expiry dates in the order doc, we infer from status or assume last order is active if Paid
                 if (status === 'Paid' || status === 'Completed') {
-                    // Show Active
-                    document.getElementById('active-plan-name').innerText = pkgName;
                     
-                    // Calculate Renewal Date or Type
-                    let expiryText = "";
-                    if (billingCycle === 'One-Time' || billingCycle === 'One-Time') {
-                        expiryText = "Active License (One-Time)";
+                    // RESET CLASSES
+                    activePlanBox.className = 'status-card';
+                    const activeTitle = document.getElementById('active-plan-title');
+                    const activeBadge = document.getElementById('active-plan-badge');
+                    const activeBtn = document.getElementById('active-plan-btn');
+                    
+                    if (billingCycle === 'Monthly') {
+                        // --- MONTHLY SUBSCRIPTION LOGIC ---
+                        activePlanBox.classList.add('active-plan'); // Green theme
+                        document.getElementById('active-plan-name').innerText = pkgName;
+                        
+                        // Fake expiry date for visual purposes (e.g. 1 year from order date)
+                        const orderDate = data.timestamp ? new Date(data.timestamp.seconds * 1000) : new Date();
+                        const nextYear = new Date(orderDate);
+                        nextYear.setFullYear(nextYear.getFullYear() + 1);
+                        
+                        document.getElementById('active-plan-expiry').innerHTML = `Renews on <span class="renewal-date">${nextYear.toLocaleDateString()}</span>`;
+                        
+                        activeTitle.innerHTML = '<i class="ri-checkbox-circle-line" style="color:var(--accent-success); margin-right:8px;"></i>Active Subscription';
+                        activeBadge.innerText = 'Active';
+                        activeBadge.className = 'status-badge badge-active';
+                        activeBtn.innerText = 'Renew Now';
+                        activeBtn.onclick = () => navigateTo('/updates');
+                        
                     } else {
-                        // Monthly: Add 30 days to today as next renewal
-                        const nextRenewal = new Date();
-                        nextRenewal.setDate(nextRenewal.getDate() + 30);
-                        expiryText = `Next Renewal: ${nextRenewal.toLocaleDateString()}`;
+                        // --- ONE-TIME PURCHASE LOGIC ---
+                        activePlanBox.classList.add('active-onetime'); // Indigo/Purple theme
+                        document.getElementById('active-plan-name').innerText = pkgName;
+                        
+                        // No specific expiry for one-time
+                        document.getElementById('active-plan-expiry').innerText = "Lifetime License (One-time Purchase)";
+                        
+                        activeTitle.innerHTML = '<i class="ri-vip-crown-fill" style="color:#6366f1; margin-right:8px;"></i>Active License';
+                        activeBadge.innerText = 'Lifetime';
+                        activeBadge.className = 'status-badge badge-lifetime';
+                        activeBtn.innerText = 'Manage';
+                        activeBtn.onclick = () => navigateTo('/pricing');
                     }
-
-                    document.getElementById('active-plan-expiry').innerText = expiryText;
                     
                     activePlanBox.classList.remove('hidden');
+
                 } else if (status === 'Cancelled' || status === 'Expired') {
                     // Show Expired
                     document.getElementById('expired-plan-name').innerText = pkgName;
