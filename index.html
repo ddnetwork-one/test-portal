@@ -64,7 +64,7 @@
            VARIABLES & RESET
            ========================================= */
         :root {
-            /* Palette - Enhanced for High-End Look */
+            /* Palette */
             --primary: #2563eb;
             --primary-dark: #1e40af;
             --primary-light: rgba(37, 99, 235, 0.08);
@@ -75,7 +75,7 @@
             --accent-orange: #f97316;
             --accent-slate: #0f172a;
             
-            /* Neutrals - Softer contrast */
+            /* Neutrals */
             --bg-body: #f8fafc;
             --bg-surface: #ffffff;
             --bg-glass: rgba(255, 255, 255, 0.7);
@@ -87,7 +87,7 @@
             --border-light: #e2e8f0;
             --border-glass: rgba(255, 255, 255, 0.5);
             
-            /* Shadows - Deeper, softer */
+            /* Shadows */
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
@@ -305,7 +305,7 @@
         }
         .nav-link:hover::after, .nav-link.active::after { width: 100%; }
 
-        /* CTA Button - Optimized for Touch */
+        /* CTA Button */
         .btn {
             padding: 14px 28px;
             border-radius: 100px;
@@ -954,7 +954,7 @@
         .team-socials a:hover { color: var(--primary); transform: translateY(-2px); }
 
         /* =========================================
-           PRICING / PACKAGES SECTION (UPDATED)
+           PRICING SECTION (UPDATED WITH LOGIC)
            ========================================= */
         .pricing-section {
             padding: 80px 0;
@@ -962,7 +962,6 @@
             position: relative;
         }
         
-        /* Advanced Background Pattern */
         .pricing-bg-mesh {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -1836,6 +1835,83 @@
         .compare-header-row th { background: var(--primary); color: white; border-color: rgba(255,255,255,0.1); }
         .compare-header-row th:first-child { background: #1e293b; color: white; }
 
+        /* =========================================
+           CHECKOUT WIZARD (NEW)
+           ========================================= */
+        #checkout-modal {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px);
+            z-index: 5000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        #checkout-modal.active { opacity: 1; pointer-events: auto; }
+
+        .checkout-container {
+            background: white; width: 100%; max-width: 900px; height: 90vh;
+            border-radius: var(--radius-lg); display: flex; overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            flex-direction: column; position: relative;
+        }
+        
+        .checkout-header {
+            padding: 24px; border-bottom: 1px solid var(--border-light);
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f8fafc;
+        }
+        .checkout-body { flex: 1; overflow-y: auto; padding: 32px; display: flex; flex-direction: column; }
+        .checkout-footer {
+            padding: 24px; border-top: 1px solid var(--border-light);
+            display: flex; justify-content: space-between; align-items: center;
+            background: white;
+        }
+
+        /* Progress Steps */
+        .steps { display: flex; justify-content: center; margin-bottom: 40px; gap: 8px; }
+        .step-dot {
+            width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; color: #64748b;
+            display: flex; align-items: center; justify-content: center; font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .step-dot.active { background: var(--primary); color: white; box-shadow: 0 0 0 4px var(--primary-light); }
+        .step-dot.completed { background: #16a34a; color: white; }
+        .step-line { flex: 1; height: 2px; background: #e2e8f0; align-self: center; max-width: 60px; }
+
+        .checkout-summary-box {
+            background: #f8fafc; border: 1px solid var(--border-light); border-radius: 12px; padding: 24px;
+            margin-top: 24px;
+        }
+        .checkout-summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+        .checkout-summary-total { border-top: 1px dashed var(--border-light); padding-top: 12px; margin-top: 12px; font-weight: 800; font-size: 18px; color: var(--text-main); display: flex; justify-content: space-between; }
+
+        /* Loading Overlay */
+        .checkout-loading-overlay {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.95);
+            z-index: 10; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; border-radius: var(--radius-lg);
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: white;
+            padding: 16px 24px; border-radius: 12px; box-shadow: var(--shadow-xl);
+            display: flex; align-items: center; gap: 12px; transform: translateY(100px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 6000;
+        }
+        .toast.visible { transform: translateY(0); }
+        .toast.success { border-left: 4px solid #16a34a; }
+        .toast.error { border-left: 4px solid #ef4444; }
+
+        @media(max-width: 768px) {
+            .checkout-container { height: 100vh; border-radius: 0; }
+            .checkout-footer { flex-direction: column-reverse; gap: 16px; }
+            .btn { width: 100%; }
+        }
+
     </style>
 </head>
 <body>
@@ -1858,7 +1934,7 @@
             <nav class="nav-desktop" aria-label="Main Navigation">
                 <a href="/home" class="nav-link active" onclick="handleNavigation('home', event)">Home</a>
                 <a href="/services" class="nav-link" onclick="handleNavigation('services', event)">Services</a>
-                <a href="/pricing" class="nav-link" onclick="handleNavigation('pricing', event)">Pricing</a> <!-- NEW NAV LINK -->
+                <a href="/pricing" class="nav-link" onclick="handleNavigation('pricing', event)">Pricing</a> 
                 <a href="/industries" class="nav-link" onclick="handleNavigation('industries', event)">Industries</a>
                 <a href="/about" class="nav-link" onclick="handleNavigation('about', event)">About Us</a>
                 <a href="/contact" class="nav-link" onclick="handleNavigation('contact', event)">Contact</a>
@@ -2034,7 +2110,7 @@
             </div>
 
             <!-- =========================================
-                 SERVICE PACKAGES SECTION (UPDATED WITH TABS)
+                 PRICING PREVIEW (LINKS TO FULL PAGE)
                  ========================================= -->
             <div class="pricing-section">
                 <div class="pricing-bg-mesh"></div>
@@ -2043,211 +2119,24 @@
                         <span class="badge">Our Packages</span>
                         <h2>Tailored Digital Solutions</h2>
                         <p>Professional websites and digital systems built for startups, SMEs, and enterprises.</p>
-                    </div>
-                    
-                    <!-- PRICING TABS HEADER -->
-                    <div class="tabs-container reveal">
-                        <div class="tabs-header">
-                            <button class="tab-btn active" onclick="switchPricingTab('landing')">Landing Page</button>
-                            <button class="tab-btn" onclick="switchPricingTab('business')">Business Website</button>
-                            <button class="tab-btn" onclick="switchPricingTab('portal')">System Portal</button>
-                            <button class="tab-btn" onclick="switchPricingTab('custom')">Custom System</button>
-                        </div>
-
-                        <!-- 1. Landing Page Content -->
-                        <div id="pricing-landing" class="tab-content active">
-                            <div class="pricing-grid" style="grid-template-columns: 1fr;">
-                                <!-- Single detailed card view or grid -->
-                                <div class="pricing-card popular" style="max-width: 800px; margin: 0 auto; transform: none;">
-                                    <div class="pricing-icon"><i class="ri-layout-masonry-line"></i></div>
-                                    <div class="pricing-header">
-                                        <h3 class="pricing-title">Landing Page Package</h3>
-                                        <div class="pricing-price">RM299 - RM599</div>
-                                        <p class="pricing-desc">Best for: Promotions, campaigns, personal brands.</p>
-                                    </div>
-                                    <div class="pricing-features">
-                                        <h4>Design & Front-End</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-check-line"></i> 1 High-Impact Page</li>
-                                            <li><i class="ri-check-line"></i> Mobile Responsive</li>
-                                            <li><i class="ri-check-line"></i> Fast Loading Design</li>
-                                        </ul>
-                                        <h4>Features</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-check-line"></i> Contact Form</li>
-                                            <li><i class="ri-check-line"></i> Social Media Links</li>
-                                            <li><i class="ri-check-line"></i> Basic SEO Setup</li>
-                                        </ul>
-                                        <h4>Included</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-gift-line"></i> Free subdomain: name.ddnex.com</li>
-                                            <li><i class="ri-gift-line"></i> Free Deployment</li>
-                                            <li><i class="ri-gift-line"></i> 1 Revision Round</li>
-                                        </ul>
-                                    </div>
-                                    <div class="pricing-cta">
-                                        <button class="btn btn-primary" onclick="selectPlanAndContact('Landing Page')">Get Started</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 2. Business Website Content -->
-                        <div id="pricing-business" class="tab-content">
-                            <div class="pricing-grid" style="grid-template-columns: 1fr;">
-                                <div class="pricing-card popular" style="max-width: 800px; margin: 0 auto; transform: none;">
-                                    <div class="pricing-icon"><i class="ri-briefcase-4-line"></i></div>
-                                    <div class="pricing-header">
-                                        <h3 class="pricing-title">Business Website Package</h3>
-                                        <div class="pricing-price">RM699 - RM1,200</div>
-                                        <p class="pricing-desc">Best for: Company profile websites.</p>
-                                    </div>
-                                    <div class="pricing-features">
-                                        <h4>Design & Pages</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-check-line"></i> Up to 5 Informational Pages</li>
-                                            <li><i class="ri-check-line"></i> Professional UI/UX Design</li>
-                                            <li><i class="ri-check-line"></i> Mobile Responsive</li>
-                                        </ul>
-                                        <h4>Features</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-check-line"></i> Advanced Contact Form</li>
-                                            <li><i class="ri-check-line"></i> Google Maps Integration</li>
-                                            <li><i class="ri-check-line"></i> Image Gallery & Lightbox</li>
-                                        </ul>
-                                        <h4>Included</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-gift-line"></i> Free subdomain: company.ddnex.com</li>
-                                            <li><i class="ri-gift-line"></i> Professional Deployment</li>
-                                            <li><i class="ri-gift-line"></i> 3 Revision Rounds</li>
-                                        </ul>
-                                    </div>
-                                    <div class="pricing-cta">
-                                        <button class="btn btn-primary" onclick="selectPlanAndContact('Business Website')">Get Started</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. System Portal Content -->
-                        <div id="pricing-portal" class="tab-content">
-                            <div class="pricing-grid" style="grid-template-columns: 1fr;">
-                                <div class="pricing-card popular" style="max-width: 800px; margin: 0 auto; transform: none; border-color: var(--accent-teal);">
-                                    <div class="pricing-badge">Best Value</div>
-                                    <div class="pricing-icon"><i class="ri-dashboard-3-line"></i></div>
-                                    <div class="pricing-header">
-                                        <h3 class="pricing-title">System Portal Package</h3>
-                                        <div class="pricing-price">RM2,800 - RM6,800</div>
-                                        <p class="pricing-desc">Public Website + Secure Internal Dashboard.</p>
-                                    </div>
-                                    <div class="pricing-features">
-                                        <h4>Public Website</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-check-line"></i> Up to 5 Public Pages</li>
-                                            <li><i class="ri-check-line"></i> Contact Integration & SEO</li>
-                                        </ul>
-                                        <h4>Dashboard Portal</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-shield-check-line"></i> Secure Admin Login System</li>
-                                            <li><i class="ri-shield-check-line"></i> User Role Management</li>
-                                            <li><i class="ri-shield-check-line"></i> Activity Logs & Reports</li>
-                                        </ul>
-                                        <h4>Included</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-gift-line"></i> Free subdomain: portal.ddnex.com</li>
-                                            <li><i class="ri-gift-line"></i> Database Setup (Firebase)</li>
-                                            <li><i class="ri-gift-line"></i> 30 Days Technical Support</li>
-                                        </ul>
-                                    </div>
-                                    <div class="pricing-cta">
-                                        <button class="btn btn-primary" onclick="selectPlanAndContact('System Portal')">Get Started</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 4. Custom System Content -->
-                        <div id="pricing-custom" class="tab-content">
-                            <div class="pricing-grid" style="grid-template-columns: 1fr;">
-                                <div class="pricing-card popular" style="max-width: 800px; margin: 0 auto; transform: none; border-color: var(--accent-purple);">
-                                    <div class="pricing-icon"><i class="ri-cpu-line"></i></div>
-                                    <div class="pricing-header">
-                                        <h3 class="pricing-title">Custom Enterprise System</h3>
-                                        <div class="pricing-price">RM4,000+</div>
-                                        <p class="pricing-desc">Tailored enterprise solutions for complex needs.</p>
-                                    </div>
-                                    <div class="pricing-features">
-                                        <h4>Development</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-check-line"></i> Fully Custom Portal Architecture</li>
-                                            <li><i class="ri-check-line"></i> Secure Database Design</li>
-                                            <li><i class="ri-check-line"></i> Scalable Cloud Infrastructure</li>
-                                        </ul>
-                                        <h4>Advanced Features</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-check-line"></i> Advanced Analytics Dashboard</li>
-                                            <li><i class="ri-check-line"></i> Process Automation (RPA)</li>
-                                            <li><i class="ri-check-line"></i> Third-Party API Integration</li>
-                                        </ul>
-                                        <h4>Included</h4>
-                                        <ul class="feature-list">
-                                            <li><i class="ri-gift-line"></i> Full System Deployment</li>
-                                            <li><i class="ri-gift-line"></i> Technical Documentation</li>
-                                            <li><i class="ri-gift-line"></i> Staff Training Sessions</li>
-                                        </ul>
-                                    </div>
-                                    <div class="pricing-cta">
-                                        <button class="btn btn-primary" onclick="selectPlanAndContact('Custom System')">Contact Us</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Compare Button -->
-                    <div class="compare-btn-container reveal">
-                        <button class="btn-compare" onclick="openCompareModal()">
-                            <i class="ri-scales-3-line"></i> Compare All Plans Side-by-Side
+                        <button class="btn btn-outline" style="margin-top: 16px;" onclick="handleNavigation('pricing', event)">
+                            View Full Pricing & Comparison <i class="ri-arrow-right-line"></i>
                         </button>
                     </div>
-
-                    <!-- NEW ADD-ON SECTION -->
-                    <div class="addons-section reveal">
-                        <div class="text-center" style="margin-bottom: 40px;">
-                            <span class="badge" style="background: white; color: var(--accent-teal); border-color: var(--accent-teal);">Boost Your Package</span>
-                            <h3 style="font-size: 24px; font-family: var(--font-heading); font-weight: 800; margin-top: 16px;">Essential Add-Ons</h3>
-                            <p style="color: var(--text-secondary); font-size: 14px; margin-top: 8px;">Enhance your digital presence with these powerful extras.</p>
+                    
+                    <!-- Brief Grid Preview -->
+                    <div class="pricing-grid" style="grid-template-columns: repeat(2, 1fr); gap: 24px;">
+                        <div class="card reveal" style="border-top: 4px solid var(--primary);">
+                            <h3 style="font-family: var(--font-heading);">Landing Page</h3>
+                            <div style="font-size: 32px; font-weight: 800; color: var(--text-main);">RM299+</div>
+                            <p style="color: var(--text-secondary); margin-bottom: 24px;">Perfect for campaigns and personal brands.</p>
+                            <button class="btn btn-outline" onclick="handleNavigation('pricing', event)">View Details</button>
                         </div>
-                        
-                        <div class="addon-card">
-                            <div class="addon-info">
-                                <div class="addon-icon"><i class="ri-mail-send-line"></i></div>
-                                <div class="addon-text">
-                                    <h4>Email Automation Marketing</h4>
-                                    <p>Automated email sequences, newsletter templates, and lead nurturing campaigns.</p>
-                                </div>
-                            </div>
-                            <div class="addon-price">
-                                RM 35 <span>/Month</span>
-                            </div>
-                        </div>
-
-                        <div style="text-align: center; margin-top: 24px;">
-                            <button class="btn btn-outline" style="border-radius: 12px; padding: 10px 24px; font-size: 14px;" onclick="handleNavigation('contact', event)">
-                                Request Add-On
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Domain Options Info -->
-                    <div class="text-center reveal" style="margin-top: 60px; padding: 32px; background: white; border-radius: 24px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
-                        <h4 style="margin-bottom: 16px; font-size: 20px; font-weight: 700; font-family: var(--font-heading);">Need a Custom Domain?</h4>
-                        <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 24px;">We can assist with registering your own professional domain.<br>*Price domain based on domain name you choose</p>
-                        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                            <span class="tech-tag">.com</span>
-                            <span class="tech-tag">.com.my</span>
-                            <span class="tech-tag">.my</span>
-                            <span class="tech-tag">.net</span>
+                        <div class="card reveal reveal-delay-1" style="border-top: 4px solid var(--accent-teal);">
+                            <h3 style="font-family: var(--font-heading);">System Portal</h3>
+                            <div style="font-size: 32px; font-weight: 800; color: var(--text-main);">RM2,800+</div>
+                            <p style="color: var(--text-secondary); margin-bottom: 24px;">Public website + secure internal dashboard.</p>
+                            <button class="btn btn-primary" onclick="handleNavigation('pricing', event)">View Details</button>
                         </div>
                     </div>
                 </div>
@@ -2287,7 +2176,7 @@
                 </div>
             </div>
 
-            <!-- Core Services Preview (UPDATED CONTENT) -->
+            <!-- Core Services Preview -->
             <div class="section-padding" style="background: white;">
                 <div class="container">
                     <div class="section-title text-center reveal">
@@ -2296,64 +2185,20 @@
                         <p>From modern web development to advanced backend systems and secure cloud deployment.</p>
                     </div>
                     <div class="grid-3">
-                        <!-- Service 1 -->
                         <div class="card reveal">
                             <div class="card-icon"><i class="ri-code-s-slash-line"></i></div>
                             <h3>Web Development</h3>
                             <p>Modern, responsive websites designed for businesses, startups, and organizations.</p>
-                            <div class="tag-row">
-                                <span class="tech-tag">HTML5</span>
-                                <span class="tech-tag">CSS3</span>
-                                <span class="tech-tag">JavaScript</span>
-                            </div>
                         </div>
-                        
-                        <!-- Service 2 -->
                         <div class="card reveal reveal-delay-1">
                             <div class="card-icon"><i class="ri-database-2-line"></i></div>
                             <h3>Frontend + Backend System</h3>
-                            <p>Complete web applications with secure backend powered by Google Firebase for real-time data and scalable performance.</p>
-                            <div class="tag-row">
-                                <span class="tech-tag">Firebase Auth</span>
-                                <span class="tech-tag">Firestore</span>
-                                <span class="tech-tag">Realtime DB</span>
-                            </div>
+                            <p>Complete web applications with secure backend powered by Google Firebase.</p>
                         </div>
-
-                        <!-- Service 3 -->
                         <div class="card reveal reveal-delay-2">
                             <div class="card-icon"><i class="ri-cloud-windy-line"></i></div>
                             <h3>Cloud Hosting & Deployment</h3>
                             <p>Fast and reliable hosting with global delivery and secure infrastructure.</p>
-                            <div class="tag-row">
-                                <span class="tech-tag">Firebase Hosting</span>
-                                <span class="tech-tag">Cloud CDN</span>
-                                <span class="tech-tag">Domain Int.</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Service 4 -->
-                        <div class="card reveal">
-                            <div class="card-icon"><i class="ri-settings-3-line"></i></div>
-                            <h3>Business Tools & Automation</h3>
-                            <p>Custom digital tools to help businesses manage operations and customer data efficiently.</p>
-                            <div class="tag-row">
-                                <span class="tech-tag">Admin Dash</span>
-                                <span class="tech-tag">Cust. DB</span>
-                                <span class="tech-tag">Email Int.</span>
-                            </div>
-                        </div>
-
-                        <!-- Service 5 -->
-                        <div class="card reveal reveal-delay-1">
-                            <div class="card-icon"><i class="ri-shield-keyhole-line"></i></div>
-                            <h3>Security & Data Protection</h3>
-                            <p>Secure backend architecture with built-in protection and encrypted data storage.</p>
-                            <div class="tag-row">
-                                <span class="tech-tag">Security Rules</span>
-                                <span class="tech-tag">SSL</span>
-                                <span class="tech-tag">Auto Backup</span>
-                            </div>
                         </div>
                     </div>
                     <div class="text-center" style="margin-top: 60px;">
@@ -2379,13 +2224,12 @@
                             <div class="case-content">
                                 <span class="case-tag">Healthcare</span>
                                 <h3>Secure Patient Management System</h3>
-                                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; flex-grow: 1;">Developed a cloud-based EMR system with encryption for KLINIK PERGIGIAN AZAM, reducing admin time by 60% and ensuring PDPA compliance.</p>
+                                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; flex-grow: 1;">Developed a cloud-based EMR system with encryption for KLINIK PERGIGIAN AZAM, reducing admin time by 60%.</p>
                                 <div class="case-link" onclick="openModal('klinik')">
                                     Read Case Study <i class="ri-arrow-right-line"></i>
                                 </div>
                             </div>
                         </div>
-                        
                         <!-- Case 2 -->
                         <div class="case-study-card reveal reveal-delay-2">
                             <div class="case-img">
@@ -2394,13 +2238,12 @@
                             <div class="case-content">
                                 <span class="case-tag">Events</span>
                                 <h3>Event Management Platform</h3>
-                                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; flex-grow: 1;">Built a scalable app for ticketing and analytics for PNE ARENA ENTERPRISE, handling 10,000+ users and improving revenue by 40%.</p>
+                                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px; flex-grow: 1;">Built a scalable app for ticketing and analytics for PNE ARENA ENTERPRISE, handling 10,000+ users.</p>
                                 <div class="case-link" onclick="openModal('pne')">
                                     Read Case Study <i class="ri-arrow-right-line"></i>
                                 </div>
                             </div>
                         </div>
-
                         <!-- Case 3 -->
                         <div class="case-study-card reveal reveal-delay-3">
                             <div class="case-img">
@@ -2415,7 +2258,6 @@
                                 </div>
                             </div>
                         </div>
-
                          <!-- Case 4 -->
                          <div class="case-study-card reveal reveal-delay-4">
                             <div class="case-img">
@@ -2491,7 +2333,7 @@
                     <div class="grid-2">
                         <div class="testimonial-card reveal">
                             <i class="ri-double-quotes-l quote-icon"></i>
-                            <p class="testimonial-text">"DDNEX® transformed our entire digital infrastructure. Their attention to security and scalability is unmatched in the region. We launched our new platform 3 months ahead of schedule."</p>
+                            <p class="testimonial-text">"DDNEX® transformed our entire digital infrastructure. Their attention to security and scalability is unmatched in the region."</p>
                             <div class="testimonial-author">
                                 <img src="https://picsum.photos/seed/sarah/100/100" loading="lazy" class="author-avatar" alt="Sarah L.">
                                 <div class="author-info">
@@ -2502,7 +2344,7 @@
                         </div>
                         <div class="testimonial-card reveal reveal-delay-1">
                             <i class="ri-double-quotes-l quote-icon"></i>
-                            <p class="testimonial-text">"The team at DDNEX® doesn't just follow requirements; they challenge them to find better solutions. Their agile approach kept us involved at every step."</p>
+                            <p class="testimonial-text">"The team at DDNEX® doesn't just follow requirements; they challenge them to find better solutions."</p>
                             <div class="testimonial-author">
                                 <img src="https://picsum.photos/seed/james/100/100" loading="lazy" class="author-avatar" alt="James K.">
                                 <div class="author-info">
@@ -2525,22 +2367,15 @@
                     
                     <div class="faq-item reveal">
                         <div class="faq-question">How long does it take to build a website?</div>
-                        <div class="faq-answer"><p>For a simple HTML static website, delivery typically takes 3-5 working days. For more complex interactive websites or AI integration, it usually takes between 2 to 4 weeks depending on the scope of features and content readiness.</p></div>
+                        <div class="faq-answer"><p>For a simple HTML static website, delivery typically takes 3-5 working days. For more complex interactive websites or AI integration, it usually takes between 2 to 4 weeks.</p></div>
                     </div>
-
                     <div class="faq-item reveal">
                         <div class="faq-question">Do I need to pay for hosting and domain?</div>
-                        <div class="faq-answer"><p>Yes, all websites require a domain name (e.g., .com) and hosting. We offer free hosting for the first year with selected packages. Domain costs vary depending on the extension (.com, .my, .net).</p></div>
+                        <div class="faq-answer"><p>Yes, all websites require a domain name and hosting. We offer free hosting for the first year with selected packages. Domain costs vary.</p></div>
                     </div>
-
                     <div class="faq-item reveal">
                         <div class="faq-question">Can I update the website content myself?</div>
-                        <div class="faq-answer"><p>For our Internal Portal and Database solutions, yes, you will have a dashboard to manage content. For static HTML or front-end websites, minor updates might require our assistance, though we can integrate a CMS upon request.</p></div>
-                    </div>
-
-                    <div class="faq-item reveal">
-                        <div class="faq-question">What happens after the project is launched?</div>
-                        <div class="faq-answer"><p>We provide a warranty period for bug fixes. Post-launch, we offer maintenance packages that include security updates, server monitoring, and content updates to ensure your digital asset remains secure and performant.</p></div>
+                        <div class="faq-answer"><p>For our Internal Portal and Database solutions, yes, you will have a dashboard to manage content. For static HTML websites, minor updates might require our assistance.</p></div>
                     </div>
                 </div>
             </div>
@@ -2555,7 +2390,6 @@
                     
                     <div class="section-title text-center reveal" style="max-width: 700px; margin-bottom: 40px;">
                         <h2>Deep technical expertise combined with strategic business understanding.</h2>
-                        <p>We align our technical solutions directly with your business goals, ensuring scalability and ROI.</p>
                     </div>
 
                     <!-- Service Tabs -->
@@ -2568,20 +2402,19 @@
                                 <button class="tab-btn" onclick="switchTab('custom')">Custom System</button>
                             </div>
                             
-                            <!-- 1. Landing Page Content -->
+                            <!-- Content Injected via JS -->
                             <div id="landing" class="tab-content active">
                                 <div class="service-detail-grid">
                                     <div class="service-image">
-                                        <img src="https://i.ibb.co/20bCpNGp/Screenshot-2026-03-07-at-5-31-57-PM.png=80&w=1000&auto=format&fit=crop" alt="Landing Page Design">
+                                        <img src="https://i.ibb.co/20bCpNGp/Screenshot-2026-03-07-at-5-31-57-PM.png" alt="Landing Page">
                                     </div>
                                     <div>
                                         <h3 style="font-size: 24px; font-family: var(--font-heading); margin-bottom: 16px;">High-Impact Landing Pages</h3>
-                                        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">Designed for conversions. Perfect for campaigns, product launches, or personal branding. We focus on speed, aesthetics, and clear call-to-actions.</p>
+                                        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 20px;">Designed for conversions. Perfect for campaigns, product launches, or personal branding.</p>
                                         <ul class="service-list">
-                                            <li><i class="ri-check-double-line"></i> Single Page Focus & Scrolling</li>
+                                            <li><i class="ri-check-double-line"></i> Single Page Focus</li>
                                             <li><i class="ri-check-double-line"></i> Mobile-First Responsive Design</li>
                                             <li><i class="ri-check-double-line"></i> SEO Optimized Structure</li>
-                                            <li><i class="ri-check-double-line"></i> Integrated Contact Forms</li>
                                         </ul>
                                         <div style="margin-top: 24px;">
                                             <span class="badge" style="margin-bottom:0; background: #f1f5f9; color: var(--text-secondary);">Starting RM299</span>
@@ -2590,20 +2423,18 @@
                                 </div>
                             </div>
 
-                            <!-- 2. Business Website Content -->
                             <div id="business" class="tab-content">
                                 <div class="service-detail-grid">
                                     <div class="service-image">
-                                        <img src="https://i.ibb.co/GfrSbSR8/Screenshot-2026-03-07-at-5-28-52-PM.png=80&w=1000&auto=format&fit=crop" alt="Business Website">
+                                        <img src="https://i.ibb.co/GfrSbSR8/Screenshot-2026-03-07-at-5-28-52-PM.png" alt="Business Website">
                                     </div>
                                     <div>
                                         <h3 style="font-size: 24px; font-family: var(--font-heading); margin-bottom: 16px;">Professional Business Websites</h3>
-                                        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">Establish credibility with a multi-page corporate site. Ideal for SMEs looking to showcase services, team, and portfolio professionally.</p>
+                                        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 20px;">Establish credibility with a multi-page corporate site.</p>
                                         <ul class="service-list">
                                             <li><i class="ri-check-double-line"></i> Up to 5 Informational Pages</li>
                                             <li><i class="ri-check-double-line"></i> Google Maps Integration</li>
                                             <li><i class="ri-check-double-line"></i> Image Gallery & Lightbox</li>
-                                            <li><i class="ri-check-double-line"></i> Social Media Integration</li>
                                         </ul>
                                         <div style="margin-top: 24px;">
                                             <span class="badge" style="margin-bottom:0; background: #f1f5f9; color: var(--text-secondary);">Starting RM699</span>
@@ -2612,20 +2443,18 @@
                                 </div>
                             </div>
 
-                            <!-- 3. System Portal Content -->
                             <div id="portal" class="tab-content">
                                 <div class="service-detail-grid">
                                     <div class="service-image">
-                                        <img src="https://i.ibb.co/3Y9Kz47Y/Screenshot-2026-03-07-at-5-25-20-PM.png=80&w=1000&auto=format&fit=crop" alt="System Portal">
+                                        <img src="https://i.ibb.co/3Y9Kz47Y/Screenshot-2026-03-07-at-5-25-20-PM.png" alt="System Portal">
                                     </div>
                                     <div>
                                         <h3 style="font-size: 24px; font-family: var(--font-heading); margin-bottom: 16px;">Secure System Portals</h3>
-                                        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">The bridge between your public presence and internal operations. Includes a customer-facing website plus a secure admin dashboard.</p>
+                                        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 20px;">The bridge between your public presence and internal operations.</p>
                                         <ul class="service-list">
                                             <li><i class="ri-check-double-line"></i> Admin Login & Authentication</li>
                                             <li><i class="ri-check-double-line"></i> User Management System</li>
                                             <li><i class="ri-check-double-line"></i> Activity Logs & Reporting</li>
-                                            <li><i class="ri-check-double-line"></i> Secure Database Integration</li>
                                         </ul>
                                         <div style="margin-top: 24px;">
                                             <span class="badge" style="margin-bottom:0; background: #f1f5f9; color: var(--text-secondary);">Starting RM2,800</span>
@@ -2634,7 +2463,6 @@
                                 </div>
                             </div>
 
-                            <!-- 4. Custom System Content -->
                             <div id="custom" class="tab-content">
                                 <div class="service-detail-grid">
                                     <div class="service-image">
@@ -2642,12 +2470,11 @@
                                     </div>
                                     <div>
                                         <h3 style="font-size: 24px; font-family: var(--font-heading); margin-bottom: 16px;">Bespoke Enterprise Systems</h3>
-                                        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">For complex requirements. We build fully custom software tailored to your unique workflows, from inventory management to HR automation.</p>
+                                        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 20px;">For complex requirements. We build fully custom software tailored to your unique workflows.</p>
                                         <ul class="service-list">
                                             <li><i class="ri-check-double-line"></i> Custom Architecture & API Development</li>
                                             <li><i class="ri-check-double-line"></i> Advanced Analytics & Dashboards</li>
                                             <li><i class="ri-check-double-line"></i> Process Automation (RPA)</li>
-                                            <li><i class="ri-check-double-line"></i> Legacy System Integration</li>
                                         </ul>
                                         <div style="margin-top: 24px;">
                                             <span class="badge" style="margin-bottom:0; background: #f1f5f9; color: var(--text-secondary);">Starting RM4,000</span>
@@ -2661,7 +2488,7 @@
             </div>
         </section>
 
-        <!-- PAGE: PRICING (NEW PAGE) -->
+        <!-- PAGE: PRICING (UPDATED WITH INTERACTIVE CHECKOUT) -->
         <section id="pricing" class="page-section">
             <div class="pricing-section" style="padding-top: 40px;">
                 <div class="pricing-bg-mesh"></div>
@@ -2670,152 +2497,22 @@
                     
                     <div class="section-title text-center reveal">
                         <h2>Choose the Perfect Plan for Your Growth</h2>
-                        <p>From landing pages to complex enterprise systems, we have a solution that fits your budget and requirements.</p>
+                        <p>From landing pages to complex enterprise systems, we have a solution that fits your budget.</p>
                     </div>
 
-                    <!-- Full Grid Layout for Pricing Page -->
-                    <div class="pricing-grid">
-                        <!-- Package 1: Landing Page -->
-                        <div class="pricing-card reveal">
-                            <div class="pricing-icon"><i class="ri-layout-masonry-line"></i></div>
-                            <div class="pricing-header">
-                                <h3 class="pricing-title">Landing Page</h3>
-                                <div class="pricing-price">RM299 - RM599</div>
-                                <p class="pricing-desc">Best for: Promotions, campaigns, personal brands.</p>
-                            </div>
-                            <div class="pricing-features">
-                                <h4>Design & Front-End</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-check-line"></i> 1 Landing Page Design</li>
-                                    <li><i class="ri-check-line"></i> Mobile Responsive</li>
-                                    <li><i class="ri-check-line"></i> Fast Loading Design</li>
-                                </ul>
-                                <h4>Features</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-check-line"></i> Contact Form</li>
-                                    <li><i class="ri-check-line"></i> Social Links</li>
-                                    <li><i class="ri-check-line"></i> Basic SEO</li>
-                                </ul>
-                                <h4>Included</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-gift-line"></i> Free subdomain</li>
-                                    <li><i class="ri-gift-line"></i> Free Deployment</li>
-                                    <li><i class="ri-gift-line"></i> 1 Revision</li>
-                                </ul>
-                            </div>
-                            <div class="pricing-cta">
-                                <button class="btn btn-outline" onclick="selectPlanAndContact('Landing Page')">Get Started</button>
-                            </div>
-                        </div>
-
-                        <!-- Package 2: Business Website -->
-                        <div class="pricing-card reveal reveal-delay-1">
-                            <div class="pricing-icon"><i class="ri-briefcase-4-line"></i></div>
-                            <div class="pricing-header">
-                                <h3 class="pricing-title">Business Website</h3>
-                                <div class="pricing-price">RM699 - RM1,200</div>
-                                <p class="pricing-desc">Best for: Company profile websites.</p>
-                            </div>
-                            <div class="pricing-features">
-                                <h4>Design & Pages</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-check-line"></i> Up to 5 Pages</li>
-                                    <li><i class="ri-check-line"></i> Professional UI/UX</li>
-                                    <li><i class="ri-check-line"></i> Mobile Responsive</li>
-                                </ul>
-                                <h4>Features</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-check-line"></i> Contact Form</li>
-                                    <li><i class="ri-check-line"></i> Google Maps</li>
-                                    <li><i class="ri-check-line"></i> Image Gallery</li>
-                                </ul>
-                                <h4>Included</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-gift-line"></i> Free subdomain</li>
-                                    <li><i class="ri-gift-line"></i> Deployment</li>
-                                    <li><i class="ri-gift-line"></i> 3 Revisions</li>
-                                </ul>
-                            </div>
-                            <div class="pricing-cta">
-                                <button class="btn btn-outline" onclick="selectPlanAndContact('Business Website')">Get Started</button>
-                            </div>
-                        </div>
-
-                        <!-- Package 3: System Portal (Popular) -->
-                        <div class="pricing-card popular reveal reveal-delay-2">
-                            <div class="pricing-badge">Best Value</div>
-                            <div class="pricing-icon"><i class="ri-dashboard-3-line"></i></div>
-                            <div class="pricing-header">
-                                <h3 class="pricing-title">System Portal</h3>
-                                <div class="pricing-price">RM2,800 - RM6,800</div>
-                                <p class="pricing-desc">Public Website + Internal Dashboard.</p>
-                            </div>
-                            <div class="pricing-features">
-                                <h4>Public Website</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-check-line"></i> Up to 5 Pages</li>
-                                    <li><i class="ri-check-line"></i> Contact & SEO</li>
-                                </ul>
-                                <h4>Dashboard Portal</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-shield-check-line"></i> Admin Login System</li>
-                                    <li><i class="ri-shield-check-line"></i> User Management</li>
-                                    <li><i class="ri-shield-check-line"></i> Activity Logs</li>
-                                </ul>
-                                <h4>Included</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-gift-line"></i> Free subdomain</li>
-                                    <li><i class="ri-gift-line"></i> Database Setup</li>
-                                    <li><i class="ri-gift-line"></i> 30 Days Support</li>
-                                </ul>
-                            </div>
-                            <div class="pricing-cta">
-                                <button class="btn btn-primary" onclick="selectPlanAndContact('System Portal')">Get Started</button>
-                            </div>
-                        </div>
-
-                        <!-- Package 4: Custom System -->
-                        <div class="pricing-card reveal reveal-delay-3">
-                            <div class="pricing-icon"><i class="ri-cpu-line"></i></div>
-                            <div class="pricing-header">
-                                <h3 class="pricing-title">Custom System</h3>
-                                <div class="pricing-price">RM4,000+</div>
-                                <p class="pricing-desc">Tailored enterprise solutions.</p>
-                            </div>
-                            <div class="pricing-features">
-                                <h4>Development</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-check-line"></i> Custom Portal</li>
-                                    <li><i class="ri-check-line"></i> Secure Database</li>
-                                    <li><i class="ri-check-line"></i> Scalable Arch</li>
-                                </ul>
-                                <h4>Features</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-check-line"></i> Advanced Analytics</li>
-                                    <li><i class="ri-check-line"></i> Automation</li>
-                                    <li><i class="ri-check-line"></i> API Integration</li>
-                                </ul>
-                                <h4>Included</h4>
-                                <ul class="feature-list">
-                                    <li><i class="ri-gift-line"></i> System Deployment</li>
-                                    <li><i class="ri-gift-line"></i> Documentation</li>
-                                    <li><i class="ri-gift-line"></i> Staff Training</li>
-                                </ul>
-                            </div>
-                            <div class="pricing-cta">
-                                <button class="btn btn-outline" onclick="selectPlanAndContact('Custom System')">Contact Us</button>
-                            </div>
-                        </div>
+                    <!-- Interactive Pricing Grid -->
+                    <div class="pricing-grid" id="pricing-container">
+                        <!-- Cards injected via JS -->
                     </div>
 
                     <!-- Compare Button -->
                     <div class="compare-btn-container reveal">
                         <button class="btn-compare" onclick="openCompareModal()">
-                            <i class="ri-scales-3-line"></i> Compare Plans
+                            <i class="ri-scales-3-line"></i> Compare Plans Side-by-Side
                         </button>
                     </div>
 
-                    <!-- NEW ADD-ON SECTION (Duplicate for standalone page) -->
+                    <!-- NEW ADD-ON SECTION -->
                     <div class="addons-section reveal">
                         <div class="text-center" style="margin-bottom: 40px;">
                             <span class="badge" style="background: white; color: var(--accent-teal); border-color: var(--accent-teal);">Boost Your Package</span>
@@ -2835,7 +2532,6 @@
                                 RM 35 <span>/Month</span>
                             </div>
                         </div>
-
                         <div style="text-align: center; margin-top: 24px;">
                             <button class="btn btn-outline" style="border-radius: 12px; padding: 10px 24px; font-size: 14px;" onclick="handleNavigation('contact', event)">
                                 Request Add-On
@@ -2846,7 +2542,7 @@
                     <!-- Domain Options Info -->
                     <div class="text-center reveal" style="margin-top: 60px; padding: 32px; background: white; border-radius: 24px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
                         <h4 style="margin-bottom: 16px; font-size: 20px; font-weight: 700; font-family: var(--font-heading);">Need a Custom Domain?</h4>
-                        <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 24px;">We can assist with registering your own professional domain.<br>*Price domain based on domain name you choose</p>
+                        <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 24px;">We can assist with registering your own professional domain.</p>
                         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                             <span class="tech-tag">.com</span>
                             <span class="tech-tag">.com.my</span>
@@ -2867,27 +2563,18 @@
                     <div class="section-title text-center reveal">
                         <h2>Tailored solutions for sector-specific challenges.</h2>
                     </div>
-                    
                     <div class="grid-3">
                         <div class="card reveal" style="border-top: 4px solid var(--accent-teal);">
                             <h3><i class="ri-heart-pulse-line" style="color: var(--accent-teal); margin-right: 8px;"></i> Healthcare</h3>
-                            <p>Secure telemedicine platforms, EMR systems, and patient management portals that ensure data privacy and interoperability standards.</p>
+                            <p>Secure telemedicine platforms, EMR systems, and patient management portals.</p>
                         </div>
                         <div class="card reveal reveal-delay-1" style="border-top: 4px solid var(--accent-purple);">
                             <h3><i class="ri-store-3-line" style="color: var(--accent-purple); margin-right: 8px;"></i> Retail & E-Commerce</h3>
-                            <p>Omnichannel experiences, inventory management systems, and customer loyalty platforms powered by real-time data analytics.</p>
+                            <p>Omnichannel experiences, inventory management, and customer loyalty platforms.</p>
                         </div>
                         <div class="card reveal reveal-delay-2">
                             <h3><i class="ri-government-line" style="margin-right: 8px;"></i> Public Sector</h3>
-                            <p>Digitalizing citizen services, building secure government portals, and implementing smart city infrastructure solutions.</p>
-                        </div>
-                        <div class="card reveal" style="border-top: 4px solid var(--accent-teal);">
-                            <h3><i class="ri-global-line" style="margin-right: 8px;"></i> Logistics & Supply Chain</h3>
-                            <p>End-to-end track and trace systems, fleet management optimization, and warehouse automation using IoT and RFID.</p>
-                        </div>
-                        <div class="card reveal reveal-delay-1">
-                            <h3><i class="ri-oil-line" style="margin-right: 8px;"></i> Energy & Utilities</h3>
-                            <p>Smart grid management, predictive maintenance for heavy machinery, and environmental monitoring dashboards.</p>
+                            <p>Digitalizing citizen services, building secure government portals.</p>
                         </div>
                     </div>
                 </div>
@@ -2904,18 +2591,11 @@
                         <div class="reveal">
                             <span class="badge">Who We Are</span>
                             <h2>Web Development Excellence Since 2025</h2>
-                            <p style="margin-bottom: 16px; color: var(--text-secondary); font-size: 16px;">DDNEX® is a next-generation web development company focused on building fast, scalable, and intelligent digital platforms.
-
-Based in Kedah, Malaysia, we combine global technology practices with local expertise to help businesses grow through innovation, efficiency, and digital transformation.
-
-DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetwork One ecosystem, delivering trusted web and cloud solutions for modern businesses.</p>
-                            <p style="color: var(--text-secondary); font-size: 16px;">Our mission is to empower Small Business & Startups & Enterprises, to leapfrog competition through technology innovation, operational efficiency, and data-driven decision making.</p>
+                            <p style="margin-bottom: 16px; color: var(--text-secondary);">DDNEX® is a next-generation web development company focused on building fast, scalable, and intelligent digital platforms.</p>
+                            <p style="color: var(--text-secondary);">Our mission is to empower Small Business & Startups & Enterprises, to leapfrog competition through technology innovation.</p>
                         </div>
                         <div class="reveal" style="border-radius: 32px; overflow: hidden; height: 300px; box-shadow: var(--shadow-xl);">
-                            <img src="https://i.ibb.co/TD3R1MYw/DDNEXFAVICON.png" 
-                                 loading="lazy"
-                                 style="width: 100%; height: 100%; object-fit: cover; object-position: center;" 
-                                 alt="DDNEX® HQ Team">
+                            <img src="https://i.ibb.co/TD3R1MYw/DDNEXFAVICON.png" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" alt="DDNEX® Team">
                         </div>
                     </div>
 
@@ -2926,22 +2606,18 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                         <div class="process-step">
                             <div class="step-number">01</div>
                             <div class="step-title">Discovery</div>
-                            <p style="font-size: 13px; color: var(--text-secondary);">Deep dive into business goals, tech audit, and strategy formulation.</p>
                         </div>
                         <div class="process-step">
                             <div class="step-number">02</div>
                             <div class="step-title">Design & Arch</div>
-                            <p style="font-size: 13px; color: var(--text-secondary);">UX/UI prototyping and scalable system architecture planning.</p>
                         </div>
                         <div class="process-step">
                             <div class="step-number">03</div>
                             <div class="step-title">Agile Development</div>
-                            <p style="font-size: 13px; color: var(--text-secondary);">Sprint-based development with continuous feedback loops.</p>
                         </div>
                         <div class="process-step">
                             <div class="step-number">04</div>
                             <div class="step-title">Deploy & Scale</div>
-                            <p style="font-size: 13px; color: var(--text-secondary);">CI/CD pipelines, rigorous testing, and market launch.</p>
                         </div>
                     </div>
 
@@ -2955,7 +2631,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                 <div class="team-role">Founder & Technical Director</div>
                                 <h4 class="team-name">Danial Danish</h4>
                                 <p class="team-desc">Leading DDNex, DDNetwork, and DD Cloud Network with technical vision.</p>
-                                <div class="team-socials"><a href="#" aria-label="LinkedIn"><i class="ri-linkedin-fill"></i></a></div>
+                                <div class="team-socials"><a href="#"><i class="ri-linkedin-fill"></i></a></div>
                             </div>
                         </div>
                         <div class="team-card reveal reveal-delay-2">
@@ -2964,7 +2640,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                 <div class="team-role">Management</div>
                                 <h4 class="team-name">Bella</h4>
                                 <p class="team-desc">Project & Client Manager ensuring seamless delivery.</p>
-                                <div class="team-socials"><a href="#" aria-label="LinkedIn"><i class="ri-linkedin-fill"></i></a></div>
+                                <div class="team-socials"><a href="#"><i class="ri-linkedin-fill"></i></a></div>
                             </div>
                         </div>
                         <div class="team-card reveal reveal-delay-3">
@@ -2973,38 +2649,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                 <div class="team-role">Management</div>
                                 <h4 class="team-name">Putri</h4>
                                 <p class="team-desc">Head of Account, Operations & Marketing.</p>
-                                <div class="team-socials"><a href="#" aria-label="LinkedIn"><i class="ri-linkedin-fill"></i></a></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- NEW SECTION: PRODUCTS -->
-                    <div class="section-title text-center reveal" style="margin-top: 100px;">
-                        <span class="badge">Our Ecosystem</span>
-                        <h2>Products by Us</h2>
-                        <p>Innovative solutions developed by DDNEX® to power your business.</p>
-                    </div>
-                    
-                    <div class="grid-1" style="max-width: 900px; margin: 0 auto;">
-                        <div class="product-card reveal">
-                            <div class="product-img-wrap">
-                                <img src="https://i.ibb.co/5gtxDtKd/blacklogo-dd.png" alt="DDNetwork One Dashboard" loading="lazy">
-                            </div>
-                            <div class="product-content">
-                                <span class="product-label">Flagship Platform</span>
-                                <h3 class="product-title">DDNetwork One</h3>
-                                <p class="product-desc">
-                                    A comprehensive all-in-one business management platform designed for SMEs and enterprises. 
-                                    Streamline operations, manage resources, and scale your business with our integrated ecosystem.
-                                </p>
-                                <div style="margin-bottom: 24px;">
-                                    <span class="tech-tag">Cloud ERP</span>
-                                    <span class="tech-tag">CRM</span>
-                                    <span class="tech-tag">Analytics</span>
-                                </div>
-                                <a href="https://ddnet.my" target="_blank" rel="noopener noreferrer" class="btn btn-primary product-btn">
-                                    Visit ddnet.my <i class="ri-external-link-line"></i>
-                                </a>
+                                <div class="team-socials"><a href="#"><i class="ri-linkedin-fill"></i></a></div>
                             </div>
                         </div>
                     </div>
@@ -3022,11 +2667,9 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                             <h3 style="margin-bottom: 24px; font-size: 22px; font-family: var(--font-heading);">Send us a message</h3>
                             <!-- FormSubmit.co Integration -->
                             <form id="contactForm" action="https://formsubmit.co/ddnetwork.one@outlook.com" method="POST">
-                                <!-- FormSubmit Config -->
                                 <input type="hidden" name="_subject" value="New Inquiry from DDNEX Website">
                                 <input type="hidden" name="_captcha" value="false">
                                 <input type="hidden" name="_template" value="table">
-                                <!-- We handle the redirect via JS for the popup, but set a fallback just in case -->
                                 <input type="hidden" name="_next" value="https://ddnex.com/?success=true">
 
                                 <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px;">
@@ -3045,7 +2688,6 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                     <input type="email" id="email" name="Email" class="form-input" placeholder="john@company.com" required>
                                 </div>
                                 
-                                <!-- UPDATE: NEW REQUIRED PHONE NUMBER FIELD -->
                                 <div class="form-group" style="margin-bottom: 20px;">
                                     <label for="phone">Phone / WhatsApp Number <span style="color:var(--primary)">*</span></label>
                                     <input type="tel" id="phone" name="Phone Number" class="form-input" placeholder="+60 12-345 6789" required>
@@ -3055,15 +2697,10 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                     <label for="service">Service Interest</label>
                                     <select id="service" name="Service Interest" class="form-input">
                                         <option value="General Inquiry">General Inquiry</option>
-                                        <!-- IMPORTANT: These values must match the button clicks exactly -->
                                         <option value="Landing Page">Landing Page</option>
                                         <option value="Business Website">Business Website</option>
                                         <option value="System Portal">System Portal</option>
                                         <option value="Custom System">Custom System</option>
-                                        <option value="Custom Software Development">Custom Software Development</option>
-                                        <option value="Cloud Migration">Cloud Migration</option>
-                                        <option value="Cybersecurity">Cybersecurity</option>
-                                        <option value="Mobile App Development">Mobile App Development</option>
                                         <option value="Other">Other</option>
                                     </select>
                                 </div>
@@ -3074,13 +2711,11 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                 </div>
 
                                 <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px; border-radius: 12px;">Submit Request</button>
-                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 16px; text-align: center;">By submitting, you agree to our Privacy Policy.</p>
                             </form>
                         </div>
 
                         <div class="contact-info-panel">
                             <h2 style="margin-bottom: 32px; font-size: 24px; font-weight: 800; font-family: var(--font-heading);">Let's Discuss Your Project</h2>
-                            
                             <div class="info-card">
                                 <div class="info-label">Headquarters</div>
                                 <div class="info-value">
@@ -3088,37 +2723,14 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                     <span>DDNetwork One,<br>08000, Kedah.</span>
                                 </div>
                             </div>
-                            
                             <div class="info-card">
                                 <div class="info-label">Contact</div>
                                 <div class="info-value">
                                     <i class="ri-mail-send-line"></i>
                                     <span>support@ddnex.com</span>
                                 </div>
-                                <div class="info-value" style="margin-top: 16px;">
-                                    <i class="ri-phone-line"></i>
-                                    <span>Not Available</span>
-                                </div>
-                            </div>
-
-                            <div class="info-card">
-                                <div class="info-label">Sales Hours</div>
-                                <div class="info-value" style="font-size: 15px;">
-                                    Mon - Fri: 9:00 AM - 6:00 PM<br>
-                                    <span style="font-size: 13px; color: #94a3b8;">(GMT+8 Kuala Lumpur)</span>
-                                </div>
-                            </div>
-
-                            <div style="margin-top: 40px;">
-                                <div class="info-label" style="margin-bottom: 16px;">Follow Us</div>
-                                <div style="display: flex; gap: 20px;">
-                                    <a href="#" aria-label="LinkedIn" style="color: white; font-size: 22px;"><i class="ri-linkedin-fill"></i></a>
-                                    <a href="#" aria-label="Twitter" style="color: white; font-size: 22px;"><i class="ri-twitter-x-fill"></i></a>
-                                    <a href="#" aria-label="Facebook" style="color: white; font-size: 22px;"><i class="ri-facebook-fill"></i></a>
-                                </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -3132,16 +2744,9 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                     <div class="legal-content reveal">
                         <p style="font-size: 12px; color: var(--text-muted);">Last updated: March 2026</p>
                         <h2>1. Introduction</h2>
-                        <p>DDNEX® ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how your personal information is collected, used, and disclosed by DDNEX®.</p>
+                        <p>DDNEX® is committed to protecting your privacy. This Privacy Policy explains how your personal information is collected, used, and disclosed by DDNEX®.</p>
                         <h2>2. Information We Collect</h2>
-                        <p>We collect information you provide directly to us when you fill out a form, request a quote, or communicate with us. This includes:</p>
-                        <ul><li>Name and contact details (email, phone number).</li><li>Company information and job title.</li><li>Project requirements and communication history.</li></ul>
-                        <h2>3. How We Use Your Information</h2>
-                        <p>We use the information we collect to communicate with you, provide the services you request, and maintain a professional relationship. We do not sell your personal data to third parties.</p>
-                        <h2>4. Data Security</h2>
-                        <p>We implement appropriate technical and organizational security measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p>
-                        <h2>5. Contact Us</h2>
-                        <p>If you have any questions about this Privacy Policy, please contact us at support@ddnex.com.</p>
+                        <p>We collect information you provide directly to us when you fill out a form, request a quote, or communicate with us.</p>
                         <div style="margin-top: 32px;"><button class="btn btn-outline" onclick="handleNavigation('home', event)">Back to Home</button></div>
                     </div>
                 </div>
@@ -3156,37 +2761,12 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                         <p style="font-size: 12px; color: var(--text-muted);">Last updated: March 2026</p>
                         <h2>1. Acceptance of Terms</h2>
                         <p>By accessing and using the DDNEX® website and services, you accept and agree to be bound by the terms and provisions of this agreement.</p>
-                        <h2>2. Services</h2>
-                        <p>DDNEX® provides enterprise digital transformation services including software development, cloud consulting, and cybersecurity solutions.</p>
-                        <h2>3. Client Responsibilities</h2>
-                        <p>Clients agree to provide necessary access, materials, and feedback in a timely manner to ensure project success.</p>
-                        <h2>4. Intellectual Property</h2>
-                        <p>Upon full payment, DDNEX® assigns to the client all intellectual property rights related to the custom deliverables created specifically for the client.</p>
                         <div style="margin-top: 32px;"><button class="btn btn-outline" onclick="handleNavigation('home', event)">Back to Home</button></div>
                     </div>
                 </div>
             </div>
         </section>
-
-        <section id="security" class="page-section">
-            <div class="section-padding">
-                <div class="container">
-                    <h1 class="page-title text-center reveal" style="font-size: 28px;">Security Policy</h1>
-                    <div class="legal-content reveal">
-                        <p style="font-size: 12px; color: var(--text-muted);">Last updated: March 2026</p>
-                        <h2>1. Commitment to Security</h2>
-                        <p>DDNEX® is committed to maintaining the highest standards of information security. Our approach is aligned with ISO 27001 best practices.</p>
-                        <h2>2. Data Encryption</h2>
-                        <p>All data in transit is encrypted using TLS 1.2 or higher. Data at rest is encrypted using industry-standard AES-256 encryption algorithms.</p>
-                        <h2>3. Access Control</h2>
-                        <p>Access to client environments and sensitive data is strictly controlled on a need-to-know basis. Multi-factor authentication (MFA) is mandatory.</p>
-                        <div style="margin-top: 32px;"><button class="btn btn-outline" onclick="handleNavigation('home', event)">Back to Home</button></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- PAGE: SUBSCRIBE SUCCESS (Virtual Thank You Page) -->
+        
         <section id="subscribe-success" class="page-section">
             <div class="section-padding" style="display: flex; align-items: center; justify-content: center; min-height: 60vh;">
                 <div class="container text-center reveal">
@@ -3194,9 +2774,6 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                         <i class="ri-check-line"></i>
                     </div>
                     <h1 class="page-title">Subscription Successful!</h1>
-                    <p style="font-size: 16px; color: var(--text-secondary); max-width: 600px; margin: 0 auto 32px; line-height: 1.6;">
-                        Thank you for subscribing to the DDNEX® newsletter. You will now receive the latest updates on our digital transformation services and tech insights directly to your inbox.
-                    </p>
                     <button class="btn btn-primary" onclick="handleNavigation('home', event)">Back to Home</button>
                 </div>
             </div>
@@ -3204,46 +2781,29 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
 
     </main>
 
-    <!-- NEWSLETTER SECTION (Before Footer) -->
+    <!-- NEWSLETTER SECTION -->
     <div class="newsletter-section">
         <div class="container">
             <div class="newsletter-wrapper">
                 <div class="newsletter-text reveal">
                     <span class="badge">Stay Updated</span>
                     <h2>Subscribe to our Newsletter</h2>
-                    <p>Join our community to receive the latest news, updates, and exclusive offers directly in your inbox.</p>
+                    <p>Join our community to receive the latest news, updates, and exclusive offers.</p>
                 </div>
                 <div class="newsletter-form reveal reveal-delay-1">
-                    
                     <!-- Begin Brevo Form -->
                     <div class="sib-form" style="text-align: center; background-color: transparent;">
                       <div id="sib-form-container" class="sib-form-container">
-                        
                         <div id="error-message" class="sib-form-message-panel" style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;max-width:100%; display: none;">
                           <div class="sib-form-message-panel__text sib-form-message-panel__text--center">
-                            <svg viewBox="0 0 512 512" class="sib-icon sib-notification__icon">
-                              <path d="M256 40c118.621 0 216 96.075 216 216 0 119.291-96.61 216-216 216-119.244 0-216-96.562-216-216 0-119.203 96.602-216 216-216m0-32C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm-11.49 120h22.979c6.823 0 12.274 5.682 11.99 12.5l-7 168c-.268 6.428-5.556 11.5-11.99 11.5h-8.979c-6.433 0-11.722-5.073-11.99-11.5l-7-168c-.283-6.818 5.167-12.5 11.99-12.5zM256 340c-15.464 0-28 12.536-28 28s12.536 28 28 28 28-12.536 28-28-12.536-28-28-28z" />
-                            </svg>
-                            <span class="sib-form-message-panel__inner-text">
-                              Your subscription could not be saved. Please try again.
-                            </span>
+                            <span class="sib-form-message-panel__inner-text">Your subscription could not be saved. Please try again.</span>
                           </div>
                         </div>
-                        
-                        <div></div>
-                        
                         <div id="success-message" class="sib-form-message-panel" style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#085229; background-color:#e7faf0; border-radius:3px; border-color:#13ce66;max-width:100%; display: none;">
                           <div class="sib-form-message-panel__text sib-form-message-panel__text--center">
-                            <svg viewBox="0 0 512 512" class="sib-icon sib-notification__icon">
-                              <path d="M256 8C119.033 8 8 119.033 8 256s111.033 248 248 248 248-111.003 248-248S392.967 8 256 8zm0 464c-118.664 0-216-96.055-216-216 0-118.663 96.055-216 216-216 118.664 0 216 96.055 216 216 0 118.663-96.055 216-216 216zm141.63-274.961L217.15 376.071c-4.705 4.667-12.303 4.637-16.97-.068l-85.878-86.572c-4.667-4.705-4.637-12.303.068-16.97l8.52-8.451c4.705-4.667 12.303-4.637 16.97.068l68.976 69.533 163.441-162.13c4.705-4.667 12.303-4.637 16.97.068l8.451 8.52c4.668 4.705 4.637 12.303-.068 16.97z" />
-                            </svg>
-                            <span class="sib-form-message-panel__inner-text">
-                              Your subscription has been successful.
-                            </span>
+                            <span class="sib-form-message-panel__inner-text">Your subscription has been successful.</span>
                           </div>
                         </div>
-                        <div></div>
-                        
                         <div id="sib-container" class="sib-container--large sib-container--vertical" style="text-align:center; background-color:rgba(255,255,255,1); max-width:100%; border-radius:25px; border-width:0px; border-color:#C0CCD9; border-style:solid; direction:ltr">
                           <form id="sib-form" method="POST" action="https://55b681f5.sibforms.com/serve/MUIFABaq05cJJvsGHKrmqIAvLM-9Hdp3lzGYv-NJeIV9LTPJFRUBrKhn5e6RFcv3oGnNdDmiTZWnRtvkAx2USfDsFX-O38zmNc29_65oZiwrcnHrxVJ-MhXDLjfT0y6atG-KAv95XsHyx-HyJ6ga9AUvkqPhf8I9XKgesGhB2eeSAvUnCMBB9cqPHf9DppgzRjuDFC9ejm4xNiZncg==" data-type="subscription">
                             <div style="padding: 8px 0;">
@@ -3268,18 +2828,12 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                     </div>
                                   </div>
                                   <label class="entry__error entry__error--primary" style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;"></label>
-                                  <label class="entry__specification" style="font-size:12px; text-align:left; font-family:Helvetica, sans-serif; color:#8390A4; text-align:left">
-                                    Provide your email address to subscribe. For e.g abc@xyz.com
-                                  </label>
                                 </div>
                               </div>
                             </div>
                             <div style="padding: 8px 0;">
                               <div class="sib-form-block" style="text-align: left">
                                 <button class="sib-form-block__button sib-form-block__button-with-loader" style="font-size:15px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#FFFFFF; background-color:#3E4857; border-radius:20px; border-width:0px;" form="sib-form" type="submit">
-                                  <svg class="icon clickable__icon progress-indicator__icon sib-hide-loader-icon" viewBox="0 0 512 512" style="">
-                                    <path d="M460.116 373.846l-20.823-12.022c-5.541-3.199-7.54-10.159-4.663-15.874 30.137-59.886 28.343-131.652-5.386-189.946-33.641-58.394-94.896-95.833-161.827-99.676C261.028 55.961 256 50.751 256 44.352V20.309c0-6.904 5.808-12.337 12.703-11.982 83.556 4.306 160.163 50.864 202.11 123.677 42.063 72.696 44.079 162.316 6.031 236.832-3.14 6.148-10.75 8.461-16.728 5.01z" />
-                                  </svg>
                                   SUBSCRIBE
                                 </button>
                               </div>
@@ -3290,8 +2844,6 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                         </div>
                       </div>
                     </div>
-                    <!-- End Brevo Form -->
-
                 </div>
             </div>
         </div>
@@ -3303,7 +2855,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             <div class="footer-grid">
                 <div class="footer-brand">
                     <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX®" style="height: 32px; margin-bottom: 20px; filter: brightness(0) invert(1);">
-                    <p>DDNEX® is a premier enterprise digital transformation agency. We build the future for businesses in Malaysia and Southeast Asia.</p>
+                    <p>DDNEX® is a premier enterprise digital transformation agency.</p>
                 </div>
                 <div class="footer-col">
                     <h4>Company</h4>
@@ -3311,7 +2863,6 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                         <li><a href="/home" onclick="handleNavigation('home', event); return false;">Home</a></li>
                         <li><a href="/about" onclick="handleNavigation('about', event); return false;">About Us</a></li>
                         <li><a href="/industries" onclick="handleNavigation('industries', event); return false;">Industries</a></li>
-                        <li><a href="#">Careers <span style="font-size: 9px; background: var(--primary); padding: 2px 6px; border-radius: 4px; color: white; margin-left: 5px;">Hiring</span></a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
@@ -3319,32 +2870,27 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                     <ul>
                         <li><a href="/services" onclick="handleNavigation('services', event); return false;">Software Engineering</a></li>
                         <li><a href="/services" onclick="handleNavigation('services', event); return false;">Cloud Solutions</a></li>
-                        <li><a href="/services" onclick="handleNavigation('services', event); return false;">Data Analytics</a></li>
-                        <li><a href="/services" onclick="handleNavigation('services', event); return false;">Cybersecurity</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h4>Pricing</h4>
                     <ul>
                         <li><a href="/pricing" onclick="handleNavigation('pricing', event); return false;">Landing Page</a></li>
-                        <li><a href="/pricing" onclick="handleNavigation('pricing', event); return false;">Business Website</a></li>
                         <li><a href="/pricing" onclick="handleNavigation('pricing', event); return false;">System Portal</a></li>
-                        <li><a href="/pricing" onclick="handleNavigation('pricing', event); return false;">Custom Systems</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2026 DDNEX®. All rights reserved.</p>
                 <div style="display: flex; gap: 24px;">
-                    <a href="#" aria-label="LinkedIn"><i class="ri-linkedin-fill"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="ri-twitter-x-fill"></i></a>
-                    <a href="#" aria-label="Facebook"><i class="ri-facebook-fill"></i></a>
+                    <a href="#"><i class="ri-linkedin-fill"></i></a>
+                    <a href="#"><i class="ri-twitter-x-fill"></i></a>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- NEW: Back To Top Button -->
+    <!-- Back To Top Button -->
     <button id="back-to-top" onclick="scrollToTop()" aria-label="Back to Top">
         <i class="ri-arrow-up-line"></i>
     </button>
@@ -3396,77 +2942,8 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                 <th>Custom System</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>Pages</td>
-                                <td>1 Page</td>
-                                <td>Up to 5 Pages</td>
-                                <td>Up to 5 Pages</td>
-                                <td>Custom</td>
-                            </tr>
-                            <tr>
-                                <td>Responsive Design</td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Contact Form</td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Google Maps</td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td>Optional</td>
-                            </tr>
-                            <tr>
-                                <td>Admin Login</td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Database (Firebase)</td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Activity Logs</td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Custom API Integration</td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Staff Training</td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-close-line cross-icon"></i></td>
-                                <td><i class="ri-check-line check-icon"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Starting Price</td>
-                                <td>RM299</td>
-                                <td>RM699</td>
-                                <td>RM2,800</td>
-                                <td>RM4,000+</td>
-                            </tr>
+                        <tbody id="comparison-body">
+                            <!-- Rows injected via JS -->
                         </tbody>
                     </table>
                 </div>
@@ -3478,26 +2955,504 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
         </div>
     </div>
 
+    <!-- CHECKOUT WIZARD MODAL (NEW) -->
+    <div id="checkout-modal">
+        <div class="checkout-container">
+            <!-- Close Button -->
+            <button onclick="closeCheckout()" style="position: absolute; top: 16px; right: 16px; z-index: 20; background: white; padding: 8px; border-radius: 50%; box-shadow: var(--shadow-md);">
+                <i class="ri-close-line" style="font-size: 24px;"></i>
+            </button>
+
+            <div class="checkout-header">
+                <div style="font-weight: 700; font-family: var(--font-heading);">Secure Checkout</div>
+                <div class="steps">
+                    <div class="step-dot active" id="dot-1">1</div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" id="dot-2">2</div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" id="dot-3">3</div>
+                </div>
+            </div>
+
+            <div class="checkout-body" id="checkout-content">
+                <!-- Step Content injected via JS -->
+            </div>
+
+            <div class="checkout-footer">
+                <button class="btn btn-outline" id="btn-back" onclick="prevStep()" disabled>Back</button>
+                <button class="btn btn-primary" id="btn-next" onclick="nextStep()">Next Step</button>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="loading-overlay" class="checkout-loading-overlay hidden">
+                <div class="spinner"></div>
+                <p style="margin-top: 16px; font-weight: 600; color: var(--text-main);" id="loading-text">Processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i id="toast-icon" class="ri-checkbox-circle-fill" style="font-size: 20px;"></i>
+        <span id="toast-msg">Message goes here</span>
+    </div>
+
     <!-- JavaScript -->
     <script>
         // --- SEO & Routing Data ---
         const pageData = {
-            'home': { title: 'DDNEX®', desc: 'DDNEX® builds fast, responsive, and custom websites for Small Business, Startups & Enterprise transformation.' },
-            'services': { title: 'Services | DDNEX®', desc: 'Explore our comprehensive digital services including Software Engineering, Cloud Solutions, and Cybersecurity.' },
-            'pricing': { title: 'Pricing | DDNEX®', desc: 'Transparent pricing for Landing Pages, Business Websites, System Portals, and Custom Enterprise Systems.' },
-            'industries': { title: 'Industries | DDNEX®', desc: 'Tailored digital solutions for Healthcare, Retail, Public Sector, Logistics, and Energy.' },
-            'about': { title: 'About Us | DDNEX®', desc: 'Meet the leadership team and learn about DDNEX® methodology in Web Development and Digital Transformation.' },
-            'contact': { title: 'Contact Us | DDNEX®', desc: 'Get in touch with DDNEX® to discuss your project. Located in Kedah, serving Malaysia and SE Asia.' },
-            'privacy': { title: 'Privacy Policy | DDNEX®', desc: 'Read our Privacy Policy to understand how we protect your data.' },
-            'terms': { title: 'Terms of Service | DDNEX®', desc: 'Terms and conditions for using DDNEX® services.' },
-            'security': { title: 'Security Policy | DDNEX®', desc: 'Our commitment to information security and data protection.' },
-            'subscribe-success': { title: 'Subscribed | DDNEX®', desc: 'Thank you for subscribing to the DDNEX® newsletter.' }
+            'home': { title: 'DDNEX®', desc: 'DDNEX® builds fast, responsive, and custom websites for enterprise transformation.' },
+            'services': { title: 'Services | DDNEX®', desc: 'Explore our comprehensive digital services.' },
+            'pricing': { title: 'Pricing | DDNEX®', desc: 'Transparent pricing for Landing Pages, Business Websites, and Systems.' },
+            'industries': { title: 'Industries | DDNEX®', desc: 'Tailored digital solutions for various sectors.' },
+            'about': { title: 'About Us | DDNEX®', desc: 'Meet the team behind DDNEX®.' },
+            'contact': { title: 'Contact Us | DDNEX®', desc: 'Get in touch with DDNEX®.' },
+            'privacy': { title: 'Privacy Policy | DDNEX®', desc: 'Read our Privacy Policy.' },
+            'terms': { title: 'Terms of Service | DDNEX®', desc: 'Terms and conditions.' },
+            'subscribe-success': { title: 'Subscribed | DDNEX®', desc: 'Thank you for subscribing.' }
         };
 
-        // --- Main Navigation Handler ---
+        // --- PRICING DATA (CENTRALIZED) ---
+        const packages = [
+            {
+                id: 'landing',
+                name: 'Landing Page',
+                price: 299,
+                priceMax: 599,
+                desc: 'Best for: Promotions, campaigns, personal brands',
+                revisions: 1,
+                features: [
+                    '1 Landing Page Design', 'Mobile Responsive', 'Fast Loading',
+                    'Contact Form', 'Social Links', 'Basic SEO', 'Free Subdomain', 'Free Deployment'
+                ]
+            },
+            {
+                id: 'business',
+                name: 'Business Website',
+                price: 699,
+                priceMax: 1200,
+                desc: 'Best for: Company profile websites',
+                popular: true,
+                revisions: 3,
+                features: [
+                    'Up to 5 Pages', 'Professional UI/UX', 'Mobile Responsive',
+                    'Advanced Contact Form', 'Google Maps', 'Image Gallery & Lightbox',
+                    'Free Subdomain', 'Professional Deployment'
+                ]
+            },
+            {
+                id: 'portal',
+                name: 'System Portal',
+                price: 2800,
+                priceMax: 6800,
+                desc: 'Best for: Public website + internal dashboard',
+                revisions: 5,
+                features: [
+                    'Up to 5 Public Pages', 'Contact & SEO', 'Admin Login System',
+                    'User Management', 'Activity Logs', 'Database Setup (Firebase)',
+                    'Free Subdomain', '30 Days Support'
+                ]
+            },
+            {
+                id: 'custom',
+                name: 'Custom System',
+                price: 4000,
+                priceMax: 10000,
+                desc: 'Best for: Enterprise, fully customized solutions',
+                revisions: 'Unlimited',
+                features: [
+                    'Custom Portal Architecture', 'Secure Database', 'Scalable Infrastructure',
+                    'Advanced Analytics', 'Process Automation (RPA)', 'API Integration',
+                    'System Deployment', 'Documentation & Staff Training'
+                ]
+            }
+        ];
+
+        const comparisonData = [
+            { label: 'Starting Price', values: ['RM299', 'RM699', 'RM2,800', 'RM4,000+'] },
+            { label: 'Pages Included', values: ['1 Page', 'Up to 5 Pages', 'Up to 5 Pages', 'Custom'] },
+            { label: 'Admin Login / Database', values: [false, false, true, true] },
+            { label: 'Revisions Included', values: ['1 Round', '3 Rounds', 'Scope Based', 'Unlimited'] },
+            { label: 'E-Commerce Ready', values: [false, false, false, true] },
+            { label: 'Staff Training', values: [false, false, false, true] },
+            { label: 'Source Code', values: [false, false, true, true] },
+        ];
+
+        /* =========================================
+           MOCK FIREBASE SERVICE (SIMULATION)
+           ========================================= */
+        class MockFirebase {
+            constructor() {
+                if (!localStorage.getItem('ddnex_orders')) localStorage.setItem('ddnex_orders', JSON.stringify([]));
+                if (!localStorage.getItem('ddnex_promos')) {
+                    const promos = [
+                        { code: 'LAUNCH20', discount: 0.20, type: 'percent', active: true },
+                        { code: 'FLAT100', discount: 100, type: 'fixed', active: true }
+                    ];
+                    localStorage.setItem('ddnex_promos', JSON.stringify(promos));
+                }
+            }
+
+            async createOrder(orderData) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const orders = JSON.parse(localStorage.getItem('ddnex_orders'));
+                        const newOrder = { id: 'ORD-' + Date.now(), timestamp: Date.now(), status: 'paid', ...orderData };
+                        orders.push(newOrder);
+                        localStorage.setItem('ddnex_orders', JSON.stringify(orders));
+                        resolve(newOrder);
+                    }, 1500); 
+                });
+            }
+
+            async validatePromo(code) {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        const promos = JSON.parse(localStorage.getItem('ddnex_promos'));
+                        const promo = promos.find(p => p.code === code && p.active);
+                        if (promo) resolve(promo);
+                        else reject('Invalid or expired promo code.');
+                    }, 800);
+                });
+            }
+        }
+
+        const db = new MockFirebase();
+
+        /* =========================================
+           PRICING & CHECKOUT STATE
+           ========================================= */
+        let checkoutStep = 1;
+        let selectedPackage = null;
+        let appliedPromo = null;
+        let formData = { name: '', email: '', phone: '', domainName: '', notes: '' };
+
+        function initPricing() {
+            renderPricingCards();
+            renderComparisonTable();
+        }
+
+        function renderPricingCards() {
+            const container = document.getElementById('pricing-container');
+            if(!container) return;
+            
+            container.innerHTML = packages.map(pkg => `
+                <div class="pricing-card ${pkg.popular ? 'popular' : ''}">
+                    ${pkg.popular ? '<div class="pricing-badge">Best Value</div>' : ''}
+                    <div class="pricing-icon">
+                        <i class="ri-${pkg.id === 'landing' ? 'layout-masonry-line' : pkg.id === 'business' ? 'briefcase-4-line' : pkg.id === 'portal' ? 'dashboard-3-line' : 'cpu-line'}"></i>
+                    </div>
+                    <div class="pricing-header">
+                        <h3 class="pricing-title">${pkg.name}</h3>
+                        <div class="pricing-price">
+                            RM${pkg.price.toLocaleString()}${pkg.priceMax ? ` - RM${pkg.priceMax.toLocaleString()}` : ''}
+                        </div>
+                        <p class="pricing-desc">${pkg.desc}</p>
+                    </div>
+                    <div class="pricing-features">
+                        <h4>What's Included</h4>
+                        <ul class="feature-list">
+                            ${pkg.features.slice(0, 5).map(f => `<li><i class="ri-check-line"></i> ${f}</li>`).join('')}
+                        </ul>
+                        <div class="revision-note">
+                            <i class="ri-pencil-ruler-2-line"></i> <strong>${pkg.revisions}</strong> Revisions Included
+                        </div>
+                    </div>
+                    <div class="pricing-cta">
+                        <button class="btn ${pkg.popular ? 'btn-primary' : 'btn-outline'}" onclick="openCheckout('${pkg.id}')">
+                            Get Started
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderComparisonTable() {
+            const tbody = document.getElementById('comparison-body');
+            if(!tbody) return;
+
+            tbody.innerHTML = comparisonData.map(row => {
+                const cells = row.values.map((val, idx) => {
+                    const isBusiness = idx === 1; 
+                    let content = '';
+                    if (typeof val === 'boolean') {
+                        content = val 
+                            ? `<i class="ri-check-line check-icon" style="font-size:20px"></i>` 
+                            : `<i class="ri-close-line cross-icon" style="font-size:20px"></i>`;
+                    } else {
+                        content = val;
+                    }
+                    return `<td style="${isBusiness ? 'color:var(--primary); font-weight:700; background:#eff6ff;' : ''}">${content}</td>`;
+                }).join('');
+                return `<tr><td>${row.label}</td>${cells}</tr>`;
+            }).join('');
+        }
+
+        /* =========================================
+           CHECKOUT WIZARD LOGIC
+           ========================================= */
+        function openCheckout(pkgId) {
+            selectedPackage = packages.find(p => p.id === pkgId);
+            checkoutStep = 1;
+            appliedPromo = null;
+            resetForm();
+            updateCheckoutUI();
+            document.getElementById('checkout-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function resetForm() {
+            formData = { name: '', email: '', phone: '', domainName: '', notes: '' };
+        }
+
+        function updateCheckoutUI() {
+            // Update Dots
+            for (let i = 1; i <= 3; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                dot.className = 'step-dot';
+                if (i < checkoutStep) dot.classList.add('completed');
+                if (i === checkoutStep) dot.classList.add('active');
+            }
+
+            // Update Buttons
+            document.getElementById('btn-back').disabled = checkoutStep === 1;
+            document.getElementById('btn-next').innerText = checkoutStep === 3 ? 'Complete Payment' : 'Next Step';
+
+            const contentDiv = document.getElementById('checkout-content');
+            
+            if (checkoutStep === 1) {
+                contentDiv.innerHTML = `
+                    <h2 style="font-family: var(--font-heading); font-size: 24px; margin-bottom: 8px;">Confirm Selection</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">You have selected the <strong>${selectedPackage.name}</strong> package.</p>
+                    <div class="checkout-summary-box">
+                        <div class="checkout-summary-row">
+                            <span>Package</span>
+                            <span style="font-weight: 600;">${selectedPackage.name}</span>
+                        </div>
+                        <div class="checkout-summary-row">
+                            <span>Revisions</span>
+                            <span>${selectedPackage.revisions}</span>
+                        </div>
+                        <div class="checkout-summary-row" style="color: var(--text-muted); font-size: 12px;">
+                            ${selectedPackage.features.slice(0, 3).join(', ')}...
+                        </div>
+                    </div>
+                `;
+            } else if (checkoutStep === 2) {
+                contentDiv.innerHTML = `
+                    <h2 style="font-family: var(--font-heading); font-size: 24px; margin-bottom: 8px;">Project Details</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">Tell us about your business and domain.</p>
+                    
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" class="form-input" value="${formData.name}" oninput="formData.name = this.value">
+                    </div>
+                    <div class="form-group">
+                        <label>Business Email</label>
+                        <input type="email" class="form-input" value="${formData.email}" oninput="formData.email = this.value">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone / WhatsApp</label>
+                        <input type="tel" class="form-input" value="${formData.phone}" oninput="formData.phone = this.value">
+                    </div>
+                    <div class="form-group">
+                        <label>Desired Domain Name (Optional)</label>
+                        <input type="text" class="form-input" placeholder="e.g., mycompany.com" value="${formData.domainName}" oninput="formData.domainName = this.value">
+                    </div>
+                    <div class="form-group">
+                        <label>Promo Code</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="promo-input" class="form-input" placeholder="Enter code" value="${appliedPromo ? appliedPromo.code : ''}" ${appliedPromo ? 'disabled' : ''}>
+                            <button class="btn btn-outline" style="padding: 0 20px;" onclick="applyPromoCode()" ${appliedPromo ? 'disabled' : ''}>Apply</button>
+                        </div>
+                        <small id="promo-msg" style="color: ${appliedPromo ? '#16a34a' : '#ef4444'}; display: none; margin-top: 4px;">${appliedPromo ? 'Promo applied!' : ''}</small>
+                    </div>
+                `;
+            } else if (checkoutStep === 3) {
+                const subtotal = selectedPackage.price;
+                let discount = 0;
+                if (appliedPromo) {
+                    discount = appliedPromo.type === 'percent' ? (subtotal * appliedPromo.discount) : appliedPromo.discount;
+                }
+                const total = Math.max(0, subtotal - discount);
+
+                contentDiv.innerHTML = `
+                    <h2 style="font-family: var(--font-heading); font-size: 24px; margin-bottom: 8px;">Payment Summary</h2>
+                    <p style="color: var(--text-secondary);">Review your order before payment.</p>
+
+                    <div class="checkout-summary-box">
+                        <div class="checkout-summary-row">
+                            <span>Package</span>
+                            <span>${selectedPackage.name}</span>
+                        </div>
+                        <div class="checkout-summary-row">
+                            <span>Subtotal</span>
+                            <span>RM ${subtotal.toLocaleString()}</span>
+                        </div>
+                        ${appliedPromo ? `
+                        <div class="checkout-summary-row" style="color: #16a34a;">
+                            <span>Discount (${appliedPromo.code})</span>
+                            <span>-RM ${discount.toLocaleString()}</span>
+                        </div>` : ''}
+                        <div class="checkout-summary-total checkout-summary-row">
+                            <span>Total Due</span>
+                            <span>RM ${total.toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; padding: 16px; background: #f1f5f9; border-radius: 12px; font-size: 13px; color: var(--text-secondary);">
+                        <i class="ri-information-line"></i> This is a simulation. No real money will be charged.
+                    </div>
+                `;
+            }
+        }
+
+        function nextStep() {
+            if (checkoutStep === 2) {
+                if (!formData.name || !formData.email || !formData.phone) {
+                    showToast('Please fill in all required fields.', 'error');
+                    return;
+                }
+            }
+
+            if (checkoutStep < 3) {
+                checkoutStep++;
+                updateCheckoutUI();
+            } else {
+                processPayment();
+            }
+        }
+
+        function prevStep() {
+            if (checkoutStep > 1) {
+                checkoutStep--;
+                updateCheckoutUI();
+            }
+        }
+
+        async function applyPromoCode() {
+            const code = document.getElementById('promo-input').value.trim().toUpperCase();
+            const msgEl = document.getElementById('promo-msg');
+            
+            if (!code) return;
+
+            msgEl.style.display = 'block';
+            msgEl.innerText = 'Checking...';
+            msgEl.style.color = 'var(--text-muted)';
+
+            try {
+                const promo = await db.validatePromo(code);
+                appliedPromo = promo;
+                msgEl.innerText = 'Success! Promo applied.';
+                msgEl.style.color = '#16a34a';
+                document.getElementById('promo-input').disabled = true;
+            } catch (err) {
+                appliedPromo = null;
+                msgEl.innerText = err;
+                msgEl.style.color = '#ef4444';
+            }
+        }
+
+        async function processPayment() {
+            const loader = document.getElementById('loading-overlay');
+            const loaderText = document.getElementById('loading-text');
+            
+            loader.classList.remove('hidden');
+            loaderText.innerText = 'Connecting to Payment Gateway...';
+
+            setTimeout(() => { loaderText.innerText = 'Verifying Card...'; }, 1000);
+            setTimeout(() => { loaderText.innerText = 'Creating Order...'; }, 2000);
+
+            try {
+                const subtotal = selectedPackage.price;
+                let discount = 0;
+                if (appliedPromo) {
+                    discount = appliedPromo.type === 'percent' ? (subtotal * appliedPromo.discount) : appliedPromo.discount;
+                }
+                
+                const orderData = {
+                    packageId: selectedPackage.id,
+                    packageName: selectedPackage.name,
+                    amount: Math.max(0, subtotal - discount),
+                    promo: appliedPromo ? appliedPromo.code : null,
+                    customer: formData
+                };
+
+                await db.createOrder(orderData);
+                
+                // Success
+                loader.classList.add('hidden');
+                showSuccessScreen(orderData);
+            } catch (error) {
+                loader.classList.add('hidden');
+                showToast('Payment failed. Please try again.', 'error');
+            }
+        }
+
+        function showSuccessScreen(order) {
+            const contentDiv = document.getElementById('checkout-content');
+            const footer = document.querySelector('.checkout-footer');
+            
+            footer.style.display = 'none';
+            document.querySelector('.steps').style.display = 'none';
+
+            contentDiv.innerHTML = `
+                <div class="text-center" style="padding: 40px 0;">
+                    <div style="width: 80px; height: 80px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                        <i class="ri-check-line" style="font-size: 40px;"></i>
+                    </div>
+                    <h2 style="font-family: var(--font-heading); font-size: 28px; margin-bottom: 16px;">Order Confirmed!</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 32px;">
+                        Thank you, ${order.customer.name}. Your order for <strong>${order.packageName}</strong> has been received.<br>
+                        Order ID: <span style="font-family: monospace; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${order.id}</span>
+                    </p>
+                    <div class="checkout-summary-box" style="text-align: left;">
+                        <div class="checkout-summary-row">
+                            <span>Total Paid</span>
+                            <span style="font-weight: 800; color: var(--primary);">RM ${order.amount.toLocaleString()}</span>
+                        </div>
+                        <div class="checkout-summary-row">
+                            <span>Email Receipt</span>
+                            <span>Sent to ${order.customer.email}</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 32px;" onclick="closeCheckout(); window.location.reload()">Return Home</button>
+                </div>
+            `;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toast-msg');
+            const icon = document.getElementById('toast-icon');
+
+            msg.innerText = message;
+            toast.className = `toast ${type}`;
+            
+            if (type === 'success') {
+                icon.className = 'ri-checkbox-circle-fill';
+                icon.style.color = '#16a34a';
+            } else {
+                icon.className = 'ri-error-warning-fill';
+                icon.style.color = '#ef4444';
+            }
+
+            toast.classList.add('visible');
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3000);
+        }
+
+        /* =========================================
+           MAIN NAVIGATION & GENERAL LOGIC
+           ========================================= */
         function handleNavigation(pageId, event) {
             if(event) event.preventDefault();
-
             const menu = document.getElementById('mobileMenu');
             if(menu && menu.classList.contains('open')) toggleMenu();
 
@@ -3507,7 +3462,6 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             playPageTransition(pageId);
         }
 
-        // --- Play Swipe Transition ---
         function playPageTransition(pageId) {
             const overlay = document.getElementById('pageTransitionOverlay');
             const logo = overlay.querySelector('.pt-logo');
@@ -3536,211 +3490,51 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             }, 1200);
         }
 
-        // --- Core Navigation Logic ---
         function updateNavigationState(pageId) {
             const urlPath = pageId === 'home' ? '/' : '/' + pageId;
             window.history.pushState({page: pageId}, "", urlPath);
-
             const data = pageData[pageId];
             if (data) {
                 document.title = data.title;
                 document.getElementById('dynamic-desc').setAttribute('content', data.desc);
             }
-
-            document.querySelectorAll('.page-section').forEach(section => {
-                section.classList.remove('active');
-            });
+            document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
             const targetSection = document.getElementById(pageId);
             if(targetSection) targetSection.classList.add('active');
-
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
-                if(link.getAttribute('onclick').includes(`'${pageId}'`)) {
-                    link.classList.add('active');
-                }
+                if(link.getAttribute('onclick').includes(`'${pageId}'`)) link.classList.add('active');
             });
-
             document.querySelectorAll('.menu-link').forEach(link => {
                 link.classList.remove('active');
-                if(link.getAttribute('onclick').includes(`'${pageId}'`)) {
-                    link.classList.add('active');
-                }
+                if(link.getAttribute('onclick').includes(`'${pageId}'`)) link.classList.add('active');
             });
-
             window.scrollTo({ top: 0, behavior: 'auto' }); 
             setTimeout(() => { runScrollAnimations(); }, 100);
         }
 
-        // --- Handle Browser Back/Forward Buttons ---
         window.onpopstate = function(event) {
-            if(event.state && event.state.page) {
-                updateNavigationState(event.state.page);
-            }
+            if(event.state && event.state.page) updateNavigationState(event.state.page);
         };
 
-        // --- Mobile Menu Toggle ---
         function toggleMenu() {
             const menu = document.getElementById('mobileMenu');
             const toggle = document.querySelector('.mobile-toggle');
-            const body = document.body;
-            
             menu.classList.toggle('open');
             toggle.classList.toggle('active');
-            
-            if(menu.classList.contains('open')) {
-                body.style.overflow = 'hidden';
-            } else {
-                body.style.overflow = 'auto';
-            }
+            document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : 'auto';
         }
 
-        // --- Tab Switching for Services ---
         function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
+            document.querySelectorAll('#services .tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('#services .tab-btn').forEach(el => el.classList.remove('active'));
             const content = document.getElementById(tabId);
             if(content) content.classList.add('active');
-            
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => {
-                if(btn.getAttribute('onclick').includes(tabId)) {
-                    btn.classList.add('active');
-                }
+            document.querySelectorAll('#services .tab-btn').forEach(btn => {
+                if(btn.getAttribute('onclick').includes(tabId)) btn.classList.add('active');
             });
         }
 
-        // --- NEW: Pricing Tab Switching for Home Page ---
-        function switchPricingTab(tabId) {
-            // Hide all pricing tab contents
-            document.querySelectorAll('#home .tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('#home .tab-btn').forEach(el => el.classList.remove('active'));
-            
-            const content = document.getElementById('pricing-' + tabId);
-            if(content) content.classList.add('active');
-            
-            const buttons = document.querySelectorAll('#home .tab-btn');
-            buttons.forEach(btn => {
-                if(btn.getAttribute('onclick').includes(tabId)) {
-                    btn.classList.add('active');
-                }
-            });
-        }
-
-        // --- Plan Selection Logic (UPDATED FOR AUTO-FILL) ---
-        function selectPlanAndContact(planName) {
-            handleNavigation('contact', null);
-            setTimeout(() => {
-                const select = document.getElementById('service');
-                if(select) {
-                    // Try to find exact match
-                    let found = false;
-                    for(let i=0; i<select.options.length; i++) {
-                        if(select.options[i].value === planName) {
-                            select.selectedIndex = i;
-                            found = true;
-                            break;
-                        }
-                    }
-                    
-                    // If exact match not found, try partial matching or set to custom
-                    if(!found) {
-                         // If it's one of our specific packages, map to "Custom Software Development" if not exact
-                        select.value = "Custom Software Development"; 
-                    }
-
-                    // Visual feedback for the user
-                    select.style.borderColor = 'var(--primary)';
-                    select.style.backgroundColor = 'var(--primary-light)';
-                    select.style.color = 'var(--primary)';
-                    select.style.fontWeight = '700';
-
-                    // Scroll to the select element lightly
-                    select.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Highlight effect removal after 2 seconds
-                    setTimeout(() => {
-                        select.style.borderColor = '';
-                        select.style.backgroundColor = '';
-                        select.style.color = '';
-                        select.style.fontWeight = '';
-                    }, 2000);
-                }
-            }, 650); // Wait for page transition to mostly complete
-        }
-
-        // --- Contact Form Handler (FormSubmit.co) ---
-        const contactForm = document.getElementById('contactForm');
-        if(contactForm) {
-            contactForm.addEventListener('submit', function(e) {
-                e.preventDefault(); 
-
-                const btn = contactForm.querySelector('button[type="submit"]');
-                const originalText = btn.innerHTML;
-                
-                btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
-                btn.disabled = true;
-                btn.style.opacity = '0.7';
-
-                const formData = new FormData(contactForm);
-                
-                fetch(contactForm.action, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    showPopup("Message Sent!", "Thank you for contacting us. We have received your inquiry and will get back to you shortly.");
-                    contactForm.reset();
-                    return true;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showPopup("Something went wrong", "Please try again or email us directly at support@ddnex.com.");
-                })
-                .finally(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
-                });
-            });
-        }
-
-        // --- Custom Popup Logic ---
-        let popupCallback = null;
-
-        function showPopup(title, message, callback = null) {
-            const popup = document.getElementById('customPopup');
-            const titleEl = document.getElementById('popupTitle');
-            const msgEl = document.getElementById('popupMessage');
-            const btn = document.getElementById('popupBtn');
-
-            titleEl.innerText = title;
-            msgEl.innerText = message;
-            popupCallback = callback;
-
-            if(callback) {
-                btn.innerText = "Back to Home";
-                btn.onclick = handlePopupAction;
-            } else {
-                btn.innerText = "Got it";
-                btn.onclick = closePopup;
-            }
-
-            popup.classList.add('active');
-        }
-
-        function closePopup() {
-            document.getElementById('customPopup').classList.remove('active');
-            popupCallback = null;
-        }
-
-        function handlePopupAction() {
-            if(popupCallback) popupCallback();
-            closePopup();
-        }
-
-        // --- Compare Modal Logic ---
         function openCompareModal() {
             document.getElementById('compareModal').classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -3755,72 +3549,32 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             document.body.style.overflow = 'auto';
         }
 
-        // --- Modal Logic for Case Studies ---
+        // Case Study Modal Logic
         const caseStudies = {
-            'klinik': {
-                title: 'Secure Patient Management System',
-                tag: 'Healthcare',
-                img: 'https://raw.githubusercontent.com/ddnetwork-ent/clinic-azam-dental/main/IMG_2260.JPG',
-                desc: 'Developed a cloud-based EMR system with encryption for KLINIK PERGIGIAN AZAM. The project faced challenges with data migration from legacy paper records. We implemented OCR solutions and strict PDPA compliance measures.',
-                stats: [ { val: '60%', label: 'Admin Time Reduced' }, { val: '100%', label: 'PDPA Compliant' } ]
-            },
-            'pne': {
-                title: 'Event Management Platform',
-                tag: 'Events',
-                img: 'https://scontent.fkul2-4.fna.fbcdn.net/v/t39.30808-6/302295237_496402925823276_6644452016584370240_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=nFHMHqDNU7wQ7kNvwFhWzLG&_nc_oc=AdnLeR0pnYzNfX3s8S0-McNEsEPZnkwHquVPQ5jhgwkJZcq8x8tNTYraZbcsw7dy8KgNcR3ANi_Qlr9P2H19_bFW&_nc_zt=23&_nc_ht=scontent.fkul2-4.fna&_nc_gid=Pvx_NdENxJ4KMJ96Nw0Flw&_nc_ss=8&oh=00_Afxt5ldZgcSeSw5YcMdrP6lXjDwzuwM5SQtJHyB5xeyYZw&oe=69AECA9C',
-                desc: 'Built a scalable app for ticketing and analytics for PNE ARENA ENTERPRISE. The system handles high-concurrency traffic during ticket launches and provides real-time analytics for venue management.',
-                stats: [ { val: '10k+', label: 'Concurrent Users' }, { val: '40%', label: 'Revenue Increase' } ]
-            },
-            'tiara': {
-                title: 'HR Optimization Tool',
-                tag: 'HR Tech',
-                img:                'https://scontent.fkul4-4.fna.fbcdn.net/v/t39.30808-6/472683464_1240338413708762_4352459610042146467_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=2a1932&_nc_ohc=tB2mXrFfAs8Q7kNvwEOVz07&_nc_oc=AdntVqWMhk_RK4wbj6LzK5WjjEep--gkogZOgTXMk2U-Qw2MNmwet9MqcIy_E-PTUpCc1R-skOxmQzzJBQvSLMae&_nc_zt=23&_nc_ht=scontent.fkul4-4.fna&_nc_gid=YSSpmEsbb4qgz8ab8KxnnQ&_nc_ss=8&oh=00_AfwVkZNdF9Ie7WWZMOkPCa3HSSpZwjhYMhoJ8dXAjKG08w&oe=69AEF0ED',
-                desc: 'Implemented RPA for resource allocation at TIARA ADVANCE RECOURSES. The bots handle repetitive scheduling and leave approval tasks, freeing up HR staff for strategic initiatives.',
-                stats: [ { val: '35%', label: 'Cost Reduction' }, { val: '24/7', label: 'Processing' } ]
-            },
-            'mory': {
-                title: 'Loyalty Web & E-Store',
-                tag: 'E-Commerce',
-                img: 'https://raw.githubusercontent.com/ddnetwork-ent/mory-matcha/refs/heads/main/MORY%20ICON-green.png',
-                desc: 'Integrated a digital loyalty system for MORY. The app connects directly to their POS systems to reward customers instantly, driving repeat business and data collection for marketing.',
-                stats: [ { val: '50%', label: 'Sales Uplift' }, { val: '2x', label: 'Retention Rate' } ]
-            }
+            'klinik': { title: 'Secure Patient Management System', tag: 'Healthcare', img: 'https://raw.githubusercontent.com/ddnetwork-ent/clinic-azam-dental/main/IMG_2260.JPG', desc: 'Developed a cloud-based EMR system with encryption for KLINIK PERGIGIAN AZAM.', stats: [{ val: '60%', label: 'Time Reduced' }] },
+            'pne': { title: 'Event Management Platform', tag: 'Events', img: 'https://scontent.fkul2-4.fna.fbcdn.net/v/t39.30808-6/302295237_496402925823276_6644452016584370240_n.jpg', desc: 'Built a scalable app for ticketing and analytics for PNE ARENA ENTERPRISE.', stats: [{ val: '10k+', label: 'Users' }] },
+            'tiara': { title: 'HR Optimization Tool', tag: 'HR Tech', img: 'https://scontent.fkul4-4.fna.fbcdn.net/v/t39.30808-6/472683464_1240338413708762_4352459610042146467_n.jpg', desc: 'Implemented RPA for resource allocation at TIARA ADVANCE RECOURSES.', stats: [{ val: '35%', label: 'Cost Reduction' }] },
+            'mory': { title: 'Loyalty Web & E-Store', tag: 'E-Commerce', img: 'https://raw.githubusercontent.com/ddnetwork-ent/mory-matcha/refs/heads/main/MORY%20ICON-green.png', desc: 'Integrated a digital loyalty system for MORY.', stats: [{ val: '50%', label: 'Sales Uplift' }] }
         };
 
         function openModal(id) {
             const data = caseStudies[id];
             if(!data) return;
-
-            const modalBody = document.getElementById('modalBody');
-            modalBody.innerHTML = `
+            document.getElementById('modalBody').innerHTML = `
                 <div class="modal-tag">${data.tag}</div>
                 <h2>${data.title}</h2>
-                <div class="modal-stats">
-                    ${data.stats.map(s => `<div class="m-stat"><h4>${s.val}</h4><span>${s.label}</span></div>`).join('')}
-                </div>
-                <img src="${data.img}" class="modal-img" alt="${data.title}" loading="lazy">
-                <div class="modal-body">
-                    <p><strong>The Challenge:</strong> ${data.desc}</p>
-                    <p><strong>Our Solution:</strong> DDNEX deployed a dedicated team to build a customized architecture that scales with demand. We focused on user experience (UX) to ensure adoption across all stakeholders.</p>
-                    <p><strong>The Result:</strong> A robust, secure, and user-friendly platform that has transformed operational efficiency.</p>
-                </div>
+                <div class="modal-stats">${data.stats.map(s => `<div class="m-stat"><h4>${s.val}</h4><span>${s.label}</span></div>`).join('')}</div>
+                <img src="${data.img}" class="modal-img" alt="${data.title}">
+                <div class="modal-body"><p>${data.desc}</p></div>
                 <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="closeModalDirect()">Close Case Study</button>
             `;
-            
             document.getElementById('caseStudyModal').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
+        function closeModal(e) { if(e.target.id === 'caseStudyModal') closeModalDirect(); }
+        function closeModalDirect() { document.getElementById('caseStudyModal').classList.remove('active'); document.body.style.overflow = 'auto'; }
 
-        function closeModal(e) {
-            if(e.target.id === 'caseStudyModal') closeModalDirect();
-        }
-
-        function closeModalDirect() {
-            document.getElementById('caseStudyModal').classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-
-        // --- SCROLL LOGIC ---
+        // Scroll Logic
         window.addEventListener('scroll', () => {
             const scrollY = window.scrollY;
             const header = document.getElementById('header');
@@ -3828,40 +3582,27 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             const backToTop = document.getElementById('back-to-top');
             const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
             const scrolled = (scrollY / height) * 100;
-            
             progress.style.width = scrolled + "%";
-
             if (scrollY > 50) header.classList.add('scrolled');
             else header.classList.remove('scrolled');
-
-            if (scrollY > 300) {
-                backToTop.classList.add('visible');
-            } else {
-                backToTop.classList.remove('visible');
-            }
+            if (scrollY > 300) backToTop.classList.add('visible');
+            else backToTop.classList.remove('visible');
         });
 
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
         function runScrollAnimations() {
-            const observerOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('active');
                         const counter = entry.target.querySelector('.counter');
                         if(counter && !counter.classList.contains('counted')) {
-                            startCounter(counter);
-                            counter.classList.add('counted');
+                            startCounter(counter); counter.classList.add('counted');
                         }
                     }
                 });
-            }, observerOptions);
+            }, { threshold: 0.15 });
             document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
         }
 
@@ -3869,35 +3610,24 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             const target = +el.getAttribute('data-target');
             const duration = 2000; 
             const increment = target / (duration / 16); 
-            
             let current = 0;
             const updateCount = () => {
                 current += increment;
-                if(current < target) {
-                    el.innerText = Math.ceil(current);
-                    requestAnimationFrame(updateCount);
-                } else {
-                    el.innerText = target;
-                }
+                if(current < target) { el.innerText = Math.ceil(current); requestAnimationFrame(updateCount); }
+                else { el.innerText = target; }
             };
             updateCount();
         }
 
-        // --- BREVO FORM HANDLING ---
+        // Init
         document.addEventListener('DOMContentLoaded', () => {
             const path = window.location.pathname.replace('/', '') || 'home';
-            if(pageData[path]) {
-                updateNavigationState(path);
-            } else {
-                updateNavigationState('home');
-            }
+            if(pageData[path]) updateNavigationState(path);
+            else updateNavigationState('home');
             runScrollAnimations();
+            initPricing(); // Initialize pricing logic
             
-            const menuLinks = document.querySelectorAll('.menu-link');
-            menuLinks.forEach((link, index) => {
-                link.style.animationDelay = `${index * 0.05}s`;
-            });
-
+            // Brevo handling
             const sibForm = document.getElementById('sib-form');
             if(sibForm) {
                 sibForm.addEventListener('submit', function(e) {
@@ -3906,7 +3636,6 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                         const originalText = btn.innerHTML;
                         btn.innerHTML = 'Processing...';
                         btn.disabled = true;
-                        
                         setTimeout(() => {
                             btn.innerHTML = originalText;
                             btn.disabled = false;
@@ -3923,17 +3652,10 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
     <script>
       window.REQUIRED_CODE_ERROR_MESSAGE = 'Please choose a country code';
       window.LOCALE = 'en';
-      window.EMAIL_INVALID_MESSAGE = window.SMS_INVALID_MESSAGE = "The information provided is invalid. Please review the field format and try again.";
+      window.EMAIL_INVALID_MESSAGE = window.SMS_INVALID_MESSAGE = "The information provided is invalid.";
       window.REQUIRED_ERROR_MESSAGE = "This field cannot be left blank. ";
-      window.GENERIC_INVALID_MESSAGE = "The information provided is invalid. Please review the field format and try again.";
-      window.translation = {
-        common: {
-          selectedList: '{quantity} list selected',
-          selectedLists: '{quantity} lists selected',
-          selectedOption: '{quantity} selected',
-          selectedOptions: '{quantity} selected',
-        }
-      };
+      window.GENERIC_INVALID_MESSAGE = "The information provided is invalid.";
+      window.translation = { common: { selectedList: '{quantity} list selected', selectedLists: '{quantity} lists selected', selectedOption: '{quantity} selected', selectedOptions: '{quantity} selected' } };
       var AUTOHIDE = Boolean(0);
     </script>
     <script defer src="https://sibforms.com/forms/end-form/build/main.js"></script>
