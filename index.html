@@ -353,22 +353,23 @@
         .mobile-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
 
         /* =========================================
-           MOBILE MENU SIDEBAR
+           MOBILE MENU FULL SCREEN OVERLAY (REDESIGNED)
            ========================================= */
         .mobile-menu {
             position: fixed;
             top: 0; 
-            right: 0; 
-            width: 85%; 
-            max-width: 380px;
+            left: 0; 
+            width: 100%; 
             height: 100vh;
-            background: white;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             transform: translateX(100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 1001;
             display: flex;
             flex-direction: column;
+            padding: 0;
         }
         
         .mobile-menu.open { transform: translateX(0); }
@@ -378,10 +379,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid var(--border-light);
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            background: rgba(255,255,255,0.8);
             flex-shrink: 0;
+            position: absolute;
+            top: 0; left: 0; width: 100%;
         }
         .menu-logo { height: 32px; }
         .menu-close-btn {
@@ -397,9 +399,10 @@
         .menu-body {
             flex: 1;
             overflow-y: auto;
-            padding: 10px 0;
+            padding: 100px 24px 40px 24px; /* Top padding to clear absolute header */
             display: flex;
             flex-direction: column;
+            gap: 16px;
             scrollbar-width: thin;
             scrollbar-color: #cbd5e1 transparent;
         }
@@ -412,46 +415,51 @@
             display: flex;
             align-items: center;
             padding: 20px 24px;
-            font-size: 17px;
-            font-weight: 500;
+            font-size: 20px;
+            font-weight: 600;
             color: var(--text-main);
-            border-left: 3px solid transparent;
-            transition: all 0.2s;
-            opacity: 0;
-            transform: translateX(20px);
-            min-height: 60px; 
+            border-radius: 16px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
         }
         
-        .mobile-menu.open .menu-link { animation: slideInMenu 0.3s var(--ease) forwards; }
-        
-        @keyframes slideInMenu { to { opacity: 1; transform: translateX(0); } }
+        .mobile-menu.open .menu-link { animation: slideInMenu 0.4s var(--ease) forwards; opacity: 0; }
+        /* Staggered animation handled in JS or CSS nth-child */
+        .mobile-menu.open .menu-link:nth-child(1) { animation-delay: 0.1s; }
+        .mobile-menu.open .menu-link:nth-child(2) { animation-delay: 0.15s; }
+        .mobile-menu.open .menu-link:nth-child(3) { animation-delay: 0.2s; }
+        .mobile-menu.open .menu-link:nth-child(4) { animation-delay: 0.25s; }
+        .mobile-menu.open .menu-link:nth-child(5) { animation-delay: 0.3s; }
 
-        .menu-link i { margin-right: 16px; font-size: 22px; color: var(--text-muted); transition: 0.3s; width: 24px; text-align: center; }
+        @keyframes slideInMenu { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(20px); } }
+
+        .menu-link i { margin-right: 16px; font-size: 24px; color: var(--primary); width: 28px; text-align: center; }
         .menu-link:hover, .menu-link.active {
-            background: #f8fafc;
-            border-left-color: var(--primary);
+            background: var(--primary-light);
             color: var(--primary);
-            padding-left: 32px; 
+            border-color: rgba(37, 99, 235, 0.1);
         }
         .menu-link:hover i, .menu-link.active i { color: var(--primary); transform: scale(1.1); }
-
+        
+        /* Mobile Menu CTA Section */
         .menu-footer {
             padding: 24px;
+            background: white;
             border-top: 1px solid var(--border-light);
-            background: #f8fafc;
             flex-shrink: 0;
+            margin-top: auto;
         }
         .menu-contact-info {
             display: flex;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             padding: 16px;
-            background: white;
-            border-radius: 12px;
+            background: #f8fafc;
+            border-radius: 16px;
             border: 1px solid var(--border-light);
         }
         .menu-contact-icon {
-            width: 44px; height: 44px;
+            width: 40px; height: 40px;
             background: var(--primary-light);
             color: var(--primary);
             border-radius: 50%;
@@ -1000,7 +1008,7 @@
         }
         
         .pricing-price {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 800;
             color: var(--text-main);
             margin-bottom: 8px;
@@ -1083,51 +1091,81 @@
         }
 
         /* =========================================
-           PRICING COMPARISON TABLE
+           COMPARE TABLE MODAL
            ========================================= */
-        .comparison-wrapper {
-            margin-top: 60px;
+        .compare-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 4000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .compare-modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .compare-container {
             background: white;
+            width: 95%;
+            max-width: 1000px;
+            max-height: 90vh;
             border-radius: 24px;
-            padding: 40px 24px;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border-light);
-            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .compare-modal-overlay.active .compare-container { transform: scale(1); }
+
+        .compare-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .compare-body {
+            overflow-y: auto;
+            padding: 24px;
         }
         
-        .comparison-table {
+        .compare-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px;
         }
-        
-        .comparison-table th, .comparison-table td {
+        .compare-table th, .compare-table td {
             padding: 16px;
             text-align: center;
             border-bottom: 1px solid var(--border-light);
         }
-        
-        .comparison-table th {
-            font-family: var(--font-heading);
-            font-weight: 700;
-            color: var(--text-main);
-            font-size: 16px;
-        }
-        
-        .comparison-table th:first-child, .comparison-table td:first-child {
+        .compare-table th:first-child, .compare-table td:first-child {
             text-align: left;
             font-weight: 600;
             color: var(--text-main);
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 10;
+            border-right: 2px solid var(--border-light);
             width: 30%;
-            background: #f8fafc;
         }
-
-        .comparison-table tr:last-child td {
-            border-bottom: none;
+        .compare-table th {
+            font-family: var(--font-heading);
+            font-size: 16px;
+            color: var(--primary);
         }
-        
-        .check-icon { color: var(--primary); font-weight: 700; font-size: 18px; }
-        .cross-icon { color: #cbd5e1; font-weight: 700; font-size: 18px; }
+        .compare-table td { font-size: 14px; color: var(--text-secondary); }
+        .compare-table tr:last-child td { border-bottom: none; }
+        .check-green { color: #16a34a; font-size: 18px; }
+        .dash-gray { color: #cbd5e1; font-size: 18px; }
 
         /* =========================================
            CONTACT SECTION
@@ -1880,7 +1918,7 @@
         </div>
     </header>
 
-    <!-- Mobile Menu Sidebar -->
+    <!-- Mobile Menu Sidebar (Redesigned Full Screen) -->
     <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
         <div class="menu-header">
             <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX®" class="menu-logo">
@@ -1905,6 +1943,9 @@
             </a>
             <a href="/contact" class="menu-link" onclick="handleNavigation('contact', event)">
                 <i class="ri-mail-send-line"></i> Contact
+            </a>
+            <a href="/pricing" class="menu-link" onclick="handleNavigation('pricing', event)">
+                <i class="ri-price-tag-3-line"></i> Pricing
             </a>
             <a href="/privacy" class="menu-link" onclick="handleNavigation('privacy', event)">
                 <i class="ri-shield-check-line"></i> Privacy Policy
@@ -1948,7 +1989,7 @@
                             <p>We architect secure, scalable, and intelligent digital ecosystems for leading organizations across Malaysia and Southeast Asia.</p>
                             <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
                                 <button class="btn btn-primary" onclick="handleNavigation('contact', event)">Start Your Transformation</button>
-                                <button class="btn btn-outline" onclick="handleNavigation('services', event)">Explore Solutions</button>
+                                <button class="btn btn-outline" onclick="handleNavigation('pricing', event)">View Pricing</button>
                             </div>
                             
                             <div class="hero-stats">
@@ -2036,24 +2077,24 @@
             </div>
 
             <!-- =========================================
-                 SERVICE PACKAGES SECTION (UPDATED DESIGN)
+                 PRICING SECTION (UPDATED)
                  ========================================= -->
-            <div class="pricing-section">
+            <div class="pricing-section" id="home-pricing-section">
                 <div class="container">
                     <div class="section-title text-center reveal">
                         <span class="badge">Our Packages</span>
                         <h2>Tailored Digital Solutions</h2>
-                        <p>Professional websites and digital systems built for startups, SMEs, and enterprises.</p>
+                        <p>Transparent, fixed pricing for startups, SMEs, and enterprises.</p>
                     </div>
                     
                     <div class="pricing-grid">
-                        <!-- Package 1: Landing Page -->
-                        <div class="pricing-card reveal reveal-delay-1">
+                        <!-- Package 1: Starter Landing Page -->
+                        <div class="pricing-card reveal">
                             <div class="pricing-icon"><i class="ri-layout-masonry-line"></i></div>
                             <div class="pricing-header">
                                 <h3 class="pricing-title">Starter Landing Page</h3>
-                                <div class="pricing-price">RM399</div>
-                                <p class="pricing-desc">Best for promotions, campaigns, startups.</p>
+                                <div class="pricing-price">RM399 <span>/ Fixed</span></div>
+                                <p class="pricing-desc">Best for: Promotions, campaigns, startups.</p>
                             </div>
                             <div class="pricing-features">
                                 <h4>Design</h4>
@@ -2081,13 +2122,13 @@
                         </div>
 
                         <!-- Package 2: Business Website (BEST VALUE) -->
-                        <div class="pricing-card best-value reveal reveal-delay-2">
-                            <div class="pricing-badge">Most Popular</div>
+                        <div class="pricing-card best-value reveal reveal-delay-1">
+                            <div class="pricing-badge">Best Value</div>
                             <div class="pricing-icon"><i class="ri-briefcase-4-line"></i></div>
                             <div class="pricing-header">
                                 <h3 class="pricing-title">Business Website</h3>
-                                <div class="pricing-price">RM899</div>
-                                <p class="pricing-desc">Best for company profiles and small businesses.</p>
+                                <div class="pricing-price">RM899 <span>/ Fixed</span></div>
+                                <p class="pricing-desc">Best for: Company profiles and small businesses.</p>
                             </div>
                             <div class="pricing-features">
                                 <h4>Design</h4>
@@ -2114,13 +2155,13 @@
                             </div>
                         </div>
 
-                        <!-- Package 3: System Portal -->
-                        <div class="pricing-card reveal reveal-delay-3">
+                        <!-- Package 3: Business Portal System -->
+                        <div class="pricing-card reveal reveal-delay-2">
                             <div class="pricing-icon"><i class="ri-dashboard-3-line"></i></div>
                             <div class="pricing-header">
                                 <h3 class="pricing-title">Business Portal System</h3>
-                                <div class="pricing-price">RM3,800</div>
-                                <p class="pricing-desc">Best for businesses that need internal management.</p>
+                                <div class="pricing-price">RM3,800 <span>/ Fixed</span></div>
+                                <p class="pricing-desc">Best for: Businesses needing internal management.</p>
                             </div>
                             <div class="pricing-features">
                                 <h4>Public Website</h4>
@@ -2148,18 +2189,18 @@
                         </div>
 
                         <!-- Package 4: Custom System -->
-                        <div class="pricing-card reveal reveal-delay-4">
+                        <div class="pricing-card reveal reveal-delay-3">
                             <div class="pricing-icon"><i class="ri-cpu-line"></i></div>
                             <div class="pricing-header">
                                 <h3 class="pricing-title">Custom System</h3>
-                                <div class="pricing-price">RM6,800+</div>
-                                <p class="pricing-desc">Best for companies needing automation or complex systems.</p>
+                                <div class="pricing-price">RM6,800+ <span>/ Start</span></div>
+                                <p class="pricing-desc">Best for: Complex automation or enterprise systems.</p>
                             </div>
                             <div class="pricing-features">
                                 <h4>Development</h4>
                                 <ul class="feature-list">
                                     <li><i class="ri-check-line"></i> Fully Custom System</li>
-                                    <li><i class="ri-check-line"></i> Secure Database Architecture</li>
+                                    <li><i class="ri-check-line"></i> Secure Database Arch</li>
                                     <li><i class="ri-check-line"></i> Scalable Backend</li>
                                 </ul>
                                 <h4>Features</h4>
@@ -2172,7 +2213,7 @@
                                 <ul class="feature-list">
                                     <li><i class="ri-gift-line"></i> Full Deployment</li>
                                     <li><i class="ri-gift-line"></i> Documentation</li>
-                                    <li><i class="ri-gift-line"></i> Staff Training</li>
+                                    <li><i class="ri-gift-line"></i> 60 Days Support</li>
                                 </ul>
                             </div>
                             <div class="pricing-cta">
@@ -2181,15 +2222,41 @@
                         </div>
                     </div>
 
-                    <!-- Domain Options Info -->
-                    <div class="text-center reveal" style="margin-top: 60px; padding: 32px; background: white; border-radius: 24px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
-                        <h4 style="margin-bottom: 16px; font-size: 20px; font-weight: 700; font-family: var(--font-heading);">Need a Custom Domain?</h4>
-                        <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 24px;">We can assist with registering your own professional domain.<br>*Price domain based on domain name you choose</p>
-                        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                            <span class="tech-tag">.com</span>
-                            <span class="tech-tag">.com.my</span>
-                            <span class="tech-tag">.my</span>
-                            <span class="tech-tag">.net</span>
+                    <!-- View Compare Button -->
+                    <div class="text-center reveal" style="margin-top: 40px;">
+                        <button class="btn btn-ghost" style="border: 1px solid var(--border-light);" onclick="openCompareModal()">
+                            <i class="ri-scales-3-line"></i> View Compare Table
+                        </button>
+                    </div>
+                    
+                    <!-- Add-ons Info -->
+                    <div class="text-center reveal" style="margin-top: 20px; padding: 32px; background: white; border-radius: 24px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);">
+                        <h4 style="margin-bottom: 16px; font-size: 20px; font-weight: 700; font-family: var(--font-heading);">Optional Add-Ons</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; max-width: 800px; margin: 0 auto;">
+                            <div style="background: #f8fafc; padding: 10px; border-radius: 8px;">
+                                <div style="font-weight: 700; color: var(--text-main);">Extra Page</div>
+                                <div style="color: var(--primary); font-size: 14px;">RM120</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 10px; border-radius: 8px;">
+                                <div style="font-weight: 700; color: var(--text-main);">Extra Revision</div>
+                                <div style="color: var(--primary); font-size: 14px;">RM80</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 10px; border-radius: 8px;">
+                                <div style="font-weight: 700; color: var(--text-main);">Custom Email</div>
+                                <div style="color: var(--primary); font-size: 14px;">RM120</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 10px; border-radius: 8px;">
+                                <div style="font-weight: 700; color: var(--text-main);">Advanced SEO</div>
+                                <div style="color: var(--primary); font-size: 14px;">RM350</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 10px; border-radius: 8px;">
+                                <div style="font-weight: 700; color: var(--text-main);">Blog System</div>
+                                <div style="color: var(--primary); font-size: 14px;">RM300</div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 10px; border-radius: 8px;">
+                                <div style="font-weight: 700; color: var(--text-main);">Analytics</div>
+                                <div style="color: var(--primary); font-size: 14px;">RM150</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2487,6 +2554,113 @@
                 </div>
             </div>
 
+        </section>
+
+        <!-- PAGE: PRICING (DEDICATED PAGE) -->
+        <section id="pricing" class="page-section">
+            <div class="section-padding">
+                <div class="container">
+                    <h1 class="page-title text-center reveal">Transparent Pricing</h1>
+                    <div class="section-title text-center reveal" style="max-width: 700px;">
+                        <h2>Choose the right plan for your growth.</h2>
+                        <p>Fixed pricing with no hidden costs. Upgrade anytime as your business scales.</p>
+                    </div>
+
+                    <!-- Re-use Pricing Grid Logic via JS or Copy Structure. Here we copy structure for simplicity but ensure IDs don't clash -->
+                    <div class="pricing-grid">
+                        <!-- Package 1 -->
+                        <div class="pricing-card reveal">
+                            <div class="pricing-icon"><i class="ri-layout-masonry-line"></i></div>
+                            <div class="pricing-header">
+                                <h3 class="pricing-title">Starter Landing Page</h3>
+                                <div class="pricing-price">RM399</div>
+                                <p class="pricing-desc">Promotions & Campaigns</p>
+                            </div>
+                            <div class="pricing-features">
+                                <ul class="feature-list">
+                                    <li><i class="ri-check-line"></i> 1 Custom Landing Page</li>
+                                    <li><i class="ri-check-line"></i> Mobile Responsive</li>
+                                    <li><i class="ri-check-line"></i> Basic SEO</li>
+                                    <li><i class="ri-check-line"></i> 1 Revision</li>
+                                </ul>
+                            </div>
+                            <div class="pricing-cta">
+                                <button class="btn btn-outline" onclick="openCheckout('landing')">Get Started</button>
+                            </div>
+                        </div>
+
+                        <!-- Package 2 -->
+                        <div class="pricing-card best-value reveal reveal-delay-1">
+                            <div class="pricing-badge">Most Popular</div>
+                            <div class="pricing-icon"><i class="ri-briefcase-4-line"></i></div>
+                            <div class="pricing-header">
+                                <h3 class="pricing-title">Business Website</h3>
+                                <div class="pricing-price">RM899</div>
+                                <p class="pricing-desc">Company Profiles</p>
+                            </div>
+                            <div class="pricing-features">
+                                <ul class="feature-list">
+                                    <li><i class="ri-check-line"></i> Up to 5 Pages</li>
+                                    <li><i class="ri-check-line"></i> Professional UI/UX</li>
+                                    <li><i class="ri-check-line"></i> Google Maps Integration</li>
+                                    <li><i class="ri-check-line"></i> 3 Revisions</li>
+                                </ul>
+                            </div>
+                            <div class="pricing-cta">
+                                <button class="btn btn-primary" onclick="openCheckout('business')">Get Started</button>
+                            </div>
+                        </div>
+
+                        <!-- Package 3 -->
+                        <div class="pricing-card reveal reveal-delay-2">
+                            <div class="pricing-icon"><i class="ri-dashboard-3-line"></i></div>
+                            <div class="pricing-header">
+                                <h3 class="pricing-title">Business Portal System</h3>
+                                <div class="pricing-price">RM3,800</div>
+                                <p class="pricing-desc">Web + Admin Portal</p>
+                            </div>
+                            <div class="pricing-features">
+                                <ul class="feature-list">
+                                    <li><i class="ri-check-line"></i> Public Website + Portal</li>
+                                    <li><i class="ri-check-line"></i> Secure Login System</li>
+                                    <li><i class="ri-check-line"></i> User Management</li>
+                                    <li><i class="ri-check-line"></i> 30 Days Support</li>
+                                </ul>
+                            </div>
+                            <div class="pricing-cta">
+                                <button class="btn btn-outline" onclick="openCheckout('portal')">Get Started</button>
+                            </div>
+                        </div>
+
+                        <!-- Package 4 -->
+                        <div class="pricing-card reveal reveal-delay-3">
+                            <div class="pricing-icon"><i class="ri-cpu-line"></i></div>
+                            <div class="pricing-header">
+                                <h3 class="pricing-title">Custom System</h3>
+                                <div class="pricing-price">RM6,800+</div>
+                                <p class="pricing-desc">Enterprise Solutions</p>
+                            </div>
+                            <div class="pricing-features">
+                                <ul class="feature-list">
+                                    <li><i class="ri-check-line"></i> Fully Custom Architecture</li>
+                                    <li><i class="ri-check-line"></i> Automation & Analytics</li>
+                                    <li><i class="ri-check-line"></i> API Integration</li>
+                                    <li><i class="ri-check-line"></i> 60 Days Support</li>
+                                </ul>
+                            </div>
+                            <div class="pricing-cta">
+                                <button class="btn btn-outline" onclick="handleNavigation('contact', event)">Contact Us</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center" style="margin-top: 40px;">
+                        <button class="btn btn-ghost" style="border: 1px solid var(--border-light);" onclick="openCompareModal()">
+                            <i class="ri-scales-3-line"></i> View Compare Table
+                        </button>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- PAGE: SERVICES -->
@@ -3273,6 +3447,99 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
         </div>
     </div>
 
+    <!-- Compare Modal Overlay -->
+    <div class="compare-modal-overlay" id="compareModal">
+        <div class="compare-container">
+            <div class="compare-header">
+                <h3 style="font-family: var(--font-heading); font-weight: 700;">Package Comparison</h3>
+                <button onclick="closeCompareModal()" class="menu-close-btn" style="background: #f1f5f9; color: var(--text-main);"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="compare-body">
+                <div style="overflow-x: auto;">
+                    <table class="compare-table">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Starter Landing</th>
+                                <th>Business Website</th>
+                                <th>Portal System</th>
+                                <th>Custom System</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Price (Fixed)</strong></td>
+                                <td>RM399</td>
+                                <td>RM899</td>
+                                <td>RM3,800</td>
+                                <td>RM6,800+</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Pages</strong></td>
+                                <td>1 Page</td>
+                                <td>Up to 5 Pages</td>
+                                <td>Public + Portal</td>
+                                <td>Unlimited</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Design</strong></td>
+                                <td>Mobile Responsive</td>
+                                <td>Professional UI/UX</td>
+                                <td>Dashboard UI</td>
+                                <td>Custom Architecture</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Contact Form</strong></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Google Maps</strong></td>
+                                <td><i class="ri-close-line dash-gray"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Admin Portal</strong></td>
+                                <td><i class="ri-close-line dash-gray"></i></td>
+                                <td><i class="ri-close-line dash-gray"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>User Management</strong></td>
+                                <td><i class="ri-close-line dash-gray"></i></td>
+                                <td><i class="ri-close-line dash-gray"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Database</strong></td>
+                                <td><i class="ri-close-line dash-gray"></i></td>
+                                <td><i class="ri-close-line dash-gray"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                                <td><i class="ri-check-line check-green"></i></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Support</strong></td>
+                                <td>1 Revision</td>
+                                <td>3 Revisions</td>
+                                <td>30 Days Support</td>
+                                <td>60 Days Support</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center" style="margin-top: 24px;">
+                    <button class="btn btn-primary" onclick="closeCompareModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script type="module">
         // Import Firebase SDKs
@@ -3308,7 +3575,8 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             'privacy': { title: 'Privacy Policy | DDNEX®', desc: 'Read our Privacy Policy to understand how we protect your data.' },
             'terms': { title: 'Terms of Service | DDNEX®', desc: 'Terms and conditions for using DDNEX® services.' },
             'security': { title: 'Security Policy | DDNEX®', desc: 'Our commitment to information security and data protection.' },
-            'subscribe-success': { title: 'Subscribed | DDNEX®', desc: 'Thank you for subscribing to the DDNEX® newsletter.' }
+            'subscribe-success': { title: 'Subscribed | DDNEX®', desc: 'Thank you for subscribing to the DDNEX® newsletter.' },
+            'pricing': { title: 'Pricing | DDNEX®', desc: 'View our transparent fixed pricing packages for web development and system solutions.' }
         };
 
         // --- Package Data for Checkout (UPDATED PRICES) ---
@@ -3317,22 +3585,19 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 id: 'landing', 
                 name: 'Starter Landing Page', 
                 desc: '1 Page, Responsive, Fast', 
-                price: 399, 
-                maxPrice: 399 
+                price: 399
             },
             { 
                 id: 'business', 
                 name: 'Business Website', 
                 desc: '5 Pages, Professional UI/UX', 
-                price: 899, 
-                maxPrice: 899 
+                price: 899
             },
             { 
                 id: 'portal', 
                 name: 'Business Portal System', 
                 desc: 'Web + Admin Dashboard', 
-                price: 3800, 
-                maxPrice: 3800 
+                price: 3800
             }
         ];
 
@@ -3429,7 +3694,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             }
         };
 
-        // --- Mobile Menu Toggle ---
+        // --- Mobile Menu Toggle (Redesigned) ---
         function toggleMenu() {
             const menu = document.getElementById('mobileMenu');
             const toggle = document.querySelector('.mobile-toggle');
@@ -3459,6 +3724,18 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                     btn.classList.add('active');
                 }
             });
+        }
+
+        // --- Compare Modal Logic ---
+        function openCompareModal() {
+            const modal = document.getElementById('compareModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCompareModal() {
+            document.getElementById('compareModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
         }
 
         // --- Contact Form Handler (FormSubmit.co) ---
