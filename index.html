@@ -2135,6 +2135,193 @@
         @media(min-width: 768px) {
             #back-to-top { bottom: 30px; right: 30px; width: 56px; height: 56px; }
         }
+
+        /* =========================================
+           NEW: USER PROFILE / DASHBOARD STYLES
+           ========================================= */
+        .profile-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 32px;
+            background: white;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-light);
+            min-height: 600px;
+        }
+
+        .profile-sidebar {
+            background: #f8fafc;
+            padding: 32px 24px;
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .profile-avatar-section {
+            text-align: center;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 auto 16px;
+            border: 2px solid white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .profile-nav-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-nav-item:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        .profile-nav-item.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+            font-weight: 600;
+        }
+
+        .profile-content {
+            padding: 40px 32px;
+        }
+
+        .profile-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .plan-card {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 20px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card::after {
+            content: '';
+            position: absolute;
+            top: -50px; right: -50px;
+            width: 150px; height: 150px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, transparent 70%);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 700;
+            gap: 6px;
+        }
+        .status-active { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+
+        @media(min-width: 768px) {
+            .profile-container { grid-template-columns: 280px 1fr; }
+            .profile-sidebar { padding: 40px 24px; }
+        }
+
+        /* =========================================
+           AUTH PAGE STYLES
+           ========================================= */
+        .auth-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 40px 20px;
+        }
+
+        .auth-card {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-light);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .google-btn {
+            background: white;
+            color: #3c4043;
+            border: 1px solid var(--border-light);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 500;
+            margin-top: 24px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .google-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border-light);
+        }
+        .divider span { padding: 0 10px; }
+
+        .auth-link {
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -2165,6 +2352,9 @@
             </nav>
 
             <div style="display: flex; align-items: center; gap: 16px;">
+                <!-- Dynamic Auth Button -->
+                <button id="headerAuthBtn" class="btn btn-ghost" onclick="handleAuthClick()" aria-label="Login">Login</button>
+                
                 <button class="btn btn-primary" onclick="handleNavigation('contact', event)" aria-label="Get Started">
                     Get Started <i class="ri-arrow-right-line"></i>
                 </button>
@@ -2223,6 +2413,11 @@
                 <!-- Contact -->
                 <div class="mobile-nav-item" onclick="handleNavigation('contact', event)">
                     <button class="mobile-nav-btn">Contact <i class="ri-arrow-right-s-line arrow"></i></button>
+                </div>
+
+                <!-- Auth Link Mobile -->
+                <div class="mobile-nav-item" onclick="handleAuthClick()">
+                    <button class="mobile-nav-btn" id="mobileAuthBtn">Login <i class="ri-arrow-right-s-line arrow"></i></button>
                 </div>
 
             </div>
@@ -2813,9 +3008,12 @@
                         </div>
                     </div>
 
-                    <!-- Domain Options Info -->
+                    <!-- UPDATE 1: Domain Options Info -->
                     <div class="pricing-footer-note reveal">
                         <p><strong>Need a Custom Domain?</strong> We can assist with registering your professional domain (e.g., yourcompany.com)</p>
+                        <p style="font-size: 12px; color: var(--accent-orange); margin-top: 8px;">
+                            <i class="ri-information-line"></i> <strong>Note:</strong> Custom domains are not included in the fixed packages. The domain is registered based on the name you choose, and renewal rates depend on the provider.
+                        </p>
                         <div class="pricing-domain-tags">
                             <span class="tech-tag">.com</span>
                             <span class="tech-tag">.com.my</span>
@@ -3575,6 +3773,9 @@
                 <!-- Domain Options Info -->
                 <div class="pricing-footer-note reveal">
                     <p><strong>Need a Custom Domain?</strong> We can assist with registering your professional domain (e.g., yourcompany.com)</p>
+                    <p style="font-size: 12px; color: var(--accent-orange); margin-top: 8px;">
+                        <i class="ri-information-line"></i> <strong>Note:</strong> Custom domains are not included in the fixed packages. The domain is registered based on the name you choose, and renewal rates depend on the provider.
+                    </p>
                     <div class="pricing-domain-tags">
                         <span class="tech-tag">.com</span>
                         <span class="tech-tag">.com.my</span>
@@ -4039,6 +4240,168 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             </div>
         </section>
 
+        <!-- =========================================
+             UPDATE 2: AUTH / LOGIN PAGE
+             ========================================= -->
+        <section id="auth" class="page-section">
+            <div class="auth-wrapper reveal">
+                <div class="auth-card">
+                    <div style="margin-bottom: 24px;">
+                        <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="height: 40px; margin: 0 auto;">
+                    </div>
+                    <h2 style="font-family: var(--font-heading); margin-bottom: 8px;">Welcome Back</h2>
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 32px;">Login to access your professional profile and track your projects.</p>
+                    
+                    <button id="googleLoginBtn" class="google-btn">
+                        <svg width="20" height="20" viewBox="0 0 48 48">
+                            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c0-3.059,1.154-5.85,3.038-7.975l-5.848-5.848C5.058,13.033,3.411,16.319,3.411,20c0,11.428,9.162,20.589,20.589,20.589c11.428,0,20.589-9.162,20.589-20.589C44.589,22.586,44.268,21.278,43.611,20.083z"/>
+                            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.975,3.038l5.848-5.848C34.046,6.053,29.268,3.411,24,3.411c-8.918,0-16.553,5.686-19.028,13.463L6.306,14.691z"/>
+                            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+
+                    <div class="divider"><span>OR</span></div>
+
+                    <form id="emailLoginForm" style="text-align: left;">
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label for="loginEmail">Email Address</label>
+                            <input type="email" id="loginEmail" class="form-input" placeholder="name@company.com" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 24px;">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+                    </form>
+                    
+                    <p style="margin-top: 24px; font-size: 14px; color: var(--text-muted);">
+                        Don't have an account? <span class="auth-link" onclick="showPopup('Registration Coming Soon', 'Please contact sales to create an account.')">Sign up</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================
+             UPDATE 2: USER PROFILE / DASHBOARD PAGE
+             ========================================= -->
+        <section id="profile" class="page-section">
+            <div class="section-padding">
+                <div class="container">
+                    <div class="profile-container reveal">
+                        <!-- Sidebar -->
+                        <aside class="profile-sidebar">
+                            <div class="profile-avatar-section">
+                                <div class="profile-avatar" id="profileAvatarInitials">U</div>
+                                <h3 id="profileNameDisplay" style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">User</h3>
+                                <p id="profileEmailDisplay" style="font-size: 13px; color: var(--text-muted);">user@example.com</p>
+                            </div>
+                            
+                            <nav>
+                                <div class="profile-nav-item active" onclick="switchProfileTab('overview')">
+                                    <i class="ri-dashboard-line"></i> Overview
+                                </div>
+                                <div class="profile-nav-item" onclick="switchProfileTab('orders')">
+                                    <i class="ri-shopping-bag-3-line"></i> My Orders
+                                </div>
+                                <div class="profile-nav-item" onclick="switchProfileTab('settings')">
+                                    <i class="ri-settings-3-line"></i> Settings
+                                </div>
+                                <div class="profile-nav-item" onclick="handleLogout()" style="color: var(--accent-orange);">
+                                    <i class="ri-logout-box-line"></i> Sign Out
+                                </div>
+                            </nav>
+                        </aside>
+
+                        <!-- Main Content Area -->
+                        <div class="profile-content">
+                            <!-- Tab: Overview -->
+                            <div id="p-overview" class="profile-tab-content">
+                                <div class="profile-header-row">
+                                    <div>
+                                        <h2 style="font-family: var(--font-heading);">Overview</h2>
+                                        <p style="color: var(--text-secondary);">Welcome back! Here is your account summary.</p>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="handleNavigation('pricing', event)">New Order</button>
+                                </div>
+
+                                <div class="plan-card">
+                                    <div>
+                                        <div style="font-size: 14px; opacity: 0.8; margin-bottom: 4px;">Current Active Plan</div>
+                                        <h3 style="font-size: 24px; font-weight: 700;">Business Website</h3>
+                                        <div class="status-badge status-active" style="margin-top: 12px;">
+                                            <i class="ri-checkbox-circle-fill"></i> Active
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 32px; font-weight: 800;">RM899</div>
+                                        <div style="font-size: 12px; opacity: 0.7;">One-time Payment</div>
+                                    </div>
+                                </div>
+
+                                <div class="grid-2" style="margin-top: 24px;">
+                                    <div style="background: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid var(--border-light);">
+                                        <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 8px;">Domain Status</div>
+                                        <h4 style="font-size: 18px; font-weight: 700;">company.ddnex.com</h4>
+                                        <div class="status-badge status-active" style="margin-top: 8px; background: rgba(16, 185, 129, 0.1); color: #16a34a;">
+                                            <i class="ri-check-line"></i> Live
+                                        </div>
+                                    </div>
+                                    <div style="background: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid var(--border-light);">
+                                        <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 8px;">Next Renewal</div>
+                                        <h4 style="font-size: 18px; font-weight: 700;">N/A</h4>
+                                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">
+                                            (Fixed package)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Orders (Database Items) -->
+                            <div id="p-orders" class="profile-tab-content" style="display: none;">
+                                <div class="profile-header-row">
+                                    <div>
+                                        <h2 style="font-family: var(--font-heading);">My Orders</h2>
+                                        <p style="color: var(--text-secondary);">Track your subscriptions and project history.</p>
+                                    </div>
+                                </div>
+                                
+                                <div id="ordersLoading" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i> Loading data from database...
+                                </div>
+                                
+                                <div id="ordersList" style="display: flex; flex-direction: column; gap: 16px;">
+                                    <!-- Dynamic Orders will be injected here -->
+                                </div>
+                            </div>
+
+                            <!-- Tab: Settings -->
+                            <div id="p-settings" class="profile-tab-content" style="display: none;">
+                                <div class="profile-header-row">
+                                    <div>
+                                        <h2 style="font-family: var(--font-heading);">Settings</h2>
+                                        <p style="color: var(--text-secondary);">Manage your account preferences.</p>
+                                    </div>
+                                </div>
+                                <div style="max-width: 600px;">
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label>Display Name</label>
+                                        <input type="text" id="settingsName" class="form-input" value="User Name">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 24px;">
+                                        <label>Email Address (Read Only)</label>
+                                        <input type="email" id="settingsEmail" class="form-input" value="user@example.com" disabled style="background: #f1f5f9; cursor: not-allowed;">
+                                    </div>
+                                    <button class="btn btn-primary" onclick="showPopup('Saved', 'Your profile settings have been updated.')">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- NEWSLETTER SECTION (Before Footer) -->
@@ -4210,7 +4573,123 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
         </div>
     </div>
 
-    <!-- JavaScript -->
+    <!-- Firebase SDKs (Modular) -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // UPDATE 3: Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyAwf31b-wpYQwPbd-3DxnqGVRw8g3xq938",
+          authDomain: "ddnetwork-database.firebaseapp.com",
+          projectId: "ddnetwork-database",
+          storageBucket: "ddnetwork-database.firebasestorage.app",
+          messagingSenderId: "699127560990",
+          appId: "1:699127560990:web:50cfd61ff620bc85fb670f"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        // Expose Auth functions to Window
+        window.firebaseAuth = {
+            googleLogin: async () => {
+                try {
+                    await signInWithPopup(auth, provider);
+                    // Auth state change listener will handle redirection
+                } catch (error) {
+                    console.error(error);
+                    window.showPopup("Login Failed", error.message);
+                }
+            },
+            emailLogin: async (email, password) => {
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    console.error(error);
+                    window.showPopup("Login Failed", "Invalid email or password.");
+                }
+            },
+            logout: async () => {
+                try {
+                    await signOut(auth);
+                    window.handleNavigation('home', null);
+                    window.showPopup("Logged Out", "You have been signed out successfully.");
+                } catch (error) {
+                    console.error(error);
+                }
+            },
+            getUser: () => auth.currentUser
+        };
+
+        // Expose DB functions to Window
+        window.firebaseDB = {
+            saveOrder: async (orderData) => {
+                try {
+                    // UPDATE 3: Naming Convention - append _ddnex
+                    const collectionName = "orders_ddnex";
+                    await addDoc(collection(db, collectionName), {
+                        ...orderData,
+                        createdAt: new Date(),
+                        userId: auth.currentUser ? auth.currentUser.uid : 'guest'
+                    });
+                    console.log(`Document saved to ${collectionName}`);
+                    return true;
+                } catch (error) {
+                    console.error("Error saving order:", error);
+                    return false;
+                }
+            },
+            getOrders: async () => {
+                if (!auth.currentUser) return [];
+                try {
+                    const q = query(
+                        collection(db, "orders_ddnex"), // UPDATE 3: Naming Convention
+                        where("userId", "==", auth.currentUser.uid),
+                        orderBy("createdAt", "desc")
+                    );
+                    const querySnapshot = await getDocs(q);
+                    const orders = [];
+                    querySnapshot.forEach((doc) => {
+                        orders.push({ id: doc.id, ...doc.data() });
+                    });
+                    return orders;
+                } catch (error) {
+                    console.error("Error fetching orders:", error);
+                    return [];
+                }
+            }
+        };
+
+        // Auth State Listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                window.updateAuthUI(true, user);
+                // If currently on auth page, go to profile
+                const currentSection = document.querySelector('.page-section.active');
+                if(currentSection && currentSection.id === 'auth') {
+                    window.handleNavigation('profile', null);
+                }
+            } else {
+                // User is signed out
+                window.updateAuthUI(false, null);
+                // If on profile page, go to auth
+                const currentSection = document.querySelector('.page-section.active');
+                if(currentSection && currentSection.id === 'profile') {
+                    window.handleNavigation('auth', null);
+                }
+            }
+        });
+
+    </script>
+
+    <!-- Main Application Logic -->
     <script>
         // --- SEO & Routing Data ---
         const pageData = {
@@ -4223,7 +4702,9 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             'privacy': { title: 'Privacy Policy | DDNEX®', desc: 'Read our Privacy Policy to understand how we protect your data.' },
             'terms': { title: 'Terms of Service | DDNEX®', desc: 'Terms and conditions for using DDNEX® services.' },
             'security': { title: 'Security Policy | DDNEX®', desc: 'Our commitment to information security and data protection.' },
-            'subscribe-success': { title: 'Subscribed | DDNEX®', desc: 'Thank you for subscribing to the DDNEX® newsletter.' }
+            'subscribe-success': { title: 'Subscribed | DDNEX®', desc: 'Thank you for subscribing to the DDNEX® newsletter.' },
+            'auth': { title: 'Login | DDNEX®', desc: 'Access your professional dashboard.' },
+            'profile': { title: 'My Profile | DDNEX®', desc: 'Manage your orders and account settings.' }
         };
 
         // --- Main Navigation Handler ---
@@ -4256,6 +4737,11 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             // 3. Change content, reset scroll, update history
             setTimeout(() => {
                 updateNavigationState(pageId);
+                
+                // Special Logic: Load Orders if Profile Page
+                if(pageId === 'profile') {
+                    loadProfileData();
+                }
             }, 500); 
 
             // 4. Slide Overlay DOWN (Reveal new content)
@@ -4366,6 +4852,20 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 }
             });
         }
+        
+        // --- Profile Tab Switching ---
+        function switchProfileTab(tabId) {
+            // Hide all profile tab contents
+            document.querySelectorAll('.profile-tab-content').forEach(el => el.style.display = 'none');
+            // Show target
+            const target = document.getElementById('p-' + tabId);
+            if(target) target.style.display = 'block';
+
+            // Update Sidebar Active State
+            document.querySelectorAll('.profile-nav-item').forEach(el => el.classList.remove('active'));
+            const activeItem = [...document.querySelectorAll('.profile-nav-item')].find(el => el.getAttribute('onclick').includes(tabId));
+            if(activeItem) activeItem.classList.add('active');
+        }
 
         // --- Compare Table Toggle (Home Page Only) ---
         function toggleCompare() {
@@ -4381,9 +4881,6 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 table.style.display = wrapper.classList.contains('active') ? 'table' : 'none';
             }
         }
-        
-        // --- Pricing Page Logic (No toggle needed, table shows immediately via CSS) ---
-        // function toggleComparePricing() is not needed as CSS handles it.
 
         // --- Plan Selection Logic ---
         function selectPlanAndContact(planName) {
@@ -4612,6 +5109,113 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 }
             };
             updateCount();
+        }
+
+        // --- AUTH & PROFILE LOGIC ---
+        
+        // Login Button Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const googleBtn = document.getElementById('googleLoginBtn');
+            const emailForm = document.getElementById('emailLoginForm');
+
+            if(googleBtn) {
+                googleBtn.addEventListener('click', () => {
+                    if(window.firebaseAuth) window.firebaseAuth.googleLogin();
+                });
+            }
+
+            if(emailForm) {
+                emailForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const email = document.getElementById('loginEmail').value;
+                    const password = document.getElementById('loginPassword').value;
+                    if(window.firebaseAuth) window.firebaseAuth.emailLogin(email, password);
+                });
+            }
+        });
+
+        // Update UI based on Auth State
+        function updateAuthUI(isLoggedIn, user) {
+            const desktopBtn = document.getElementById('headerAuthBtn');
+            const mobileBtn = document.getElementById('mobileAuthBtn');
+            
+            if (isLoggedIn && user) {
+                // Logged In State
+                const profileHtml = `<i class="ri-user-smile-line"></i> Profile`;
+                desktopBtn.innerHTML = profileHtml;
+                desktopBtn.onclick = () => handleNavigation('profile', event);
+                
+                if(mobileBtn) {
+                    mobileBtn.innerHTML = `Profile <i class="ri-arrow-right-s-line arrow"></i>`;
+                    mobileBtn.onclick = () => handleNavigation('profile', event);
+                }
+            } else {
+                // Logged Out State
+                desktopBtn.innerHTML = `Login`;
+                desktopBtn.onclick = () => handleAuthClick();
+
+                if(mobileBtn) {
+                    mobileBtn.innerHTML = `Login <i class="ri-arrow-right-s-line arrow"></i>`;
+                    mobileBtn.onclick = () => handleAuthClick();
+                }
+            }
+        }
+
+        function handleAuthClick() {
+            handleNavigation('auth', null);
+        }
+
+        function handleLogout() {
+            if(window.firebaseAuth) window.firebaseAuth.logout();
+        }
+
+        // Load Profile Data from DB
+        async function loadProfileData() {
+            const user = window.firebaseAuth ? window.firebaseAuth.getUser() : null;
+            if (!user) return;
+
+            // Update Header Info
+            document.getElementById('profileNameDisplay').textContent = user.displayName || "User";
+            document.getElementById('profileEmailDisplay').textContent = user.email;
+            document.getElementById('profileAvatarInitials').textContent = (user.displayName || "U").charAt(0).toUpperCase();
+
+            // Update Settings Inputs
+            document.getElementById('settingsName').value = user.displayName || "";
+            document.getElementById('settingsEmail').value = user.email || "";
+
+            // Load Orders from DB
+            const ordersList = document.getElementById('ordersList');
+            const loading = document.getElementById('ordersLoading');
+            
+            if(window.firebaseDB) {
+                loading.style.display = 'block';
+                ordersList.innerHTML = '';
+                
+                const orders = await window.firebaseDB.getOrders();
+                loading.style.display = 'none';
+
+                if(orders.length === 0) {
+                    ordersList.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);">No orders found.</div>`;
+                } else {
+                    orders.forEach(order => {
+                        const date = order.createdAt ? new Date(order.createdAt.seconds * 1000).toLocaleDateString() : 'Pending';
+                        const status = order.status || 'Pending';
+                        
+                        const orderEl = document.createElement('div');
+                        orderEl.style.cssText = "background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;";
+                        orderEl.innerHTML = `
+                            <div>
+                                <div style="font-weight: 700; font-size: 16px;">${order.planName || 'Custom Order'}</div>
+                                <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Ordered on: ${date}</div>
+                            </div>
+                            <div class="status-badge ${status === 'Completed' ? 'status-active' : 'status-pending'}">
+                                ${status}
+                            </div>
+                        `;
+                        ordersList.appendChild(orderEl);
+                    });
+                }
+            }
         }
 
         // --- DOMContentLoaded ---
