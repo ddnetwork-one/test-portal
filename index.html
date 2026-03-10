@@ -2322,6 +2322,109 @@
             cursor: pointer;
             text-decoration: underline;
         }
+
+        /* =========================================
+           NEW: CHECKOUT PAGE STYLES
+           ========================================= */
+        .checkout-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .checkout-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .checkout-steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: 0;
+            transform: translateY(-50%);
+        }
+
+        .step-indicator {
+            position: relative;
+            z-index: 1;
+            background: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .step-indicator.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .step-indicator.completed {
+            border-color: var(--accent-green);
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .checkout-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-light);
+        }
+
+        .checkout-summary {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+        }
+
+        .checkout-summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        .checkout-summary-row.total {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-light);
+            font-weight: 800;
+            color: var(--text-main);
+            font-size: 20px;
+        }
+
+        .billplz-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .billplz-box img {
+            height: 40px;
+            width: auto;
+        }
     </style>
 </head>
 <body>
@@ -2585,7 +2688,7 @@
                                 </ul>
                             </div>
                             <div class="pricing-cta">
-                                <button class="btn btn-outline" onclick="selectPlanAndContact('Starter Landing Page')">Get Started</button>
+                                <button class="btn btn-outline" onclick="initiateCheckout('Starter Landing Page', 399)">Get Started</button>
                             </div>
                         </div>
 
@@ -2622,7 +2725,7 @@
                                 </ul>
                             </div>
                             <div class="pricing-cta">
-                                <button class="btn btn-primary" onclick="selectPlanAndContact('Business Website')">Get Started</button>
+                                <button class="btn btn-primary" onclick="initiateCheckout('Business Website', 899)">Get Started</button>
                             </div>
                         </div>
 
@@ -2658,7 +2761,7 @@
                                 </ul>
                             </div>
                             <div class="pricing-cta">
-                                <button class="btn btn-outline" onclick="selectPlanAndContact('Business Portal System')">Get Started</button>
+                                <button class="btn btn-outline" onclick="initiateCheckout('Business Portal System', 3800)">Get Started</button>
                             </div>
                         </div>
 
@@ -2695,7 +2798,8 @@
                                 </ul>
                             </div>
                             <div class="pricing-cta">
-                                <button class="btn btn-outline" onclick="selectPlanAndContact('Custom System Development')">Contact Us</button>
+                                <!-- UPDATE 4: Let's Talk -> Contact Form -->
+                                <button class="btn btn-outline" onclick="handleNavigation('contact', event)">Let's Talk</button>
                             </div>
                         </div>
                     </div>
@@ -3352,7 +3456,7 @@
                             </ul>
                         </div>
                         <div class="pricing-cta">
-                            <button class="btn btn-outline" onclick="selectPlanAndContact('Starter Landing Page')">Get Started</button>
+                            <button class="btn btn-outline" onclick="initiateCheckout('Starter Landing Page', 399)">Get Started</button>
                         </div>
                     </div>
 
@@ -3389,7 +3493,7 @@
                             </ul>
                         </div>
                         <div class="pricing-cta">
-                            <button class="btn btn-primary" onclick="selectPlanAndContact('Business Website')">Get Started</button>
+                            <button class="btn btn-primary" onclick="initiateCheckout('Business Website', 899)">Get Started</button>
                         </div>
                     </div>
 
@@ -3426,7 +3530,7 @@
                             </ul>
                         </div>
                         <div class="pricing-cta">
-                            <button class="btn btn-outline" onclick="selectPlanAndContact('Business Portal System')">Get Started</button>
+                            <button class="btn btn-outline" onclick="initiateCheckout('Business Portal System', 3800)">Get Started</button>
                         </div>
                     </div>
 
@@ -3463,8 +3567,8 @@
                             </ul>
                         </div>
                         <div class="pricing-cta">
-                            <!-- Changed button text to "Let's Talk" -->
-                            <button class="btn btn-primary" onclick="selectPlanAndContact('Custom System Development')">Let's Talk</button>
+                            <!-- UPDATE 4: Let's Talk -> Contact Form -->
+                            <button class="btn btn-primary" onclick="handleNavigation('contact', event)">Let's Talk</button>
                         </div>
                     </div>
                 </div>
@@ -4326,16 +4430,17 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                     <button class="btn btn-primary" onclick="handleNavigation('pricing', event)">New Order</button>
                                 </div>
 
-                                <div class="plan-card">
+                                <div class="plan-card" id="dynamicPlanCard">
+                                    <!-- Content injected via JS based on DB -->
                                     <div>
                                         <div style="font-size: 14px; opacity: 0.8; margin-bottom: 4px;">Current Active Plan</div>
-                                        <h3 style="font-size: 24px; font-weight: 700;">Business Website</h3>
+                                        <h3 id="dbPlanName" style="font-size: 24px; font-weight: 700;">Loading...</h3>
                                         <div class="status-badge status-active" style="margin-top: 12px;">
                                             <i class="ri-checkbox-circle-fill"></i> Active
                                         </div>
                                     </div>
                                     <div style="text-align: right;">
-                                        <div style="font-size: 32px; font-weight: 800;">RM899</div>
+                                        <div id="dbPlanPrice" style="font-size: 32px; font-weight: 800;">RM0</div>
                                         <div style="font-size: 12px; opacity: 0.7;">One-time Payment</div>
                                     </div>
                                 </div>
@@ -4397,6 +4502,127 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================
+             NEW: CHECKOUT PAGE (3 Steps)
+             ========================================= -->
+        <section id="checkout" class="page-section">
+            <div class="section-padding">
+                <div class="container checkout-container">
+                    <h1 class="page-title text-center reveal" style="margin-bottom: 40px;">Secure Checkout</h1>
+
+                    <div class="checkout-card reveal">
+                        <!-- Steps Header -->
+                        <div class="checkout-steps">
+                            <div class="step-indicator active" id="stepInd1">1</div>
+                            <div class="step-indicator" id="stepInd2">2</div>
+                            <div class="step-indicator" id="stepInd3">3</div>
+                        </div>
+
+                        <form id="checkoutForm" onsubmit="event.preventDefault(); submitBillPlz();">
+                            
+                            <!-- STEP 1: Review & Personal Info -->
+                            <div id="checkoutStep1">
+                                <h3 style="font-family: var(--font-heading); margin-bottom: 24px; font-size: 20px;">Review Order</h3>
+                                
+                                <div class="checkout-summary" style="margin-bottom: 24px;">
+                                    <div class="checkout-summary-row">
+                                        <span>Selected Plan</span>
+                                        <strong id="summaryPlanName">...</strong>
+                                    </div>
+                                    <div class="checkout-summary-row">
+                                        <span>Base Price</span>
+                                        <span id="summaryPlanPrice">RM0</span>
+                                    </div>
+                                    <div class="checkout-summary-row total">
+                                        <span>Total Due</span>
+                                        <span id="summaryTotal" style="color: var(--primary);">RM0</span>
+                                    </div>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                                    <div class="form-group">
+                                        <label>Full Name</label>
+                                        <input type="text" id="coName" class="form-input" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email Address</label>
+                                        <input type="email" id="coEmail" class="form-input" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phone Number</label>
+                                        <input type="tel" id="coPhone" class="form-input" required>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 32px; text-align: right;">
+                                    <button type="button" class="btn btn-primary" onclick="nextCheckoutStep(2)">Continue to Billing <i class="ri-arrow-right-line"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: Billing Details -->
+                            <div id="checkoutStep2" style="display: none;">
+                                <h3 style="font-family: var(--font-heading); margin-bottom: 24px; font-size: 20px;">Billing Details</h3>
+                                
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label>Company Name (Optional)</label>
+                                    <input type="text" id="coCompany" class="form-input" placeholder="Your Company Sdn Bhd">
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label>Billing Address</label>
+                                    <textarea id="coAddress" class="form-input" rows="3" placeholder="Street, City, Postcode, State" required></textarea>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                    <div class="form-group">
+                                        <label>City</label>
+                                        <input type="text" id="coCity" class="form-input" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Postcode</label>
+                                        <input type="text" id="coPostcode" class="form-input" required>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 32px; display: flex; justify-content: space-between;">
+                                    <button type="button" class="btn btn-outline" onclick="prevCheckoutStep(1)">Back</button>
+                                    <button type="button" class="btn btn-primary" onclick="nextCheckoutStep(3)">Continue to Payment <i class="ri-arrow-right-line"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- STEP 3: Payment (BillPlz) -->
+                            <div id="checkoutStep3" style="display: none;">
+                                <h3 style="font-family: var(--font-heading); margin-bottom: 24px; font-size: 20px;">Payment</h3>
+                                
+                                <p style="margin-bottom: 24px; color: var(--text-secondary);">You will be redirected to BillPlz secure payment gateway to complete your transaction.</p>
+                                
+                                <div class="billplz-box">
+                                    <img src="https://www.billplz.com/assets/logo/v6/billplz-logo.png" alt="BillPlz">
+                                    <div>
+                                        <div style="font-weight: 700;">Secure Payment</div>
+                                        <div style="font-size: 13px; color: var(--text-muted);">FPX Bank Transfer & Credit Card</div>
+                                    </div>
+                                </div>
+
+                                <div class="checkout-summary" style="margin-top: 24px; background: white; border-color: var(--primary-light);">
+                                    <div class="checkout-summary-row total">
+                                        <span>Total to Pay</span>
+                                        <span id="summaryTotalFinal" style="color: var(--primary);">RM0</span>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 32px; display: flex; justify-content: space-between;">
+                                    <button type="button" class="btn btn-outline" onclick="prevCheckoutStep(2)">Back</button>
+                                    <button type="submit" class="btn btn-primary">Pay Now <i class="ri-secure-payment-line"></i></button>
+                                </div>
+                            </div>
+
+                        </form>
                     </div>
                 </div>
             </div>
@@ -4578,7 +4804,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // UPDATE 3: Firebase Configuration
         const firebaseConfig = {
@@ -4663,6 +4889,26 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                     console.error("Error fetching orders:", error);
                     return [];
                 }
+            },
+            // UPDATE 1: Get Single Latest Order for Profile Page
+            getLatestOrder: async () => {
+                if (!auth.currentUser) return null;
+                try {
+                    const q = query(
+                        collection(db, "orders_ddnex"),
+                        where("userId", "==", auth.currentUser.uid),
+                        orderBy("createdAt", "desc"),
+                        limit(1)
+                    );
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) {
+                        return { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+                    }
+                    return null;
+                } catch (error) {
+                    console.error("Error fetching latest order:", error);
+                    return null;
+                }
             }
         };
 
@@ -4704,8 +4950,12 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             'security': { title: 'Security Policy | DDNEX®', desc: 'Our commitment to information security and data protection.' },
             'subscribe-success': { title: 'Subscribed | DDNEX®', desc: 'Thank you for subscribing to the DDNEX® newsletter.' },
             'auth': { title: 'Login | DDNEX®', desc: 'Access your professional dashboard.' },
-            'profile': { title: 'My Profile | DDNEX®', desc: 'Manage your orders and account settings.' }
+            'profile': { title: 'My Profile | DDNEX®', desc: 'Manage your orders and account settings.' },
+            'checkout': { title: 'Checkout | DDNEX®', desc: 'Complete your secure purchase.' }
         };
+
+        // --- Global State for Checkout ---
+        let currentCheckoutPlan = { name: '', price: 0 };
 
         // --- Main Navigation Handler ---
         function handleNavigation(pageId, event) {
@@ -4882,34 +5132,129 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             }
         }
 
-        // --- Plan Selection Logic ---
-        function selectPlanAndContact(planName) {
-            handleNavigation('contact', null);
-            setTimeout(() => {
-                const select = document.getElementById('service');
-                if(select) {
-                    for(let i=0; i<select.options.length; i++) {
-                        if(select.options[i].value === planName) {
-                            select.selectedIndex = i;
-                            break;
-                        }
-                    }
+        // --- UPDATE 2: Initiate Checkout Logic ---
+        function initiateCheckout(planName, price) {
+            const user = window.firebaseAuth ? window.firebaseAuth.getUser() : null;
+            
+            if (!user) {
+                showPopup("Login Required", "Please login to proceed with your purchase.");
+                handleNavigation('auth', null);
+                return;
+            }
 
-                    select.style.borderColor = 'var(--primary)';
-                    select.style.backgroundColor = 'var(--primary-light)';
-                    select.style.color = 'var(--primary)';
-                    select.style.fontWeight = '700';
+            // Set global state
+            currentCheckoutPlan = { name: planName, price: price };
 
-                    select.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Pre-fill Step 1 Data
+            document.getElementById('coName').value = user.displayName || '';
+            document.getElementById('coEmail').value = user.email || '';
+            // Phone would typically come from a user profile DB doc, but for now empty or local storage
+            
+            // Populate Summary
+            document.getElementById('summaryPlanName').innerText = planName;
+            document.getElementById('summaryPlanPrice').innerText = 'RM' + price;
+            document.getElementById('summaryTotal').innerText = 'RM' + price;
+            document.getElementById('summaryTotalFinal').innerText = 'RM' + price;
+
+            // Reset Steps
+            document.getElementById('checkoutStep1').style.display = 'block';
+            document.getElementById('checkoutStep2').style.display = 'none';
+            document.getElementById('checkoutStep3').style.display = 'none';
+            document.getElementById('stepInd1').className = 'step-indicator active';
+            document.getElementById('stepInd2').className = 'step-indicator';
+            document.getElementById('stepInd3').className = 'step-indicator';
+
+            handleNavigation('checkout', null);
+        }
+
+        function nextCheckoutStep(step) {
+            // Simple validation
+            if(step === 2) {
+                const name = document.getElementById('coName').value;
+                const email = document.getElementById('coEmail').value;
+                const phone = document.getElementById('coPhone').value;
+                if(!name || !email || !phone) {
+                    showPopup("Missing Info", "Please fill in all personal details.");
+                    return;
+                }
+            }
+            if(step === 3) {
+                 const address = document.getElementById('coAddress').value;
+                 if(!address) {
+                    showPopup("Missing Info", "Please provide a billing address.");
+                    return;
+                 }
+            }
+
+            document.getElementById('checkoutStep1').style.display = 'none';
+            document.getElementById('checkoutStep2').style.display = 'none';
+            document.getElementById('checkoutStep3').style.display = 'none';
+            document.getElementById(`checkoutStep${step}`).style.display = 'block';
+
+            // Update indicators
+            document.getElementById('stepInd1').className = step >= 1 ? 'step-indicator completed' : 'step-indicator';
+            document.getElementById('stepInd1').innerText = step >= 1 ? '✓' : '1';
+            
+            document.getElementById('stepInd2').className = step >= 2 ? 'step-indicator completed' : (step === 2 ? 'step-indicator active' : 'step-indicator');
+            document.getElementById('stepInd2').innerText = step >= 2 ? '✓' : '2';
+
+            document.getElementById('stepInd3').className = step === 3 ? 'step-indicator active' : 'step-indicator';
+        }
+
+        function prevCheckoutStep(step) {
+            nextCheckoutStep(step); // Reuse logic but going backwards resets visual state appropriately
+        }
+
+        // --- BillPlz Integration (Frontend Simulation) ---
+        async function submitBillPlz() {
+            const btn = document.querySelector('#checkoutStep3 button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
+            btn.disabled = true;
+
+            // 1. Gather Data
+            const orderData = {
+                planName: currentCheckoutPlan.name,
+                amount: currentCheckoutPlan.price,
+                customerName: document.getElementById('coName').value,
+                customerEmail: document.getElementById('coEmail').value,
+                customerPhone: document.getElementById('coPhone').value,
+                company: document.getElementById('coCompany').value,
+                address: document.getElementById('coAddress').value,
+                city: document.getElementById('coCity').value,
+                postcode: document.getElementById('coPostcode').value,
+                status: 'Pending Payment'
+            };
+
+            try {
+                // 2. Save to Firebase first (Create Order Record)
+                const saved = await window.firebaseDB.saveOrder(orderData);
+                
+                if (saved) {
+                    // 3. In a real backend scenario, you would call YOUR backend endpoint here.
+                    // Your backend would then call BillPlz API using a Secret Key, get a Bill URL, and return it to frontend.
+                    
+                    // For this Frontend-Only Demo, we will simulate the API Call delay
+                    // and then alert the user that in production, this redirects to BillPlz.
                     
                     setTimeout(() => {
-                        select.style.borderColor = '';
-                        select.style.backgroundColor = '';
-                        select.style.color = '';
-                        select.style.fontWeight = '';
+                        alert(`In Production: Redirecting to BillPlz for RM${orderData.amount} payment...\n\n(Development Demo: Order saved to Firebase)`);
+                        
+                        // Reset and go to Profile
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        handleNavigation('profile', null);
                     }, 2000);
+                } else {
+                    throw new Error("Failed to save order to database.");
                 }
-            }, 650);
+
+            } catch (error) {
+                console.error(error);
+                showPopup("Checkout Error", "Could not initialize payment. Please try again.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
 
         // --- Contact Form Handler (FormSubmit.co) ---
@@ -5187,6 +5532,17 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             const ordersList = document.getElementById('ordersList');
             const loading = document.getElementById('ordersLoading');
             
+            // --- UPDATE 1: Load Latest Order for Dashboard Card ---
+            const latestOrder = await window.firebaseDB.getLatestOrder();
+            if(latestOrder) {
+                document.getElementById('dbPlanName').textContent = latestOrder.planName;
+                document.getElementById('dbPlanPrice').textContent = 'RM' + latestOrder.amount;
+            } else {
+                document.getElementById('dbPlanName').textContent = "No Active Plan";
+                document.getElementById('dbPlanPrice').textContent = "-";
+            }
+
+            // Load List
             if(window.firebaseDB) {
                 loading.style.display = 'block';
                 ordersList.innerHTML = '';
