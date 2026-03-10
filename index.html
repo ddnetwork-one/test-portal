@@ -32,7 +32,7 @@
     <!-- Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
-    <!-- Brevo Form CSS (Preserved) -->
+    <!-- Brevo Form CSS (Preserved & Customized) -->
     <style>
       @font-face {
         font-display: block;
@@ -111,6 +111,7 @@
             --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
             --shadow-glow: 0 0 40px rgba(37, 99, 235, 0.15);
             --shadow-card: 0 0 0 1px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04), 0 12px 24px rgba(0,0,0,0.04);
+            --shadow-card-hover: 0 20px 40px -12px rgba(0,0,0,0.1);
             
             /* Typography */
             --font-main: 'Inter', system-ui, -apple-system, sans-serif;
@@ -120,7 +121,8 @@
             --header-height: 80px;
             --container-width: 1280px;
             --radius-md: 16px;
-            --radius-lg: 32px; 
+            --radius-lg: 24px; 
+            --radius-xl: 32px;
             
             /* Animation */
             --ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -395,25 +397,29 @@
         .mobile-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
 
         /* =========================================
-           MOBILE MENU SIDEBAR - FULL SCREEN REDESIGN
+           MOBILE MENU SIDEBAR - DROPDOWN REDESIGN
            ========================================= */
         .mobile-menu {
             position: fixed;
             top: 0; 
             left: 0; 
             right: 0;
-            width: 100%; 
-            height: 100vh;
-            background: white;
-            transform: translateX(100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            bottom: 0;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(20px);
             z-index: 1001;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
         }
         
-        .mobile-menu.open { transform: translateX(0); }
+        .mobile-menu.open { 
+            transform: translateX(0); 
+            opacity: 1;
+        }
 
         .menu-header {
             padding: 24px;
@@ -421,16 +427,14 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--border-light);
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            flex-shrink: 0;
+            background: white;
             position: sticky;
             top: 0;
             z-index: 10;
         }
         .menu-logo { height: 32px; }
         .menu-close-btn {
-            width: 44px; height: 44px;
+            width: 40px; height: 40px;
             border-radius: 50%;
             background: #f1f5f9;
             display: flex; align-items: center; justify-content: center;
@@ -441,99 +445,91 @@
 
         .menu-body {
             flex: 1;
-            padding: 20px 24px;
+            padding: 0 24px 40px;
+        }
+
+        /* Mobile Nav Links (Simplified) */
+        .mobile-nav-list {
+            margin-top: 24px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 0;
         }
-        
-        .menu-link {
+
+        .mobile-nav-item {
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .mobile-nav-btn {
+            width: 100%;
             display: flex;
             align-items: center;
-            padding: 16px 20px;
-            font-size: 16px;
-            font-weight: 500;
+            justify-content: space-between;
+            padding: 20px 0;
+            background: none;
             color: var(--text-main);
-            border-radius: 16px;
-            transition: all 0.3s var(--ease);
-            opacity: 0;
-            transform: translateX(20px);
-            background: transparent;
-        }
-        
-        .mobile-menu.open .menu-link { 
-            animation: slideInMenu 0.4s var(--ease) forwards; 
-        }
-        
-        /* Staggered animation */
-        .mobile-menu.open .menu-link:nth-child(1) { animation-delay: 0.05s; }
-        .mobile-menu.open .menu-link:nth-child(2) { animation-delay: 0.1s; }
-        .mobile-menu.open .menu-link:nth-child(3) { animation-delay: 0.15s; }
-        .mobile-menu.open .menu-link:nth-child(4) { animation-delay: 0.2s; }
-        .mobile-menu.open .menu-link:nth-child(5) { animation-delay: 0.25s; }
-        .mobile-menu.open .menu-link:nth-child(6) { animation-delay: 0.3s; }
-        .mobile-menu.open .menu-link:nth-child(7) { animation-delay: 0.35s; }
-        .mobile-menu.open .menu-link:nth-child(8) { animation-delay: 0.4s; }
-        
-        @keyframes slideInMenu { to { opacity: 1; transform: translateX(0); } }
-
-        .menu-link i { 
-            margin-right: 16px; 
-            font-size: 22px; 
-            color: var(--text-muted); 
-            transition: 0.3s; 
-            width: 24px; 
-            text-align: center; 
-        }
-        
-        .menu-link:hover, .menu-link.active {
-            background: var(--primary-light);
-            color: var(--primary);
-        }
-        .menu-link:hover i, .menu-link.active i { color: var(--primary); transform: scale(1.1); }
-
-        .menu-divider {
-            height: 1px;
-            background: var(--border-light);
-            margin: 16px 0;
-        }
-
-        .menu-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-muted);
-            padding: 0 20px;
-            margin-bottom: 8px;
+            font-size: 16px;
             font-weight: 600;
-        }
-
-        .menu-footer {
-            padding: 24px;
-            border-top: 1px solid var(--border-light);
-            background: #f8fafc;
+            text-align: left;
+            border: none;
         }
         
-        .menu-contact-info {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 16px;
-            background: white;
-            border-radius: 16px;
-            border: 1px solid var(--border-light);
+        .mobile-nav-btn i.arrow {
+            transition: transform 0.3s ease;
+            color: var(--text-muted);
         }
-        .menu-contact-icon {
-            width: 48px; height: 48px;
-            background: var(--primary-light);
+
+        .mobile-nav-dropdown {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+            background: #f8fafc;
+            border-radius: 0 0 12px 12px;
+            padding-left: 20px;
+        }
+
+        .mobile-nav-dropdown.open {
+            max-height: 500px; /* Arbitrary large height */
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+
+        .mobile-nav-dropdown a {
+            display: block;
+            padding: 12px 0;
+            font-size: 15px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .mobile-nav-dropdown a:hover, .mobile-nav-dropdown a.active {
             color: var(--primary);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin-right: 14px;
-            font-size: 20px;
+            padding-left: 8px; /* Subtle movement */
         }
-        .menu-contact-text div:first-child { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
-        .menu-contact-text div:last-child { font-size: 14px; font-weight: 600; color: var(--text-main); }
+
+        .mobile-nav-item.active .mobile-nav-btn {
+            color: var(--primary);
+        }
+        .mobile-nav-item.active .mobile-nav-btn i.arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Legal Links in Mobile Menu */
+        .menu-legal-links {
+            margin-top: 40px;
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            font-size: 13px;
+        }
+        .menu-legal-links a { color: var(--text-muted); font-weight: 500;}
+        .menu-legal-links a:hover { color: var(--primary); }
+
+        .menu-footer-cta {
+            margin-top: auto;
+            padding-top: 24px;
+            text-align: center;
+        }
 
         /* Desktop View Reset */
         @media(min-width: 992px) {
@@ -751,7 +747,7 @@
         }
         .card:hover {
             transform: translateY(-8px);
-            box-shadow: var(--shadow-xl);
+            box-shadow: var(--shadow-card-hover);
             border-color: rgba(37, 99, 235, 0.2);
         }
         .card:hover::before { opacity: 1; }
@@ -1003,7 +999,7 @@
         .team-socials a:hover { color: var(--primary); transform: translateY(-2px); }
 
         /* =========================================
-           PRICING / PACKAGES SECTION - REDESIGNED
+           PRICING / PACKAGES SECTION - REDESIGNED UI
            ========================================= */
         .pricing-section {
             padding: 80px 0;
@@ -1023,7 +1019,7 @@
             border: 1px solid var(--border-light);
             padding: 32px 24px; 
             position: relative;
-            transition: 0.4s var(--ease);
+            transition: all 0.4s var(--ease);
             display: flex;
             flex-direction: column;
             height: 100%;
@@ -1037,11 +1033,11 @@
             z-index: 2;
         }
         .pricing-card:hover {
-            transform: translateY(-10px);
-            box-shadow: var(--shadow-xl);
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-card-hover);
         }
         .pricing-card.popular:hover {
-            transform: scale(1.02) translateY(-10px);
+            transform: scale(1.02) translateY(-8px);
         }
         
         .pricing-badge {
@@ -1213,7 +1209,9 @@
             flex-wrap: wrap;
         }
 
-        /* Compare Table Styles */
+        /* =========================================
+           IMPROVED COMPARISON TABLE
+           ========================================= */
         .compare-toggle {
             text-align: center;
             margin: 60px 0 40px;
@@ -1267,14 +1265,15 @@
             width: 100%;
             background: white;
             border-radius: 24px;
-            overflow: hidden;
+            overflow: hidden; /* Important for rounding */
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--border-light);
+            border-collapse: separate; 
+            border-spacing: 0;
         }
         
         .compare-table thead {
-            background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
-            color: white;
+            background: #f8fafc;
         }
         
         .compare-table th {
@@ -1283,16 +1282,20 @@
             font-weight: 700;
             text-align: center;
             font-family: var(--font-heading);
+            border-bottom: 2px solid var(--border-light);
+            position: relative;
         }
         
         .compare-table th:first-child {
             text-align: left;
-            background: rgba(0,0,0,0.1);
+            background: #f1f5f9;
+            border-right: 1px solid var(--border-light);
         }
         
         .compare-table th.popular-col {
-            background: rgba(255,255,255,0.15);
-            position: relative;
+            background: #eff6ff;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
         }
         
         .compare-table td {
@@ -1301,6 +1304,7 @@
             border-bottom: 1px solid var(--border-light);
             text-align: center;
             color: var(--text-secondary);
+            background: white;
         }
         
         .compare-table td:first-child {
@@ -1308,6 +1312,7 @@
             font-weight: 600;
             color: var(--text-main);
             background: #f8fafc;
+            border-right: 1px solid var(--border-light);
         }
         
         .compare-table td.check-yes {
@@ -1318,16 +1323,18 @@
         .compare-table td.check-no {
             color: var(--text-muted);
             font-size: 20px;
-        }
-        
-        .compare-table tbody tr:hover {
-            background: #f8fafc;
+            opacity: 0.3;
         }
         
         .compare-table tbody tr:last-child td {
             border-bottom: none;
         }
         
+        .compare-table tbody tr:hover td:not(:first-child) {
+            background: #fdfdfd;
+        }
+        
+        /* Mobile Comparison Cards */
         .mobile-compare-card {
             display: block;
             background: white;
@@ -1384,7 +1391,8 @@
             .pricing-preview-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
             .pricing-price { font-size: 36px; }
             .pricing-card { padding: 32px; }
-            .mobile-compare-card { display: none; }
+            .mobile-compare-card { display: none; } /* Hide mobile cards on desktop */
+            .compare-table { display: table !important; } /* Force show table */
         }
         
         @media(min-width: 1024px) {
@@ -1640,7 +1648,7 @@
         }
         .product-card:hover {
             transform: translateY(-8px);
-            box-shadow: var(--shadow-xl);
+            box-shadow: var(--shadow-card-hover);
             border-color: var(--primary);
         }
         .product-img-wrap {
@@ -1973,19 +1981,13 @@
         .popup-overlay.active .popup-card { transform: scale(1) translateY(0); }
         .popup-icon {
             width: 64px; height: 64px;
-            background: var(--primary-light);
-            color: var(--primary);
+            background: #fee2e2;
+            color: #ef4444;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 32px;
             margin: 0 auto 24px;
-            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
-            animation: pulseIcon 2s infinite;
-        }
-        @keyframes pulseIcon {
-            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(37, 99, 235, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+            box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.2);
         }
         .popup-title { font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 16px; font-family: var(--font-heading); }
         .popup-message { color: var(--text-secondary); font-size: 15px; margin-bottom: 32px; line-height: 1.6; }
@@ -2079,7 +2081,7 @@
         </div>
     </header>
 
-    <!-- Mobile Menu Sidebar - Full Screen -->
+    <!-- Mobile Menu Sidebar - Dropdown Redesign -->
     <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
         <div class="menu-header">
             <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX®" class="menu-logo">
@@ -2090,50 +2092,59 @@
 
         <!-- Scrollable Body -->
         <div class="menu-body">
-            <a href="/home" class="menu-link active" onclick="handleNavigation('home', event)">
-                <i class="ri-home-5-line"></i> Home
-            </a>
-            <a href="/services" class="menu-link" onclick="handleNavigation('services', event)">
-                <i class="ri-briefcase-4-line"></i> Services
-            </a>
-            <a href="/pricing" class="menu-link" onclick="handleNavigation('pricing', event)">
-                <i class="ri-price-tag-3-line"></i> Pricing
-            </a>
-            <a href="/industries" class="menu-link" onclick="handleNavigation('industries', event)">
-                <i class="ri-building-2-line"></i> Industries
-            </a>
-            <a href="/about" class="menu-link" onclick="handleNavigation('about', event)">
-                <i class="ri-team-line"></i> About Us
-            </a>
-            <a href="/contact" class="menu-link" onclick="handleNavigation('contact', event)">
-                <i class="ri-mail-send-line"></i> Contact
-            </a>
-            
-            <div class="menu-divider"></div>
-            <div class="menu-label">Legal</div>
-            
-            <a href="/privacy" class="menu-link" onclick="handleNavigation('privacy', event)">
-                <i class="ri-shield-check-line"></i> Privacy Policy
-            </a>
-            <a href="/terms" class="menu-link" onclick="handleNavigation('terms', event)">
-                <i class="ri-file-list-3-line"></i> Terms of Service
-            </a>
-        </div>
+            <div class="mobile-nav-list">
+                
+                <!-- Home -->
+                <div class="mobile-nav-item" onclick="handleNavigation('home', event)">
+                    <button class="mobile-nav-btn">Home <i class="ri-arrow-right-s-line arrow"></i></button>
+                </div>
 
-        <!-- Static Footer -->
-        <div class="menu-footer">
-            <div class="menu-contact-info">
-                <div class="menu-contact-icon">
-                    <i class="ri-mail-line"></i>
+                <!-- Services -->
+                <div class="mobile-nav-item">
+                    <button class="mobile-nav-btn" onclick="toggleMobileDropdown(this)">
+                        Services <i class="ri-arrow-down-s-line arrow"></i>
+                    </button>
+                    <div class="mobile-nav-dropdown">
+                        <a href="/services" onclick="handleNavigation('services', event)">Software Engineering</a>
+                        <a href="/services" onclick="handleNavigation('services', event)">Cloud Solutions</a>
+                        <a href="/services" onclick="handleNavigation('services', event)">Cybersecurity</a>
+                    </div>
                 </div>
-                <div class="menu-contact-text">
-                    <div>Email us</div>
-                    <div>support@ddnex.com</div>
+
+                <!-- Pricing -->
+                <div class="mobile-nav-item" onclick="handleNavigation('pricing', event)">
+                    <button class="mobile-nav-btn">Pricing <i class="ri-arrow-right-s-line arrow"></i></button>
                 </div>
+
+                <!-- Industries -->
+                <div class="mobile-nav-item" onclick="handleNavigation('industries', event)">
+                    <button class="mobile-nav-btn">Industries <i class="ri-arrow-right-s-line arrow"></i></button>
+                </div>
+
+                <!-- About -->
+                <div class="mobile-nav-item" onclick="handleNavigation('about', event)">
+                    <button class="mobile-nav-btn">About Us <i class="ri-arrow-right-s-line arrow"></i></button>
+                </div>
+
+                <!-- Contact -->
+                <div class="mobile-nav-item" onclick="handleNavigation('contact', event)">
+                    <button class="mobile-nav-btn">Contact <i class="ri-arrow-right-s-line arrow"></i></button>
+                </div>
+
             </div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="handleNavigation('contact', event)">
-                Start Your Project <i class="ri-arrow-right-line"></i>
-            </button>
+
+            <!-- Legal Links -->
+            <div class="menu-legal-links">
+                <a onclick="handleNavigation('privacy', event); return false;">Privacy</a>
+                <a onclick="handleNavigation('terms', event); return false;">Terms</a>
+            </div>
+
+            <!-- Footer CTA -->
+            <div class="menu-footer-cta">
+                <button class="btn btn-primary" style="width: 100%;" onclick="handleNavigation('contact', event)">
+                    Start Your Project <i class="ri-arrow-right-line"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2521,7 +2532,7 @@
                         </div>
 
                         <!-- Desktop Table -->
-                        <table class="compare-table" style="display: none;">
+                        <table class="compare-table">
                             <thead>
                                 <tr>
                                     <th>Features</th>
@@ -3249,7 +3260,7 @@
                         </div>
 
                         <!-- Desktop Table -->
-                        <table class="compare-table" style="display: none;">
+                        <table class="compare-table">
                             <thead>
                                 <tr>
                                     <th>Features</th>
@@ -3764,7 +3775,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                         <option value="Custom System Development">Custom System Development</option>
                                         <option value="Custom Software Development">Custom Software Development</option>
                                         <option value="Cloud Migration">Cloud Migration</option>
-                                        <option value="Cybersecurity">Cybersecurity</option>
+                                        <option value="Cybersecurity">Cybersecurity</option
                                         <option value="Mobile App Development">Mobile App Development</option>
                                         <option value="Other">Other</option>
                                     </select>
@@ -3927,7 +3938,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                               <path d="M256 40c118.621 0 216 96.075 216 216 0 119.291-96.61 216-216 216-119.244 0-216-96.562-216-216 0-119.203 96.602-216 216-216m0-32C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm-11.49 120h22.979c6.823 0 12.274 5.682 11.99 12.5l-7 168c-.268 6.428-5.556 11.5-11.99 11.5h-8.979c-6.433 0-11.722-5.073-11.99-11.5l-7-168c-.283-6.818 5.167-12.5 11.99-12.5zM256 340c-15.464 0-28 12.536-28 28s12.536 28 28 28 28-12.536 28-28-12.536-28-28-28z" />
                             </svg>
                             <span class="sib-form-message-panel__inner-text">
-                              Your subscription could not be saved. Please try again.
+                              Your subscription could not be saved. Please fill your email.
                             </span>
                           </div>
                         </div>
@@ -4175,7 +4186,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             }
         };
 
-        // --- Mobile Menu Toggle ---
+        // --- Mobile Menu Toggle & Dropdown Logic ---
         function toggleMenu() {
             const menu = document.getElementById('mobileMenu');
             const toggle = document.querySelector('.mobile-toggle');
@@ -4188,7 +4199,28 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 body.style.overflow = 'hidden';
             } else {
                 body.style.overflow = 'auto';
+                // Close all dropdowns when closing menu
+                document.querySelectorAll('.mobile-nav-dropdown').forEach(el => el.classList.remove('open'));
+                document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
             }
+        }
+
+        function toggleMobileDropdown(btn) {
+            const item = btn.closest('.mobile-nav-item');
+            const dropdown = item.querySelector('.mobile-nav-dropdown');
+            const isOpen = item.classList.contains('active');
+
+            // Close others
+            document.querySelectorAll('.mobile-nav-item').forEach(el => {
+                if(el !== item) {
+                    el.classList.remove('active');
+                    el.querySelector('.mobile-nav-dropdown')?.classList.remove('open');
+                }
+            });
+
+            // Toggle current
+            item.classList.toggle('active');
+            dropdown.classList.toggle('open');
         }
 
         // --- Tab Switching for Services ---
@@ -4474,30 +4506,6 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             }
             runScrollAnimations();
             
-            const menuLinks = document.querySelectorAll('.menu-link');
-            menuLinks.forEach((link, index) => {
-                link.style.animationDelay = `${index * 0.05}s`;
-            });
-
-            const sibForm = document.getElementById('sib-form');
-            if(sibForm) {
-                sibForm.addEventListener('submit', function(e) {
-                    const btn = sibForm.querySelector('button[type="submit"]');
-                    if(btn) {
-                        const originalText = btn.innerHTML;
-                        btn.innerHTML = 'Processing...';
-                        btn.disabled = true;
-                        
-                        setTimeout(() => {
-                            btn.innerHTML = originalText;
-                            btn.disabled = false;
-                            sibForm.reset();
-                            handleNavigation('subscribe-success', null);
-                        }, 1500);
-                    }
-                });
-            }
-            
             // Handle resize for compare tables
             window.addEventListener('resize', () => {
                 const tables = document.querySelectorAll('.compare-table');
@@ -4509,6 +4517,67 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                     }
                 });
             });
+        });
+
+        // --- BREVO NEWSLETTER LOGIC OVERRIDE ---
+        // We hijack the form submission to control the UI flow exactly as requested
+        document.addEventListener('DOMContentLoaded', () => {
+            const sibForm = document.getElementById('sib-form');
+            const sibError = document.getElementById('error-message');
+            const sibSuccess = document.getElementById('success-message');
+            
+            if(sibForm) {
+                // Prevent default Brevo behavior
+                sibForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Basic HTML5 validation check
+                    if(!sibForm.checkValidity()) {
+                        sibForm.reportValidity();
+                        return;
+                    }
+
+                    const btn = sibForm.querySelector('button[type="submit"]');
+                    const originalText = btn.innerHTML;
+                    const emailInput = sibForm.querySelector('input[name="EMAIL"]');
+                    const emailValue = emailInput ? emailInput.value : '';
+
+                    // Reset Messages
+                    sibError.style.display = 'none';
+                    sibSuccess.style.display = 'none';
+
+                    btn.innerHTML = 'Processing...';
+                    btn.disabled = true;
+                    
+                    const formData = new FormData(sibForm);
+
+                    // Submit to Brevo
+                    fetch(sibForm.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        // Brevo returns 200 OK even if the email is already subscribed, 
+                        // but we check the response text or status to be sure.
+                        // Usually, a success implies they are added or already existed.
+                        if (response.ok) {
+                            // SUCCESS: Navigate to subscribe-success page
+                            handleNavigation('subscribe-success', null);
+                        } else {
+                            throw new Error('Server error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Brevo Error:', error);
+                        // FAILURE: Show Custom Popup with specific message
+                        showPopup("Subscription Failed", "Please fill your email.");
+                    })
+                    .finally(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    });
+                });
+            }
         });
     </script>
     
