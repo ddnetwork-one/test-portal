@@ -4531,16 +4531,37 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 sibForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
-                    // Basic HTML5 validation check
-                    if(!sibForm.checkValidity()) {
-                        sibForm.reportValidity();
-                        return;
-                    }
-
                     const btn = sibForm.querySelector('button[type="submit"]');
                     const originalText = btn.innerHTML;
                     const emailInput = sibForm.querySelector('input[name="EMAIL"]');
-                    const emailValue = emailInput ? emailInput.value : '';
+                    const emailValue = emailInput ? emailInput.value.trim() : '';
+
+                    // --- STRICT VALIDATION LOGIC ---
+                    // 1. Check if field is empty
+                    if(!emailValue) {
+                        showPopup("Subscription Failed", "Please fill your email.");
+                        return;
+                    }
+
+                    // 2. Check if "@" exists
+                    if(!emailValue.includes('@')) {
+                        showPopup("Subscription Failed", "Please include an '@' in your email address.");
+                        return;
+                    }
+
+                    // 3. Check if domain exists (text after @)
+                    const parts = emailValue.split('@');
+                    if(parts.length < 2 || !parts[1]) {
+                        showPopup("Subscription Failed", "Please enter a valid domain after '@'.");
+                        return;
+                    }
+
+                    // 4. Check if domain has a dot (e.g., example.com)
+                    const domain = parts[1];
+                    if(!domain.includes('.')) {
+                        showPopup("Subscription Failed", "Please enter a valid email domain (e.g., example.com).");
+                        return;
+                    }
 
                     // Reset Messages
                     sibError.style.display = 'none';
@@ -4569,7 +4590,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                     })
                     .catch(error => {
                         console.error('Brevo Error:', error);
-                        // FAILURE: Show Custom Popup with specific message
+                        // FAILURE: Show Custom Popup
                         showPopup("Subscription Failed", "Please fill your email.");
                     })
                     .finally(() => {
