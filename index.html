@@ -108,7 +108,7 @@
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            --shadow-xl: 0 25px 50px -12px rgba(0,0,0,0.15);
             --shadow-glow: 0 0 40px rgba(37, 99, 235, 0.15);
             --shadow-card: 0 0 0 1px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04), 0 12px 24px rgba(0,0,0,0.04);
             --shadow-card-hover: 0 20px 40px -12px rgba(0,0,0,0.1);
@@ -162,18 +162,21 @@
         }
 
         /* =========================================
-           PAGE TRANSITION OVERLAY
+           PAGE TRANSITION OVERLAY (MORY STYLE)
            ========================================= */
         .page-transition-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: white;
+            background: var(--primary); /* DDNEX Blue Background */
             z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: none; 
+            /* Start off-screen at the bottom */
             transform: translateY(100%);
+            /* Smooth cubic-bezier transition matching MORY */
+            transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1);
         }
         
         .pt-logo {
@@ -181,29 +184,18 @@
             height: auto;
             opacity: 0;
             transform: scale(0.8);
-            transition: opacity 0.3s ease, transform 0.4s var(--ease-out);
+            transition: all 0.3s ease 0.1s; 
         }
 
-        .page-transition-overlay.swipe-up {
-            animation: swipeUp 0.6s var(--ease) forwards;
-        }
-        .page-transition-overlay.swipe-down {
-            animation: swipeDown 0.6s var(--ease) forwards;
+        /* When active, the overlay covers the screen */
+        .page-transition-overlay.active {
+            transform: translateY(0);
         }
         
-        .page-transition-overlay.covering .pt-logo {
+        /* When active, the logo fades in and scales up */
+        .page-transition-overlay.active .pt-logo {
             opacity: 1;
             transform: scale(1);
-        }
-
-        @keyframes swipeUp {
-            0% { transform: translateY(100%); }
-            100% { transform: translateY(0%); }
-        }
-
-        @keyframes swipeDown {
-            0% { transform: translateY(0%); }
-            100% { transform: translateY(-100%); }
         }
 
         /* =========================================
@@ -1051,93 +1043,6 @@
             transform: scale(1.02) translateY(-8px);
         }
         
-                /* =========================================
-           CUSTOM SYSTEM CARD (GREY THEME)
-           ========================================= */
-        
-        /* Main Card Container */
-        .pricing-card.custom-card {
-            background: #f8fafc; /* Light grey background */
-            border: 1px solid #cbd5e1; /* Slate grey border */
-            color: var(--text-main);
-        }
-        
-        .pricing-card.custom-card:hover {
-            background: #f1f5f9; /* Slightly darker grey on hover */
-            border-color: #94a3b8;
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Custom Badge (Replaces standard pricing-badge) */
-        .pricing-badge-custom {
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #475569; /* Slate grey */
-            color: white;
-            padding: 6px 20px;
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(71, 85, 105, 0.3);
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        /* Icon Styling */
-        .pricing-card.custom-card .pricing-icon {
-            background: #e2e8f0; /* Muted grey icon bg */
-            color: #475569; /* Slate grey icon */
-        }
-        
-        .pricing-card.custom-card:hover .pricing-icon {
-            background: #475569; /* Turns dark slate on hover */
-            color: white;
-            box-shadow: 0 10px 20px rgba(71, 85, 105, 0.3);
-        }
-        
-        /* Text Styling adjustments for grey background */
-        .pricing-card.custom-card .pricing-title {
-            color: #1e293b; /* Darker slate for title */
-        }
-        
-        .pricing-card.custom-card .feature-list li {
-            color: #475569; /* Muted text for list items */
-        }
-        
-        .pricing-card.custom-card .feature-list i {
-            color: #64748b; /* Muted checkmarks */
-        }
-        
-        /* Button Styling */
-        .btn-outline-custom {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 14px 20px;
-            border-radius: 100px;
-            font-size: 15px;
-            font-weight: 700;
-            background: white;
-            color: #475569;
-            border: 2px solid #cbd5e1;
-            transition: all 0.3s var(--ease);
-            text-align: center;
-        }
-        
-        .btn-outline-custom:hover {
-            border-color: #475569;
-            color: #1e293b;
-            background: #f8fafc;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
         .pricing-badge {
             position: absolute;
             top: -12px;
@@ -2208,6 +2113,7 @@
     <!-- Header -->
     <header id="header">
         <div class="container">
+            <!-- CLICKING LOGO NOW NAVIGATES TO HOME AND RESETS TOP -->
             <a href="/" onclick="handleNavigation('home', event)">
                 <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX® Logo" class="brand-logo">
             </a>
@@ -2525,19 +2431,12 @@
                         </div>
 
                         <!-- Package 4: Custom System Development -->
-                        <div class="pricing-card custom-card reveal reveal-delay-4">
-                            <div class="pricing-badge-custom">
-                                <i class="ri-pencil-ruler-2-line"></i> Fully Custom
-                            </div>
-                            <div class="pricing-icon">
-                                <i class="ri-cpu-line"></i>
-                            </div>
+                        <div class="pricing-card reveal reveal-delay-4">
+                            <div class="pricing-icon"><i class="ri-cpu-line"></i></div>
                             <div class="pricing-header">
                                 <h3 class="pricing-title">Custom System</h3>
                                 <p class="pricing-subtitle">Best for automation or complex systems</p>
-                                <div class="pricing-price">
-                                    RM6,800 <span>/ starting</span>
-                                </div>
+                                <div class="pricing-price">RM6,800 <span>/ starting</span></div>
                                 <div class="pricing-delivery">
                                     <i class="ri-time-line"></i> Delivery: 3–6 Weeks
                                 </div>
@@ -2564,9 +2463,10 @@
                                 </ul>
                             </div>
                             <div class="pricing-cta">
-                                <button class="btn btn-outline-custom" onclick="selectPlanAndContact('Custom System Development')">Contact Us</button>
+                                <button class="btn btn-outline" onclick="selectPlanAndContact('Custom System Development')">Contact Us</button>
                             </div>
                         </div>
+                    </div>
 
                     <!-- Compare Button -->
                     <div class="compare-toggle">
@@ -4272,33 +4172,36 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             playPageTransition(pageId);
         }
 
-        // --- Play Swipe Transition ---
+        // --- Play Swipe Transition (MORY STYLE) ---
         function playPageTransition(pageId) {
             const overlay = document.getElementById('pageTransitionOverlay');
             const logo = overlay.querySelector('.pt-logo');
             
+            // 1. Slide Overlay UP (Blue screen covers content)
             overlay.classList.remove('swipe-down');
-            overlay.classList.add('swipe-up', 'covering');
+            overlay.classList.add('active'); // Adds transform: translateY(0)
             
+            // 2. Fade in Logo
             setTimeout(() => {
                 logo.style.opacity = '1';
                 logo.style.transform = 'scale(1)';
-            }, 200);
+            }, 100);
 
+            // 3. Change content, reset scroll, update history
             setTimeout(() => {
                 updateNavigationState(pageId);
-                overlay.classList.remove('swipe-up');
-                overlay.classList.add('swipe-down');
+            }, 500); 
+
+            // 4. Slide Overlay DOWN (Reveal new content)
+            setTimeout(() => {
+                overlay.classList.remove('active'); // Transforms back to translateY(100%)
                 
+                // Reset Logo for next time
                 setTimeout(() => {
                     logo.style.opacity = '0';
                     logo.style.transform = 'scale(0.8)';
                 }, 100);
-            }, 600); 
-
-            setTimeout(() => {
-                overlay.classList.remove('swipe-down', 'covering');
-            }, 1200);
+            }, 600);
         }
 
         // --- Core Navigation Logic ---
@@ -4332,7 +4235,9 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 }
             });
 
+            // RESET TO TOP
             window.scrollTo({ top: 0, behavior: 'auto' }); 
+            
             setTimeout(() => { runScrollAnimations(); }, 100);
         }
 
