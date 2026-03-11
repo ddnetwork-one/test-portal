@@ -2469,24 +2469,132 @@
             color: var(--text-main);
         }
 
-        /* Domain Checker Styles */
-        .domain-checker {
-            display: flex;
-            gap: 12px;
+        /* UPDATE 1: REDESIGNED DOMAIN BOX STYLES */
+        .domain-checker-wrapper {
+            margin-top: 32px;
+            border-top: 1px solid var(--border-light);
+            padding-top: 32px;
+        }
+
+        .domain-label {
+            font-weight: 700;
+            font-size: 15px;
             margin-bottom: 12px;
-            align-items: flex-start;
+            display: block;
+            color: var(--text-main);
+        }
+
+        .domain-box {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: #fff; /* High contrast white background */
+            border: 2px solid #e2e8f0; /* Clear border */
+            border-radius: 16px; /* Modern radius */
+            padding: 6px; /* Inner spacing */
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Focus state for visual feedback */
+        .domain-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .domain-input-group {
+            display: flex;
+            gap: 0; /* Remove gap for joined look */
+            flex: 1;
+            position: relative;
+        }
+
+        #coDomainInput {
+            flex: 1;
+            border: none !important; /* Remove individual input borders */
+            background: transparent !important;
+            padding: 16px 20px !important;
+            font-size: 16px;
+            font-family: var(--font-main);
+            color: var(--text-main);
+            outline: none !important;
+            box-shadow: none !important;
+            border-radius: 12px; /* Inner radius */
+            min-width: 0; /* Prevent flex overflow */
+        }
+
+        #checkDomainBtn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0 24px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 100px;
+            height: 52px; /* Match input height roughly */
+        }
+
+        #checkDomainBtn:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        #checkDomainBtn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.7;
         }
 
         .domain-status {
             font-size: 13px;
             font-weight: 600;
-            margin-top: 8px;
             display: none;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
         }
-        .domain-status.available { display: flex; color: var(--accent-green); }
-        .domain-status.taken { display: flex; color: #ef4444; }
+        
+        .domain-status.available { 
+            display: flex; 
+            color: var(--accent-green); 
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .domain-status.taken { 
+            display: flex; 
+            color: #ef4444; 
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+        
+        .domain-status.info {
+            display: flex;
+            color: var(--accent-orange);
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+        }
+
+        /* Mobile adjustment for domain box */
+        @media(max-width: 600px) {
+            .domain-input-group {
+                flex-direction: column;
+            }
+            #checkDomainBtn {
+                width: 100%;
+                height: 48px;
+            }
+        }
 
         /* Terms Checkbox */
         .terms-checkbox-group {
@@ -4657,13 +4765,17 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                 </div>
                             </div>
 
-                            <!-- Domain Selection & Checker -->
-                            <div style="margin-top: 32px; border-top: 1px solid var(--border-light); padding-top: 24px;">
-                                <label style="font-weight: 700; font-size: 15px; margin-bottom: 12px; display: block;">Desired Domain Name</label>
-                                <div class="domain-checker">
-                                    <input type="text" id="coDomainInput" class="form-input" placeholder="e.g. mycompany.com or mycompany.ddnex.com">
-                                    <button type="button" class="btn btn-outline" id="checkDomainBtn" onclick="checkDomainAvailability()">Check</button>
+                            <!-- Domain Selection & Checker (REDESIGNED) -->
+                            <div class="domain-checker-wrapper">
+                                <label class="domain-label">Desired Domain Name</label>
+                                
+                                <div class="domain-box">
+                                    <div class="domain-input-group">
+                                        <input type="text" id="coDomainInput" placeholder="e.g. mycompany.com or mycompany.ddnex.com">
+                                        <button type="button" id="checkDomainBtn" onclick="checkDomainAvailability()">Check</button>
+                                    </div>
                                 </div>
+                                
                                 <div class="helper-text">Enter your preferred domain (e.g. .com, .com.my, .net, or company.ddnex.com).</div>
                                 
                                 <div id="domainStatusAvailable" class="domain-status available">
@@ -4671,6 +4783,9 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                 </div>
                                 <div id="domainStatusTaken" class="domain-status taken">
                                     <i class="ri-close-circle-fill"></i> This domain existed, please choose others.
+                                </div>
+                                <div id="domainStatusInfo" class="domain-status info">
+                                    <i class="ri-information-line"></i> Custom domains require verification. Our support team will contact you.
                                 </div>
                             </div>
 
@@ -5312,6 +5427,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             isDomainAvailable = false;
             document.getElementById('domainStatusAvailable').style.display = 'none';
             document.getElementById('domainStatusTaken').style.display = 'none';
+            document.getElementById('domainStatusInfo').style.display = 'none';
 
             closePlanModalDirect();
         }
@@ -5342,6 +5458,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             isDomainAvailable = false;
             document.getElementById('domainStatusAvailable').style.display = 'none';
             document.getElementById('domainStatusTaken').style.display = 'none';
+            document.getElementById('domainStatusInfo').style.display = 'none';
 
             // Auto-fill User Data
             document.getElementById('coFullName').value = user.displayName || "";
@@ -5355,17 +5472,19 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             handleNavigation('checkout', null);
         }
 
-        // --- Domain Checker Logic ---
+        // --- Domain Checker Logic (REDESIGNED LOGIC) ---
         async function checkDomainAvailability() {
             const input = document.getElementById('coDomainInput');
             const domain = input.value.trim().toLowerCase();
             const btn = document.getElementById('checkDomainBtn');
             const statusAvail = document.getElementById('domainStatusAvailable');
             const statusTaken = document.getElementById('domainStatusTaken');
+            const statusInfo = document.getElementById('domainStatusInfo');
 
             // Reset UI
             statusAvail.style.display = 'none';
             statusTaken.style.display = 'none';
+            statusInfo.style.display = 'none';
             isDomainAvailable = false;
 
             if (!domain) {
@@ -5383,22 +5502,36 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Checking...';
             btn.disabled = true;
 
-            // SIMULATING DATABASE CHECK (Replace with actual Firebase call in production)
-            // Mock list of taken domains for demonstration
-            const takenDomains = ["google.com", "facebook.com", "taken.ddnex.com", "test.com.my"];
+            // UPDATE 1: LOGIC CHANGE
+            // If domain is .ddnex.com, run the check. If custom (.com, etc), skip check and show support team message.
             
+            const isDdnexSubdomain = domain.includes('.ddnex.com');
+
             setTimeout(() => {
                 btn.innerHTML = 'Check';
                 btn.disabled = false;
 
-                if (takenDomains.includes(domain)) {
-                    statusTaken.style.display = 'flex';
-                    isDomainAvailable = false;
-                    input.style.borderColor = "#ef4444";
+                if (isDdnexSubdomain) {
+                    // RUN CHECK FOR DDNEX SUBDOMAINS
+                    // Mock list of taken subdomains for demonstration
+                    const takenDomains = ["google.ddnex.com", "facebook.ddnex.com", "taken.ddnex.com", "test.ddnex.com"];
+                    
+                    if (takenDomains.includes(domain)) {
+                        statusTaken.style.display = 'flex';
+                        isDomainAvailable = false;
+                        input.style.borderColor = "#ef4444"; // Red border
+                    } else {
+                        statusAvail.style.display = 'flex';
+                        isDomainAvailable = true;
+                        input.style.borderColor = "#10b981"; // Green border
+                        tempOrderData.domain = domain; // Update stored domain
+                    }
                 } else {
-                    statusAvail.style.display = 'flex';
-                    isDomainAvailable = true;
-                    input.style.borderColor = "#10b981";
+                    // CUSTOM DOMAIN HANDLING
+                    // Do not show taken/available. Show "Support Team" message.
+                    statusInfo.style.display = 'flex';
+                    isDomainAvailable = true; // Allow to proceed (team handles verification)
+                    input.style.borderColor = "var(--accent-orange)"; // Orange/Info border
                     tempOrderData.domain = domain; // Update stored domain
                 }
             }, 1000);
@@ -5442,9 +5575,10 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 showPopup("Domain Required", "Please enter your desired domain name.");
                 return;
             }
-            // If user hasn't checked or it's taken
+            // If user hasn't checked (and it's a ddnex domain) or it's taken
+            // If it's a custom domain, we just need them to have clicked check to see the info message
             if (!isDomainAvailable) {
-                showPopup("Check Domain", "Please check domain availability and ensure it is marked as green (Available) before proceeding.");
+                showPopup("Check Domain", "Please check domain availability and ensure it is marked as available or info before proceeding.");
                 return;
             }
             nextCheckoutStep(2);
