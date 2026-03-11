@@ -2623,6 +2623,7 @@
         .terms-checkbox-group a {
             color: var(--primary);
             text-decoration: underline;
+            cursor: pointer;
         }
 
         /* Change Plan Modal */
@@ -4662,7 +4663,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                     <div style="background: #f8fafc; padding: 24px; border-radius: 16px; border: 1px solid var(--border-light);">
                                         <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 8px;">Domain Status</div>
                                         <h4 style="font-size: 18px; font-weight: 700;" id="dbDomainName">Fetching...</h4>
-                                        <div class="status-badge status-active" id="dbDomainStatus" style="margin-top: 8px; background: rgba(16, 185, 129, 0.1); color: #16a34a;">
+                                        <div class="status-badge status-active" id="dbDomainStatus" style="margin-top: 8px; background: rgba(16, 185, 129, 0.1); color: #10b981;">
                                             <i class="ri-check-line"></i> Live
                                         </div>
                                     </div>
@@ -4765,24 +4766,39 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                 </div>
                             </div>
 
-                            <!-- Domain Selection & Checker (REDESIGNED) -->
+                            <!-- UPDATE: Domain Selection with Toggle Logic -->
                             <div class="domain-checker-wrapper">
-                                <label class="domain-label">Desired Domain Name</label>
+                                <label class="domain-label">Choose your Domain Type</label>
                                 
+                                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                                    <button id="btnDomainDdnex" class="btn btn-outline" onclick="setDomainType('ddnex')" style="flex:1; justify-content:center;">
+                                        Free Subdomain
+                                    </button>
+                                    <button id="btnDomainCustom" class="btn btn-outline" onclick="setDomainType('custom')" style="flex:1; justify-content:center;">
+                                        Custom Domain
+                                    </button>
+                                </div>
+
                                 <div class="domain-box">
                                     <div class="domain-input-group">
-                                        <input type="text" id="coDomainInput" placeholder="e.g. mycompany.com or mycompany.ddnex.com">
+                                        <input type="text" id="coDomainInput" placeholder="e.g. mycompany" autocomplete="off">
+                                        <!-- Read-only suffix for DDNEX -->
+                                        <span id="domainSuffix" style="display: none; align-items: center; padding: 0 16px; color: var(--text-muted); font-weight: 600; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border-light);">
+                                            .ddnex.com
+                                        </span>
                                         <button type="button" id="checkDomainBtn" onclick="checkDomainAvailability()">Check</button>
                                     </div>
                                 </div>
                                 
-                                <div class="helper-text">Enter your preferred domain (e.g. .com, .com.my, .net, or company.ddnex.com).</div>
+                                <div class="helper-text" id="domainHelperText">
+                                    Enter your preferred name.
+                                </div>
                                 
                                 <div id="domainStatusAvailable" class="domain-status available">
                                     <i class="ri-checkbox-circle-fill"></i> Available! You can use this domain.
                                 </div>
                                 <div id="domainStatusTaken" class="domain-status taken">
-                                    <i class="ri-close-circle-fill"></i> This domain existed, please choose others.
+                                    <i class="ri-close-circle-fill"></i> This domain is taken, please choose another.
                                 </div>
                                 <div id="domainStatusInfo" class="domain-status info">
                                     <i class="ri-information-line"></i> Custom domains require verification. Our support team will contact you.
@@ -4818,7 +4834,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                     </div>
                                 </div>
 
-                                <!-- NEW: Style Description -->
+                                <!-- Style Description -->
                                 <div class="form-group" style="margin-top: 20px;">
                                     <label>Website Style & Description <span style="color:red">*</span></label>
                                     <textarea id="coStyleDesc" class="form-input" rows="4" placeholder="Describe colors, layout, vibe..."></textarea>
@@ -4857,10 +4873,15 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                                     <p id="confirmStyle" style="margin-top: 8px; font-style: italic; color: var(--text-secondary); font-size: 14px;"></p>
                                 </div>
 
-                                <!-- NEW: Terms Agreement -->
+                                <!-- UPDATE 3: Terms Agreement with Popups -->
                                 <div class="terms-checkbox-group">
                                     <input type="checkbox" id="agreeTerms" onchange="togglePlaceOrderBtn()">
-                                    <label for="agreeTerms">I agree to the <a href="#" onclick="handleNavigation('terms', event)">Terms & Conditions</a> and <a href="#" onclick="handleNavigation('privacy', event)">Privacy Policy</a> set forth by DDNEX®.</label>
+                                    <label for="agreeTerms">I agree to the 
+                                        <a href="javascript:void(0)" onclick="openLegalPopup('terms')">Terms & Conditions</a> 
+                                        and 
+                                        <a href="javascript:void(0)" onclick="openLegalPopup('privacy')">Privacy Policy</a> 
+                                        set forth by DDNEX®.
+                                    </label>
                                 </div>
 
                                 <div style="display: flex; justify-content: center; gap: 16px;">
@@ -5402,6 +5423,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
         let currentCheckoutStep = 1;
         let tempOrderData = {}; // Store data between steps
         let isDomainAvailable = false; // Track domain status
+        let currentDomainType = 'ddnex'; // 'ddnex' or 'custom'
 
         // QUICK CHANGE PLAN MODAL
         function openPlanModal() {
@@ -5414,14 +5436,25 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             document.getElementById('planModal').classList.remove('active');
         }
         function changePlan(name, price, domain) {
-            tempOrderData.planName = name;
-            tempOrderData.price = price;
-            tempOrderData.domain = domain;
-            
+            tempOrderData = {
+                planName: name,
+                price: price,
+                domain: domain,
+                userId: window.firebaseAuth ? window.firebaseAuth.getUser().uid : null
+            };
+
             // Update UI immediately
             document.getElementById('coPlanName').textContent = name;
             document.getElementById('coPlanPrice').textContent = 'RM' + price;
-            document.getElementById('coDomainInput').value = domain;
+            
+            // Reset Domain Selection Logic
+            if(domain.includes('.ddnex.com')) {
+                setDomainType('ddnex');
+                document.getElementById('coDomainInput').value = domain.replace('.ddnex.com', '');
+            } else {
+                setDomainType('custom');
+                document.getElementById('coDomainInput').value = '';
+            }
             
             // Reset validation
             isDomainAvailable = false;
@@ -5449,21 +5482,23 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 userId: user.uid
             };
 
-            // Reset UI
+            // Update UI
             document.getElementById('coPlanName').textContent = planName;
             document.getElementById('coPlanPrice').textContent = 'RM' + price;
-            document.getElementById('coDomainInput').value = domain;
 
-            // Reset Domain Check UI
-            isDomainAvailable = false;
-            document.getElementById('domainStatusAvailable').style.display = 'none';
-            document.getElementById('domainStatusTaken').style.display = 'none';
-            document.getElementById('domainStatusInfo').style.display = 'none';
+            // Auto-set Domain Type based on default domain passed
+            if(domain.includes('.ddnex.com')) {
+                setDomainType('ddnex');
+                document.getElementById('coDomainInput').value = domain.replace('.ddnex.com', '');
+            } else {
+                setDomainType('custom');
+                document.getElementById('coDomainInput').value = '';
+            }
 
             // Auto-fill User Data
             document.getElementById('coFullName').value = user.displayName || "";
             document.getElementById('coEmail').value = user.email || "";
-            document.getElementById('coPhone').value = ""; // Phone not in standard Auth profile usually
+            document.getElementById('coPhone').value = ""; 
 
             // Reset Steps
             nextCheckoutStep(1);
@@ -5472,10 +5507,51 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             handleNavigation('checkout', null);
         }
 
-        // --- Domain Checker Logic (REDESIGNED LOGIC) ---
+        // --- Domain Type Toggle Logic ---
+        function setDomainType(type) {
+            currentDomainType = type;
+            const input = document.getElementById('coDomainInput');
+            const suffix = document.getElementById('domainSuffix');
+            const helper = document.getElementById('domainHelperText');
+            const btnDdnex = document.getElementById('btnDomainDdnex');
+            const btnCustom = document.getElementById('btnDomainCustom');
+            const checkBtn = document.getElementById('checkDomainBtn');
+
+            // Reset UI
+            isDomainAvailable = false;
+            document.getElementById('domainStatusAvailable').style.display = 'none';
+            document.getElementById('domainStatusTaken').style.display = 'none';
+            document.getElementById('domainStatusInfo').style.display = 'none';
+            input.style.borderColor = "#e2e8f0";
+
+            if(type === 'ddnex') {
+                // Show Suffix, Hide Custom UI
+                suffix.style.display = 'flex';
+                input.placeholder = "e.g. mycompany";
+                helper.textContent = "Enter your preferred name for the free subdomain.";
+                btnDdnex.classList.add('btn-primary');
+                btnDdnex.classList.remove('btn-outline');
+                btnCustom.classList.remove('btn-primary');
+                btnCustom.classList.add('btn-outline');
+                checkBtn.textContent = "Check";
+            } else {
+                // Hide Suffix, Show Custom UI
+                suffix.style.display = 'none';
+                input.placeholder = "e.g. mycompany.com";
+                helper.textContent = "Enter your full custom domain (e.g. .com, .my).";
+                btnCustom.classList.add('btn-primary');
+                btnCustom.classList.remove('btn-outline');
+                btnDdnex.classList.remove('btn-primary');
+                btnDdnex.classList.add('btn-outline');
+                checkBtn.textContent = "Verify"; // Verify custom domain syntax
+            }
+            input.value = ""; // Clear input on switch
+        }
+
+        // --- Domain Checker Logic (UPDATED) ---
         async function checkDomainAvailability() {
             const input = document.getElementById('coDomainInput');
-            const domain = input.value.trim().toLowerCase();
+            const domainInput = input.value.trim();
             const btn = document.getElementById('checkDomainBtn');
             const statusAvail = document.getElementById('domainStatusAvailable');
             const statusTaken = document.getElementById('domainStatusTaken');
@@ -5486,62 +5562,59 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             statusTaken.style.display = 'none';
             statusInfo.style.display = 'none';
             isDomainAvailable = false;
+            input.style.borderColor = "#e2e8f0";
 
-            if (!domain) {
+            if (!domainInput) {
                 showPopup("Input Required", "Please enter a domain name.");
                 return;
             }
 
-            // Simple Regex for basic validation
-            const domainRegex = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/;
-            if (!domainRegex.test(domain) && !domain.includes('.ddnex.com')) {
-                showPopup("Invalid Format", "Please enter a valid domain (e.g. example.com).");
-                return;
+            // Construct Full Domain String
+            let fullDomain = domainInput;
+            if (currentDomainType === 'ddnex') {
+                fullDomain = domainInput.toLowerCase() + ".ddnex.com";
+            } else {
+                fullDomain = domainInput.toLowerCase();
+                // Basic Regex for validation of custom domain
+                const domainRegex = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/;
+                if (!domainRegex.test(fullDomain)) {
+                    showPopup("Invalid Format", "Please enter a valid domain (e.g. example.com).");
+                    return;
+                }
             }
 
             btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Checking...';
             btn.disabled = true;
 
-            // UPDATE 1: LOGIC CHANGE
-            // If domain is .ddnex.com, run the check. If custom (.com, etc), skip check and show support team message.
-            
-            const isDdnexSubdomain = domain.includes('.ddnex.com');
-
             setTimeout(() => {
-                btn.innerHTML = 'Check';
+                btn.innerHTML = currentDomainType === 'ddnex' ? 'Check' : 'Verify';
                 btn.disabled = false;
 
-                if (isDdnexSubdomain) {
+                if (currentDomainType === 'ddnex') {
                     // RUN CHECK FOR DDNEX SUBDOMAINS
-                    // Mock list of taken subdomains for demonstration
-                    const takenDomains = ["google.ddnex.com", "facebook.ddnex.com", "taken.ddnex.com", "test.ddnex.com"];
+                    const takenDomains = ["google", "facebook", "taken", "test", "admin", "support"]; // Mock DB
                     
-                    if (takenDomains.includes(domain)) {
+                    if (takenDomains.includes(domainInput.toLowerCase())) {
                         statusTaken.style.display = 'flex';
-                        isDomainAvailable = false;
-                        input.style.borderColor = "#ef4444"; // Red border
+                        input.style.borderColor = "#ef4444"; 
                     } else {
                         statusAvail.style.display = 'flex';
                         isDomainAvailable = true;
-                        input.style.borderColor = "#10b981"; // Green border
-                        tempOrderData.domain = domain; // Update stored domain
+                        input.style.borderColor = "#10b981"; 
+                        tempOrderData.domain = fullDomain;
                     }
                 } else {
-                    // CUSTOM DOMAIN HANDLING
-                    // Do not show taken/available. Show "Support Team" message.
+                    // CUSTOM DOMAIN HANDLING (INFO ONLY)
                     statusInfo.style.display = 'flex';
                     isDomainAvailable = true; // Allow to proceed (team handles verification)
-                    input.style.borderColor = "var(--accent-orange)"; // Orange/Info border
-                    tempOrderData.domain = domain; // Update stored domain
+                    input.style.borderColor = "var(--accent-orange)"; 
+                    tempOrderData.domain = fullDomain;
                 }
             }, 1000);
         }
 
         function nextCheckoutStep(step) {
-            // Hide all sections
             document.querySelectorAll('.checkout-section').forEach(el => el.classList.remove('active'));
-            
-            // Show target
             document.getElementById('checkoutStep' + step).classList.add('active');
 
             // Update Indicators
@@ -5555,10 +5628,9 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 }
             }
 
-            // If Step 3, Populate Confirmation
             if (step === 3) {
                 document.getElementById('confirmPlan').textContent = tempOrderData.planName;
-                document.getElementById('confirmDomain').textContent = document.getElementById('coDomainInput').value;
+                document.getElementById('confirmDomain').textContent = document.getElementById('coDomainInput').value + (currentDomainType === 'ddnex' ? '.ddnex.com' : '');
                 document.getElementById('confirmPrice').textContent = 'RM' + tempOrderData.price;
                 document.getElementById('confirmName').textContent = document.getElementById('coFullName').value;
                 document.getElementById('confirmEmail').textContent = document.getElementById('coEmail').value;
@@ -5570,17 +5642,22 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
         }
 
         function validateStep1() {
-            const domain = document.getElementById('coDomainInput').value.trim();
-            if (!domain) {
+            const domainInput = document.getElementById('coDomainInput').value.trim();
+            if (!domainInput) {
                 showPopup("Domain Required", "Please enter your desired domain name.");
                 return;
             }
-            // If user hasn't checked (and it's a ddnex domain) or it's taken
-            // If it's a custom domain, we just need them to have clicked check to see the info message
+            // Re-validate logic if user skipped checking
             if (!isDomainAvailable) {
-                showPopup("Check Domain", "Please check domain availability and ensure it is marked as available or info before proceeding.");
-                return;
+                 // If custom, info message acts as validation. If ddnex, must be green.
+                 if (currentDomainType === 'ddnex' && document.getElementById('domainStatusAvailable').style.display === 'none') {
+                     showPopup("Check Domain", "Please check domain availability before proceeding.");
+                     return;
+                 }
             }
+            
+            // Store formatted domain
+            tempOrderData.domain = domainInput + (currentDomainType === 'ddnex' ? '.ddnex.com' : '');
             nextCheckoutStep(2);
         }
 
@@ -5588,20 +5665,17 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             const styleDesc = document.getElementById('coStyleDesc').value.trim();
             const errorEl = document.getElementById('styleDescError');
             
-            // Validate Description Length
             if (styleDesc.length < 50) {
                 errorEl.style.display = 'block';
-                // Shake effect or focus
                 document.getElementById('coStyleDesc').focus();
                 return;
             } else {
                 errorEl.style.display = 'none';
             }
 
-            // Validate Phone (Basic)
             const phone = document.getElementById('coPhone').value.trim();
             if (phone.length < 5) {
-                showPopup("Invalid Phone", "Please enter a valid phone number for our team to contact you.");
+                showPopup("Invalid Phone", "Please enter a valid phone number.");
                 return;
             }
 
@@ -5620,26 +5694,22 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
             btn.disabled = true;
 
-            // Gather Data
             const finalOrder = {
                 ...tempOrderData,
-                domain: document.getElementById('coDomainInput').value,
                 customerName: document.getElementById('coFullName').value,
                 customerEmail: document.getElementById('coEmail').value,
                 customerPhone: document.getElementById('coPhone').value,
                 customerCompany: document.getElementById('coCompany').value,
                 styleDescription: document.getElementById('coStyleDesc').value,
-                status: 'Pending Payment', // Or Active if automated payment
-                renewalDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString() // +1 Year
+                status: 'Pending Payment',
+                renewalDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()
             };
 
-            // Save to DB
             if (window.firebaseDB) {
                 const success = await window.firebaseDB.saveOrder(finalOrder);
                 if (success) {
                     showPopup("Order Placed!", "Your order has been received. We will contact you shortly.");
                     handleNavigation('profile', null);
-                    // Reset Form
                     document.getElementById('checkoutForm').reset();
                     document.getElementById('agreeTerms').checked = false;
                     togglePlaceOrderBtn();
@@ -5655,7 +5725,31 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
             }
         }
 
-        // --- Contact Form Handler (FormSubmit.co) ---
+        // --- Legal Popup Function ---
+        function openLegalPopup(type) {
+            // Find the relevant page section content
+            const targetSection = document.getElementById(type);
+            const title = targetSection.querySelector('.page-title').innerText;
+            const contentHTML = targetSection.querySelector('.legal-content').innerHTML;
+
+            // Inject into Modal (Using existing modal structure for efficiency or creating a specialized one)
+            // Here we reuse the modal-overlay and modal-content, but repurpose it
+            const modal = document.getElementById('caseStudyModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalBody.innerHTML = `
+                <h2 style="font-family: var(--font-heading); margin-bottom: 24px;">${title}</h2>
+                <div style="color: var(--text-secondary); line-height: 1.8;">
+                    ${contentHTML}
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 32px;" onclick="closeModalDirect()">Close</button>
+            `;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // --- Contact Form Handler ---
         const contactForm = document.getElementById('contactForm');
         if(contactForm) {
             contactForm.addEventListener('submit', function(e) {
@@ -5676,7 +5770,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                 })
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not ok');
-                    showPopup("Message Sent!", "Thank you for contacting us. We have received your inquiry and will get back to you shortly.");
+                    showPopup("Message Sent!", "Thank you for contacting us. We have received your inquiry.");
                     contactForm.reset();
                     return true;
                 })
@@ -5945,7 +6039,7 @@ DDNEX operates under DD CLOUD NETWORK (SSM Registered) and is part of the DDNetw
                     document.getElementById('dbDomainName').textContent = "-";
                 } else {
                     // UPDATE 1: Load Latest Active Plan into Overview
-                    const latestOrder = orders[0]; // Assuming query is ordered by createdAt desc
+                    const latestOrder = orders[0]; 
                     
                     document.getElementById('dbPlanName').textContent = latestOrder.planName || 'Custom Plan';
                     document.getElementById('dbPlanPrice').textContent = 'RM' + (latestOrder.price || '0');
