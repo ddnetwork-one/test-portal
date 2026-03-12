@@ -4473,15 +4473,22 @@
                                         </div>
                                     </div>
 
-                                    <div class="domain-input-group">
-                                        <input type="text" id="coDomainInput" placeholder="e.g. mycompany" autocomplete="off">
-                                        <!-- Read-only suffix for DDNEX -->
-                                        <span id="domainSuffix" style="display: none; align-items: center; padding: 0 16px; color: var(--text-muted); font-weight: 600; background: #f1f5f9; border-radius: 8px; font-size: 14px; white-space: nowrap; border: 1px dashed #cbd5e1; margin-right: 4px;">
-                                            .ddnex.com
-                                        </span>
-                                        <button type="button" id="checkDomainBtn" onclick="checkDomainAvailability()">Check</button>
-                                    </div>
-                                </div>
+<!-- Replace this block in your HTML -->
+<div class="domain-input-group">
+    <input 
+        type="text" 
+        id="coDomainInput" 
+        name="domain_input_new" 
+        placeholder="e.g. mycompany" 
+        autocomplete="off" 
+        oninput="formatDomainInput(this)"
+    >
+    <!-- Read-only suffix for DDNEX -->
+    <span id="domainSuffix" style="display: none; align-items: center; padding: 0 16px; color: var(--text-muted); font-weight: 600; background: #f1f5f9; border-radius: 8px; font-size: 14px; white-space: nowrap; border: 1px dashed #cbd5e1; margin-right: 4px;">
+        .ddnex.com
+    </span>
+    <button type="button" id="checkDomainBtn" onclick="checkDomainAvailability()">Check</button>
+</div>
                                 
                                 <div class="helper-text" id="domainHelperText">
                                     Enter your preferred name.
@@ -5364,6 +5371,43 @@
                 return;
             }
 
+            /**
+ * Formats the domain input in real-time:
+ * 1. Removes spaces.
+ * 2. Converts to lowercase.
+ * 3. Removes invalid characters (symbols).
+ */
+function formatDomainInput(input) {
+    // 1. Get current value
+    let value = input.value;
+
+    // 2. Remove spaces (replace with hyphens if you prefer, or just remove them)
+    // Here I am removing spaces completely as is standard for domain subdomains
+    value = value.replace(/\s+/g, '');
+
+    // 3. Convert to lowercase
+    value = value.toLowerCase();
+
+    // 4. Remove any special characters except letters, numbers, and hyphens
+    // Regex allows: a-z, 0-9, and hyphen (-)
+    value = value.replace(/[^a-z0-9-]/g, '');
+
+    // 5. Update the input value
+    input.value = value;
+
+    // Optional: Reset the validation status if the user changes the text
+    const statusAvail = document.getElementById('domainStatusAvailable');
+    const statusTaken = document.getElementById('domainStatusTaken');
+    
+    if (statusAvail.style.display === 'flex' || statusTaken.style.display === 'flex') {
+        statusAvail.style.display = 'none';
+        statusTaken.style.display = 'none';
+        document.getElementById('domainStatusInfo').style.display = 'none';
+        isDomainAvailable = false;
+        input.style.borderColor = "#e2e8f0"; // Reset border color
+    }
+}
+
             tempOrderData = {
                 planName: planName,
                 price: price,
@@ -5424,64 +5468,73 @@
             input.value = ""; 
         }
 
-        async function checkDomainAvailability() {
-            const input = document.getElementById('coDomainInput');
-            const domainInput = input.value.trim();
-            const btn = document.getElementById('checkDomainBtn');
-            const statusAvail = document.getElementById('domainStatusAvailable');
-            const statusTaken = document.getElementById('domainStatusTaken');
-            const statusInfo = document.getElementById('domainStatusInfo');
+async function checkDomainAvailability() {
+    const input = document.getElementById('coDomainInput');
+    // Trim whitespace just in case
+    let domainInput = input.value.trim(); 
+    
+    const btn = document.getElementById('checkDomainBtn');
+    const statusAvail = document.getElementById('domainStatusAvailable');
+    const statusTaken = document.getElementById('domainStatusTaken');
+    const statusInfo = document.getElementById('domainStatusInfo');
 
-            statusAvail.style.display = 'none';
-            statusTaken.style.display = 'none';
-            statusInfo.style.display = 'none';
-            isDomainAvailable = false;
-            input.style.borderColor = "#e2e8f0";
+    // Hide previous results
+    statusAvail.style.display = 'none';
+    statusTaken.style.display = 'none';
+    statusInfo.style.display = 'none';
+    isDomainAvailable = false;
+    input.style.borderColor = "#e2e8f0";
 
-            if (!domainInput) {
-                showPopup("Input Required", "Please enter a domain name.");
-                return;
-            }
+    if (!domainInput) {
+        showPopup("Input Required", "Please enter a domain name.");
+        return;
+    }
 
-            let fullDomain = domainInput;
-            if (currentDomainType === 'ddnex') {
-                fullDomain = domainInput.toLowerCase() + ".ddnex.com";
-            } else {
-                fullDomain = domainInput.toLowerCase();
-                const domainRegex = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/;
-                if (!domainRegex.test(fullDomain)) {
-                    showPopup("Invalid Format", "Please enter a valid domain (e.g. example.com).");
-                    return;
-                }
-            }
+    // Force lowercase and remove spaces again before processing
+    domainInput = domainInput.toLowerCase().replace(/\s+/g, '');
 
-            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Checking...';
-            btn.disabled = true;
-
-            setTimeout(() => {
-                btn.innerHTML = currentDomainType === 'ddnex' ? 'Check' : 'Verify';
-                btn.disabled = false;
-
-                if (currentDomainType === 'ddnex') {
-                    const takenDomains = ["google", "facebook", "taken", "test", "admin", "support"]; 
-                    
-                    if (takenDomains.includes(domainInput.toLowerCase())) {
-                        statusTaken.style.display = 'flex';
-                        input.style.borderColor = "#ef4444"; 
-                    } else {
-                        statusAvail.style.display = 'flex';
-                        isDomainAvailable = true;
-                        input.style.borderColor = "#10b981"; 
-                        tempOrderData.domain = fullDomain;
-                    }
-                } else {
-                    statusInfo.style.display = 'flex';
-                    isDomainAvailable = true; 
-                    input.style.borderColor = "var(--accent-orange)"; 
-                    tempOrderData.domain = fullDomain;
-                }
-            }, 1000);
+    let fullDomain = domainInput;
+    if (currentDomainType === 'ddnex') {
+        fullDomain = domainInput + ".ddnex.com";
+    } else {
+        fullDomain = domainInput;
+        const domainRegex = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/;
+        if (!domainRegex.test(fullDomain)) {
+            showPopup("Invalid Format", "Please enter a valid domain (e.g. example.com).");
+            return;
         }
+    }
+
+    // --- LOADING STATE ---
+    btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Checking...';
+    btn.disabled = true;
+
+    // Simulate API check
+    setTimeout(() => {
+        btn.innerHTML = currentDomainType === 'ddnex' ? 'Check' : 'Verify';
+        btn.disabled = false;
+
+        if (currentDomainType === 'ddnex') {
+            const takenDomains = ["google", "facebook", "taken", "test", "admin", "support", "company"]; // Added "company" to blocked list if you want
+            
+            if (takenDomains.includes(domainInput)) {
+                statusTaken.style.display = 'flex';
+                input.style.borderColor = "#ef4444"; 
+                isDomainAvailable = false;
+            } else {
+                statusAvail.style.display = 'flex';
+                isDomainAvailable = true;
+                input.style.borderColor = "#10b981"; 
+                tempOrderData.domain = fullDomain;
+            }
+        } else {
+            statusInfo.style.display = 'flex';
+            isDomainAvailable = true; 
+            input.style.borderColor = "var(--accent-orange)"; 
+            tempOrderData.domain = fullDomain;
+        }
+    }, 1000);
+}
 
         function nextCheckoutStep(step) {
             document.querySelectorAll('.checkout-section').forEach(el => el.classList.remove('active'));
