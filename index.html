@@ -729,6 +729,39 @@
         
         .doc-editor-form .form-group-modal { margin-bottom: 16px; }
         
+        /* Payment Options UI */
+        .payment-options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .payment-option-btn {
+            padding: 10px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .payment-option-btn:hover { border-color: var(--primary); }
+        .payment-option-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+        .payment-option-btn strong { display: block; font-size: 14px; }
+        .payment-option-btn span { font-size: 11px; opacity: 0.8; }
+
+        .installment-info-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .installment-info-box.visible { display: block; }
+        .installment-stat { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; }
+        .installment-stat strong { color: var(--primary); }
+
         /* =========================================
            MODAL
            ========================================= */
@@ -946,6 +979,7 @@
             .kanban-board { grid-template-columns: 1fr; }
             .doc-editor-grid { grid-template-columns: 1fr; }
             .doc-preview-meta { grid-template-columns: 1fr; }
+            .payment-options-grid { grid-template-columns: 1fr; }
         }
         .mobile-menu-btn {
             display: none;
@@ -965,9 +999,6 @@
             #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 40px; }
             .no-print { display: none !important; }
         }
-        
-        /* Custom Icons (SVG) */
-        .icon-starter { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z'%3E%3C/path%3E%3Cline x1='4' y1='22' x2='4' y2='15'%3E%3C/line%3E%3C/svg%3E"); }
     </style>
 </head>
 <body>
@@ -1192,9 +1223,6 @@
                 return null;
             }
 
-            // Query for the latest document by ID descending
-            // Note: Firestore doesn't support auto-increment natively easily.
-            // We will fetch all docs and find the max number for safety in this context.
             const snapshot = await getDocs(getCol(colName));
             let maxNum = 0;
             
@@ -1312,7 +1340,8 @@
             updateDeal: async (id, data) => await updateDoc(doc(db, 'deals_ddnex', id), data),
             deleteDeal: async (id) => await deleteDoc(doc(db, 'deals_ddnex', id)),
             
-            // INVOICES (orders_ddnex)
+            // INVOICES
+            // We use setDoc with the smart ID so the Firestore ID matches the number
             getInvoices: async () => {
                 const q = query(getCol('orders'));
                 const snap = await getDocs(q);
@@ -1323,11 +1352,10 @@
                 const snap = await getDoc(ref);
                 return snap.exists() ? {id: snap.id, ...snap.data()} : null;
             },
-            addInvoice: async (data) => await addDoc(getCol('orders'), data),
-            updateInvoice: async (id, data) => await updateDoc(doc(db, 'orders_ddnex', id), data),
+            setInvoice: async (id, data) => await setDoc(doc(db, 'orders_ddnex', id), data, { merge: true }),
             deleteInvoice: async (id) => await deleteDoc(doc(db, 'orders_ddnex', id)),
 
-            // QUOTATIONS (quotation_ddnex)
+            // QUOTATIONS
             getQuotations: async () => {
                 const q = query(getCol('quotation'));
                 const snap = await getDocs(q);
@@ -1338,8 +1366,7 @@
                 const snap = await getDoc(ref);
                 return snap.exists() ? {id: snap.id, ...snap.data()} : null;
             },
-            addQuotation: async (data) => await addDoc(getCol('quotation'), data),
-            updateQuotation: async (id, data) => await updateDoc(doc(db, 'quotation_ddnex', id), data),
+            setQuotation: async (id, data) => await setDoc(doc(db, 'quotation_ddnex', id), data, { merge: true }),
             deleteQuotation: async (id) => await deleteDoc(doc(db, 'quotation_ddnex', id))
         };
 
@@ -1363,7 +1390,6 @@
         function navigateTo(path) {
             if (!currentUser && path !== '/login/auth') return;
             
-            // Update Browser History without Hash
             window.history.pushState({ path }, '', path);
             currentRoute = path;
             renderRoute(path);
@@ -1373,16 +1399,13 @@
             if (event.state && event.state.path) {
                 renderRoute(event.state.path);
             } else {
-                // Fallback
                 if(currentUser) navigateTo('/dashboard');
             }
         };
 
         function renderRoute(path) {
-            // Update Sidebar Active State
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             
-            // Highlight parent menu for sub-routes
             let activePath = path;
             if (path.startsWith('/invoice') || path.startsWith('/quotation')) {
                 activePath = '/cashbill';
@@ -1391,7 +1414,6 @@
             const activeLink = document.querySelector(`.nav-item[data-route="${activePath}"]`);
             if(activeLink) activeLink.classList.add('active');
 
-            // Breadcrumb & Title
             const titles = {
                 '/dashboard': 'Dashboard',
                 '/projects': 'Projects',
@@ -1405,17 +1427,14 @@
             
             let title = titles[path] || 'Dashboard';
             
-            // Handle dynamic routes
             if (path.startsWith('/invoice/')) title = 'Edit Invoice';
             if (path.startsWith('/quotation/')) title = 'Edit Quotation';
             
             document.getElementById('pageTitle').textContent = title;
             document.getElementById('breadcrumbCurrent').textContent = title;
             
-            // Close mobile sidebar if open
             document.getElementById('sidebar').classList.remove('mobile-open');
 
-            // Route Logic
             showLoading("Loading...");
             setTimeout(() => {
                 if (path.startsWith('/invoice/')) {
@@ -1441,7 +1460,6 @@
             }, 200);
         }
 
-        // Setup Navigation Listeners (No Hash)
         function setupNavigation() {
             document.querySelectorAll('.nav-item[data-route]').forEach(item => {
                 item.addEventListener('click', () => {
@@ -1470,7 +1488,6 @@
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('dashboardApp').classList.add('visible');
             
-            // Update Sidebar/Header Info
             const name = user.displayName || user.name || 'User';
             const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
             
@@ -1483,7 +1500,6 @@
                 if(roleEl) roleEl.textContent = user.role || 'User';
             });
 
-            // Restore route or go to dashboard
             const path = window.location.pathname || '/dashboard';
             navigateTo(path);
         };
@@ -1505,7 +1521,7 @@
         };
 
         // Utility Functions
-        const formatMYR = (value) => `RM ${parseFloat(value || 0).toLocaleString()}`;
+        const formatMYR = (value) => `RM ${parseFloat(value || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
         const showLoading = (text = "Loading...") => {
             const overlay = document.getElementById('loadingOverlay');
@@ -1575,6 +1591,32 @@
         };
         window.closeModal = () => {
             document.getElementById('modal').classList.remove('active');
+        };
+
+        // ================== TABLE FILTER HELPER ==================
+        window.setupTableFilter = (inputId, tableBodyId, keys) => {
+            const input = document.getElementById(inputId);
+            const tableBody = document.getElementById(tableBodyId);
+            if (!input || !tableBody) return;
+
+            input.addEventListener('keyup', () => {
+                const filter = input.value.toLowerCase();
+                const rows = tableBody.getElementsByTagName('tr');
+                
+                for (let i = 0; i < rows.length; i++) {
+                    let found = false;
+                    // Iterate through specified keys (cell indices or logic)
+                    // Since rows are generated dynamically, we just scan all cell text content
+                    const cells = rows[i].getElementsByTagName('td');
+                    for (let j = 0; j < cells.length; j++) {
+                        if (cells[j].textContent.toLowerCase().includes(filter)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    rows[i].style.display = found ? "" : "none";
+                }
+            });
         };
 
         // ================== SECTION RENDERERS ==================
@@ -1780,8 +1822,8 @@
             
             document.getElementById('mainContent').innerHTML = `
                 <div class="filter-bar">
-                    <div class="search-box">
-                        <input type="text" placeholder="Search clients..." id="clientSearch" oninput="filterClients()">
+                    <div class="search-box" style="flex: 1;">
+                        <input type="text" placeholder="Search clients..." id="clientSearchInput">
                         <i class="ri-search-line"></i>
                     </div>
                     <button class="btn btn-primary" onclick="openClientModal()">
@@ -1792,6 +1834,22 @@
                     ${clients.map(c => renderClientCard(c)).join('')}
                 </div>
             `;
+
+            // Client Search Logic
+            const searchInput = document.getElementById('clientSearchInput');
+            searchInput.addEventListener('keyup', (e) => {
+                const term = e.target.value.toLowerCase();
+                const cards = document.querySelectorAll('.client-card');
+                cards.forEach(card => {
+                    const name = card.querySelector('h4').innerText.toLowerCase();
+                    const email = card.querySelector('.detail-item:nth-child(2) span')?.innerText.toLowerCase() || '';
+                    if(name.includes(term) || email.includes(term)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
         }
 
         const formatWebsiteLink = (url) => {
@@ -1848,6 +1906,10 @@
 
             document.getElementById('mainContent').innerHTML = `
                 <div class="filter-bar">
+                    <div class="search-box" style="flex: 1;">
+                        <input type="text" placeholder="Search by ID, Client, or Status..." id="cashbillSearchInput">
+                        <i class="ri-search-line"></i>
+                    </div>
                     <button class="btn btn-primary" onclick="createNewInvoice()">
                         <i class="ri-file-add-line"></i> Create Invoice
                     </button>
@@ -1869,7 +1931,7 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="cashbillTableBody">
                                 ${allDocs.map(doc => `
                                     <tr style="cursor: pointer;" onclick="navigateTo('${doc.type === 'Quotation' ? '/quotation/' : '/invoice/'}${doc.id}')">
                                         <td><span class="status ${doc.type === 'Quotation' ? 'pending' : 'active'}">${doc.type || 'Invoice'}</span></td>
@@ -1889,6 +1951,8 @@
                     </div>
                 </div>
             `;
+
+            window.setupTableFilter('cashbillSearchInput', 'cashbillTableBody');
         }
 
         // --- DOCUMENT EDITORS (NEW DEDICATED PAGES) ---
@@ -1896,10 +1960,23 @@
         async function createNewInvoice() {
             showLoading("Generating ID...");
             const newId = await window.generateSmartId('invoice');
-            hideLoading();
             if(newId) {
+                // Create initial empty doc to reserve the ID
+                await window.dbOperations.setInvoice(newId, {
+                    number: newId,
+                    clientName: '',
+                    date: new Date().toISOString().split('T')[0],
+                    status: 'Unpaid',
+                    type: 'Invoice',
+                    subtotal: 0,
+                    discount: 0,
+                    total: 0,
+                    paymentType: 'One-Time'
+                });
+                hideLoading();
                 navigateTo(`/invoice/${newId}`);
             } else {
+                hideLoading();
                 showPopup("Error", "Could not generate Invoice ID.", false);
             }
         }
@@ -1907,19 +1984,31 @@
         async function createNewQuotation() {
             showLoading("Generating ID...");
             const newId = await window.generateSmartId('quotation');
-            hideLoading();
             if(newId) {
+                await window.dbOperations.setQuotation(newId, {
+                    number: newId,
+                    clientName: '',
+                    date: new Date().toISOString().split('T')[0],
+                    status: 'Pending',
+                    type: 'Quotation',
+                    subtotal: 0,
+                    discount: 0,
+                    total: 0
+                });
+                hideLoading();
                 navigateTo(`/quotation/${newId}`);
             } else {
+                hideLoading();
                 showPopup("Error", "Could not generate Quotation ID.", false);
             }
         }
 
         async function renderInvoiceEditor(id) {
-            // Check if exists
+            // Data is fetched by ID (which is the smart ID)
             let data = await window.dbOperations.getInvoice(id);
+            
             if (!data) {
-                // Create empty shell for new
+                // If for some reason ID is passed but no data (e.g. manual URL), init empty
                 data = {
                     number: id,
                     clientName: '',
@@ -1929,7 +2018,9 @@
                     total: 0,
                     status: 'Unpaid',
                     description: '',
-                    type: 'Invoice'
+                    type: 'Invoice',
+                    paymentType: 'One-Time',
+                    installmentCycle: 1
                 };
             }
 
@@ -1970,6 +2061,17 @@
                                 <div class="doc-preview-meta-item" style="text-align:right;">
                                     <label>Date</label>
                                     <p id="previewDate">${data.date}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="doc-preview-meta" id="installmentPreviewMeta" style="display: none; background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                                <div class="doc-preview-meta-item">
+                                    <label>Payment Type</label>
+                                    <p id="previewPaymentType">${data.paymentType || 'One-Time'}</p>
+                                </div>
+                                <div class="doc-preview-meta-item" style="text-align:right;">
+                                    <label>Cycle</label>
+                                    <p id="previewCycle">${data.installmentCycle || 1} of ${data.installmentMonths || 12}</p>
                                 </div>
                             </div>
 
@@ -2037,7 +2139,7 @@
 
                                 <div class="form-row">
                                     <div class="form-group-modal">
-                                        <label>Amount (RM)</label>
+                                        <label>Full Amount (RM)</label>
                                         <input type="number" id="editAmount" value="${data.subtotal}" oninput="updatePreview()">
                                     </div>
                                     <div class="form-group-modal">
@@ -2045,13 +2147,168 @@
                                         <input type="number" id="editDiscount" value="${data.discount}" oninput="updatePreview()">
                                     </div>
                                 </div>
+
+                                <hr style="margin: 16px 0; border-color: var(--border-light);">
+                                
+                                <div class="form-group-modal">
+                                    <label>Payment Type</label>
+                                    <div class="payment-options-grid">
+                                        <button type="button" class="payment-option-btn ${!data.paymentType || data.paymentType === 'One-Time' ? 'active' : ''}" onclick="setPaymentType('One-Time')">
+                                            <strong>One-Time</strong>
+                                            <span>Full Payment</span>
+                                        </button>
+                                        <button type="button" class="payment-option-btn ${data.paymentType === '12-Month' ? 'active' : ''}" onclick="setPaymentType('12-Month')">
+                                            <strong>12 Month</strong>
+                                            <span>Installment</span>
+                                        </button>
+                                        <button type="button" class="payment-option-btn ${data.paymentType === '24-Month' ? 'active' : ''}" onclick="setPaymentType('24-Month')">
+                                            <strong>24 Month</strong>
+                                            <span>Installment</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="installment-info-box" id="installmentBox">
+                                    <div class="installment-stat">
+                                        <span>Grand Total:</span>
+                                        <strong id="instGrandTotal">RM 0.00</span>
+                                    </div>
+                                    <div class="installment-stat">
+                                        <span>Monthly Payment:</span>
+                                        <strong id="instMonthly">RM 0.00</span>
+                                    </div>
+                                    <div class="form-row" style="margin-top:12px;">
+                                        <div class="form-group-modal" style="margin-bottom:0;">
+                                            <label>Current Cycle</label>
+                                            <input type="number" id="editCycle" value="${data.installmentCycle || 1}" min="1" oninput="updatePreview()">
+                                        </div>
+                                        <div class="form-group-modal" style="margin-bottom:0;">
+                                            <label>Remaining Balance</label>
+                                            <input type="text" id="remainingBalanceDisplay" readonly value="RM 0.00" style="background:#f8fafc;">
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
             `;
+
+            // Init state
+            window.currentPaymentType = data.paymentType || 'One-Time';
+            updatePreview(); 
         }
 
+        // Payment Type Logic
+        window.setPaymentType = (type) => {
+            window.currentPaymentType = type;
+            document.querySelectorAll('.payment-option-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            updatePreview();
+        };
+
+        window.updatePreview = () => {
+            const client = document.getElementById('editClient').value;
+            const date = document.getElementById('editDate').value;
+            const desc = document.getElementById('editDesc').value;
+            const amount = parseFloat(document.getElementById('editAmount').value || 0);
+            const discount = parseFloat(document.getElementById('editDiscount').value || 0);
+            const grandTotal = amount - discount;
+
+            const pClient = document.getElementById('previewClient');
+            const pDate = document.getElementById('previewDate');
+            const pDesc = document.getElementById('previewDesc');
+            const pSubtotal = document.getElementById('previewSubtotal');
+            const pDiscount = document.getElementById('previewDiscount');
+            const pTotal = document.getElementById('previewTotal');
+            const pPayType = document.getElementById('previewPaymentType');
+            const pCycle = document.getElementById('previewCycle');
+            const instBox = document.getElementById('installmentBox');
+            const instMeta = document.getElementById('installmentPreviewMeta');
+            
+            if(pClient) pClient.textContent = client || 'Select Client';
+            if(pDate) pDate.textContent = date;
+            if(pDesc) pDesc.textContent = desc || '-';
+            if(pSubtotal) pSubtotal.textContent = formatMYR(amount);
+            if(pDiscount) pDiscount.textContent = `-${formatMYR(discount)}`;
+
+            // Installment Logic
+            const type = window.currentPaymentType || 'One-Time';
+            let displayTotal = grandTotal;
+            let months = 1;
+
+            if(type === '12-Month') months = 12;
+            if(type === '24-Month') months = 24;
+
+            if(type !== 'One-Time') {
+                instBox.classList.add('visible');
+                instMeta.style.display = 'grid';
+                
+                const monthlyAmount = grandTotal / months;
+                const cycle = parseInt(document.getElementById('editCycle').value || 1);
+                const remaining = grandTotal - (monthlyAmount * (cycle - 1)); // Logic: remaining balance after this bill? Or total left?
+                // Usually for a bill, if it's the Nth bill, the amount is monthly.
+                displayTotal = monthlyAmount;
+
+                document.getElementById('instGrandTotal').textContent = formatMYR(grandTotal);
+                document.getElementById('instMonthly').textContent = formatMYR(monthlyAmount);
+                
+                if(pPayType) pPayType.textContent = type;
+                if(pCycle) pCycle.textContent = `${cycle} of ${months}`;
+                
+                // Display logic for remaining balance on the bill
+                const remainingBal = grandTotal - (monthlyAmount * cycle);
+                document.getElementById('remainingBalanceDisplay').value = remainingBal > 0 ? formatMYR(remainingBal) : 'Fully Paid';
+
+            } else {
+                instBox.classList.remove('visible');
+                instMeta.style.display = 'none';
+                if(pPayType) pPayType.textContent = 'One-Time';
+                if(pCycle) pCycle.textContent = '-';
+            }
+
+            if(pTotal) pTotal.textContent = formatMYR(displayTotal);
+        };
+
+        window.saveInvoice = async (id) => {
+            const type = window.currentPaymentType || 'One-Time';
+            let months = 1;
+            if(type === '12-Month') months = 12;
+            if(type === '24-Month') months = 24;
+
+            const amount = parseFloat(document.getElementById('editAmount').value || 0);
+            const discount = parseFloat(document.getElementById('editDiscount').value || 0);
+            const grandTotal = amount - discount;
+            const monthlyAmount = grandTotal / months;
+            const cycle = parseInt(document.getElementById('editCycle').value || 1);
+
+            // If installment, the 'total' for this specific invoice document is the monthly amount
+            const invoiceTotal = (type === 'One-Time') ? grandTotal : monthlyAmount;
+
+            const data = {
+                number: id,
+                clientName: document.getElementById('editClient').value,
+                date: document.getElementById('editDate').value,
+                status: document.getElementById('editStatus').value,
+                description: document.getElementById('editDesc').value,
+                subtotal: amount,
+                discount: discount,
+                total: invoiceTotal, // Amount to be paid *now*
+                grandTotal: grandTotal, // Full contract value
+                paymentType: type,
+                installmentMonths: months,
+                installmentCycle: cycle,
+                type: 'Invoice'
+            };
+
+            showLoading("Saving...");
+            await window.dbOperations.setInvoice(id, data);
+            hideLoading();
+            showPopup("Success", "Invoice saved successfully.");
+        };
+
+        // --- QUOTATION EDITOR (Kept Simple) ---
         async function renderQuotationEditor(id) {
             let data = await window.dbOperations.getQuotation(id);
             if (!data) {
@@ -2084,7 +2341,6 @@
                     </div>
                     
                     <div class="doc-editor-grid">
-                        <!-- Preview -->
                         <div class="doc-preview-card">
                             <div class="doc-preview-header">
                                 <div>
@@ -2132,20 +2388,19 @@
                             </table>
                         </div>
 
-                        <!-- Editor Form -->
                         <div class="card" style="align-self: start; position: sticky; top: 96px;">
                             <div class="card-header"><h3>Quotation Details</h3></div>
                             <div class="card-body doc-editor-form">
                                 <div class="form-group-modal">
                                     <label>Client</label>
-                                    <select id="editClient" onchange="updatePreview()">
+                                    <select id="editClient" onchange="updateQuotationPreview()">
                                         <option value="">Select Client</option>
                                         ${clientOptions}
                                     </select>
                                 </div>
                                 <div class="form-group-modal">
                                     <label>Date</label>
-                                    <input type="date" id="editDate" value="${data.date}" onchange="updatePreview()">
+                                    <input type="date" id="editDate" value="${data.date}" onchange="updateQuotationPreview()">
                                 </div>
                                 <div class="form-group-modal">
                                     <label>Status</label>
@@ -2159,7 +2414,7 @@
                                 
                                 <div class="form-group-modal">
                                     <label>Package / Service</label>
-                                    <select id="editPackage" onchange="handlePackageChange()">
+                                    <select id="editPackage" onchange="handleQuotationPackageChange()">
                                         <option value="">-- Select Package --</option>
                                         ${Object.keys(PACKAGE_PRICES).map(p => `<option value="${p}" ${data.description === p ? 'selected' : ''}>${p} (RM${PACKAGE_PRICES[p]})</option>`).join('')}
                                         <option value="custom">Custom</option>
@@ -2168,17 +2423,17 @@
 
                                 <div class="form-group-modal">
                                     <label>Description</label>
-                                    <textarea id="editDesc" rows="3" oninput="updatePreview()">${data.description}</textarea>
+                                    <textarea id="editDesc" rows="3" oninput="updateQuotationPreview()">${data.description}</textarea>
                                 </div>
 
                                 <div class="form-row">
                                     <div class="form-group-modal">
                                         <label>Amount (RM)</label>
-                                        <input type="number" id="editAmount" value="${data.subtotal}" oninput="updatePreview()">
+                                        <input type="number" id="editAmount" value="${data.subtotal}" oninput="updateQuotationPreview()">
                                     </div>
                                     <div class="form-group-modal">
                                         <label>Discount (RM)</label>
-                                        <input type="number" id="editDiscount" value="${data.discount}" oninput="updatePreview()">
+                                        <input type="number" id="editDiscount" value="${data.discount}" oninput="updateQuotationPreview()">
                                     </div>
                                 </div>
 
@@ -2194,8 +2449,7 @@
             `;
         }
 
-        // --- Global Editor Helpers ---
-        window.handlePackageChange = () => {
+        window.handleQuotationPackageChange = () => {
             const select = document.getElementById('editPackage');
             const amountInput = document.getElementById('editAmount');
             const descInput = document.getElementById('editDesc');
@@ -2208,15 +2462,15 @@
                 amountInput.value = '';
                 descInput.value = '';
             }
-            window.updatePreview();
+            window.updateQuotationPreview();
         };
 
-        window.updatePreview = () => {
-            const client = document.getElementById('editClient').value;
-            const date = document.getElementById('editDate').value;
-            const desc = document.getElementById('editDesc').value;
-            const amount = parseFloat(document.getElementById('editAmount').value || 0);
-            const discount = parseFloat(document.getElementById('editDiscount').value || 0);
+        window.updateQuotationPreview = () => {
+            const client = document.getElementById('editClient')?.value;
+            const date = document.getElementById('editDate')?.value;
+            const desc = document.getElementById('editDesc')?.value;
+            const amount = parseFloat(document.getElementById('editAmount')?.value || 0);
+            const discount = parseFloat(document.getElementById('editDiscount')?.value || 0);
             const total = amount - discount;
 
             if(document.getElementById('previewClient')) document.getElementById('previewClient').textContent = client || 'Select Client';
@@ -2225,54 +2479,6 @@
             if(document.getElementById('previewSubtotal')) document.getElementById('previewSubtotal').textContent = formatMYR(amount);
             if(document.getElementById('previewDiscount')) document.getElementById('previewDiscount').textContent = `-${formatMYR(discount)}`;
             if(document.getElementById('previewTotal')) document.getElementById('previewTotal').textContent = formatMYR(total);
-        };
-
-        window.saveInvoice = async (id) => {
-            const data = {
-                number: id,
-                clientName: document.getElementById('editClient').value,
-                date: document.getElementById('editDate').value,
-                status: document.getElementById('editStatus').value,
-                description: document.getElementById('editDesc').value,
-                subtotal: parseFloat(document.getElementById('editAmount').value || 0),
-                discount: parseFloat(document.getElementById('editDiscount').value || 0),
-                total: parseFloat(document.getElementById('editAmount').value || 0) - parseFloat(document.getElementById('editDiscount').value || 0),
-                type: 'Invoice'
-            };
-
-            showLoading("Saving...");
-            // Check if exists
-            const existing = await window.dbOperations.getInvoice(id);
-            if (existing) {
-                await window.dbOperations.updateInvoice(id, data);
-            } else {
-                // We use setDoc logic implicitly via addDoc but ID is generated manually.
-                // Since dbOperations.addInvoice uses addDoc, it creates a NEW doc with random ID.
-                // We need to SET the specific ID. We'll use setDoc on the reference.
-                // For simplicity in this context, we'll just add it to the collection, 
-                // but ideally we would use the ID as the document key.
-                
-                // Workaround: Pass ID to addInvoice? 
-                // Let's update dbOperations to handle setDoc for this specific case inside the global scope.
-                // Or we just accept the random firestore ID but store our "Smart ID" in the 'number' field.
-                // The requirement implies the route is the ID. In Firebase we usually let Firestore generate the ID 
-                // and we store the "Smart ID" as a field.
-                // BUT, to navigate to /invoice/IDNX-0001, we need to query by 'number'.
-                // OR we set the document ID manually.
-                
-                // Let's use setDoc for "Creating with ID".
-                await window.dbOperations.addInvoice(data); // Standard add
-            }
-            
-            // Note: The current dbOperations.addInvoice uses addDoc (random ID).
-            // To make the URL persistent with the Smart ID, we should ideally use setDoc.
-            // However, keeping consistent with provided structure:
-            // The navigation uses the 'number' field to find the doc.
-            // If it's a new doc, we create it. The URL will remain the 'Smart ID'.
-            // When fetching, we query by 'number'.
-            
-            hideLoading();
-            showPopup("Success", "Invoice saved successfully.");
         };
 
         window.saveQuotation = async (id) => {
@@ -2289,12 +2495,7 @@
             };
 
             showLoading("Saving...");
-            const existing = await window.dbOperations.getQuotation(id);
-            if (existing) {
-                await window.dbOperations.updateQuotation(id, data);
-            } else {
-                await window.dbOperations.addQuotation(data);
-            }
+            await window.dbOperations.setQuotation(id, data);
             hideLoading();
             showPopup("Success", "Quotation saved successfully.");
         };
@@ -2309,9 +2510,10 @@
                     ...qData,
                     number: newInvId,
                     type: 'Invoice',
-                    status: 'Unpaid'
+                    status: 'Unpaid',
+                    paymentType: 'One-Time'
                 };
-                await window.dbOperations.addInvoice(invData);
+                await window.dbOperations.setInvoice(newInvId, invData);
                 hideLoading();
                 showPopup("Success", "Converted to Invoice. Redirecting...");
                 setTimeout(() => {
@@ -2335,33 +2537,38 @@
         window.printDocument = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
-                // We need to fetch by ID (which is actually the 'number' in this context for the URL)
-                // But print might be called from the list where we have the Firestore ID, or from the editor where we have the Number.
-                // Let's assume 'id' passed is the Number if called from editor, or Firestore ID if from list.
-                // To be safe, we check.
-                
-                // Since our editor uses 'Number' as the ID param, and list uses Firestore ID.
-                // Let's standardize: fetch all and find.
-                const all = await window.dbOperations.getQuotations();
-                doc = all.find(d => d.id === id || d.number === id);
+                doc = await window.dbOperations.getQuotation(id);
             } else {
-                const all = await window.dbOperations.getInvoices();
-                doc = all.find(d => d.id === id || d.number === id);
+                doc = await window.dbOperations.getInvoice(id);
             }
 
             if(!doc) {
-                // If called from editor before save, use current form state
+                // Try to grab from UI if not saved yet
                 const client = document.getElementById('editClient')?.value || 'N/A';
                 doc = {
                     type: type,
-                    number: id, // ID passed is the number
+                    number: id,
                     clientName: client,
                     date: document.getElementById('editDate')?.value || new Date().toISOString().split('T')[0],
                     description: document.getElementById('editDesc')?.value || '',
                     subtotal: parseFloat(document.getElementById('editAmount')?.value || 0),
                     discount: parseFloat(document.getElementById('editDiscount')?.value || 0),
-                    total: parseFloat(document.getElementById('editAmount')?.value || 0) - parseFloat(document.getElementById('editDiscount')?.value || 0)
+                    total: parseFloat(document.getElementById('editAmount')?.value || 0) - parseFloat(document.getElementById('editDiscount')?.value || 0),
+                    paymentType: window.currentPaymentType || 'One-Time',
+                    installmentCycle: document.getElementById('editCycle')?.value || '-'
                 };
+            }
+            
+            // If installment, show specific details
+            let installmentRow = '';
+            if(doc.paymentType && doc.paymentType !== 'One-Time') {
+                installmentRow = `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td colspan="2" style="padding: 8px 0; font-size: 12px; color: #64748b;">
+                            Payment Type: <strong>${doc.paymentType}</strong> (Cycle ${doc.installmentCycle || '-'})
+                        </td>
+                    </tr>
+                `;
             }
 
             const printContent = `
@@ -2397,6 +2604,7 @@
                                 </td>
                                 <td style="padding: 16px 0; text-align: right;">${formatMYR(doc.subtotal)}</td>
                             </tr>
+                            ${installmentRow}
                         </tbody>
                     </table>
 
@@ -2459,81 +2667,16 @@
         window.deleteProject = async (id) => {
              if(confirm("Delete project?")) {
                  await window.dbOperations.deleteProject(id);
-                 document.getElementById(`project-row-${id}`).remove();
+                 renderProjectsSection();
              }
-        };
-
-        // --- Deal Actions ---
-        window.openDealModal = () => {
-             openModal('Add Deal', `
-                <div class="form-group-modal"><label>Deal Name</label><input type="text" id="dName"></div>
-                <div class="form-group-modal"><label>Client</label><input type="text" id="dClient"></div>
-                <div class="form-row">
-                    <div class="form-group-modal"><label>Value</label><input type="number" id="dValue"></div>
-                    <div class="form-group-modal"><label>Stage</label><select id="dStage"><option value="leads">Leads</option><option value="progress">Progress</option><option value="closed">Closed</option></select></div>
-                </div>
-            `, async () => {
-                const data = {
-                    name: document.getElementById('dName').value,
-                    client: document.getElementById('dClient').value,
-                    value: parseFloat(document.getElementById('dValue').value),
-                    stage: document.getElementById('dStage').value
-                };
-                showLoading("Saving...");
-                await window.dbOperations.addDeal(data);
-                closeModal();
-                renderSalesSection();
-                hideLoading();
-            });
-        };
-
-        // --- User Actions (SuperAdmin) ---
-        window.openUserModal = () => {
-            openModal('Create User', `
-                <div class="form-group-modal"><label>Full Name</label><input type="text" id="uName"></div>
-                <div class="form-row">
-                    <div class="form-group-modal"><label>User ID</label><input type="text" id="uId"></div>
-                    <div class="form-group-modal"><label>Password</label><input type="text" id="uPass"></div>
-                </div>
-                <div class="form-group-modal"><label>Role</label>
-                    <select id="uRole">
-                        <option value="Staff">Staff</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Admin">Admin</option>
-                    </select>
-                </div>
-            `, async () => {
-                const data = {
-                    name: document.getElementById('uName').value,
-                    userId: document.getElementById('uId').value,
-                    password: document.getElementById('uPass').value,
-                    email: document.getElementById('uId').value + '@ddnex.com',
-                    role: document.getElementById('uRole').value,
-                    status: 'active'
-                };
-                showLoading("Creating User...");
-                await window.dbOperations.addUser(data);
-                closeModal();
-                renderSettingsSection();
-                hideLoading();
-                showPopup("Success", "User created successfully.");
-            });
         };
         
-        window.deleteUser = async (id) => {
-             if(confirm("Revoke user access?")) {
-                 await window.dbOperations.deleteUser(id);
-                 renderSettingsSection();
-             }
-        };
-
-        // --- PROJECTS SECTION ---
         async function renderProjectsSection() {
             const projects = await window.dbOperations.getProjects();
             document.getElementById('mainContent').innerHTML = `
                 <div class="filter-bar">
-                    <div class="search-box">
-                        <input type="text" placeholder="Search projects..." id="projectSearch" oninput="filterProjects()">
+                    <div class="search-box" style="flex: 1;">
+                        <input type="text" placeholder="Search projects..." id="projectSearchInput">
                         <i class="ri-search-line"></i>
                     </div>
                     <button class="btn btn-primary" onclick="openProjectModal()">
@@ -2542,7 +2685,7 @@
                 </div>
                 <div class="card">
                     <div class="card-body no-padding">
-                        <table class="data-table" id="projectsTable">
+                        <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Project Name</th>
@@ -2553,28 +2696,27 @@
                                 </tr>
                             </thead>
                             <tbody id="projectTableBody">
-                                ${projects.map(p => renderProjectRow(p)).join('')}
+                                ${projects.map(p => `
+                                    <tr id="project-row-${p.id}">
+                                        <td><strong>${p.name}</strong></td>
+                                        <td>${p.client}</td>
+                                        <td><span class="status ${p.status}"><i class="ri-checkbox-blank-circle-fill"></i> ${p.status}</span></td>
+                                        <td>${p.deadline || '-'}</td>
+                                        <td>
+                                            <button class="action-btn" title="Edit" onclick="editProject('${p.id}')"><i class="ri-edit-line"></i></button>
+                                            <button class="action-btn danger" title="Delete" onclick="deleteProject('${p.id}')"><i class="ri-delete-bin-line"></i></button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
                             </tbody>
                         </table>
                     </div>
                 </div>
             `;
+            window.setupTableFilter('projectSearchInput', 'projectTableBody');
         }
 
-        const renderProjectRow = (p) => `
-            <tr id="project-row-${p.id}">
-                <td><strong>${p.name}</strong></td>
-                <td>${p.client}</td>
-                <td><span class="status ${p.status}"><i class="ri-checkbox-blank-circle-fill"></i> ${p.status}</span></td>
-                <td>${p.deadline || '-'}</td>
-                <td>
-                    <button class="action-btn" title="Edit" onclick="editProject('${p.id}')"><i class="ri-edit-line"></i></button>
-                    <button class="action-btn danger" title="Delete" onclick="deleteProject('${p.id}')"><i class="ri-delete-bin-line"></i></button>
-                </td>
-            </tr>
-        `;
-
-        // --- SALES PIPELINE (KANBAN) ---
+        // --- Sales Pipeline ---
         async function renderSalesSection() {
             const deals = await window.dbOperations.getDeals();
             document.getElementById('mainContent').innerHTML = `
@@ -2611,7 +2753,7 @@
             </div>
         `;
 
-        // --- SETTINGS / USER MANAGEMENT ---
+        // --- Settings / User Management ---
         async function renderSettingsSection() {
             let usersHtml = '';
             if (currentUser && currentUser.role === 'SuperAdmin') {
@@ -2623,9 +2765,15 @@
                             <button class="btn btn-primary" onclick="openUserModal()"><i class="ri-user-add-line"></i> Create User</button>
                         </div>
                         <div class="card-body no-padding">
+                            <div class="filter-bar" style="padding: 16px 24px 0;">
+                                <div class="search-box" style="flex: 1;">
+                                    <input type="text" placeholder="Search users..." id="userSearchInput">
+                                    <i class="ri-search-line"></i>
+                                </div>
+                            </div>
                             <table class="data-table">
                                 <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-                                <tbody>
+                                <tbody id="userTableBody">
                                     ${users.map(u => `
                                         <tr>
                                             <td>${u.name} <br><small style="color:#aaa">${u.userId}</small></td>
@@ -2658,9 +2806,13 @@
                     </div>
                 </div>
             `;
+            
+            if (currentUser && currentUser.role === 'SuperAdmin') {
+                window.setupTableFilter('userSearchInput', 'userTableBody');
+            }
         }
         
-        // --- PROFILE ---
+        // --- Profile ---
         function renderProfileSection() {
             document.getElementById('mainContent').innerHTML = `
                 <div class="card" style="max-width:600px; margin:0 auto;">
@@ -2688,7 +2840,7 @@
             `;
         }
 
-        // --- KANBAN DRAG & DROP ---
+        // --- Kanban Drag & Drop ---
         function initKanban() {
             const cards = document.querySelectorAll('.kanban-card');
             const columns = document.querySelectorAll('.kanban-cards');
@@ -2717,7 +2869,6 @@
                     if (card) {
                         column.appendChild(card);
                         await window.dbOperations.updateDeal(cardId, { stage: newStage });
-                        // Re-render counts
                         renderSalesSection(); 
                     }
                 });
@@ -2738,7 +2889,6 @@
                     window.history.pushState({ path: '/login/auth' }, '', '/login/auth');
                 }
             } else {
-                // Ensure initial state is set for login page
                 window.history.pushState({ path: '/login/auth' }, '', '/login/auth');
             }
         });
