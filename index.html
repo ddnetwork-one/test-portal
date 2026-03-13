@@ -622,6 +622,73 @@
         .btn-danger:hover { background: #dc2626; }
 
         /* =========================================
+           SERVICES / PRICING CARDS
+           ========================================= */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+        .pricing-card {
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+            padding: 32px 24px;
+            position: relative;
+            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+            display: flex;
+            flex-direction: column;
+        }
+        .pricing-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-xl); }
+        .pricing-card.popular { border: 2px solid var(--primary); }
+        .pricing-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 4px 16px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .pricing-header { text-align: center; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--bg-body); }
+        .pricing-header h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; font-family: var(--font-heading); color: var(--text-main); }
+        .pricing-header p { color: var(--text-muted); font-size: 14px; min-height: 40px; }
+        .pricing-price { text-align: center; margin-bottom: 24px; }
+        .pricing-price .currency { font-size: 18px; font-weight: 600; vertical-align: top; }
+        .pricing-price .amount { font-size: 48px; font-weight: 800; font-family: var(--font-heading); color: var(--text-main); }
+        .pricing-price .period { font-size: 14px; color: var(--text-muted); }
+        .pricing-features { flex: 1; margin-bottom: 24px; }
+        .pricing-features ul li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .pricing-features ul li i { color: var(--accent-green); flex-shrink: 0; margin-top: 3px; }
+        .pricing-features .feature-group {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg-body);
+            border-radius: var(--radius-sm);
+        }
+        .pricing-features .feature-group-title {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            display: block;
+        }
+        .pricing-card .btn { width: 100%; }
+
+        /* =========================================
            MODAL (Updated from Main Site)
            ========================================= */
         .modal-overlay {
@@ -928,6 +995,13 @@
                     <i class="ri-file-list-3-line"></i>
                     <span>Cashbill / Invoice</span>
                 </a>
+                
+                <div class="nav-section-title" style="margin-top: 24px;">Reference</div>
+                <a href="#/services" class="nav-item" data-section="services" onclick="navigateTo('/services', event)">
+                    <i class="ri-price-tag-3-line"></i>
+                    <span>Services & Pricing</span>
+                </a>
+
                 <div class="nav-section-title" style="margin-top: 24px;">System</div>
                 <a href="#/settings" class="nav-item" data-section="settings" onclick="navigateTo('/settings', event)">
                     <i class="ri-settings-3-line"></i>
@@ -1072,20 +1146,13 @@
                     console.log("SuperAdmin Created in DB");
                 }
 
-                // Sign in anonymously (or custom token) to get a session, 
-                // but for this specific requirement, we will simulate a session object
-                // to allow the app to run. 
-                // Since we can't easily swap to email auth without a password, we will mock the user object
-                // but perform DB operations as the configured user.
-                
-                // For a real app, you'd create the user in Auth too. Here we mock session state.
                 const userMock = { 
                     uid: 'superadmin_001', 
                     displayName: 'Super Administrator', 
-                    email: 'admin@ddnex.com' 
+                    email: 'admin@ddnex.com',
+                    role: 'SuperAdmin'
                 };
                 
-                // Manually trigger the auth state logic for the UI
                 window.onUserLoggedIn(userMock);
                 return;
             }
@@ -1099,13 +1166,11 @@
                     const userDoc = querySnapshot.docs[0];
                     const userData = userDoc.data();
                     
-                    // In real app, compare hash. Here plain text for demo based on prompt simplicity
                     if (userData.password === password) {
                         if (userData.status === 'suspended') {
                             window.showPopup("Access Denied", "Your account has been suspended.", false);
                             return;
                         }
-                        // Mock session
                         window.onUserLoggedIn({ 
                             uid: userDoc.id, 
                             displayName: userData.name, 
@@ -1208,7 +1273,8 @@
                 '/sales': 'Sales Pipeline',
                 '/cashbill': 'Cashbill & Invoices',
                 '/settings': 'Settings',
-                '/profile': 'My Profile'
+                '/profile': 'My Profile',
+                '/services': 'Services & Pricing' // Added
             };
             
             const title = titles[path] || 'Dashboard';
@@ -1229,6 +1295,7 @@
                     case '/cashbill': renderCashbillSection(); break;
                     case '/settings': renderSettingsSection(); break;
                     case '/profile': renderProfileSection(); break;
+                    case '/services': renderServicesSection(); break; // Added
                     default: renderDashboardSection();
                 }
                 hideLoading();
@@ -1249,6 +1316,9 @@
 
         window.onUserLoggedIn = (user) => {
             currentUser = user;
+            // Persistence: Save to LocalStorage
+            localStorage.setItem('ddnex_user', JSON.stringify(user));
+            
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('dashboardApp').classList.add('visible');
             
@@ -1265,7 +1335,9 @@
                 if(roleEl) roleEl.textContent = user.role || 'User';
             });
 
-            navigateTo('/dashboard');
+            // Check hash to route or default to dashboard
+            const hash = window.location.hash.replace('#', '') || '/dashboard';
+            navigateTo(hash);
         };
 
         window.handleLogout = () => {
@@ -1276,9 +1348,13 @@
 
         window.onUserLoggedOut = () => {
             currentUser = null;
+            // Persistence: Clear LocalStorage
+            localStorage.removeItem('ddnex_user');
+            
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('dashboardApp').classList.remove('visible');
             document.getElementById('loginForm').reset();
+            window.location.hash = '/login/auth';
         };
 
         // Utility Functions
@@ -1362,7 +1438,7 @@
             const clients = await window.dbOperations.getClients();
             
             const activeProjects = projects.filter(p => p.status === 'active').length;
-            const pendingInvoices = projects.reduce((sum, p) => sum + (p.value || 0), 0); // Dummy calculation
+            const pendingInvoices = projects.reduce((sum, p) => sum + (p.value || 0), 0); 
             
             document.getElementById('mainContent').innerHTML = `
                 <div class="stats-grid">
@@ -1419,8 +1495,193 @@
                              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                                 <button class="btn btn-outline" onclick="navigateTo('/cashbill')"><i class="ri-file-add-line"></i> New Invoice</button>
                                 <button class="btn btn-outline" onclick="navigateTo('/clients')"><i class="ri-user-add-line"></i> Add Client</button>
+                                <button class="btn btn-outline" onclick="navigateTo('/services')"><i class="ri-price-tag-3-line"></i> View Plans</button>
+                                <button class="btn btn-outline" onclick="navigateTo('/sales')"><i class="ri-funnel-chart-line"></i> Pipeline</button>
                              </div>
                         </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- SERVICES & PRICING (NEW) ---
+        function renderServicesSection() {
+            document.getElementById('mainContent').innerHTML = `
+                <div style="text-align:center; margin-bottom: 32px;">
+                    <h2 style="font-size: 28px; font-family: var(--font-heading); font-weight: 800; margin-bottom: 8px;">DDNEX® Service Packages</h2>
+                    <p style="color: var(--text-muted);">Transparent pricing for all your digital needs.</p>
+                </div>
+
+                <div class="pricing-grid">
+                    <!-- Starter -->
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3>Starter Landing Page</h3>
+                            <p>Best for promotions, campaigns, startups</p>
+                        </div>
+                        <div class="pricing-price">
+                            <span class="currency">RM</span><span class="amount">399</span>
+                            <div class="period">Fixed</div>
+                        </div>
+                        <div class="pricing-features">
+                            <div class="feature-group">
+                                <span class="feature-group-title">Delivery</span>
+                                <ul><li>2–3 Days</li></ul>
+                            </div>
+                            <div class="feature-group">
+                                <span class="feature-group-title">Payment Options</span>
+                                <ul>
+                                    <li>12-Month Installment: RM39/mo (Total RM468)</li>
+                                    <li>Monthly Promo: RM29/mo (24-month commitment)</li>
+                                </ul>
+                            </div>
+                            <span class="feature-group-title">Design</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> 1 Custom Landing Page</li>
+                                <li><i class="ri-check-line"></i> Mobile Responsive Design</li>
+                                <li><i class="ri-check-line"></i> Fast Loading Layout</li>
+                            </ul>
+                            <span class="feature-group-title">Features</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Contact Form</li>
+                                <li><i class="ri-check-line"></i> Social Media Links</li>
+                                <li><i class="ri-check-line"></i> Basic SEO Setup</li>
+                            </ul>
+                            <span class="feature-group-title">Included</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Free Subdomain (1 Year)</li>
+                                <li><i class="ri-check-line"></i> Free Deployment</li>
+                                <li><i class="ri-check-line"></i> 1 Revision</li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-outline" onclick="navigateTo('/clients')">Choose Starter</button>
+                    </div>
+
+                    <!-- Business (Popular) -->
+                    <div class="pricing-card popular">
+                        <div class="pricing-badge">Most Popular</div>
+                        <div class="pricing-header">
+                            <h3>Business Website</h3>
+                            <p>Best for company profiles & small businesses</p>
+                        </div>
+                        <div class="pricing-price">
+                            <span class="currency">RM</span><span class="amount">899</span>
+                            <div class="period">Fixed</div>
+                        </div>
+                        <div class="pricing-features">
+                            <div class="feature-group">
+                                <span class="feature-group-title">Delivery</span>
+                                <ul><li>4–7 Days</li></ul>
+                            </div>
+                            <div class="feature-group">
+                                <span class="feature-group-title">Payment Options</span>
+                                <ul>
+                                    <li>12-Month Installment: RM89/mo (Total RM1,068)</li>
+                                    <li>Monthly Promo: RM69/mo (24-month commitment)</li>
+                                </ul>
+                            </div>
+                            <span class="feature-group-title">Design</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Up to 5 Pages</li>
+                                <li><i class="ri-check-line"></i> Professional UI/UX</li>
+                                <li><i class="ri-check-line"></i> Mobile Responsive</li>
+                            </ul>
+                            <span class="feature-group-title">Features</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Advanced Contact Form</li>
+                                <li><i class="ri-check-line"></i> Google Maps Integration</li>
+                                <li><i class="ri-check-line"></i> Image Gallery</li>
+                            </ul>
+                            <span class="feature-group-title">Included</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Free Subdomain (1 Year)</li>
+                                <li><i class="ri-check-line"></i> Professional Deployment</li>
+                                <li><i class="ri-check-line"></i> 3 Revisions</li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary" onclick="navigateTo('/clients')">Choose Business</button>
+                    </div>
+
+                    <!-- Portal -->
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3>Business Portal System</h3>
+                            <p>Best for internal management systems</p>
+                        </div>
+                        <div class="pricing-price">
+                            <span class="currency">RM</span><span class="amount">3,800</span>
+                            <div class="period">Fixed</div>
+                        </div>
+                        <div class="pricing-features">
+                            <div class="feature-group">
+                                <span class="feature-group-title">Delivery</span>
+                                <ul><li>10–14 Days</li></ul>
+                            </div>
+                            <div class="feature-group">
+                                <span class="feature-group-title">Payment Options</span>
+                                <ul>
+                                    <li>12-Month Installment: RM349/mo (Total RM4,188)</li>
+                                    <li>Monthly Promo: RM249/mo (Includes Support)</li>
+                                </ul>
+                            </div>
+                            <span class="feature-group-title">Public Website</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Up to 5 Pages</li>
+                                <li><i class="ri-check-line"></i> Contact Form</li>
+                                <li><i class="ri-check-line"></i> Basic SEO</li>
+                            </ul>
+                            <span class="feature-group-title">Admin Portal</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Secure Login System</li>
+                                <li><i class="ri-check-line"></i> User Management</li>
+                                <li><i class="ri-check-line"></i> Activity Logs</li>
+                            </ul>
+                            <span class="feature-group-title">Included</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Database Setup</li>
+                                <li><i class="ri-check-line"></i> Documentation</li>
+                                <li><i class="ri-check-line"></i> 30 Days Support</li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-outline" onclick="navigateTo('/clients')">Choose Portal</button>
+                    </div>
+
+                    <!-- Custom -->
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3>Custom System</h3>
+                            <p>Best for automation or complex systems</p>
+                        </div>
+                        <div class="pricing-price">
+                            <span class="currency">RM</span><span class="amount">6,800</span>
+                            <div class="period">Starting</div>
+                        </div>
+                        <div class="pricing-features">
+                            <div class="feature-group">
+                                <span class="feature-group-title">Delivery</span>
+                                <ul><li>3–6 Weeks</li></ul>
+                            </div>
+                            <span class="feature-group-title">Development</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Fully Custom System</li>
+                                <li><i class="ri-check-line"></i> Secure Database Architecture</li>
+                                <li><i class="ri-check-line"></i> Scalable Backend</li>
+                            </ul>
+                            <span class="feature-group-title">Features</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Automation Tools</li>
+                                <li><i class="ri-check-line"></i> Advanced Analytics</li>
+                                <li><i class="ri-check-line"></i> API Integration</li>
+                            </ul>
+                            <span class="feature-group-title">Included</span>
+                            <ul>
+                                <li><i class="ri-check-line"></i> Full Deployment</li>
+                                <li><i class="ri-check-line"></i> Documentation</li>
+                                <li><i class="ri-check-line"></i> Staff Training</li>
+                                <li><i class="ri-check-line"></i> 60 Days Support</li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-outline" onclick="navigateTo('/contact')">Let's Talk</button>
                     </div>
                 </div>
             `;
@@ -1446,6 +1707,15 @@
             `;
         }
 
+        // Helper to format website link correctly
+        const formatWebsiteLink = (url) => {
+            if (!url) return '#';
+            if (!/^https?:\/\//i.test(url)) {
+                return 'https://' + url;
+            }
+            return url;
+        };
+
         const renderClientCard = (c) => `
             <div class="client-card" id="client-card-${c.id}">
                 <div class="client-header">
@@ -1458,7 +1728,12 @@
                 <div class="client-details">
                     <div class="detail-item"><i class="ri-user-line"></i><span>${c.contact}</span></div>
                     <div class="detail-item"><i class="ri-mail-line"></i><span>${c.email}</span></div>
-                    <div class="detail-item"><i class="ri-global-line"></i><a href="${c.website || '#'}" target="_blank" style="color:var(--primary); text-decoration:none;">${c.website || 'No Website'}</a></div>
+                    <div class="detail-item">
+                        <i class="ri-global-line"></i>
+                        <a href="${formatWebsiteLink(c.website)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary); text-decoration:none; font-weight:500;">
+                            ${c.website ? 'Visit Website' : 'No Website'}
+                        </a>
+                    </div>
                     <div class="detail-item"><i class="ri-vip-crown-line"></i><span style="font-weight:600; color:var(--accent-purple);">Plan: ${c.activePlan || 'Standard'}</span></div>
                 </div>
                 <div class="client-actions">
@@ -1601,7 +1876,6 @@
 
         // --- SETTINGS / USER MANAGEMENT (SUPERADMIN) ---
         async function renderSettingsSection() {
-            // Only SuperAdmin sees User Management
             let usersHtml = '';
             if (currentUser && currentUser.role === 'SuperAdmin') {
                 const users = await window.dbOperations.getUsers();
@@ -1682,15 +1956,21 @@
 
         // --- Client Actions ---
         window.openClientModal = (id = null) => {
-            // Simplified modal for brevity
             const isEdit = !!id;
             openModal(isEdit ? 'Edit Client' : 'Add Client', `
                 <div class="form-group-modal"><label>Company Name</label><input type="text" id="cliName"></div>
                 <div class="form-group-modal"><label>Contact Person</label><input type="text" id="cliContact"></div>
                 <div class="form-group-modal"><label>Email</label><input type="email" id="cliEmail"></div>
                 <div class="form-group-modal"><label>Phone (for WhatsApp)</label><input type="tel" id="cliPhone"></div>
-                <div class="form-group-modal"><label>Website</label><input type="text" id="cliWebsite" placeholder="https://"></div>
-                <div class="form-group-modal"><label>Active Plan</label><select id="cliPlan"><option>Basic</option><option>Standard</option><option>Premium</option></select></div>
+                <div class="form-group-modal"><label>Website</label><input type="text" id="cliWebsite" placeholder="example.com"></div>
+                <div class="form-group-modal"><label>Active Plan</label>
+                    <select id="cliPlan">
+                        <option value="Starter Landing Page">Starter Landing Page (RM399)</option>
+                        <option value="Business Website">Business Website (RM899)</option>
+                        <option value="Business Portal System">Business Portal System (RM3,800)</option>
+                        <option value="Custom System">Custom System (RM6,800+)</option>
+                    </select>
+                </div>
             `, async () => {
                 const data = {
                     name: document.getElementById('cliName').value,
@@ -1783,7 +2063,6 @@
 
         window.generatePDF = (id) => {
             showPopup("Generating PDF", "Preparing document for download...", true, () => {
-                // Simulation
                 alert("This would trigger jsPDF or window.print() logic here.");
             });
         };
@@ -1842,7 +2121,7 @@
                 const data = {
                     name: document.getElementById('uName').value,
                     userId: document.getElementById('uId').value,
-                    password: document.getElementById('uPass').value, // In real app, hash this!
+                    password: document.getElementById('uPass').value,
                     email: document.getElementById('uId').value + '@ddnex.com',
                     role: document.getElementById('uRole').value,
                     status: 'active'
@@ -1891,11 +2170,8 @@
                     
                     if (card) {
                         column.appendChild(card);
-                        // Update DB
                         await window.dbOperations.updateDeal(cardId, { stage: newStage });
-                        // Update Counts
                         document.querySelectorAll('.kanban-header .count').forEach(el => {
-                            // Simple reload to update counts correctly
                             renderSalesSection(); 
                         });
                     }
@@ -1905,13 +2181,23 @@
 
         // Init
         window.addEventListener('load', () => {
-            // Check initial hash
+            // 1. Check Persistence
+            const savedUser = localStorage.getItem('ddnex_user');
+            if (savedUser) {
+                try {
+                    const userObj = JSON.parse(savedUser);
+                    // Restore session without showing login page
+                    window.onUserLoggedIn(userObj);
+                    return; 
+                } catch (e) {
+                    localStorage.removeItem('ddnex_user');
+                }
+            }
+
+            // 2. Check initial hash if no session
             const hash = window.location.hash.replace('#', '') || '/login/auth';
-            // If trying to access protected route without user, go to login
-            if (hash !== '/login/auth' && !currentUser) {
+            if (hash !== '/login/auth') {
                 window.location.hash = '/login/auth';
-            } else if (currentUser) {
-                navigateTo(hash);
             }
         });
 
