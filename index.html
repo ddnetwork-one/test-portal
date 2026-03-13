@@ -6525,10 +6525,12 @@
     // --- BREVO NEWSLETTER LOGIC ---
     document.addEventListener('DOMContentLoaded', () => {
         const sibForm = document.getElementById('sib-form');
+        const sibError = document.getElementById('error-message');
+        const sibSuccess = document.getElementById('success-message');
         
         if(sibForm) {
             sibForm.addEventListener('submit', function(e) {
-                // Prevent default submission to handle validation first
+                // 1. Prevent default form submission to handle via AJAX
                 e.preventDefault();
                 
                 const btn = sibForm.querySelector('button[type="submit"]');
@@ -6536,45 +6538,50 @@
                 const emailInput = sibForm.querySelector('input[name="EMAIL"]');
                 const emailValue = emailInput ? emailInput.value.trim() : '';
 
-                // 1. Basic Empty Check
+                // 2. Hide previous messages
+                sibError.style.display = 'none';
+                sibSuccess.style.display = 'none';
+
+                // 3. Client-side Validation
                 if(!emailValue) {
-                    showPopup("Subscription Failed", "Please fill your email.");
-                    return; // Stop here
+                    sibError.style.display = 'block';
+                    return;
                 }
 
-                // 2. Format Validation (Simple Regex)
                 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if(!emailPattern.test(emailValue)) {
-                    showPopup("Subscription Failed", "Please enter a valid email address (e.g. name@domain.com).");
-                    return; // Stop here
+                    sibError.style.display = 'block';
+                    return;
                 }
 
-                // 3. If valid, visually show processing
+                // 4. Show Loading State
                 btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
                 btn.disabled = true;
                 
                 const formData = new FormData(sibForm);
 
-                // 4. Submit to Brevo API
+                // 5. Submit to Brevo via Fetch
                 fetch(sibForm.action, {
                     method: 'POST',
                     body: formData
                 })
                 .then(response => {
-                    // Brevo usually returns 200 OK even if the email is already subscribed
                     if (response.ok) {
-                        // Success: Redirect to success page
-                        handleNavigation('subscribe-success', null);
+                        // On success, show the green success message
+                        sibSuccess.style.display = 'block';
+                        // Clear the input
+                        emailInput.value = '';
                     } else {
-                        throw new Error('Server error');
+                        // On server error, show red error
+                        sibError.style.display = 'block';
                     }
                 })
                 .catch(error => {
                     console.error('Brevo Error:', error);
-                    showPopup("Subscription Failed", "There was a network error. Please try again.");
+                    sibError.style.display = 'block';
                 })
                 .finally(() => {
-                    // Reset button state regardless of success/failure (or after redirect delay)
+                    // Reset button
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 });
