@@ -74,6 +74,47 @@
     <!-- Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
+    <!-- Brevo Form CSS -->
+    <style>
+      @font-face {
+        font-display: block;
+        font-family: Roboto;
+        src: url(https://assets.brevo.com/font/Roboto/Latin/normal/normal/7529907e9eaf8ebb5220c5f9850e3811.woff2) format("woff2"), url(https://assets.brevo.com/font/Roboto/Latin/normal/normal/25c678feafdc175a70922a116c9be3e7.woff) format("woff")
+      }
+      @font-face {
+        font-display: fallback;
+        font-family: Roboto;
+        font-weight: 600;
+        src: url(https://assets.brevo.com/font/Roboto/Latin/medium/normal/6e9caeeafb1f3491be3e32744bc30440.woff2) format("woff2"), url(https://assets.brevo.com/font/Roboto/Latin/medium/normal/71501f0d8d5aa95960f6475d5487d4c2.woff) format("woff")
+      }
+      @font-face {
+        font-display: fallback;
+        font-family: Roboto;
+        font-weight: 700;
+        src: url(https://assets.brevo.com/font/Roboto/Latin/bold/normal/3ef7cf158f310cf752d5ad08cd0e7e60.woff2) format("woff2"), url(https://assets.brevo.com/font/Roboto/Latin/bold/normal/ece3a1d82f18b60bcce0211725c476aa.woff) format("woff")
+      }
+      #sib-container input:-ms-input-placeholder {
+        text-align: left;
+        font-family: Helvetica, sans-serif;
+        color: #c0ccda;
+      }
+      #sib-container input::placeholder {
+        text-align: left;
+        font-family: Helvetica, sans-serif;
+        color: #c0ccda;
+      }
+      #sib-container textarea::placeholder {
+        text-align: left;
+        font-family: Helvetica, sans-serif;
+        color: #c0ccda;
+      }
+      #sib-container a {
+        text-decoration: underline;
+        color: #2BB2FC;
+      }
+    </style>
+    <!-- Note: Removed the external sib-styles.css to prevent conflicts with our custom design. Using inline styles for the iframe wrapper instead. -->
+
     <!-- SITE CUSTOM STYLES -->
     <style>
         /* =========================================
@@ -364,6 +405,7 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
+            z-index: 1001; /* Above header */
         }
 
         .nav-item:hover .nav-dropdown {
@@ -449,7 +491,7 @@
         }
 
         /* =========================================
-           MOBILE MENU - RAIN DROP OVERLAY STYLE
+           MOBILE MENU - RAIN DROP OVERLAY STYLE (FIXED Z-INDEX)
            ========================================= */
         .mobile-toggle { 
             display: flex; 
@@ -486,36 +528,38 @@
         }
 
         .mobile-menu {
-            position: fixed; /* Drops below header */
-            top: 0; 
+            position: absolute; /* Drops below header */
+            top: var(--header-height); 
             left: 0;
             right: 0;
-            bottom: 0;
-            height: 100vh;
+            height: 0; /* Initially 0 height */
             background: rgba(255, 255, 255, 0.98); 
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            z-index: 998; /* Below header (1000/1002) */
+            z-index: 999; /* Below header (1000/1002) but above page content */
             display: flex;
             flex-direction: column;
-            padding-top: var(--header-height);
+            padding: 0;
             opacity: 0;
             visibility: hidden;
             /* Transition for the "rain drop" slide down effect */
-            transform: translateY(0);
+            transform: translateY(-20px);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             border-bottom: 1px solid var(--border-light);
-            overflow-y: auto;
-            pointer-events: none;
+            overflow: hidden; 
         }
 
         /* When Open */
         .mobile-menu.open { 
             opacity: 1;
             visibility: visible;
-            pointer-events: auto;
             transform: translateY(0);
+            /* The menu grows to fit content */
+            height: auto; 
+            max-height: calc(100vh - var(--header-height)); 
+            overflow-y: auto;
+            padding-bottom: 20px;
         }
 
         /* Mobile Nav Items - Stacked vertically */
@@ -1453,7 +1497,6 @@
         .pricing-section.full-table .compare-table-wrapper {
             display: block;
             animation: none;
-            margin-top: 40px;
         }
 
         @keyframes slideDown {
@@ -1828,7 +1871,7 @@
         .author-info span { font-size: 12px; color: var(--text-secondary); }
 
         /* =========================================
-           FAQ SECTION
+           FAQ SECTION (FIXED ACCORDION)
            ========================================= */
         .faq-grid-wrapper {
             display: grid;
@@ -1899,7 +1942,7 @@
         }
 
         .faq-item.active .faq-question i {
-            transform: rotate(45deg); 
+            transform: rotate(45deg); /* Changed to X rotation */
             color: var(--primary);
         }
 
@@ -2047,84 +2090,24 @@
             font-size: 15px;
         }
         
-        #sib-form-container {
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        .sib-form {
-            background: transparent !important;
-            text-align: left !important;
-        }
-        .sib-container--large {
-            background: var(--bg-body) !important;
-            padding: 20px !important; 
-            border: 1px solid var(--border-light) !important;
-            border-radius: 20px !important;
+        /* Iframe Container */
+        .iframe-container {
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
             box-shadow: var(--shadow-md);
-            max-width: 100% !important;
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            display: flex;
+            justify-content: center;
         }
-        @media(min-width: 992px) { .sib-container--large { padding: 32px !important; } }
-
-        .sib-form-block p {
-            color: var(--text-secondary) !important;
-            font-family: var(--font-main) !important;
-            font-size: 14px !important;
-            margin-bottom: 16px !important;
+        .iframe-container iframe {
+            width: 100%;
+            max-width: 540px;
+            height: 305px;
+            border: none;
+            display: block;
         }
-        .entry__label {
-            font-family: var(--font-main) !important;
-            color: var(--text-main) !important;
-            font-weight: 600 !important;
-            margin-bottom: 6px !important;
-            display: block !important;
-            font-size: 13px !important;
-        }
-        .entry__field input {
-            width: 100% !important;
-            padding: 12px !important; 
-            border: 1px solid var(--border-light) !important;
-            border-radius: 10px !important;
-            background: white !important;
-            color: var(--text-main) !important;
-            font-family: var(--font-main) !important;
-            box-shadow: var(--shadow-sm) !important;
-            transition: 0.3s !important;
-        }
-        @media(min-width: 992px) { .entry__field input { padding: 14px !important; border-radius: 12px !important; } }
-
-        .entry__field input:focus {
-            border-color: var(--primary) !important;
-            outline: none !important;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
-        }
-        .sib-form-block__button {
-            width: 100% !important;
-            padding: 12px 24px !important; 
-            background: var(--primary) !important;
-            color: white !important;
-            border-radius: 12px !important;
-            font-weight: 700 !important;
-            font-family: var(--font-main) !important;
-            transition: 0.3s !important;
-            border: none !important;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-        }
-        @media(min-width: 992px) { .sib-form-block__button { padding: 14px 28px !important; border-radius: 100px !important; } }
-
-        .sib-form-block__button:hover {
-            background: var(--primary-dark) !important;
-            transform: translateY(-2px) !important;
-        }
-        .sib-form-message-panel {
-            max-width: 100% !important;
-            margin-bottom: 16px !important;
-            font-family: var(--font-main) !important;
-            border-radius: 12px !important;
-        }
-        .entry__specification {
-            display: none;
-        }
-        .sib-input { margin-bottom: 0 !important; }
 
         /* =========================================
            LEGAL PAGES
@@ -2562,10 +2545,10 @@
         }
 
         /* =========================================
-           CHECKOUT PAGE STYLES
+           CHECKOUT PAGE STYLES (IMPROVED VISUALS)
            ========================================= */
         .checkout-wrapper {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
         }
 
@@ -2680,6 +2663,7 @@
             background: #f8fafc;
             padding: 20px;
             border-radius: 16px;
+            border: 1px solid var(--border-light);
         }
 
         .summary-row {
@@ -3002,7 +2986,7 @@
         }
 
         /* =========================================
-           PAYMENT OPTION SELECTOR STYLES
+           PAYMENT OPTION SELECTOR STYLES (IMPROVED VISUALS)
            ========================================= */
         .payment-options-container {
             margin-top: 24px;
@@ -3050,7 +3034,6 @@
             font-weight: 800;
             color: var(--primary);
             font-family: var(--font-heading);
-            text-align: right;
         }
         
         .payment-badge {
@@ -3155,7 +3138,7 @@
             </div>
         </div>
 
-        <!-- Mobile Menu - Fixed Fullscreen Overlay -->
+        <!-- Mobile Menu - Absolute Positioned Below Header -->
         <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
             
             <!-- Stacked Items -->
@@ -3563,7 +3546,6 @@
                                 <span class="mobile-compare-value check-yes"><i class="ri-check-line"></i> 1 Page</span>
                             </div>
                             <div class="mobile-compare-row">
-                            <div class="mobile-compare-row">
                                 <span class="mobile-compare-feature">Mobile Responsive</span>
                                 <span class="mobile-compare-value check-yes"><i class="ri-check-line"></i></span>
                             </div>
@@ -3870,7 +3852,7 @@
                 </div>
             </div>
 
-            <!-- FAQ (Static) -->
+            <!-- FAQ (Static - FIX: INIT FUNCTION CALLED ON LOAD) -->
             <div class="faq-section" style="padding: 60px 0;">
                 <div class="container">
                     <div class="section-title text-center reveal"><h2>Frequently Asked Questions</h2><p>Everything you need to know.</p></div>
@@ -3916,127 +3898,142 @@
                     <p>Professional websites and digital systems built for startups, SMEs, and enterprises. Fixed pricing with no hidden fees.</p>
                 </div>
                 
-                <!-- NOTE: For brevity, the pricing cards HTML is identical to the Home section. 
-                     In a real production file, you would copy the exact HTML from the Home section's pricing-preview-grid here. 
-                     I will place a placeholder comment for the cards to save space, but you should paste the full HTML. -->
-                     
                 <div class="pricing-preview-grid">
-                    <!-- COPY PRICING CARDS 1-4 FROM HOME SECTION HERE -->
-                     <div class="pricing-card reveal reveal-delay-1">
-                            <div class="pricing-icon"><i class="ri-layout-masonry-line"></i></div>
-                            <div class="pricing-header">
-                                <h3 class="pricing-title">Starter Landing Page</h3>
-                                <p class="pricing-subtitle">Best for promotions, campaigns, startups</p>
-                                <div class="pricing-block-main">
-                                    <div class="main-price-row">
-                                        <span class="main-price">RM399</span>
-                                        <span class="main-price-label">Fixed</span>
-                                    </div>
-                                    <div class="delivery-info"><i class="ri-time-line"></i> Delivery: 2–3 Days</div>
-                                </div>
-                                <div class="pricing-divider"><span>Payment Options</span></div>
-                                <div class="sub-price-option">
-                                    <span class="sub-price-label">12-Month Installment</span>
-                                    <span class="sub-price-val">RM39/mo</span>
-                                </div>
-                                <div class="sub-price-note">Total: RM468 (Payment Plan)</div>
-                                <div class="sub-price-option" style="margin-top: 12px;">
-                                    <span class="sub-price-label">Monthly Promo</span>
-                                    <span class="promo-price-val">RM29/mo</span>
-                                </div>
-                                <div class="sub-price-note">24-month commitment. Includes Hosting.</div>
-                            </div>
-                            <div class="pricing-features">
-                                <h4>Design</h4><ul class="feature-list"><li><i class="ri-check-line"></i> 1 Custom Landing Page</li><li><i class="ri-check-line"></i> Mobile Responsive Design</li><li><i class="ri-check-line"></i> Fast Loading Layout</li></ul>
-                                <h4>Features</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Contact Form</li><li><i class="ri-check-line"></i> Social Media Links</li><li><i class="ri-check-line"></i> Basic SEO Setup</li></ul>
-                                <h4>Included</h4><ul class="feature-list"><li><i class="ri-gift-line"></i> Free Subdomain (1 Year)</li><li><i class="ri-gift-line"></i> Free Deployment</li><li><i class="ri-gift-line"></i> 1 Revision</li></ul>
-                            </div>
-                            <div class="pricing-cta"><button class="btn btn-outline" onclick="initiateCheckout('Starter Landing Page', 399, '')">Get Started</button></div>
-                        </div>
-                        <!-- Card 2 -->
-                        <div class="pricing-card popular reveal reveal-delay-2">
-                            <div class="pricing-badge">Most Popular</div>
-                            <div class="pricing-icon"><i class="ri-briefcase-4-line"></i></div>
-                            <div class="pricing-header">
-                                <h3 class="pricing-title">Business Website</h3>
-                                <p class="pricing-subtitle">Best for company profiles & small businesses</p>
-                                <div class="pricing-block-main">
-                                    <div class="main-price-row">
-                                        <span class="main-price">RM899</span>
-                                        <span class="main-price-label">Fixed</span>
-                                    </div>
-                                    <div class="delivery-info"><i class="ri-time-line"></i> Delivery: 4–7 Days</div>
-                                </div>
-                                <div class="pricing-divider"><span>Payment Options</span></div>
-                                <div class="sub-price-option">
-                                    <span class="sub-price-label">12-Month Installment</span>
-                                    <span class="sub-price-val">RM89/mo</span>
-                                </div>
-                                <div class="sub-price-note">Total: RM1,068 (Payment Plan)</div>
-                                <div class="sub-price-option" style="margin-top: 12px;">
-                                    <span class="sub-price-label">Monthly Promo</span>
-                                    <span class="promo-price-val">RM69/mo</span>
-                                </div>
-                                <div class="sub-price-note">24-month commitment. Includes Hosting & Maintenance.</div>
-                            </div>
-                            <div class="pricing-features">
-                                <h4>Design</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Up to 5 Pages</li><li><i class="ri-check-line"></i> Professional UI/UX</li><li><i class="ri-check-line"></i> Mobile Responsive</li></ul>
-                                <h4>Features</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Advanced Contact Form</li><li><i class="ri-check-line"></i> Google Maps Integration</li><li><i class="ri-check-line"></i> Image Gallery</li></ul>
-                                <h4>Included</h4><ul class="feature-list"><li><i class="ri-gift-line"></i> Free Subdomain (1 Year)</li><li><i class="ri-gift-line"></i> Professional Deployment</li><li><i class="ri-gift-line"></i> 3 Revisions</li></ul>
-                            </div>
-                            <div class="pricing-cta"><button class="btn btn-primary" onclick="initiateCheckout('Business Website', 899, '')">Get Started</button></div>
-                        </div>
-                        <!-- Card 3 -->
-                        <div class="pricing-card reveal reveal-delay-3">
-                            <div class="pricing-icon"><i class="ri-dashboard-3-line"></i></div>
-                            <div class="pricing-header">
-                                <h3 class="pricing-title">Business Portal System</h3>
-                                <p class="pricing-subtitle">Best for internal management systems</p>
-                                <div class="pricing-block-main">
-                                    <div class="main-price-row">
-                                        <span class="main-price">RM3,800</span>
-                                        <span class="main-price-label">Fixed</span>
-                                    </div>
-                                    <div class="delivery-info"><i class="ri-time-line"></i> Delivery: 10–14 Days</div>
-                                </div>
-                                <div class="pricing-divider"><span>Payment Options</span></div>
-                                <div class="sub-price-option">
-                                    <span class="sub-price-label">12-Month Installment</span>
-                                    <span class="sub-price-val">RM349/mo</span>
-                                </div>
-                                <div class="sub-price-note">Total: RM4,188 (Payment Plan)</div>
-                                <div class="sub-price-option" style="margin-top: 12px;">
-                                    <span class="sub-price-label">Monthly Promo</span>
-                                    <span class="promo-price-val">RM249/mo</span>
-                                </div>
-                                <div class="sub-price-note">24-month commitment. Includes System Updates & Support.</div>
-                            </div>
-                            <div class="pricing-features">
-                                <h4>Public Website</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Up to 5 Pages</li><li><i class="ri-check-line"></i> Contact Form</li><li><i class="ri-check-line"></i> Basic SEO</li></ul>
-                                <h4>Admin Portal</h4><ul class="feature-list"><li><i class="ri-shield-check-line"></i> Secure Login System</li><li><i class="ri-shield-check-line"></i> User Management</li><li><i class="ri-shield-check-line"></i> Activity Logs</li></ul>
-                                <h4>Included</h4><ul class="feature-list"><li><i class="ri-gift-line"></i> Database Setup</li><li><i class="ri-gift-line"></i> Documentation</li><li><i class="ri-gift-line"></i> 30 Days Support</li></ul>
-                            </div>
-                            <div class="pricing-cta"><button class="btn btn-outline" onclick="initiateCheckout('Business Portal System', 3800, '')">Get Started</button></div>
-                        </div>
-                        <!-- Card 4 -->
-                        <div class="pricing-card reveal reveal-delay-4">
-                            <div class="pricing-icon"><i class="ri-cpu-line"></i></div>
-                            <div class="pricing-header">
-                                <h3 class="pricing-title">Custom System</h3>
-                                <p class="pricing-subtitle">Best for automation or complex systems</p>
+                    <!-- Card 1 -->
+                    <div class="pricing-card reveal reveal-delay-1">
+                        <div class="pricing-icon"><i class="ri-layout-masonry-line"></i></div>
+                        <div class="pricing-header">
+                            <h3 class="pricing-title">Starter Landing Page</h3>
+                            <p class="pricing-subtitle">Best for promotions, campaigns, startups</p>
+                            
+                            <!-- NEW PRICING STRUCTURE -->
+                            <div class="pricing-block-main">
                                 <div class="main-price-row">
-                                    <span class="main-price">RM6,800</span>
-                                    <span class="main-price-label">Starting</span>
+                                    <span class="main-price">RM399</span>
+                                    <span class="main-price-label">Fixed</span>
                                 </div>
-                                <div class="delivery-info"><i class="ri-time-line"></i> Delivery: 3–6 Weeks</div>
+                                <div class="delivery-info"><i class="ri-time-line"></i> Delivery: 2–3 Days</div>
                             </div>
-                            <div class="pricing-features">
-                                <h4>Development</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Fully Custom System</li><li><i class="ri-check-line"></i> Secure Database Architecture</li><li><i class="ri-check-line"></i> Scalable Backend</li></ul>
-                                <h4>Features</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Automation Tools</li><li><i class="ri-check-line"></i> Advanced Analytics</li><li><i class="ri-check-line"></i> API Integration</li></ul>
-                                <h4>Included</h4><ul class="feature-list"><li><i class="ri-gift-line"></i> Full Deployment</li><li><i class="ri-gift-line"></i> Documentation</li><li><i class="ri-gift-line"></i> Staff Training</li><li><i class="ri-gift-line"></i> 60 Days Support</li></ul>
+
+                            <div class="pricing-divider"><span>Payment Options</span></div>
+
+                            <div class="sub-price-option">
+                                <span class="sub-price-label">12-Month Installment</span>
+                                <span class="sub-price-val">RM39/mo</span>
                             </div>
-                            <div class="pricing-cta"><button class="btn btn-primary" onclick="handleNavigation('contact', event)">Let's Talk</button></div>
+                            <div class="sub-price-note">Total: RM468 (Payment Plan)</div>
+
+                            <div class="sub-price-option" style="margin-top: 12px;">
+                                <span class="sub-price-label">Monthly Promo</span>
+                                <span class="promo-price-val">RM29/mo</span>
+                            </div>
+                            <div class="sub-price-note">24-month commitment. Includes Hosting.</div>
+                            <!-- END NEW STRUCTURE -->
                         </div>
+                        <div class="pricing-features">
+                            <h4>Design</h4><ul class="feature-list"><li><i class="ri-check-line"></i> 1 Custom Landing Page</li><li><i class="ri-check-line"></i> Mobile Responsive Design</li><li><i class="ri-check-line"></i> Fast Loading Layout</li></ul>
+                            <h4>Features</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Contact Form</li><li><i class="ri-check-line"></i> Social Media Links</li><li><i class="ri-check-line"></i> Basic SEO Setup</li></ul>
+                            <h4>Included</h4><ul class="feature-list"><li><i class="ri-gift-line"></i> Free Subdomain (1 Year)</li><li><i class="ri-gift-line"></i> Free Deployment</li><li><i class="ri-gift-line"></i> 1 Revision</li></ul>
+                        </div>
+                        <div class="pricing-cta"><button class="btn btn-outline" onclick="initiateCheckout('Starter Landing Page', 399, '')">Get Started</button></div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="pricing-card popular reveal reveal-delay-2">
+                        <div class="pricing-badge">Most Popular</div>
+                        <div class="pricing-icon"><i class="ri-briefcase-4-line"></i></div>
+                        <div class="pricing-header">
+                            <h3 class="pricing-title">Business Website</h3>
+                            <p class="pricing-subtitle">Best for company profiles & small businesses</p>
+                            
+                            <!-- NEW PRICING STRUCTURE -->
+                            <div class="pricing-block-main">
+                                <div class="main-price-row">
+                                    <span class="main-price">RM899</span>
+                                    <span class="main-price-label">Fixed</span>
+                                </div>
+                                <div class="delivery-info"><i class="ri-time-line"></i> Delivery: 4–7 Days</div>
+                            </div>
+
+                            <div class="pricing-divider"><span>Payment Options</span></div>
+
+                            <div class="sub-price-option">
+                                <span class="sub-price-label">12-Month Installment</span>
+                                <span class="sub-price-val">RM89/mo</span>
+                            </div>
+                            <div class="sub-price-note">Total: RM1,068 (Payment Plan)</div>
+
+                            <div class="sub-price-option" style="margin-top: 12px;">
+                                <span class="sub-price-label">Monthly Promo</span>
+                                <span class="promo-price-val">RM69/mo</span>
+                            </div>
+                            <div class="sub-price-note">24-month commitment. Includes Hosting & Maintenance.</div>
+                            <!-- END NEW STRUCTURE -->
+                        </div>
+                        <div class="pricing-features">
+                            <h4>Design</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Up to 5 Pages</li><li><i class="ri-check-line"></i> Professional UI/UX</li><li><i class="ri-check-line"></i> Mobile Responsive</li></ul>
+                            <h4>Features</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Advanced Contact Form</li><li><i class="ri-check-line"></i> Google Maps Integration</li><li><i class="ri-check-line"></i> Image Gallery</li></ul>
+                            <h4>Included</h4><ul class="feature-list"><li><i class="ri-gift-line"></i> Free Subdomain (1 Year)</li><li><i class="ri-gift-line"></i> Professional Deployment</li><li><i class="ri-gift-line"></i> 3 Revisions</li></ul>
+                        </div>
+                        <div class="pricing-cta"><button class="btn btn-primary" onclick="initiateCheckout('Business Website', 899, '')">Get Started</button></div>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="pricing-card reveal reveal-delay-3">
+                        <div class="pricing-icon"><i class="ri-dashboard-3-line"></i></div>
+                        <div class="pricing-header">
+                            <h3 class="pricing-title">Business Portal System</h3>
+                            <p class="pricing-subtitle">Best for internal management systems</p>
+                            
+                            <!-- NEW PRICING STRUCTURE -->
+                            <div class="pricing-block-main">
+                                <div class="main-price-row">
+                                    <span class="main-price">RM3,800</span>
+                                    <span class="main-price-label">Fixed</span>
+                                </div>
+                                <div class="delivery-info"><i class="ri-time-line"></i> Delivery: 10–14 Days</div>
+                            </div>
+
+                            <div class="pricing-divider"><span>Payment Options</span></div>
+
+                            <div class="sub-price-option">
+                                <span class="sub-price-label">12-Month Installment</span>
+                                <span class="sub-price-val">RM349/mo</span>
+                            </div>
+                            <div class="sub-price-note">Total: RM4,188 (Payment Plan)</div>
+
+                            <div class="sub-price-option" style="margin-top: 12px;">
+                                <span class="sub-price-label">Monthly Promo</span>
+                                <span class="promo-price-val">RM249/mo</span>
+                            </div>
+                            <div class="sub-price-note">24-month commitment. Includes System Updates & Support.</div>
+                            <!-- END NEW STRUCTURE -->
+
+                        </div>
+                        <div class="pricing-features">
+                            <h4>Public Website</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Up to 5 Pages</li><li><i class="ri-check-line"></i> Contact Form</li><li><i class="ri-check-line"></i> Basic SEO</li></ul>
+                            <h4>Admin Portal</h4><ul class="feature-list"><li><i class="ri-shield-check-line"></i> Secure Login System</li><li><i class="ri-shield-check-line"></i> User Management</li><li><i class="ri-shield-check-line"></i> Activity Logs</li></ul>
+                            <h4>Included</h4><ul class="feature-list"><li><i class="ri-gift-line"></i> Database Setup</li><li><i class="ri-gift-line"></i> Documentation</li><li><i class="ri-gift-line"></i> 30 Days Support</li></ul>
+                        </div>
+                        <div class="pricing-cta"><button class="btn btn-outline" onclick="initiateCheckout('Business Portal System', 3800, '')">Get Started</button></div>
+                    </div>
+                    <!-- Card 4 -->
+                    <div class="pricing-card reveal reveal-delay-4">
+                        <div class="pricing-icon"><i class="ri-cpu-line"></i></div>
+                        <div class="pricing-header">
+                            <h3 class="pricing-title">Custom System</h3>
+                            <p class="pricing-subtitle">Best for automation or complex systems</p>
+                            <div class="main-price-row">
+                                <span class="main-price">RM6,800</span>
+                                <span class="main-price-label">Starting</span>
+                            </div>
+                            <div class="delivery-info"><i class="ri-time-line"></i> Delivery: 3–6 Weeks</div>
+                        </div>
+                        <div class="pricing-features">
+                            <h4>Development</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Fully Custom System</li><li><i class="ri-check-line"></i> Secure Database Architecture</li><li><i class="ri-check-line"></i> Scalable Backend</li></ul>
+                            <h4>Features</h4><ul class="feature-list"><li><i class="ri-check-line"></i> Automation Tools</li><li><i class="ri-check-line"></i> Advanced Analytics</li><li><i class="ri-check-line"></i> API Integration</li></ul>
+                            <h4>Included</h4><ul class="feature-list"><li><i class="ri-gift-line"></i> Full Deployment</li><li><i class="ri-gift-line"></i> Documentation</li><li><i class="ri-gift-line"></i> Staff Training</li><li><i class="ri-gift-line"></i> 60 Days Support</li></ul>
+                        </div>
+                        <div class="pricing-cta"><button class="btn btn-primary" onclick="handleNavigation('contact', event)">Let's Talk</button></div>
+                    </div>
                 </div>
 
                 <!-- Addons -->
@@ -4544,7 +4541,7 @@
                     
                     <button id="googleLoginBtn" class="google-btn">
                         <svg width="20" height="20" viewBox="0 0 48 48">
-                            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-3.059,1.154-5.85,3.038-7.975l-5.848-5.848C5.058,13.033,3.411,16.319,3.411,20c0,11.428,9.162,20.589,20.589,20.589c11.428,0,20.589-9.162,20.589-20.589C44.589,22.586,44.268,21.278,43.611,20.083z"/>
+                            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-3.059,1.154-5.85,3.038-7.975l-5.848-5.848C5.058,13.033,3.411,16.319,3.411,20c0,11.428,9.162,20.589,20.589,20.589c11.428,0,20.589-9.162,20.589-20.589C44.589,22.586,44.268,21.278,43.611,20.083z"/>
                             <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.975,3.038l5.848-5.848C34.046,6.053,29.268,3.411,24,3.411c-8.918,0-16.553,5.686-19.028,13.463L6.306,14.691z"/>
                             <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
                             <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
@@ -4759,7 +4756,7 @@
                                     <div class="payment-price">
                                         <span id="price12Month">RM0</span><span style="font-size: 12px; color: var(--text-muted);">/mo</span>
                                     <span class="payment-badge" id="badge12Month"></span>
-                                    <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="total12Month"></div>
+                                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="total12Month"></div>
                                     </div>
                                 </div>
 
@@ -5128,80 +5125,9 @@
                 </div>
                 <div class="newsletter-form reveal reveal-delay-1">
                     
-                    <!-- Begin Brevo Form -->
-                    <div class="sib-form" style="text-align: center; background-color: transparent;">
-                      <div id="sib-form-container" class="sib-form-container">
-                        
-                        <div id="error-message" class="sib-form-message-panel" style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;max-width:540px;">
-                          <div class="sib-form-message-panel__text sib-form-message-panel__text--center">
-                            <svg viewBox="0 0 512 512" class="sib-icon sib-notification__icon">
-                              <path d="M256 40c118.621 0 216 96.075 216 216 0 119.291-96.61 216-216 216-119.244 0-216-96.562-216-216 0-119.203 96.602-216 216-216 248 248 248 248 0 0 0 248 248 0 0 0 248-248 248 0 0 0-248 248 0 0 0-248-12.303-4.637-11.99 12.5l-7 168c-.268 6.428-5.556 11.5-11.99 11.5h-8.979c-6.433 0-11.722-5.073-11.99-11.5l-7-168c-.283-6.818 5.167-12.5 11.99-12.5zM256 340c-15.464 0-28 12.536-28 28s12.536 28 28 28 28-12.536 28-28 28-28-12.536-28 28-28 28-28-12.536-28 28-28 28-28-12.536-28 28-28 28-28-12.536-28 28 28 28 28z" />
-                            </svg>
-                            <span class="sib-form-message-panel__inner-text">
-                              Your subscription could not be saved. Please try again.
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div></div>
-                        
-                        <div id="success-message" class="sib-form-message-panel" style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#085229; background-color:#e7faf0; border-radius:3px; border-color:#13ce66;max-width:540px;">
-                          <div class="sib-form-message-panel__text sib-form-message-panel__text--center">
-                            <svg viewBox="0 0 512 512" class="sib-icon sib-notification__icon">
-                              <path d="M256 8C119.033 8 8 119.033 8 256s111.033 248 248 248 248-111.033 248-248S392.967 8 256 8zm0 464c-118.664 0-216-96.055-216-216 0-118.663 96.055-216 216-216 118.664 0 216 96.055 216 216 0 118.663-96.055 216-216 216-16.97 0-12.303-4.637-16.97-0.068l-85.878-86.572c-4.667-4.705-4.637-12.303.068-16.97l8.52-8.451c4.705-4.667 12.303-4.637 16.97.068l68.976 69.533 163.441-162.13c4.705-4.667 12.303-4.637 16.97.068l8.451 8.52c4.668 4.705 4.637 12.303.068 16.97z" />
-                            </svg>
-                            <span class="sib-form-message-panel__inner-text">
-                              Your subscription has been successful.
-                            </span>
-                          </div>
-                        </div>
-                        <div></div>
-                        
-                        <div id="sib-container" class="sib-container--large sib-container--vertical" style="text-align:center; background-color:rgba(255,255,255,1); max-width:540px; border-radius:25px; border-width:0px; border-color:#C0CCD9; border-style:solid; direction:ltr">
-                          <form id="sib-form" method="POST" action="https://55b681f5.sibforms.com/serve/MUIFABaq05cJJvsGHKrmqIAvLM-9Hdp3lzGYv-NJeIV9LTPJFRUBrKhn5e6RFcv3oGnNdDmiTZWnRtvkAx2USfDsFX-O38zmNc29_65oZiwrcnHrxVJ-MhXDLjfT0y6atG-KAv95XsHyx-HyJ6ga9AUvkqPhf8I9XKgesGhB2eeSAvUnCMBB9cqPHf9DppgzRjuDFC9ejm4xNiZncg==" data-type="subscription">
-                            <div style="padding: 8px 0;">
-                              <div class="sib-form-block" style="font-size:32px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent; text-align:left">
-                                <p>Newsletter</p>
-                              </div>
-                            </div>
-                            <div style="padding: 8px 0;">
-                              <div class="sib-form-block" style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#3C4858; background-color:transparent; text-align:left">
-                                <div class="sib-text-form-block">
-                                  <p>Subscribe to our newsletter and stay updated.</p>
-                                </div>
-                              </div>
-                            </div>
-                            <div style="padding: 8px 0;">
-                              <div class="sib-input sib-form-block">
-                                <div class="form__entry entry_block">
-                                  <div class="form__label-row ">
-                                    <label class="entry__label" style="font-weight: 700; text-align:left; font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#3c4858;" for="EMAIL" data-required="*">Enter your email address to subscribe</label>
-                                    <div class="entry__field">
-                                      <input class="input " type="text" id="EMAIL" name="EMAIL" autocomplete="off" placeholder="EMAIL" data-required="true" required />
-                                    </div>
-                                  </div>
-                                  <label class="entry__error entry__error--primary" style="font-size:16px; text-align:left; font-family:Helvetica, sans-serif; color:#661d1d; background-color:#ffeded; border-radius:3px; border-color:#ff4949;"></label>
-                                  <label class="entry__specification" style="font-size:12px; text-align:left; font-family:Helvetica, sans-serif; color:#8390A4; text-align:left">
-                                    Provide your email address to subscribe. For e.g mail@example.com
-                                  </label>
-                                </div>
-                              </div>
-                            </div>
-                            <div style="padding: 8px 0;">
-                              <div class="sib-form-block" style="text-align: left">
-                                <button class="sib-form-block__button sib-form-block__button-with-loader" style="font-size:16px; text-align:left; font-weight:700; font-family:Helvetica, sans-serif; color:#FFFFFF; background-color:#3E4857; border-radius:20px; border-width:0px;" form="sib-form" type="submit">
-                                  <svg class="icon clickable__icon progress-indicator__icon sib-hide-loader-icon" viewBox="0 0 512 512" style="">
-                                    <path d="M460.116 373.846l-20.823-12.022c-5.541-3.199-7.54-10.159-4.663-15.874 30.137-59.886 28.343-131.652-5.386-189.946-33.641-58.394-94.896-95.833-161.827-99.676C261.028 55.961 256 50.751 256 44.352V20.309c0-6.904 5.808-12.337 12.703-11.982 83.556 4.306 160.163 50.864 202.11 123.677 42.063 72.696 44.079 162.316 6.031 236.832-3.14 6.148-10.75 8.461-16.728 5.01z" />
-                                  </svg>
-                                  SUBSCRIBE
-                                </button>
-                              </div>
-                            </div>
-                            <input type="text" name="email_address_check" value="" class="input--hidden">
-                            <input type="hidden" name="locale" value="en">
-                          </form>
-                        </div>
-                      </div>
+                    <!-- Begin Brevo Form Iframe -->
+                    <div class="iframe-container">
+                        <iframe width="540" height="305" src="https://55b681f5.sibforms.com/serve/MUIFABaq05cJJvsGHKrmqIAvLM-9Hdp3lzGYv-NJeIV9LTPJFRUBrKhn5e6RFcv3oGnNdDmiTZWnRtvkAx2USfDsFX-O38zmNc29_65oZiwrcnHrxVJ-MhXDLjfT0y6atG-KAv95XsHyx-HyJ6ga9AUvkqPhf8I9XKgesGhB2eeSAvUnCMBB9cqPHf9DppgzRjuDFC9ejm4xNiZncg==" frameborder="0" scrolling="auto" allowfullscreen style="display: block;"></iframe>
                     </div>
                     <!-- End Brevo Form -->
 
@@ -5529,11 +5455,6 @@
             window.scrollTo({ top: 0, behavior: 'auto' }); 
             
             setTimeout(() => { runScrollAnimations(); }, 100);
-            
-            // FIX: Initialize FAQ on Home page load
-            if(pageId === 'home') {
-                setTimeout(() => initFAQ(), 100);
-            }
         }
 
         window.onpopstate = function(event) {
@@ -5629,14 +5550,6 @@
             const questions = document.querySelectorAll('.faq-question');
             
             questions.forEach(question => {
-                // Remove existing listener to prevent duplicates if called twice
-                question.replaceWith(question.cloneNode(true));
-            });
-            
-            // Re-select after cloning
-            const newQuestions = document.querySelectorAll('.faq-question');
-            
-            newQuestions.forEach(question => {
                 question.addEventListener('click', () => {
                     const item = question.parentElement;
                     const answer = item.querySelector('.faq-answer');
@@ -5690,7 +5603,6 @@
             };
 
             document.getElementById('coPlanName').textContent = name;
-            document.getElementById('coPlanPrice').textContent = 'RM' + price.toLocaleString();
             
             // Calculate and set payment options based on plan
             calculatePaymentOptions(price, name);
@@ -5785,7 +5697,6 @@
             };
 
             document.getElementById('coPlanName').textContent = planName;
-            document.getElementById('coPlanPrice').textContent = 'RM' + price.toLocaleString();
             
             // Calculate payments
             calculatePaymentOptions(price, planName);
@@ -5873,8 +5784,8 @@
             // 3. Convert to lowercase
             value = value.toLowerCase();
 
-            // 4. Remove any special characters except letters, numbers, hyphens, and dots
-            value = value.replace(/[^a-z0-9.-]/g, '');
+            // 4. Remove any special characters except letters, numbers, and hyphens
+            value = value.replace(/[^a-z0-9-]/g, '');
 
             // 5. Update the input value
             input.value = value;
@@ -6312,12 +6223,6 @@
                     const password = document.getElementById('loginPassword').value;
                     if(window.firebaseAuth) window.firebaseAuth.emailLogin(email, password);
                 });
-            }
-            
-            // Run initial FAQ init for Home page if it's active on load
-            const homeSection = document.getElementById('home');
-            if(homeSection && homeSection.classList.contains('active')) {
-                initFAQ();
             }
         });
 
