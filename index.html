@@ -5866,6 +5866,7 @@
                 return;
             }
 
+            // Set initial data
             tempOrderData = {
                 planName: planName,
                 price: price,
@@ -5873,11 +5874,19 @@
                 userId: user.uid
             };
 
+            // UPDATE: Calculate and set the displayed Base Price immediately
+            const basePriceEl = document.getElementById('coPlanPrice');
+            if(basePriceEl) {
+                basePriceEl.textContent = 'RM' + price.toLocaleString();
+            }
+            
+            // Also update the plan name display
             document.getElementById('coPlanName').textContent = planName;
             
-            // Calculate payments
+            // Calculate payment options for the chosen plan
             calculatePaymentOptions(price, planName);
 
+            // Handle Domain Logic
             if(domain.includes('.ddnex.com')) {
                 setDomainType('ddnex');
                 document.getElementById('coDomainInput').value = domain.replace('.ddnex.com', '');
@@ -5888,10 +5897,12 @@
                 updateDomainPreview('');
             }
 
+            // Pre-fill User Info
             document.getElementById('coFullName').value = user.displayName || "";
             document.getElementById('coEmail').value = user.email || "";
             document.getElementById('coPhone').value = ""; 
 
+            // Go to checkout
             nextCheckoutStep(1);
             
             handleNavigation('checkout', null);
@@ -6511,73 +6522,65 @@
             });
         });
 
-        // --- BREVO NEWSLETTER LOGIC ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const sibForm = document.getElementById('sib-form');
-            const sibError = document.getElementById('error-message');
-            const sibSuccess = document.getElementById('success-message');
-            
-            if(sibForm) {
-                sibForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const btn = sibForm.querySelector('button[type="submit"]');
-                    const originalText = btn.innerHTML;
-                    const emailInput = sibForm.querySelector('input[name="EMAIL"]');
-                    const emailValue = emailInput ? emailInput.value.trim() : '';
+    // --- BREVO NEWSLETTER LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const sibForm = document.getElementById('sib-form');
+        
+        if(sibForm) {
+            sibForm.addEventListener('submit', function(e) {
+                // Prevent default submission to handle validation first
+                e.preventDefault();
+                
+                const btn = sibForm.querySelector('button[type="submit"]');
+                const originalText = btn.innerHTML;
+                const emailInput = sibForm.querySelector('input[name="EMAIL"]');
+                const emailValue = emailInput ? emailInput.value.trim() : '';
 
-                    if(!emailValue) {
-                        showPopup("Subscription Failed", "Please fill your email.");
-                        return;
+                // 1. Basic Empty Check
+                if(!emailValue) {
+                    showPopup("Subscription Failed", "Please fill your email.");
+                    return; // Stop here
+                }
+
+                // 2. Format Validation (Simple Regex)
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if(!emailPattern.test(emailValue)) {
+                    showPopup("Subscription Failed", "Please enter a valid email address (e.g. name@domain.com).");
+                    return; // Stop here
+                }
+
+                // 3. If valid, visually show processing
+                btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
+                btn.disabled = true;
+                
+                const formData = new FormData(sibForm);
+
+                // 4. Submit to Brevo API
+                fetch(sibForm.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Brevo usually returns 200 OK even if the email is already subscribed
+                    if (response.ok) {
+                        // Success: Redirect to success page
+                        handleNavigation('subscribe-success', null);
+                    } else {
+                        throw new Error('Server error');
                     }
-
-                    if(!emailValue.includes('@')) {
-                        showPopup("Subscription Failed", "Please include an '@' in your email address.");
-                        return;
-                    }
-
-                    const parts = emailValue.split('@');
-                    if(parts.length < 2 || !parts[1]) {
-                        showPopup("Subscription Failed", "Please enter a valid domain after '@'.");
-                        return;
-                    }
-
-                    const domain = parts[1];
-                    if(!domain.includes('.')) {
-                        showPopup("Subscription Failed", "Please enter a valid email domain (e.g. example.com).");
-                        return;
-                    }
-
-                    sibError.style.display = 'none';
-                    sibSuccess.style.display = 'none';
-
-                    btn.innerHTML = 'Processing...';
-                    btn.disabled = true;
-                    
-                    const formData = new FormData(sibForm);
-
-                    fetch(sibForm.action, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            handleNavigation('subscribe-success', null);
-                        } else {
-                            throw new Error('Server error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Brevo Error:', error);
-                        showPopup("Subscription Failed", "Please fill your email.");
-                    })
-                    .finally(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    });
+                })
+                .catch(error => {
+                    console.error('Brevo Error:', error);
+                    showPopup("Subscription Failed", "There was a network error. Please try again.");
+                })
+                .finally(() => {
+                    // Reset button state regardless of success/failure (or after redirect delay)
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 });
-            }
-        });
+            });
+        }
+    });
     </script>
     
     <!-- Brevo External Script -->
