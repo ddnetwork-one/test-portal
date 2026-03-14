@@ -598,73 +598,6 @@
         .btn-success:hover { background: #059669; }
 
         /* =========================================
-           SERVICES / PRICING CARDS
-           ========================================= */
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            margin-top: 24px;
-        }
-        .pricing-card {
-            background: white;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-light);
-            padding: 32px 24px;
-            position: relative;
-            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
-            display: flex;
-            flex-direction: column;
-        }
-        .pricing-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-xl); }
-        .pricing-card.popular { border: 2px solid var(--primary); }
-        .pricing-badge {
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--primary);
-            color: white;
-            padding: 4px 16px;
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .pricing-header { text-align: center; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--bg-body); }
-        .pricing-header h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; font-family: var(--font-heading); color: var(--text-main); }
-        .pricing-header p { color: var(--text-muted); font-size: 14px; min-height: 40px; }
-        .pricing-price { text-align: center; margin-bottom: 24px; }
-        .pricing-price .currency { font-size: 18px; font-weight: 600; vertical-align: top; }
-        .pricing-price .amount { font-size: 48px; font-weight: 800; font-family: var(--font-heading); color: var(--text-main); }
-        .pricing-price .period { font-size: 14px; color: var(--text-muted); }
-        .pricing-features { flex: 1; margin-bottom: 24px; }
-        .pricing-features ul li {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 12px;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-        .pricing-features ul li i { color: var(--accent-green); flex-shrink: 0; margin-top: 3px; }
-        .pricing-features .feature-group {
-            margin-bottom: 16px;
-            padding: 12px;
-            background: var(--bg-body);
-            border-radius: var(--radius-sm);
-        }
-        .pricing-features .feature-group-title {
-            font-weight: 700;
-            font-size: 13px;
-            color: var(--text-main);
-            margin-bottom: 8px;
-            display: block;
-        }
-        .pricing-card .btn { width: 100%; }
-
-        /* =========================================
            DOCUMENT EDITOR PAGE (Invoice/Quotation)
            ========================================= */
         .doc-editor-container {
@@ -1525,6 +1458,33 @@
         // Utility Functions
         const formatMYR = (value) => `RM ${parseFloat(value || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
+        // UPDATED: Date formatting to DD/MM/YYYY
+        const formatDate = (date) => {
+            if (!date) return '-';
+            try {
+                let d;
+                // Handle Firestore Timestamp
+                if (date.seconds) {
+                    d = new Date(date.seconds * 1000);
+                } 
+                // Handle String (YYYY-MM-DD or ISO)
+                else if (typeof date === 'string') {
+                    d = new Date(date);
+                } else {
+                    d = new Date(date);
+                }
+                
+                if (isNaN(d.getTime())) return date; // Return original if invalid
+
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}/${month}/${year}`;
+            } catch (e) {
+                return date;
+            }
+        };
+        
         const showLoading = (text = "Loading...") => {
             const overlay = document.getElementById('loadingOverlay');
             document.getElementById('loadingText').textContent = text;
@@ -1628,7 +1588,6 @@
             const orders = await window.dbOperations.getOrders(); // Fetch all orders
             
             const activeProjects = projects.filter(p => p.status === 'active').length;
-            // Revenue calculation based on 'Paid' status
             const totalRevenue = orders.filter(i => i.status === 'Paid').reduce((sum, i) => sum + (i.total || i.price || 0), 0);
             
             document.getElementById('mainContent').innerHTML = `
@@ -1902,8 +1861,15 @@
             const orders = await window.dbOperations.getOrders(); // Combined collection
             const quotations = await window.dbOperations.getQuotations();
             
-            // Combine and sort
-            const allDocs = [...orders, ...quotations].sort((a, b) => (b.date || b.createdAt?.seconds || 0) - (a.date || a.createdAt?.seconds || 0));
+            // Combine
+            let allDocs = [...orders, ...quotations];
+
+            // Default Sort: Oldest to Latest (Ascending)
+            allDocs.sort((a, b) => {
+                const dateA = a.date ? new Date(a.date) : (a.createdAt ? new Date(a.createdAt.seconds * 1000) : new Date(0));
+                const dateB = b.date ? new Date(b.date) : (b.createdAt ? new Date(b.createdAt.seconds * 1000) : new Date(0));
+                return dateA - dateB;
+            });
 
             document.getElementById('mainContent').innerHTML = `
                 <div class="filter-bar">
@@ -1911,6 +1877,11 @@
                         <input type="text" placeholder="Search by ID, Client, or Status..." id="cashbillSearchInput">
                         <i class="ri-search-line"></i>
                     </div>
+                    <!-- Sort Dropdown -->
+                    <select class="filter-select" id="sortSelect" onchange="applyTableSort()">
+                        <option value="oldest">Oldest to Latest</option>
+                        <option value="latest">Latest to Oldest</option>
+                    </select>
                     <button class="btn btn-primary" onclick="createNewInvoice()">
                         <i class="ri-file-add-line"></i> Create Invoice
                     </button>
@@ -1933,37 +1904,7 @@
                                 </tr>
                             </thead>
                             <tbody id="cashbillTableBody">
-                                ${allDocs.map(doc => {
-                                    // Determine Type Logic
-                                    let typeLabel = doc.type || 'Invoice';
-                                    let typeClass = 'active'; // Invoice default
-                                    if (doc.source === 'Website') {
-                                        typeLabel = 'Website Order';
-                                        typeClass = 'website';
-                                    } else if (doc.type === 'Quotation') {
-                                        typeLabel = 'Quotation';
-                                        typeClass = 'pending';
-                                    }
-
-                                    const dateStr = doc.date ? new Date(doc.date).toLocaleDateString() : (doc.createdAt ? new Date(doc.createdAt.seconds * 1000).toLocaleDateString() : '-');
-                                    const clientName = doc.clientName || doc.customerName || 'N/A';
-                                    const amount = doc.total || doc.price || 0;
-
-                                    return `
-                                    <tr style="cursor: pointer;" onclick="navigateTo('${doc.type === 'Quotation' ? '/quotation/' : '/invoice/'}${doc.id}')">
-                                        <td><span class="status ${typeClass}">${typeLabel}</span></td>
-                                        <td><strong>${doc.number || doc.id}</strong></td>
-                                        <td>${clientName}</td>
-                                        <td>${dateStr}</td>
-                                        <td>${formatMYR(amount)}</td>
-                                        <td><span class="status ${doc.status === 'Paid' || doc.status === 'Completed' ? 'completed' : 'pending'}">${doc.status}</span></td>
-                                        <td onclick="event.stopPropagation()">
-                                            <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', '${doc.type}')"><i class="ri-printer-line"></i></button>
-                                            <button class="action-btn danger" title="Delete" onclick="deleteDocGeneric('${doc.id}', '${doc.type}')"><i class="ri-delete-bin-line"></i></button>
-                                        </td>
-                                    </tr>
-                                    `;
-                                }).join('')}
+                                ${allDocs.map(doc => renderDocRow(doc)).join('')}
                             </tbody>
                         </table>
                     </div>
@@ -1972,6 +1913,72 @@
 
             window.setupTableFilter('cashbillSearchInput', 'cashbillTableBody');
         }
+
+        // Helper to render a single document row
+        function renderDocRow(doc) {
+            // Determine Type Logic
+            let typeLabel = doc.type || 'Invoice';
+            let typeClass = 'active'; // Invoice default
+            if (doc.source === 'Website') {
+                typeLabel = 'Website Order';
+                typeClass = 'website';
+            } else if (doc.type === 'Quotation') {
+                typeLabel = 'Quotation';
+                typeClass = 'pending';
+            }
+
+            const dateStr = formatDate(doc.date || doc.createdAt);
+            const clientName = doc.clientName || doc.customerName || 'N/A';
+            const amount = doc.total || doc.price || 0;
+
+            return `
+            <tr style="cursor: pointer;" onclick="navigateTo('${doc.type === 'Quotation' ? '/quotation/' : '/invoice/'}${doc.id}')">
+                <td><span class="status ${typeClass}">${typeLabel}</span></td>
+                <td><strong>${doc.number || doc.id}</strong></td>
+                <td>${clientName}</td>
+                <td>${dateStr}</td>
+                <td>${formatMYR(amount)}</td>
+                <td><span class="status ${doc.status === 'Paid' || doc.status === 'Completed' ? 'completed' : 'pending'}">${doc.status}</span></td>
+                <td onclick="event.stopPropagation()">
+                    <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', '${doc.type}')"><i class="ri-printer-line"></i></button>
+                    <button class="action-btn danger" title="Delete" onclick="deleteDocGeneric('${doc.id}', '${doc.type}')"><i class="ri-delete-bin-line"></i></button>
+                </td>
+            </tr>
+            `;
+        }
+
+        // Sort Function
+        window.applyTableSort = () => {
+            const sortValue = document.getElementById('sortSelect').value;
+            const tbody = document.getElementById('cashbillTableBody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                // Date is in 4th column (index 3)
+                // Format is DD/MM/YYYY. We need to parse it back to Date object for comparison
+                const getDateFromRow = (row) => {
+                    const dateText = row.cells[3].textContent;
+                    const parts = dateText.split('/');
+                    if(parts.length === 3) {
+                        // DD/MM/YYYY -> YYYY-MM-DD (ISO)
+                        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                    }
+                    return new Date(0); // Fallback
+                };
+
+                const dateA = getDateFromRow(a);
+                const dateB = getDateFromRow(b);
+
+                if (sortValue === 'latest') {
+                    return dateB - dateA; // Descending
+                } else {
+                    return dateA - dateB; // Ascending
+                }
+            });
+
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+        };
 
         // --- DOCUMENT EDITORS ---
 
@@ -2082,7 +2089,7 @@
                                 </div>
                                 <div class="doc-preview-meta-item" style="text-align:right;">
                                     <label>Date</label>
-                                    <p id="previewDate">${data.date || (data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : '-')}</p>
+                                    <p id="previewDate">${formatDate(data.date || data.createdAt)}</p>
                                 </div>
                             </div>
                             
@@ -2237,7 +2244,7 @@
 
         window.updatePreview = () => {
             const client = document.getElementById('editClient').value;
-            const date = document.getElementById('editDate').value;
+            const dateVal = document.getElementById('editDate').value;
             const desc = document.getElementById('editDesc').value;
             const amount = parseFloat(document.getElementById('editAmount').value || 0);
             const discount = parseFloat(document.getElementById('editDiscount').value || 0);
@@ -2255,7 +2262,7 @@
             const instMeta = document.getElementById('installmentPreviewMeta');
             
             if(pClient) pClient.textContent = client || 'Select Client';
-            if(pDate) pDate.textContent = date;
+            if(pDate) pDate.textContent = formatDate(dateVal);
             if(pDesc) pDesc.textContent = desc || '-';
             if(pSubtotal) pSubtotal.textContent = formatMYR(amount);
             if(pDiscount) pDiscount.textContent = `-${formatMYR(discount)}`;
@@ -2331,7 +2338,7 @@
             showPopup("Success", "Order saved successfully.");
         };
 
-        // --- QUOTATION EDITOR ---
+        // --- QUOTATION EDITOR (Kept Simple) ---
         async function renderQuotationEditor(id) {
             let data = await window.dbOperations.getQuotation(id);
             if (!data) {
@@ -2383,7 +2390,7 @@
                                 </div>
                                 <div class="doc-preview-meta-item" style="text-align:right;">
                                     <label>Date</label>
-                                    <p id="previewDate">${data.date}</p>
+                                    <p id="previewDate">${formatDate(data.date)}</p>
                                 </div>
                             </div>
 
@@ -2490,14 +2497,14 @@
 
         window.updateQuotationPreview = () => {
             const client = document.getElementById('editClient')?.value;
-            const date = document.getElementById('editDate')?.value;
+            const dateVal = document.getElementById('editDate')?.value;
             const desc = document.getElementById('editDesc')?.value;
             const amount = parseFloat(document.getElementById('editAmount')?.value || 0);
             const discount = parseFloat(document.getElementById('editDiscount')?.value || 0);
             const total = amount - discount;
 
             if(document.getElementById('previewClient')) document.getElementById('previewClient').textContent = client || 'Select Client';
-            if(document.getElementById('previewDate')) document.getElementById('previewDate').textContent = date;
+            if(document.getElementById('previewDate')) document.getElementById('previewDate').textContent = formatDate(dateVal);
             if(document.getElementById('previewDesc')) document.getElementById('previewDesc').textContent = desc || '-';
             if(document.getElementById('previewSubtotal')) document.getElementById('previewSubtotal').textContent = formatMYR(amount);
             if(document.getElementById('previewDiscount')) document.getElementById('previewDiscount').textContent = `-${formatMYR(discount)}`;
@@ -2567,6 +2574,7 @@
             }
 
             if(!doc) {
+                // Try to grab from UI if not saved yet
                 const client = document.getElementById('editClient')?.value || 'N/A';
                 doc = {
                     type: type,
@@ -2582,6 +2590,7 @@
                 };
             }
             
+            // If installment, show specific details
             let installmentRow = '';
             if(doc.paymentType && doc.paymentType !== 'One-Time') {
                 installmentRow = `
@@ -2603,7 +2612,7 @@
                         <div style="text-align: right;">
                             <h2 style="font-size: 24px; color: #2563eb;">${doc.type || 'Invoice'}</h2>
                             <p style="font-weight: 600;">${doc.number}</p>
-                            <p style="color: #64748b;">Date: ${doc.date}</p>
+                            <p style="color: #64748b;">Date: ${formatDate(doc.date || doc.createdAt)}</p>
                         </div>
                     </div>
 
@@ -2723,7 +2732,7 @@
                                         <td><strong>${p.name}</strong></td>
                                         <td>${p.client}</td>
                                         <td><span class="status ${p.status}"><i class="ri-checkbox-blank-circle-fill"></i> ${p.status}</span></td>
-                                        <td>${p.deadline || '-'}</td>
+                                        <td>${formatDate(p.deadline)}</td>
                                         <td>
                                             <button class="action-btn" title="Edit" onclick="editProject('${p.id}')"><i class="ri-edit-line"></i></button>
                                             <button class="action-btn danger" title="Delete" onclick="deleteProject('${p.id}')"><i class="ri-delete-bin-line"></i></button>
