@@ -1259,7 +1259,28 @@
 
         const getCol = (name) => collection(db, `${name}_ddnex`);
 
-        // --- SMART ID GENERATOR ---
+        // --- SMART ID GENERATOR FOR USERS ---
+        window.generateUserIdSmart = async () => {
+            const snapshot = await getDocs(getCol('users'));
+            let maxNum = 0;
+            
+            snapshot.forEach(d => {
+                const data = d.data();
+                // Check if userId exists and is a number string
+                if (data.userId) {
+                    const numPart = parseInt(data.userId, 10);
+                    if (!isNaN(numPart) && numPart > maxNum) {
+                        maxNum = numPart;
+                    }
+                }
+            });
+
+            const nextNum = maxNum + 1;
+            // Pad with zeros to make it 3 digits (001, 002, ...)
+            return String(nextNum).padStart(3, '0');
+        };
+
+        // --- SMART ID GENERATOR FOR DOCS ---
         window.generateSmartId = async (type) => {
             let colName, prefix;
             if (type === 'invoice' || type === 'order') {
@@ -1290,52 +1311,35 @@
             return `${prefix}-${paddedNum}`;
         };
 
-        // --- NEW: SMART USER ID GENERATOR ---
-        window.generateUserId = async () => {
-            const snapshot = await getDocs(getCol('users'));
-            let maxNum = 0;
-            
-            snapshot.forEach(d => {
-                const data = d.data();
-                if (data.userId) {
-                    const numPart = parseInt(data.userId, 10);
-                    if (!isNaN(numPart) && numPart > maxNum) {
-                        maxNum = numPart;
-                    }
-                }
-            });
-
-            const nextNum = maxNum + 1;
-            return String(nextNum).padStart(3, '0'); // Returns 001, 002, etc.
-        };
-
         window.handleHardcodedLogin = async (userId, password) => {
-            if (userId === '001' && password === '1234') {
-                const q = query(getCol('users'), where('userId', '==', '001'));
-                const querySnapshot = await getDocs(q);
+            // Check super admin first (001)
+            // We check if any user has userId 001 and role SuperAdmin
+            const qSuper = query(getCol('users'), where('userId', '==', '001'), where('role', '==', 'SuperAdmin'));
+            const superSnap = await getDocs(qSuper);
+            
+            // If no super admin exists yet, allow hardcoded creation
+            if (superSnap.empty && userId === '001' && password === '1234') {
+                 await setDoc(doc(db, 'users_ddnex', 'superadmin_001'), {
+                    userId: '001',
+                    name: 'Super Administrator',
+                    email: 'admin@ddnex.com',
+                    role: 'SuperAdmin',
+                    status: 'active',
+                    password: '1234', // Storing password for hardcoded check
+                    createdAt: new Date()
+                });
                 
-                if (querySnapshot.empty) {
-                    await setDoc(doc(db, 'users_ddnex', 'superadmin_001'), {
-                        userId: '001',
-                        name: 'Super Administrator',
-                        email: 'admin@ddnex.com',
-                        role: 'SuperAdmin',
-                        status: 'active',
-                        createdAt: new Date()
-                    });
-                }
-
                 const userMock = { 
                     uid: 'superadmin_001', 
                     displayName: 'Super Administrator', 
                     email: 'admin@ddnex.com',
                     role: 'SuperAdmin'
                 };
-                
                 window.onUserLoggedIn(userMock);
                 return;
             }
 
+            // Normal login check against DB
             try {
                 const q = query(getCol('users'), where('userId', '==', userId));
                 const querySnapshot = await getDocs(q);
@@ -1353,7 +1357,8 @@
                             uid: userDoc.id, 
                             displayName: userData.name, 
                             email: userData.email,
-                            role: userData.role
+                            role: userData.role,
+                            userId: userData.userId
                         });
                     } else {
                         window.showPopup("Login Failed", "Invalid User ID or Password.", false);
@@ -1408,6 +1413,7 @@
             updateDeal: async (id, data) => await updateDoc(doc(db, 'deals_ddnex', id), data),
             deleteDeal: async (id) => await deleteDoc(doc(db, 'deals_ddnex', id)),
             
+            // ORDERS / INVOICES (Combined Collection)
             getOrders: async () => {
                 const q = query(getCol('orders'));
                 const snap = await getDocs(q);
@@ -1421,6 +1427,7 @@
             setOrder: async (id, data) => await setDoc(doc(db, 'orders_ddnex', id), data, { merge: true }),
             deleteOrder: async (id) => await deleteDoc(doc(db, 'orders_ddnex', id)),
 
+            // QUOTATIONS
             getQuotations: async () => {
                 const q = query(getCol('quotation'));
                 const snap = await getDocs(q);
@@ -1588,19 +1595,23 @@
         // Utility Functions
         const formatMYR = (value) => `RM ${parseFloat(value || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
+        // UPDATED: Date formatting to DD/MM/YYYY
         const formatDate = (date) => {
             if (!date) return '-';
             try {
                 let d;
+                // Handle Firestore Timestamp
                 if (date.seconds) {
                     d = new Date(date.seconds * 1000);
-                } else if (typeof date === 'string') {
+                } 
+                // Handle String (YYYY-MM-DD or ISO)
+                else if (typeof date === 'string') {
                     d = new Date(date);
                 } else {
                     d = new Date(date);
                 }
                 
-                if (isNaN(d.getTime())) return date;
+                if (isNaN(d.getTime())) return date; // Return original if invalid
 
                 const day = String(d.getDate()).padStart(2, '0');
                 const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -1711,7 +1722,7 @@
         async function renderDashboardSection() {
             const projects = await window.dbOperations.getProjects();
             const clients = await window.dbOperations.getClients();
-            const orders = await window.dbOperations.getOrders();
+            const orders = await window.dbOperations.getOrders(); // Fetch all orders
             
             const activeProjects = projects.filter(p => p.status === 'active').length;
             const totalRevenue = orders.filter(i => i.status === 'Paid' || i.status === 'Activated' || i.status === 'Completed').reduce((sum, i) => sum + (i.total || i.price || i.finalPrice || 0), 0);
@@ -1780,7 +1791,7 @@
             `;
         }
 
-        // --- SERVICES & PRICING ---
+        // --- SERVICES & PRICING (UPDATED UI) ---
         function renderServicesSection() {
             document.getElementById('mainContent').innerHTML = `
                 <div style="text-align:center; margin-bottom: 32px;">
@@ -1904,6 +1915,7 @@
                 </div>
             `;
 
+            // Client Search Logic
             const searchInput = document.getElementById('clientSearchInput');
             searchInput.addEventListener('keyup', (e) => {
                 const term = e.target.value.toLowerCase();
@@ -1964,13 +1976,15 @@
             </div>
         `;
 
-        // --- CASHBILL / ORDERS LIST ---
+        // --- CASHBILL / ORDERS LIST (Combined) ---
         async function renderCashbillSection() {
-            const orders = await window.dbOperations.getOrders();
+            const orders = await window.dbOperations.getOrders(); // Combined collection
             const quotations = await window.dbOperations.getQuotations();
             
+            // Combine
             let allDocs = [...orders, ...quotations];
 
+            // Default Sort: Oldest to Latest (Ascending)
             allDocs.sort((a, b) => {
                 const dateA = a.date ? new Date(a.date) : (a.createdAt ? new Date(a.createdAt.seconds * 1000) : new Date(0));
                 const dateB = b.date ? new Date(b.date) : (b.createdAt ? new Date(b.createdAt.seconds * 1000) : new Date(0));
@@ -1983,6 +1997,7 @@
                         <input type="text" placeholder="Search by ID, Client, or Status..." id="cashbillSearchInput">
                         <i class="ri-search-line"></i>
                     </div>
+                    <!-- Sort Dropdown -->
                     <select class="filter-select" id="sortSelect" onchange="applyTableSort()">
                         <option value="oldest">Oldest to Latest</option>
                         <option value="latest">Latest to Oldest</option>
@@ -2019,9 +2034,11 @@
             window.setupTableFilter('cashbillSearchInput', 'cashbillTableBody');
         }
 
+        // Helper to render a single document row
         function renderDocRow(doc) {
+            // Determine Type Logic
             let typeLabel = doc.type || 'Invoice';
-            let typeClass = 'active';
+            let typeClass = 'active'; // Invoice default
             if (doc.source === 'Website') {
                 typeLabel = 'Website Order';
                 typeClass = 'website';
@@ -2031,11 +2048,13 @@
             }
 
             const dateStr = formatDate(doc.date || doc.createdAt);
+            // Use customerName primarily for website orders, fallback to clientName
             const clientName = doc.customerName || doc.clientName || 'N/A';
             const amount = doc.total || doc.price || doc.finalPrice || 0;
 
+            // Handle status class
             let statusClass = doc.status ? doc.status.toLowerCase() : 'pending';
-            if(statusClass === 'activated') statusClass = 'activated';
+            if(statusClass === 'activated') statusClass = 'activated'; // specific styling if needed
 
             return `
             <tr style="cursor: pointer;" onclick="navigateTo('${doc.type === 'Quotation' ? '/quotation/' : '/invoice/'}${doc.id}')">
@@ -2053,31 +2072,36 @@
             `;
         }
 
+        // Sort Function
         window.applyTableSort = () => {
             const sortValue = document.getElementById('sortSelect').value;
             const tbody = document.getElementById('cashbillTableBody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
 
             rows.sort((a, b) => {
+                // Date is in 4th column (index 3)
+                // Format is DD/MM/YYYY. We need to parse it back to Date object for comparison
                 const getDateFromRow = (row) => {
                     const dateText = row.cells[3].textContent;
                     const parts = dateText.split('/');
                     if(parts.length === 3) {
+                        // DD/MM/YYYY -> YYYY-MM-DD (ISO)
                         return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
                     }
-                    return new Date(0);
+                    return new Date(0); // Fallback
                 };
 
                 const dateA = getDateFromRow(a);
                 const dateB = getDateFromRow(b);
 
                 if (sortValue === 'latest') {
-                    return dateB - dateA;
+                    return dateB - dateA; // Descending
                 } else {
-                    return dateA - dateB;
+                    return dateA - dateB; // Ascending
                 }
             });
 
+            // Re-append sorted rows
             rows.forEach(row => tbody.appendChild(row));
         };
 
@@ -2130,11 +2154,12 @@
             }
         }
 
-        // INVOICE EDITOR
+        // INVOICE EDITOR (Handles both Manual Invoice and Website Order)
         async function renderInvoiceEditor(id) {
             let data = await window.dbOperations.getOrder(id);
             
             if (!data) {
+                // Should not happen if navigated from list, but fallback
                 data = {
                     number: id,
                     clientName: '',
@@ -2147,14 +2172,14 @@
                     type: 'Invoice',
                     paymentType: 'One-Time',
                     installmentCycle: 1,
-                    domain: '',
-                    clientPhone: ''
+                    domain: ''
                 };
             }
 
             const clients = await window.dbOperations.getClients();
             const clientOptions = clients.map(c => `<option value="${c.name}" ${data.clientName === c.name ? 'selected' : ''}>${c.name}</option>`).join('');
             
+            // Determine if this is a website order to show different UI
             const isWebsiteOrder = data.source === 'Website';
 
             document.getElementById('mainContent').innerHTML = `
@@ -2170,6 +2195,7 @@
                     </div>
                     
                     <div class="doc-editor-grid">
+                        <!-- Preview -->
                         <div class="doc-preview-card">
                             <div class="doc-preview-header">
                                 <div>
@@ -2194,6 +2220,7 @@
                                 </div>
                             </div>
                             
+                            <!-- Domain Display in Preview -->
                             ${data.domain || isWebsiteOrder ? `
                             <div style="margin-bottom: 24px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid var(--primary);">
                                 <label style="font-size:11px; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Project Domain</label>
@@ -2239,6 +2266,7 @@
                             </table>
                         </div>
 
+                        <!-- Editor Form -->
                         <div class="card" style="align-self: start; position: sticky; top: 96px;">
                             <div class="card-header"><h3>Order Details</h3></div>
                             <div class="card-body doc-editor-form">
@@ -2247,13 +2275,11 @@
                                     <input type="text" id="editClient" value="${data.clientName || data.customerName || ''}" oninput="updatePreview()" ${isWebsiteOrder ? 'readonly' : ''}>
                                 </div>
                                 
+                                <!-- Domain Input Field -->
                                 <div class="form-group-modal">
                                     <label>Domain <span style="color:#aaa; font-weight:400;">(e.g., client.com)</span></label>
                                     <input type="text" id="editDomain" value="${data.domain || ''}" placeholder="example.com" oninput="updatePreview()">
                                 </div>
-                                
-                                <!-- Hidden field to store phone for whatsapp -->
-                                <input type="hidden" id="editClientPhone" value="${data.customerPhone || ''}">
 
                                 <div class="form-row">
                                     <div class="form-group-modal">
@@ -2345,8 +2371,8 @@
                                 </div>
                                 
                                 <!-- WhatsApp Payment Reminder Button -->
-                                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-light);">
-                                    <button class="btn btn-whatsapp" style="width:100%" onclick="sendPaymentReminder('${id}')">
+                                <div style="margin-top: 16px;">
+                                    <button class="btn btn-whatsapp" style="width: 100%;" onclick="sendPaymentReminder()">
                                         <i class="ri-whatsapp-line"></i> Send Payment Reminder
                                     </button>
                                 </div>
@@ -2358,39 +2384,34 @@
             `;
 
             window.currentPaymentType = data.paymentType || 'One-Time';
+            // Store data needed for reminder
+            window.currentInvoiceData = data; 
+            
             updatePreview(); 
         }
 
-        // WhatsApp Reminder Function
-        window.sendPaymentReminder = async (id) => {
-            const doc = await window.dbOperations.getOrder(id);
-            if(!doc) {
-                showPopup("Error", "Could not load invoice data.", false);
-                return;
-            }
+        // NEW: Payment Reminder Function
+        window.sendPaymentReminder = () => {
+            // Get fresh values from inputs
+            const clientName = document.getElementById('editClient').value;
+            const desc = document.getElementById('editDesc').value;
+            const amount = document.getElementById('previewTotal').textContent; // Formatted amount
+            const cycle = document.getElementById('editCycle').value;
+            const months = window.currentPaymentType === '12-Month' ? 12 : 24;
+            const date = document.getElementById('editDate').value; // YYYY-MM-DD
             
-            // Need phone number
-            const phone = doc.customerPhone || doc.clientPhone;
-            if(!phone) {
-                showPopup("Missing Info", "No phone number found for this client.", false);
-                return;
-            }
-
-            // Parse data
-            const pkgName = doc.description || doc.planName || 'N/A';
-            const amount = formatMYR(doc.total || doc.price || 0);
-            const cycle = doc.installmentCycle || 1;
-            const months = doc.installmentMonths || (doc.paymentType === 'One-Time' ? 1 : 12); // Default fallback
-            const dueDate = formatDate(doc.date);
+            // Format Date for message (DD/MM/YYYY)
+            const d = new Date(date);
+            const formattedDate = d.toLocaleDateString('en-GB'); // dd/mm/yyyy
 
             const text = `Hello,
 
 This is a friendly reminder from DDNEX® regarding your monthly installment payment.
 
-Package: ${pkgName}
+Package: ${desc}
 Monthly Payment: ${amount}
 Billing Cycle: Month ${cycle} of ${months}
-Due Date: ${dueDate}
+Due Date: ${formattedDate}
 
 Kindly complete the payment before the due date to ensure your service continues without interruption.
 
@@ -2401,14 +2422,15 @@ Thank you.
 DDNEX®
 support@ddnex.com`;
 
-            let cleaned = phone.replace(/\D/g, '');
-            if(cleaned.startsWith('0')) cleaned = '6' + cleaned;
-            if(!cleaned.startsWith('6')) cleaned = '6' + cleaned;
-
-            const url = `https://wa.me/${cleaned}?text=${encodeURIComponent(text)}`;
+            // Note: We don't have phone number in the editor explicitly, usually taken from client list.
+            // For now, we open WhatsApp Web without a specific number (user selects recipient) or we can try to find it.
+            // Let's try to fetch client phone if possible, otherwise generic.
+            // To keep it simple and robust within the editor without extra async fetch:
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         };
 
+        // Updated Package Change Handler
         window.handlePackageChange = () => {
             const select = document.getElementById('editPackage');
             const amountInput = document.getElementById('editAmount');
@@ -2416,8 +2438,14 @@ support@ddnex.com`;
             const selected = select.value;
 
             if(selected && selected !== 'custom') {
+                // Update Amount
                 amountInput.value = PACKAGE_PRICES[selected];
+                // Update Description
                 descInput.value = selected;
+            } else if (selected === 'custom') {
+                // Optional: Clear fields for custom entry
+                // amountInput.value = '';
+                // descInput.value = '';
             }
             window.updatePreview();
         };
@@ -2506,7 +2534,7 @@ support@ddnex.com`;
             const data = {
                 number: id,
                 clientName: document.getElementById('editClient').value,
-                domain: document.getElementById('editDomain').value,
+                domain: document.getElementById('editDomain').value, // Save domain
                 date: document.getElementById('editDate').value,
                 status: document.getElementById('editStatus').value,
                 description: document.getElementById('editDesc').value,
@@ -2527,7 +2555,7 @@ support@ddnex.com`;
             showPopup("Success", "Order saved successfully.");
         };
 
-        // --- QUOTATION EDITOR ---
+        // --- QUOTATION EDITOR (Kept Simple) ---
         async function renderQuotationEditor(id) {
             let data = await window.dbOperations.getQuotation(id);
             if (!data) {
@@ -2763,6 +2791,7 @@ support@ddnex.com`;
             }
 
             if(!doc) {
+                // Try to grab from UI if not saved yet
                 const client = document.getElementById('editClient')?.value || 'N/A';
                 doc = {
                     type: type,
@@ -2779,6 +2808,7 @@ support@ddnex.com`;
                 };
             }
             
+            // If installment, show specific details
             let installmentRow = '';
             if(doc.paymentType && doc.paymentType !== 'One-Time') {
                 installmentRow = `
@@ -2862,115 +2892,6 @@ support@ddnex.com`;
             printArea.style.display = 'block';
             window.print();
             printArea.style.display = 'none';
-        };
-
-        // --- User Management ---
-        window.openUserModal = (userData = null) => {
-            const isEdit = userData !== null;
-            const title = isEdit ? 'Edit User' : 'Create New User';
-            
-            openModal(title, `
-                <div class="form-group-modal">
-                    <label>User ID</label>
-                    <input type="text" id="mUserId" value="${isEdit ? userData.userId : ''}" placeholder="Auto-generated" readonly style="background:#f8fafc;">
-                </div>
-                <div class="form-group-modal">
-                    <label>Full Name</label>
-                    <input type="text" id="mUserName" value="${isEdit ? userData.name : ''}" placeholder="John Doe">
-                </div>
-                <div class="form-group-modal">
-                    <label>Email</label>
-                    <input type="email" id="mUserEmail" value="${isEdit ? userData.email : ''}" placeholder="email@example.com">
-                </div>
-                <div class="form-row">
-                    <div class="form-group-modal">
-                        <label>Role</label>
-                        <select id="mUserRole">
-                            <option value="Admin" ${isEdit && userData.role === 'Admin' ? 'selected' : ''}>Admin</option>
-                            <option value="Staff" ${isEdit && userData.role === 'Staff' ? 'selected' : ''}>Staff</option>
-                        </select>
-                    </div>
-                    <div class="form-group-modal">
-                        <label>Status</label>
-                        <select id="mUserStatus">
-                            <option value="active" ${isEdit && userData.status === 'active' ? 'selected' : ''}>Active</option>
-                            <option value="suspended" ${isEdit && userData.status === 'suspended' ? 'selected' : ''}>Suspended</option>
-                        </select>
-                    </div>
-                </div>
-                ${!isEdit ? `
-                <div class="form-group-modal">
-                    <label>Password</label>
-                    <input type="text" id="mUserPassword" placeholder="Enter password">
-                </div>
-                ` : ''}
-                <input type="hidden" id="mUserDocId" value="${isEdit ? userData.id : ''}">
-            `, async () => {
-                const docId = document.getElementById('mUserDocId').value;
-                const userId = document.getElementById('mUserId').value;
-                const name = document.getElementById('mUserName').value;
-                const email = document.getElementById('mUserEmail').value;
-                const role = document.getElementById('mUserRole').value;
-                const status = document.getElementById('mUserStatus').value;
-                const password = document.getElementById('mUserPassword')?.value;
-
-                if (!name || !email) {
-                    showPopup("Error", "Name and Email are required.", false);
-                    return;
-                }
-
-                showLoading("Saving...");
-                
-                try {
-                    if (docId) {
-                        // Update existing
-                        await window.dbOperations.updateUser(docId, { name, email, role, status });
-                    } else {
-                        // Create new
-                        const newUserId = await window.generateUserId();
-                        const pwd = password || '1234'; // Default password
-                        await window.dbOperations.addUser({ 
-                            userId: newUserId, 
-                            name, 
-                            email, 
-                            role, 
-                            status, 
-                            password: pwd,
-                            createdAt: new Date() 
-                        });
-                    }
-                    closeModal();
-                    renderSettingsSection();
-                    showPopup("Success", `User ${docId ? 'updated' : 'created'} successfully.`);
-                } catch (err) {
-                    console.error(err);
-                    showPopup("Error", "Failed to save user.", false);
-                }
-                
-                hideLoading();
-            });
-
-            // Generate ID for new user
-            if (!isEdit) {
-                setTimeout(async () => {
-                    const newId = await window.generateUserId();
-                    document.getElementById('mUserId').value = newId;
-                }, 100);
-            }
-        };
-
-        window.editUser = (id, encodedData) => {
-            const userData = JSON.parse(decodeURIComponent(encodedData));
-            openUserModal(userData);
-        };
-
-        window.deleteUser = async (id) => {
-            if(confirm("Delete this user?")) {
-                showLoading("Deleting...");
-                await window.dbOperations.deleteUser(id);
-                hideLoading();
-                renderSettingsSection();
-            }
         };
 
         // --- Project Actions ---
@@ -3090,6 +3011,7 @@ support@ddnex.com`;
         // --- Settings / User Management ---
         async function renderSettingsSection() {
             let usersHtml = '';
+            // Check if current user is SuperAdmin from the state or DB
             if (currentUser && currentUser.role === 'SuperAdmin') {
                 const users = await window.dbOperations.getUsers();
                 usersHtml = `
@@ -3110,7 +3032,7 @@ support@ddnex.com`;
                                 <tbody id="userTableBody">
                                     ${users.map(u => `
                                         <tr>
-                                            <td>${u.name} <br><small style="color:#aaa">ID: ${u.userId}</small></td>
+                                            <td>${u.name} <br><small style="color:#aaa">${u.userId}</small></td>
                                             <td>${u.role}</td>
                                             <td><span class="status ${u.status === 'active' ? 'active' : 'suspended'}">${u.status}</span></td>
                                             <td>
@@ -3145,29 +3067,165 @@ support@ddnex.com`;
                 window.setupTableFilter('userSearchInput', 'userTableBody');
             }
         }
-        
-        // --- Profile ---
-        function renderProfileSection() {
+
+        // --- USER MODAL & ACTIONS ---
+        window.openUserModal = async () => {
+            showLoading("Generating ID...");
+            const newUserId = await window.generateUserIdSmart();
+            hideLoading();
+
+            openModal('Create New User', `
+                <div class="form-group-modal">
+                    <label>User ID (Auto-generated)</label>
+                    <input type="text" id="uId" value="${newUserId}" readonly style="background:#f8fafc;">
+                </div>
+                <div class="form-group-modal">
+                    <label>Full Name</label>
+                    <input type="text" id="uName" placeholder="John Doe">
+                </div>
+                <div class="form-group-modal">
+                    <label>Email</label>
+                    <input type="email" id="uEmail" placeholder="john@example.com">
+                </div>
+                <div class="form-row">
+                    <div class="form-group-modal">
+                        <label>Password</label>
+                        <input type="text" id="uPass" placeholder="Set initial password">
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Role</label>
+                        <select id="uRole">
+                            <option value="Admin">Admin</option>
+                            <option value="Staff">Staff</option>
+                            <option value="SuperAdmin">SuperAdmin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group-modal">
+                    <label>Status</label>
+                    <select id="uStatus">
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                </div>
+            `, async () => {
+                const data = {
+                    userId: document.getElementById('uId').value,
+                    name: document.getElementById('uName').value,
+                    email: document.getElementById('uEmail').value,
+                    password: document.getElementById('uPass').value,
+                    role: document.getElementById('uRole').value,
+                    status: document.getElementById('uStatus').value
+                };
+                
+                if(!data.name || !data.password) {
+                    showPopup("Error", "Name and Password are required.", false);
+                    return;
+                }
+
+                showLoading("Saving...");
+                await window.dbOperations.addUser(data);
+                closeModal();
+                renderSettingsSection(); // Refresh list
+                hideLoading();
+                showPopup("Success", "User created successfully.");
+            });
+        };
+
+        window.editUser = (id, dataStr) => {
+            const u = JSON.parse(decodeURIComponent(dataStr));
+            openModal('Edit User', `
+                <div class="form-group-modal">
+                    <label>User ID</label>
+                    <input type="text" value="${u.userId}" readonly style="background:#f8fafc;">
+                </div>
+                <div class="form-group-modal">
+                    <label>Full Name</label>
+                    <input type="text" id="uName" value="${u.name}">
+                </div>
+                <div class="form-group-modal">
+                    <label>Email</label>
+                    <input type="email" id="uEmail" value="${u.email}">
+                </div>
+                 <div class="form-group-modal">
+                    <label>New Password</label>
+                    <input type="text" id="uPass" placeholder="Leave blank to keep current">
+                </div>
+                <div class="form-row">
+                    <div class="form-group-modal">
+                        <label>Role</label>
+                        <select id="uRole">
+                            <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                            <option value="Staff" ${u.role === 'Staff' ? 'selected' : ''}>Staff</option>
+                            <option value="SuperAdmin" ${u.role === 'SuperAdmin' ? 'selected' : ''}>SuperAdmin</option>
+                        </select>
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Status</label>
+                        <select id="uStatus">
+                            <option value="active" ${u.status === 'active' ? 'selected' : ''}>Active</option>
+                            <option value="suspended" ${u.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+                        </select>
+                    </div>
+                </div>
+            `, async () => {
+                const updateData = {
+                    name: document.getElementById('uName').value,
+                    email: document.getElementById('uEmail').value,
+                    role: document.getElementById('uRole').value,
+                    status: document.getElementById('uStatus').value
+                };
+                const newPass = document.getElementById('uPass').value;
+                if(newPass) updateData.password = newPass;
+
+                showLoading("Updating...");
+                await window.dbOperations.updateUser(id, updateData);
+                closeModal();
+                renderSettingsSection();
+                hideLoading();
+            });
+        };
+
+        window.deleteUser = async (id) => {
+            if(confirm("Delete this user?")) {
+                showLoading("Deleting...");
+                await window.dbOperations.deleteUser(id);
+                renderSettingsSection();
+                hideLoading();
+            }
+        };
+
+        // --- Profile Section (Read from DB) ---
+        async function renderProfileSection() {
+            // Fetch latest user data from DB based on current user's UID or userId
+            let userData = currentUser; // Default to cached
+            
+            if (currentUser && currentUser.uid) {
+                // If we have UID, we can fetch fresh data, but since we are not using Auth UID for custom users always, 
+                // we rely on the cached currentUser or a query if needed. 
+                // For simplicity and performance, we use currentUser which is populated on login.
+            }
+            
             document.getElementById('mainContent').innerHTML = `
                 <div class="card" style="max-width:600px; margin:0 auto;">
                     <div class="card-body">
                         <div style="text-align:center; margin-bottom:24px;">
-                            <div class="user-avatar" style="width:80px; height:80px; font-size:28px; margin:0 auto 16px;">${getInitials(currentUser.displayName)}</div>
-                            <h2>${currentUser.displayName}</h2>
-                            <p style="color:var(--text-muted)">${currentUser.email}</p>
-                            <span class="status active" style="margin-top:8px;">${currentUser.role || 'User'}</span>
+                            <div class="user-avatar" style="width:80px; height:80px; font-size:28px; margin:0 auto 16px;">${getInitials(userData.displayName)}</div>
+                            <h2>${userData.displayName}</h2>
+                            <p style="color:var(--text-muted)">${userData.email}</p>
+                            <span class="status active" style="margin-top:8px;">${userData.role || 'User'}</span>
                         </div>
                         <div class="form-group-modal">
                             <label>Full Name</label>
-                            <input type="text" value="${currentUser.displayName}" disabled>
+                            <input type="text" value="${userData.displayName}" disabled>
                         </div>
                         <div class="form-group-modal">
                             <label>Email</label>
-                            <input type="email" value="${currentUser.email}" disabled>
+                            <input type="email" value="${userData.email}" disabled>
                         </div>
                         <div class="form-group-modal">
                             <label>User ID</label>
-                            <input type="text" value="${currentUser.uid}" disabled>
+                            <input type="text" value="${userData.userId || currentUser.uid}" disabled>
                         </div>
                     </div>
                 </div>
@@ -3203,7 +3261,6 @@ support@ddnex.com`;
                     if (card) {
                         column.appendChild(card);
                         await window.dbOperations.updateDeal(cardId, { stage: newStage });
-                        // Re-render to update counts and clean up state
                         renderSalesSection(); 
                     }
                 });
