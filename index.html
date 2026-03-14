@@ -1262,7 +1262,6 @@
         // --- SMART ID GENERATOR ---
         window.generateSmartId = async (type) => {
             let colName, prefix;
-            // All orders (invoices/website) now go into 'orders_ddnex'
             if (type === 'invoice' || type === 'order') {
                 colName = 'orders';
                 prefix = 'IDNX';
@@ -1289,6 +1288,25 @@
             const nextNum = maxNum + 1;
             const paddedNum = String(nextNum).padStart(4, '0');
             return `${prefix}-${paddedNum}`;
+        };
+
+        // --- NEW: SMART USER ID GENERATOR ---
+        window.generateUserId = async () => {
+            const snapshot = await getDocs(getCol('users'));
+            let maxNum = 0;
+            
+            snapshot.forEach(d => {
+                const data = d.data();
+                if (data.userId) {
+                    const numPart = parseInt(data.userId, 10);
+                    if (!isNaN(numPart) && numPart > maxNum) {
+                        maxNum = numPart;
+                    }
+                }
+            });
+
+            const nextNum = maxNum + 1;
+            return String(nextNum).padStart(3, '0'); // Returns 001, 002, etc.
         };
 
         window.handleHardcodedLogin = async (userId, password) => {
@@ -1390,7 +1408,6 @@
             updateDeal: async (id, data) => await updateDoc(doc(db, 'deals_ddnex', id), data),
             deleteDeal: async (id) => await deleteDoc(doc(db, 'deals_ddnex', id)),
             
-            // ORDERS / INVOICES (Combined Collection)
             getOrders: async () => {
                 const q = query(getCol('orders'));
                 const snap = await getDocs(q);
@@ -1404,7 +1421,6 @@
             setOrder: async (id, data) => await setDoc(doc(db, 'orders_ddnex', id), data, { merge: true }),
             deleteOrder: async (id) => await deleteDoc(doc(db, 'orders_ddnex', id)),
 
-            // QUOTATIONS
             getQuotations: async () => {
                 const q = query(getCol('quotation'));
                 const snap = await getDocs(q);
@@ -1572,23 +1588,19 @@
         // Utility Functions
         const formatMYR = (value) => `RM ${parseFloat(value || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
-        // UPDATED: Date formatting to DD/MM/YYYY
         const formatDate = (date) => {
             if (!date) return '-';
             try {
                 let d;
-                // Handle Firestore Timestamp
                 if (date.seconds) {
                     d = new Date(date.seconds * 1000);
-                } 
-                // Handle String (YYYY-MM-DD or ISO)
-                else if (typeof date === 'string') {
+                } else if (typeof date === 'string') {
                     d = new Date(date);
                 } else {
                     d = new Date(date);
                 }
                 
-                if (isNaN(d.getTime())) return date; // Return original if invalid
+                if (isNaN(d.getTime())) return date;
 
                 const day = String(d.getDate()).padStart(2, '0');
                 const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -1699,7 +1711,7 @@
         async function renderDashboardSection() {
             const projects = await window.dbOperations.getProjects();
             const clients = await window.dbOperations.getClients();
-            const orders = await window.dbOperations.getOrders(); // Fetch all orders
+            const orders = await window.dbOperations.getOrders();
             
             const activeProjects = projects.filter(p => p.status === 'active').length;
             const totalRevenue = orders.filter(i => i.status === 'Paid' || i.status === 'Activated' || i.status === 'Completed').reduce((sum, i) => sum + (i.total || i.price || i.finalPrice || 0), 0);
@@ -1768,7 +1780,7 @@
             `;
         }
 
-        // --- SERVICES & PRICING (UPDATED UI) ---
+        // --- SERVICES & PRICING ---
         function renderServicesSection() {
             document.getElementById('mainContent').innerHTML = `
                 <div style="text-align:center; margin-bottom: 32px;">
@@ -1892,7 +1904,6 @@
                 </div>
             `;
 
-            // Client Search Logic
             const searchInput = document.getElementById('clientSearchInput');
             searchInput.addEventListener('keyup', (e) => {
                 const term = e.target.value.toLowerCase();
@@ -1953,15 +1964,13 @@
             </div>
         `;
 
-        // --- CASHBILL / ORDERS LIST (Combined) ---
+        // --- CASHBILL / ORDERS LIST ---
         async function renderCashbillSection() {
-            const orders = await window.dbOperations.getOrders(); // Combined collection
+            const orders = await window.dbOperations.getOrders();
             const quotations = await window.dbOperations.getQuotations();
             
-            // Combine
             let allDocs = [...orders, ...quotations];
 
-            // Default Sort: Oldest to Latest (Ascending)
             allDocs.sort((a, b) => {
                 const dateA = a.date ? new Date(a.date) : (a.createdAt ? new Date(a.createdAt.seconds * 1000) : new Date(0));
                 const dateB = b.date ? new Date(b.date) : (b.createdAt ? new Date(b.createdAt.seconds * 1000) : new Date(0));
@@ -1974,7 +1983,6 @@
                         <input type="text" placeholder="Search by ID, Client, or Status..." id="cashbillSearchInput">
                         <i class="ri-search-line"></i>
                     </div>
-                    <!-- Sort Dropdown -->
                     <select class="filter-select" id="sortSelect" onchange="applyTableSort()">
                         <option value="oldest">Oldest to Latest</option>
                         <option value="latest">Latest to Oldest</option>
@@ -2011,11 +2019,9 @@
             window.setupTableFilter('cashbillSearchInput', 'cashbillTableBody');
         }
 
-        // Helper to render a single document row
         function renderDocRow(doc) {
-            // Determine Type Logic
             let typeLabel = doc.type || 'Invoice';
-            let typeClass = 'active'; // Invoice default
+            let typeClass = 'active';
             if (doc.source === 'Website') {
                 typeLabel = 'Website Order';
                 typeClass = 'website';
@@ -2025,13 +2031,11 @@
             }
 
             const dateStr = formatDate(doc.date || doc.createdAt);
-            // Use customerName primarily for website orders, fallback to clientName
             const clientName = doc.customerName || doc.clientName || 'N/A';
             const amount = doc.total || doc.price || doc.finalPrice || 0;
 
-            // Handle status class
             let statusClass = doc.status ? doc.status.toLowerCase() : 'pending';
-            if(statusClass === 'activated') statusClass = 'activated'; // specific styling if needed
+            if(statusClass === 'activated') statusClass = 'activated';
 
             return `
             <tr style="cursor: pointer;" onclick="navigateTo('${doc.type === 'Quotation' ? '/quotation/' : '/invoice/'}${doc.id}')">
@@ -2049,36 +2053,31 @@
             `;
         }
 
-        // Sort Function
         window.applyTableSort = () => {
             const sortValue = document.getElementById('sortSelect').value;
             const tbody = document.getElementById('cashbillTableBody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
 
             rows.sort((a, b) => {
-                // Date is in 4th column (index 3)
-                // Format is DD/MM/YYYY. We need to parse it back to Date object for comparison
                 const getDateFromRow = (row) => {
                     const dateText = row.cells[3].textContent;
                     const parts = dateText.split('/');
                     if(parts.length === 3) {
-                        // DD/MM/YYYY -> YYYY-MM-DD (ISO)
                         return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
                     }
-                    return new Date(0); // Fallback
+                    return new Date(0);
                 };
 
                 const dateA = getDateFromRow(a);
                 const dateB = getDateFromRow(b);
 
                 if (sortValue === 'latest') {
-                    return dateB - dateA; // Descending
+                    return dateB - dateA;
                 } else {
-                    return dateA - dateB; // Ascending
+                    return dateA - dateB;
                 }
             });
 
-            // Re-append sorted rows
             rows.forEach(row => tbody.appendChild(row));
         };
 
@@ -2131,12 +2130,11 @@
             }
         }
 
-        // INVOICE EDITOR (Handles both Manual Invoice and Website Order)
+        // INVOICE EDITOR
         async function renderInvoiceEditor(id) {
             let data = await window.dbOperations.getOrder(id);
             
             if (!data) {
-                // Should not happen if navigated from list, but fallback
                 data = {
                     number: id,
                     clientName: '',
@@ -2149,14 +2147,14 @@
                     type: 'Invoice',
                     paymentType: 'One-Time',
                     installmentCycle: 1,
-                    domain: ''
+                    domain: '',
+                    clientPhone: ''
                 };
             }
 
             const clients = await window.dbOperations.getClients();
             const clientOptions = clients.map(c => `<option value="${c.name}" ${data.clientName === c.name ? 'selected' : ''}>${c.name}</option>`).join('');
             
-            // Determine if this is a website order to show different UI
             const isWebsiteOrder = data.source === 'Website';
 
             document.getElementById('mainContent').innerHTML = `
@@ -2172,7 +2170,6 @@
                     </div>
                     
                     <div class="doc-editor-grid">
-                        <!-- Preview -->
                         <div class="doc-preview-card">
                             <div class="doc-preview-header">
                                 <div>
@@ -2197,7 +2194,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Domain Display in Preview -->
                             ${data.domain || isWebsiteOrder ? `
                             <div style="margin-bottom: 24px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid var(--primary);">
                                 <label style="font-size:11px; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Project Domain</label>
@@ -2243,7 +2239,6 @@
                             </table>
                         </div>
 
-                        <!-- Editor Form -->
                         <div class="card" style="align-self: start; position: sticky; top: 96px;">
                             <div class="card-header"><h3>Order Details</h3></div>
                             <div class="card-body doc-editor-form">
@@ -2252,11 +2247,13 @@
                                     <input type="text" id="editClient" value="${data.clientName || data.customerName || ''}" oninput="updatePreview()" ${isWebsiteOrder ? 'readonly' : ''}>
                                 </div>
                                 
-                                <!-- Domain Input Field -->
                                 <div class="form-group-modal">
                                     <label>Domain <span style="color:#aaa; font-weight:400;">(e.g., client.com)</span></label>
                                     <input type="text" id="editDomain" value="${data.domain || ''}" placeholder="example.com" oninput="updatePreview()">
                                 </div>
+                                
+                                <!-- Hidden field to store phone for whatsapp -->
+                                <input type="hidden" id="editClientPhone" value="${data.customerPhone || ''}">
 
                                 <div class="form-row">
                                     <div class="form-group-modal">
@@ -2346,6 +2343,13 @@
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <!-- WhatsApp Payment Reminder Button -->
+                                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-light);">
+                                    <button class="btn btn-whatsapp" style="width:100%" onclick="sendPaymentReminder('${id}')">
+                                        <i class="ri-whatsapp-line"></i> Send Payment Reminder
+                                    </button>
+                                </div>
 
                             </div>
                         </div>
@@ -2357,7 +2361,54 @@
             updatePreview(); 
         }
 
-        // Updated Package Change Handler
+        // WhatsApp Reminder Function
+        window.sendPaymentReminder = async (id) => {
+            const doc = await window.dbOperations.getOrder(id);
+            if(!doc) {
+                showPopup("Error", "Could not load invoice data.", false);
+                return;
+            }
+            
+            // Need phone number
+            const phone = doc.customerPhone || doc.clientPhone;
+            if(!phone) {
+                showPopup("Missing Info", "No phone number found for this client.", false);
+                return;
+            }
+
+            // Parse data
+            const pkgName = doc.description || doc.planName || 'N/A';
+            const amount = formatMYR(doc.total || doc.price || 0);
+            const cycle = doc.installmentCycle || 1;
+            const months = doc.installmentMonths || (doc.paymentType === 'One-Time' ? 1 : 12); // Default fallback
+            const dueDate = formatDate(doc.date);
+
+            const text = `Hello,
+
+This is a friendly reminder from DDNEX® regarding your monthly installment payment.
+
+Package: ${pkgName}
+Monthly Payment: ${amount}
+Billing Cycle: Month ${cycle} of ${months}
+Due Date: ${dueDate}
+
+Kindly complete the payment before the due date to ensure your service continues without interruption.
+
+If payment has already been made, please disregard this message.
+
+Thank you.
+
+DDNEX®
+support@ddnex.com`;
+
+            let cleaned = phone.replace(/\D/g, '');
+            if(cleaned.startsWith('0')) cleaned = '6' + cleaned;
+            if(!cleaned.startsWith('6')) cleaned = '6' + cleaned;
+
+            const url = `https://wa.me/${cleaned}?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        };
+
         window.handlePackageChange = () => {
             const select = document.getElementById('editPackage');
             const amountInput = document.getElementById('editAmount');
@@ -2365,14 +2416,8 @@
             const selected = select.value;
 
             if(selected && selected !== 'custom') {
-                // Update Amount
                 amountInput.value = PACKAGE_PRICES[selected];
-                // Update Description
                 descInput.value = selected;
-            } else if (selected === 'custom') {
-                // Optional: Clear fields for custom entry
-                // amountInput.value = '';
-                // descInput.value = '';
             }
             window.updatePreview();
         };
@@ -2461,7 +2506,7 @@
             const data = {
                 number: id,
                 clientName: document.getElementById('editClient').value,
-                domain: document.getElementById('editDomain').value, // Save domain
+                domain: document.getElementById('editDomain').value,
                 date: document.getElementById('editDate').value,
                 status: document.getElementById('editStatus').value,
                 description: document.getElementById('editDesc').value,
@@ -2482,7 +2527,7 @@
             showPopup("Success", "Order saved successfully.");
         };
 
-        // --- QUOTATION EDITOR (Kept Simple) ---
+        // --- QUOTATION EDITOR ---
         async function renderQuotationEditor(id) {
             let data = await window.dbOperations.getQuotation(id);
             if (!data) {
@@ -2718,7 +2763,6 @@
             }
 
             if(!doc) {
-                // Try to grab from UI if not saved yet
                 const client = document.getElementById('editClient')?.value || 'N/A';
                 doc = {
                     type: type,
@@ -2735,7 +2779,6 @@
                 };
             }
             
-            // If installment, show specific details
             let installmentRow = '';
             if(doc.paymentType && doc.paymentType !== 'One-Time') {
                 installmentRow = `
@@ -2819,6 +2862,115 @@
             printArea.style.display = 'block';
             window.print();
             printArea.style.display = 'none';
+        };
+
+        // --- User Management ---
+        window.openUserModal = (userData = null) => {
+            const isEdit = userData !== null;
+            const title = isEdit ? 'Edit User' : 'Create New User';
+            
+            openModal(title, `
+                <div class="form-group-modal">
+                    <label>User ID</label>
+                    <input type="text" id="mUserId" value="${isEdit ? userData.userId : ''}" placeholder="Auto-generated" readonly style="background:#f8fafc;">
+                </div>
+                <div class="form-group-modal">
+                    <label>Full Name</label>
+                    <input type="text" id="mUserName" value="${isEdit ? userData.name : ''}" placeholder="John Doe">
+                </div>
+                <div class="form-group-modal">
+                    <label>Email</label>
+                    <input type="email" id="mUserEmail" value="${isEdit ? userData.email : ''}" placeholder="email@example.com">
+                </div>
+                <div class="form-row">
+                    <div class="form-group-modal">
+                        <label>Role</label>
+                        <select id="mUserRole">
+                            <option value="Admin" ${isEdit && userData.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                            <option value="Staff" ${isEdit && userData.role === 'Staff' ? 'selected' : ''}>Staff</option>
+                        </select>
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Status</label>
+                        <select id="mUserStatus">
+                            <option value="active" ${isEdit && userData.status === 'active' ? 'selected' : ''}>Active</option>
+                            <option value="suspended" ${isEdit && userData.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+                        </select>
+                    </div>
+                </div>
+                ${!isEdit ? `
+                <div class="form-group-modal">
+                    <label>Password</label>
+                    <input type="text" id="mUserPassword" placeholder="Enter password">
+                </div>
+                ` : ''}
+                <input type="hidden" id="mUserDocId" value="${isEdit ? userData.id : ''}">
+            `, async () => {
+                const docId = document.getElementById('mUserDocId').value;
+                const userId = document.getElementById('mUserId').value;
+                const name = document.getElementById('mUserName').value;
+                const email = document.getElementById('mUserEmail').value;
+                const role = document.getElementById('mUserRole').value;
+                const status = document.getElementById('mUserStatus').value;
+                const password = document.getElementById('mUserPassword')?.value;
+
+                if (!name || !email) {
+                    showPopup("Error", "Name and Email are required.", false);
+                    return;
+                }
+
+                showLoading("Saving...");
+                
+                try {
+                    if (docId) {
+                        // Update existing
+                        await window.dbOperations.updateUser(docId, { name, email, role, status });
+                    } else {
+                        // Create new
+                        const newUserId = await window.generateUserId();
+                        const pwd = password || '1234'; // Default password
+                        await window.dbOperations.addUser({ 
+                            userId: newUserId, 
+                            name, 
+                            email, 
+                            role, 
+                            status, 
+                            password: pwd,
+                            createdAt: new Date() 
+                        });
+                    }
+                    closeModal();
+                    renderSettingsSection();
+                    showPopup("Success", `User ${docId ? 'updated' : 'created'} successfully.`);
+                } catch (err) {
+                    console.error(err);
+                    showPopup("Error", "Failed to save user.", false);
+                }
+                
+                hideLoading();
+            });
+
+            // Generate ID for new user
+            if (!isEdit) {
+                setTimeout(async () => {
+                    const newId = await window.generateUserId();
+                    document.getElementById('mUserId').value = newId;
+                }, 100);
+            }
+        };
+
+        window.editUser = (id, encodedData) => {
+            const userData = JSON.parse(decodeURIComponent(encodedData));
+            openUserModal(userData);
+        };
+
+        window.deleteUser = async (id) => {
+            if(confirm("Delete this user?")) {
+                showLoading("Deleting...");
+                await window.dbOperations.deleteUser(id);
+                hideLoading();
+                renderSettingsSection();
+            }
         };
 
         // --- Project Actions ---
@@ -2958,7 +3110,7 @@
                                 <tbody id="userTableBody">
                                     ${users.map(u => `
                                         <tr>
-                                            <td>${u.name} <br><small style="color:#aaa">${u.userId}</small></td>
+                                            <td>${u.name} <br><small style="color:#aaa">ID: ${u.userId}</small></td>
                                             <td>${u.role}</td>
                                             <td><span class="status ${u.status === 'active' ? 'active' : 'suspended'}">${u.status}</span></td>
                                             <td>
@@ -3051,6 +3203,7 @@
                     if (card) {
                         column.appendChild(card);
                         await window.dbOperations.updateDeal(cardId, { stage: newStage });
+                        // Re-render to update counts and clean up state
                         renderSalesSection(); 
                     }
                 });
