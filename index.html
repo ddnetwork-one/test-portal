@@ -455,6 +455,7 @@
         .status.unpaid { background: #fef2f2; color: #dc2626; }
         .status.paid { background: #dcfce7; color: #16a34a; }
         .status.website { background: #e0e7ff; color: #4f46e5; }
+        .status.activated { background: #dcfce7; color: #16a34a; }
         .status i { font-size: 8px; }
 
         /* Action Buttons */
@@ -1588,7 +1589,7 @@
             const orders = await window.dbOperations.getOrders(); // Fetch all orders
             
             const activeProjects = projects.filter(p => p.status === 'active').length;
-            const totalRevenue = orders.filter(i => i.status === 'Paid').reduce((sum, i) => sum + (i.total || i.price || 0), 0);
+            const totalRevenue = orders.filter(i => i.status === 'Paid' || i.status === 'Activated' || i.status === 'Completed').reduce((sum, i) => sum + (i.total || i.price || i.finalPrice || 0), 0);
             
             document.getElementById('mainContent').innerHTML = `
                 <div class="stats-grid">
@@ -1928,8 +1929,13 @@
             }
 
             const dateStr = formatDate(doc.date || doc.createdAt);
-            const clientName = doc.clientName || doc.customerName || 'N/A';
-            const amount = doc.total || doc.price || 0;
+            // Use customerName primarily for website orders, fallback to clientName
+            const clientName = doc.customerName || doc.clientName || 'N/A';
+            const amount = doc.total || doc.price || doc.finalPrice || 0;
+
+            // Handle status class
+            let statusClass = doc.status ? doc.status.toLowerCase() : 'pending';
+            if(statusClass === 'activated') statusClass = 'activated'; // specific styling if needed
 
             return `
             <tr style="cursor: pointer;" onclick="navigateTo('${doc.type === 'Quotation' ? '/quotation/' : '/invoice/'}${doc.id}')">
@@ -1938,7 +1944,7 @@
                 <td>${clientName}</td>
                 <td>${dateStr}</td>
                 <td>${formatMYR(amount)}</td>
-                <td><span class="status ${doc.status === 'Paid' || doc.status === 'Completed' ? 'completed' : 'pending'}">${doc.status}</span></td>
+                <td><span class="status ${statusClass}">${doc.status || 'Pending'}</span></td>
                 <td onclick="event.stopPropagation()">
                     <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', '${doc.type}')"><i class="ri-printer-line"></i></button>
                     <button class="action-btn danger" title="Delete" onclick="deleteDocGeneric('${doc.id}', '${doc.type}')"><i class="ri-delete-bin-line"></i></button>
@@ -2146,6 +2152,7 @@
                                         <select id="editStatus">
                                             <option value="Unpaid" ${data.status === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
                                             <option value="Paid" ${data.status === 'Paid' ? 'selected' : ''}>Paid</option>
+                                            <option value="Activated" ${data.status === 'Activated' ? 'selected' : ''}>Activated</option>
                                             <option value="Completed" ${data.status === 'Completed' ? 'selected' : ''}>Completed</option>
                                         </select>
                                     </div>
