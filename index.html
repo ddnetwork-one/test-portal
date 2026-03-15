@@ -1575,6 +1575,23 @@
             window.onUserLoggedOut();
         };
 
+        // =========================================
+        // BREVO API KEY FETCHER (From Firebase)
+        // =========================================
+        window.getBrevoApiKey = async () => {
+            try {
+                const ref = doc(db, 'ddnex_brevo_api', 'api');
+                const snap = await getDoc(ref);
+                if (snap.exists()) {
+                    return snap.data().api || '';
+                }
+                return '';
+            } catch (error) {
+                console.error('Error fetching Brevo API key:', error);
+                return '';
+            }
+        };
+
         window.dbOperations = {
             getUsers: async () => {
                 const q = query(getCol('users'));
@@ -1663,7 +1680,6 @@
         // BREVO EMAIL CONFIGURATION
         // =========================================
         const BREVO_CONFIG = {
-            apiKey: 'xsmtpsib-2533085266d6738b429508f73c71d3fdd6cfc4e03627753ab86772d9ea02768c-INpKW2QjzD6wSYG9',
             senderEmail: 'support@ddnex.com',
             senderName: 'DDNEX® Billing System'
         };
@@ -1672,6 +1688,13 @@
         // EMAIL SENDING FUNCTION (Brevo API)
         // =========================================
         async function sendEmailViaBrevo(toEmail, toName, subject, htmlContent) {
+            // Fetch API key from Firebase
+            const apiKey = await window.getBrevoApiKey();
+            
+            if (!apiKey) {
+                return { success: false, error: 'Email API key not configured. Please add it to Firebase.' };
+            }
+
             const payload = {
                 sender: {
                     name: BREVO_CONFIG.senderName,
@@ -1691,7 +1714,7 @@
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
-                        'api-key': BREVO_CONFIG.apiKey
+                        'api-key': apiKey
                     },
                     body: JSON.stringify(payload)
                 });
@@ -2407,7 +2430,7 @@
   </div>
 </body>
 </html>
-            `;
+`;
         };
 
         // ================== SECTION RENDERERS ==================
