@@ -1575,36 +1575,6 @@
             window.onUserLoggedOut();
         };
 
-        // =========================================
-        // BREVO API KEY FETCHER (From Firebase)
-        // Attempts to find the key in two possible locations
-        // =========================================
-        window.getBrevoApiKey = async () => {
-            try {
-                // Attempt 1: Collection: ddnex_brevo_api, Doc: api
-                let ref = doc(db, 'ddnex_brevo_api', 'api');
-                let snap = await getDoc(ref);
-                
-                if (snap.exists() && snap.data().api) {
-                    return snap.data().api;
-                }
-
-                // Attempt 2: Collection: ddnex_brevo_api_ddnex, Doc: api (Portal standard naming)
-                ref = doc(db, 'ddnex_brevo_api_ddnex', 'api');
-                snap = await getDoc(ref);
-                
-                if (snap.exists() && snap.data().api) {
-                    return snap.data().api;
-                }
-
-                console.error('Brevo API Key document not found in either collection.');
-                return '';
-            } catch (error) {
-                console.error('Error fetching Brevo API key:', error);
-                return '';
-            }
-        };
-
         window.dbOperations = {
             getUsers: async () => {
                 const q = query(getCol('users'));
@@ -1693,6 +1663,7 @@
         // BREVO EMAIL CONFIGURATION
         // =========================================
         const BREVO_CONFIG = {
+            apiKey: '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',
             senderEmail: 'support@ddnex.com',
             senderName: 'DDNEX® Billing System'
         };
@@ -1701,13 +1672,6 @@
         // EMAIL SENDING FUNCTION (Brevo API)
         // =========================================
         async function sendEmailViaBrevo(toEmail, toName, subject, htmlContent) {
-            // Fetch API key from Firebase
-            const apiKey = await window.getBrevoApiKey();
-            
-            if (!apiKey) {
-                return { success: false, error: 'Email API key not configured. Please add it to Firebase.' };
-            }
-
             const payload = {
                 sender: {
                     name: BREVO_CONFIG.senderName,
@@ -1727,7 +1691,7 @@
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
-                        'api-key': apiKey
+                        'api-key': BREVO_CONFIG.apiKey
                     },
                     body: JSON.stringify(payload)
                 });
@@ -2443,7 +2407,7 @@
   </div>
 </body>
 </html>
-`;
+            `;
         };
 
         // ================== SECTION RENDERERS ==================
