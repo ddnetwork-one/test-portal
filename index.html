@@ -1740,10 +1740,10 @@
             return `${day}/${month}/${year}`;
         };
 
-        // Generate Professional HTML Template (as per user request)
+        // Generate Professional HTML Template (UPDATED LAYOUT)
         const generateProfessionalHTML = (doc) => {
             const isQuotation = doc.type === 'Quotation';
-            const docTitle = isQuotation ? 'Quotation' : 'Invoice';
+            const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
             const clientName = doc.clientName || doc.customerName || 'Client';
             const docNumber = doc.number || doc.id;
             const dateStr = formatDateLong(doc.date || doc.createdAt);
@@ -1789,14 +1789,35 @@
             const discount = parseFloat(doc.discount || 0);
             const total = subtotal - discount;
 
-            // CTA Logic
-            let ctaHtml = '';
+            // Transaction Reference Logic
+            let transactionRef = doc.transactionRef || doc.id; 
+            // If your DB stores a specific transactionRef field, use that. 
+            // Otherwise, default to the document ID as requested.
+
+            // Build Payment Details Section
+            let paymentDetailsSection = '';
+            if (!isQuotation) {
+                paymentDetailsSection = `
+                    <h3>Payment Details</h3>
+                    <div class="meta">
+                        <strong>Payment Method:</strong> Online Transfer<br>
+                        <strong>Transaction Reference:</strong> ${transactionRef}
+                    </div>
+                `;
+            }
+
+            // Notes Logic
+            let notesHtml = `
+                <li>This document serves as an official payment receipt from DDNEX®.</li>
+                <li>The invoice has been successfully settled by the client.</li>
+                <li>Services include system setup, hosting, and maintenance under the agreed plan.</li>
+            `;
+            
             if (isQuotation) {
-                const subject = encodeURIComponent(`Quotation Approval ${docNumber}`);
-                const body = encodeURIComponent(`Hi DDNEX team,\n\nWe would like to proceed with the quotation.\n\nBest regards,\n[Your Name]`);
-                ctaHtml = `<a href="mailto:support@ddnex.com?subject=${subject}&body=${body}" style="display:inline-block; padding:14px 32px; background-color:#0071e3; color:#ffffff; text-decoration:none; border-radius:12px; font-weight:600; font-size:15px; margin-top:24px;">Approve Quotation</a>`;
-            } else {
-                ctaHtml = `<p style="font-size:14px; color:#1c1c1e; margin-top:24px;"><strong>Payment Status:</strong> <span style="color:${doc.status === 'Paid' ? '#16a34a' : '#dc2626'}">${doc.status || 'Unpaid'}</span></p>`;
+                notesHtml = `
+                    <li>This quotation is valid for 16 days.</li>
+                    <li>Services delivered via DDNEX® secure portal.</li>
+                `;
             }
 
             return `
@@ -1815,15 +1836,20 @@
   .content { padding: 32px 24px 40px; }
   .content h2 { font-size: 24px; font-weight: 600; margin-bottom: 16px; }
   .content h3 { font-size: 18px; font-weight: 500; margin-top: 32px; margin-bottom: 12px; }
+  .meta { font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
   table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
   table th, table td { border-bottom: 1px solid #e5e5ea; padding: 12px 8px; text-align: left; }
   table th { color: #6e6e73; font-weight: 500; background-color: #f7f7f7; }
+  .total { text-align: right; font-size: 16px; font-weight: 600; margin-top: 16px; }
   .notes { font-size: 13px; color: #6e6e73; margin-top: 20px; line-height: 1.5; }
   .notes ul { padding-left: 18px; margin: 8px 0; }
-  .links a { color: #0071e3; text-decoration: none; margin-right: 16px; font-size: 13px; }
-  .signature { margin-top: 40px; font-size: 14px; color: #1c1c1e; line-height: 1.5; }
-  .signature strong { display: block; }
   .footer { text-align: center; font-size: 12px; color: #8e8e93; padding: 24px 16px; border-top: 1px solid #e5e5ea; }
+  .status-paid { color: #16a34a; font-weight: 700; }
+  .status-pending { color: #d97706; font-weight: 700; }
+  @media(max-width:600px){
+    .container{width:95%!important;}
+    table th,table td{font-size:13px;}
+  }
 </style>
 </head>
 <body>
@@ -1842,51 +1868,56 @@
 
     <!-- CONTENT -->
     <div class="content">
-      <h2>${docTitle} for ${clientName}</h2>
-      <p>
-        <strong>${docTitle} No.:</strong> ${docNumber}<br>
-        <strong>Date:</strong> ${dateStr}<br>
-        ${isQuotation ? `<strong>Valid Until:</strong> ${validUntil}` : ''}
-      </p>
+      <h2>${docTitle}</h2>
+      
+      <div class="meta">
+        <strong>${docTitle.replace(' Receipt', '')} No:</strong> ${docNumber}<br>
+        <strong>Date Issued:</strong> ${dateStr}<br>
+        ${!isQuotation ? `<strong>Payment Status:</strong> <span class="${doc.status === 'Paid' ? 'status-paid' : 'status-pending'}">${doc.status || 'Unpaid'}</span>` : ''}
+      </div>
 
-      <h3>Services & Pricing</h3>
+      <h3>Bill To</h3>
+      <div class="meta">
+        <strong>${clientName}</strong><br>
+        Malaysia
+      </div>
+
+      <h3>Services</h3>
       <table>
         <tr>
           <th>Item</th>
           <th>Description</th>
-          <th>Price (RM)</th>
+          <th>Amount (RM)</th>
         </tr>
         ${itemRows}
       </table>
 
+      <div class="total">
+        Total: ${formatMYR(total)}
+      </div>
+
+      ${paymentDetailsSection}
+
       <div class="notes">
         <p><strong>Notes:</strong></p>
         <ul>
-          <li>All prices are exclusive of GST.</li>
-          <li>Services delivered via DDNEX® secure portal.</li>
+          ${notesHtml}
         </ul>
       </div>
 
-      <h3>Terms and Policies</h3>
-      <div class="links">
-        <a href="http://ddnex.com/payment-policy">Payment Policy</a>
-        <a href="https://ddnex.com/terms">Terms & Conditions</a>
-        <a href="https://ddnex.com/privacy">Privacy Policy</a>
+      <h3>Terms & Conditions Summary</h3>
+      <div class="notes">
+        <ul>
+          <li>All services are provided under the DDNEX® service agreement.</li>
+          <li>Installment plans include hosting, maintenance, and system updates during the subscription period.</li>
+          <li>Payments made are non-refundable once service setup and deployment have started.</li>
+          <li>DDNEX® reserves the right to modify service policies when necessary.</li>
+          <li>Full Terms & Policies are available at www.ddnex.com.</li>
+        </ul>
       </div>
 
-      <!-- CTA / STATUS -->
-      ${ctaHtml}
-
-      <!-- SIGNATURE -->
-      <div class="signature">
-        Best regards,<br><br>
-        <strong>Danial Danish</strong><br>
-        Lead & Founder<br>
-        DDNEX® by DD Cloud Network
-      </div>
     </div>
 
-    <!-- FOOTER -->
     <div class="footer">
       Prepared by DDNEX® Team | support@ddnex.com
     </div>
@@ -3165,7 +3196,7 @@
                                 <tbody id="userTableBody">
                                     ${users.map(u => `
                                         <tr>
-                                        <td>${u.name} <br><small style="color:#aaa">${u.userId}</small></td>
+                                            <td>${u.name} <br><small style="color:#aaa">${u.userId}</small></td>
                                             <td>${u.role}</td>
                                             <td><span class="status ${u.status === 'active' ? 'active' : 'suspended'}">${u.status}</span></td>
                                             <td>
@@ -3326,6 +3357,142 @@
                 renderSettingsSection();
                 hideLoading();
             }
+        };
+
+        // --- Client Modal Logic ---
+        window.openClientModal = () => {
+            openModal('Add Client', `
+                <div class="form-group-modal"><label>Name</label><input type="text" id="cName"></div>
+                <div class="form-row">
+                     <div class="form-group-modal"><label>Contact Person</label><input type="text" id="cContact"></div>
+                     <div class="form-group-modal"><label>Phone</label><input type="text" id="cPhone"></div>
+                </div>
+                <div class="form-group-modal"><label>Email</label><input type="email" id="cEmail"></div>
+                <div class="form-group-modal"><label>Website</label><input type="text" id="cWebsite" placeholder="example.com"></div>
+                <div class="form-row">
+                    <div class="form-group-modal"><label>Industry</label><input type="text" id="cIndustry"></div>
+                    <div class="form-group-modal"><label>Plan</label><input type="text" id="cPlan"></div>
+                </div>
+            `, async () => {
+                const data = {
+                    name: document.getElementById('cName').value,
+                    contact: document.getElementById('cContact').value,
+                    phone: document.getElementById('cPhone').value,
+                    email: document.getElementById('cEmail').value,
+                    website: document.getElementById('cWebsite').value,
+                    industry: document.getElementById('cIndustry').value,
+                    activePlan: document.getElementById('cPlan').value,
+                    color: '#2563eb'
+                };
+                if(!data.name) return;
+                
+                showLoading("Saving...");
+                await window.dbOperations.addClient(data);
+                closeModal();
+                renderClientsSection();
+                hideLoading();
+            });
+        };
+
+        window.editClient = async (id) => {
+            const clients = await window.dbOperations.getClients();
+            const c = clients.find(x => x.id === id);
+            if(!c) return;
+
+            openModal('Edit Client', `
+                 <div class="form-group-modal"><label>Name</label><input type="text" id="cName" value="${c.name}"></div>
+                <div class="form-row">
+                     <div class="form-group-modal"><label>Contact Person</label><input type="text" id="cContact" value="${c.contact || ''}"></div>
+                     <div class="form-group-modal"><label>Phone</label><input type="text" id="cPhone" value="${c.phone || ''}"></div>
+                </div>
+                <div class="form-group-modal"><label>Email</label><input type="email" id="cEmail" value="${c.email || ''}"></div>
+                <div class="form-group-modal"><label>Website</label><input type="text" id="cWebsite" value="${c.website || ''}"></div>
+                <div class="form-row">
+                    <div class="form-group-modal"><label>Industry</label><input type="text" id="cIndustry" value="${c.industry || ''}"></div>
+                    <div class="form-group-modal"><label>Plan</label><input type="text" id="cPlan" value="${c.activePlan || ''}"></div>
+                </div>
+            `, async () => {
+                const data = {
+                    name: document.getElementById('cName').value,
+                    contact: document.getElementById('cContact').value,
+                    phone: document.getElementById('cPhone').value,
+                    email: document.getElementById('cEmail').value,
+                    website: document.getElementById('cWebsite').value,
+                    industry: document.getElementById('cIndustry').value,
+                    activePlan: document.getElementById('cPlan').value
+                };
+                
+                showLoading("Updating...");
+                await window.dbOperations.updateClient(id, data);
+                closeModal();
+                renderClientsSection();
+                hideLoading();
+            });
+        };
+
+        window.deleteClient = async (id) => {
+            if(confirm("Delete this client?")) {
+                showLoading("Deleting...");
+                await window.dbOperations.deleteClient(id);
+                renderClientsSection();
+                hideLoading();
+            }
+        };
+
+        // --- Project Modal Logic ---
+        window.editProject = async (id) => {
+            const projects = await window.dbOperations.getProjects();
+            const p = projects.find(x => x.id === id);
+            if(!p) return;
+
+            openModal('Edit Project', `
+                <div class="form-group-modal"><label>Project Name</label><input type="text" id="pName" value="${p.name}"></div>
+                <div class="form-group-modal"><label>Client Name</label><input type="text" id="pClient" value="${p.client}"></div>
+                <div class="form-row">
+                     <div class="form-group-modal"><label>Status</label>
+                        <select id="pStatus">
+                            <option value="active" ${p.status === 'active' ? 'selected' : ''}>Active</option>
+                            <option value="pending" ${p.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="completed" ${p.status === 'completed' ? 'selected' : ''}>Completed</option>
+                        </select>
+                     </div>
+                     <div class="form-group-modal"><label>Deadline</label><input type="date" id="pDate" value="${p.deadline}"></div>
+                </div>
+            `, async () => {
+                const data = {
+                    name: document.getElementById('pName').value,
+                    client: document.getElementById('pClient').value,
+                    status: document.getElementById('pStatus').value,
+                    deadline: document.getElementById('pDate').value
+                };
+                showLoading("Updating...");
+                await window.dbOperations.updateProject(id, data);
+                closeModal();
+                renderProjectsSection();
+                hideLoading();
+            });
+        };
+
+        // --- Deal Modal Logic ---
+        window.openDealModal = () => {
+            openModal('Add Deal', `
+                <div class="form-group-modal"><label>Deal Name</label><input type="text" id="dName"></div>
+                <div class="form-group-modal"><label>Client</label><input type="text" id="dClient"></div>
+                <div class="form-group-modal"><label>Value (RM)</label><input type="number" id="dValue"></div>
+                <input type="hidden" id="dStage" value="leads">
+            `, async () => {
+                const data = {
+                    name: document.getElementById('dName').value,
+                    client: document.getElementById('dClient').value,
+                    value: parseFloat(document.getElementById('dValue').value || 0),
+                    stage: 'leads'
+                };
+                showLoading("Saving...");
+                await window.dbOperations.addDeal(data);
+                closeModal();
+                renderSalesSection();
+                hideLoading();
+            });
         };
 
         // --- Profile Section ---
