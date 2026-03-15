@@ -1660,38 +1660,31 @@
         };
 
         // =========================================
-        // BREVO EMAIL CONFIGURATION
+        // RESEND EMAIL CONFIGURATION
         // =========================================
-        const BREVO_CONFIG = {
-            apiKey: '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',
+        const RESEND_CONFIG = {
+            apiKey: 're_CYfqoJnD_4RJM91oh6JGY7DQg4RrTE8ZY',
             senderEmail: 'support@ddnex.com',
             senderName: 'DDNEX® Billing System'
         };
 
         // =========================================
-        // EMAIL SENDING FUNCTION (Brevo API)
+        // EMAIL SENDING FUNCTION (Resend API)
         // =========================================
-        async function sendEmailViaBrevo(toEmail, toName, subject, htmlContent) {
+        async function sendEmailViaResend(toEmail, toName, subject, htmlContent) {
             const payload = {
-                sender: {
-                    name: BREVO_CONFIG.senderName,
-                    email: BREVO_CONFIG.senderEmail
-                },
-                to: [{
-                    email: toEmail,
-                    name: toName || 'Client'
-                }],
+                from: `${RESEND_CONFIG.senderName} <${RESEND_CONFIG.senderEmail}>`,
+                to: [toEmail],
                 subject: subject,
-                htmlContent: htmlContent
+                html: htmlContent
             };
 
             try {
-                const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                const response = await fetch('https://api.resend.com/emails', {
                     method: 'POST',
                     headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'api-key': BREVO_CONFIG.apiKey
+                        'Authorization': `Bearer ${RESEND_CONFIG.apiKey}`,
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
                 });
@@ -1699,9 +1692,9 @@
                 const result = await response.json();
                 
                 if (response.ok) {
-                    return { success: true, messageId: result.messageId };
+                    return { success: true, messageId: result.id };
                 } else {
-                    console.error('Brevo Error:', result);
+                    console.error('Resend Error:', result);
                     return { success: false, error: result.message || 'Failed to send email' };
                 }
             } catch (error) {
@@ -1724,7 +1717,7 @@
                 statusEl.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Sending email...';
             }
 
-            const result = await sendEmailViaBrevo(toEmail, 'Client', subject, htmlContent);
+            const result = await sendEmailViaResend(toEmail, 'Client', subject, htmlContent);
 
             if (statusEl) {
                 if (result.success) {
@@ -3276,7 +3269,7 @@
                         <td>${item.description || '-'}</td>
                         <td style="text-align:right;">${formatMYR(item.amount)}</td>
                     </tr>
-                `).join('');
+                                    `).join('');
                 
                 tbody.innerHTML = itemsHtml + `
                     <tr>
@@ -3683,7 +3676,7 @@
             }
         };
 
-        // ================== EMAIL TEMPLATE MODAL (Brevo Integrated) ==================
+        // ================== EMAIL TEMPLATE MODAL (Resend Integrated) ==================
         window.openEmailTemplateModal = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
@@ -3743,7 +3736,7 @@
                     </div>
                     
                     <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="triggerSendEmail('${id}', '${type}')">
-                        <i class="ri-send-plane-fill"></i> Send via Brevo
+                        <i class="ri-send-plane-fill"></i> Send via Resend
                     </button>
                     
                     <div id="emailSendStatus"></div>
