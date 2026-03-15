@@ -15,6 +15,10 @@
     
     <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <!-- jsPDF for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         /* =========================================
@@ -721,6 +725,7 @@
         .btn-success:hover { background: #059669; }
         .btn-warning { background: var(--accent-orange); color: white; }
         .btn-warning:hover { background: #ea580c; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
         /* =========================================
            DOCUMENT EDITOR PAGE (Invoice/Quotation)
@@ -1214,6 +1219,77 @@
             background: #fef2f2;
             color: #dc2626;
         }
+        .email-status-indicator.cooldown {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        /* Cooldown Timer Styles */
+        .cooldown-timer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fef3c7;
+            border-radius: var(--radius-sm);
+            margin-top: 16px;
+            font-size: 13px;
+            color: #d97706;
+        }
+        .cooldown-timer i {
+            font-size: 16px;
+        }
+        .cooldown-timer .timer-display {
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        /* Force Send Button */
+        .btn-force-send {
+            background: transparent;
+            border: 1px solid var(--accent-orange);
+            color: var(--accent-orange);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-force-send:hover {
+            background: var(--accent-orange);
+            color: white;
+        }
+
+        /* PDF Generation Progress */
+        .pdf-progress {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #f0f9ff;
+            border-radius: var(--radius-sm);
+            margin-top: 12px;
+        }
+        .pdf-progress.active {
+            display: flex;
+        }
+        .pdf-progress-bar {
+            flex: 1;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .pdf-progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
 
         /* Responsive */
         @media(max-width: 768px) {
@@ -1252,9 +1328,21 @@
             #printArea { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 40px; }
             .no-print { display: none !important; }
         }
+
+        /* Hidden PDF Container */
+        #pdfGenerationContainer {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 800px;
+            background: white;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Hidden PDF Generation Container -->
+    <div id="pdfGenerationContainer"></div>
 
     <!-- Login Page -->
     <div class="login-page" id="loginPage">
@@ -1639,7 +1727,18 @@
                 return snap.exists() ? {id: snap.id, ...snap.data()} : null;
             },
             setQuotation: async (id, data) => await setDoc(doc(db, 'quotation_ddnex', id), data, { merge: true }),
-            deleteQuotation: async (id) => await deleteDoc(doc(db, 'quotation_ddnex', id))
+            deleteQuotation: async (id) => await deleteDoc(doc(db, 'quotation_ddnex', id)),
+
+            // Email cooldown tracking
+            getEmailCooldown: async (docId) => {
+                const ref = doc(db, 'email_cooldown_ddnex', docId);
+                const snap = await getDoc(ref);
+                return snap.exists() ? snap.data() : null;
+            },
+            setEmailCooldown: async (docId) => {
+                const ref = doc(db, 'email_cooldown_ddnex', docId);
+                await setDoc(ref, { lastSent: new Date().toISOString() });
+            }
         };
 
     </script>
@@ -1651,8 +1750,8 @@
         // =========================================
         const EMAILJS_CONFIG = {
             publicKey: 'dN7qLgPS_8B-K-SSq',
-            serviceId: 'service_fkiuk6k', // Replace with your EmailJS service ID
-            templateId: 'template_7ch5l34' // Replace with your EmailJS template ID
+            serviceId: 'service_fkiuk6k',
+            templateId: 'template_7ch5l34'
         };
 
         // Initialize EmailJS when the script loads
@@ -1667,7 +1766,12 @@
         // Pagination State
         let invoicePageState = { page: 1, perPage: 20, filteredData: [] };
         let quotationPageState = { page: 1, perPage: 20, filteredData: [] };
-        
+
+        // Email Cooldown State (5 minutes in milliseconds)
+        const EMAIL_COOLDOWN_MS = 5 * 60 * 1000;
+        let currentEmailDocId = null;
+        let cooldownInterval = null;
+
         // Constants
         const PACKAGE_PRICES = {
             'Starter Landing Page': 399,
@@ -1677,18 +1781,334 @@
         };
 
         // =========================================
-        // EMAIL SENDING FUNCTION (EmailJS)
+        // PDF GENERATION FUNCTIONS
         // =========================================
-        async function sendEmailViaEmailJS(toEmail, toName, subject, htmlContent) {
+        async function generatePDF(doc, type) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    
+                    // Create PDF document
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const margin = 20;
+                    let yPos = margin;
+
+                    // Helper function to add text
+                    const addText = (text, x, y, options = {}) => {
+                        const { fontSize = 10, fontStyle = 'normal', align = 'left', color = [15, 23, 42] } = options;
+                        pdf.setFontSize(fontSize);
+                        pdf.setFont('helvetica', fontStyle);
+                        pdf.setTextColor(...color);
+                        pdf.text(text, x, y, { align });
+                        return y;
+                    };
+
+                    // Helper function for wrapped text
+                    const addWrappedText = (text, x, y, maxWidth, options = {}) => {
+                        const { fontSize = 10, fontStyle = 'normal', lineHeight = 6 } = options;
+                        pdf.setFontSize(fontSize);
+                        pdf.setFont('helvetica', fontStyle);
+                        const lines = pdf.splitTextToSize(text, maxWidth);
+                        lines.forEach((line, i) => {
+                            pdf.text(line, x, y + (i * lineHeight));
+                        });
+                        return y + (lines.length * lineHeight);
+                    };
+
+                    // Header with Logo placeholder
+                    pdf.setFillColor(37, 99, 235);
+                    pdf.rect(0, 0, pageWidth, 40, 'F');
+                    
+                    addText('DDNEX', margin, 18, { fontSize: 24, fontStyle: 'bold', color: [255, 255, 255] });
+                    addText('Digital Solutions Provider', margin, 28, { fontSize: 10, color: [200, 220, 255] });
+
+                    // Document type badge
+                    const docTitle = type === 'Quotation' ? 'QUOTATION' : 'INVOICE';
+                    const docNumber = doc.number || doc.id;
+                    addText(docTitle, pageWidth - margin, 18, { fontSize: 16, fontStyle: 'bold', align: 'right', color: [255, 255, 255] });
+                    addText(docNumber, pageWidth - margin, 28, { fontSize: 10, align: 'right', color: [200, 220, 255] });
+
+                    yPos = 55;
+
+                    // Company Info
+                    pdf.setFillColor(248, 250, 252);
+                    pdf.rect(margin, yPos, pageWidth - (margin * 2), 25, 'F');
+                    
+                    addText('DDNEX by DD Cloud Network', margin + 5, yPos + 8, { fontSize: 10, fontStyle: 'bold' });
+                    addText('Company Reg: 202603040752 (MA0342542-K)', margin + 5, yPos + 14, { fontSize: 8, color: [100, 116, 139] });
+                    addText('Sungai Petani, Kedah, Malaysia', margin + 5, yPos + 20, { fontSize: 8, color: [100, 116, 139] });
+
+                    yPos += 35;
+
+                    // Document Info Box
+                    const clientName = doc.clientName || doc.customerName || 'Client';
+                    const dateStr = formatDateLong(doc.date || doc.createdAt);
+                    
+                    // Two column layout
+                    const colWidth = (pageWidth - (margin * 3)) / 2;
+                    
+                    // Left column - Bill To
+                    addText('BILL TO', margin, yPos, { fontSize: 8, fontStyle: 'bold', color: [100, 116, 139] });
+                    yPos += 6;
+                    addText(clientName, margin, yPos, { fontSize: 12, fontStyle: 'bold' });
+                    yPos += 6;
+                    addText('Malaysia', margin, yPos, { fontSize: 9, color: [71, 85, 105] });
+                    
+                    if (doc.domain) {
+                        yPos += 5;
+                        addText(`Domain: ${doc.domain}`, margin, yPos, { fontSize: 9, color: [37, 99, 235] });
+                    }
+
+                    // Right column - Details
+                    let rightY = yPos - 12;
+                    const rightX = margin + colWidth + margin;
+                    
+                    addText('DATE', rightX, rightY, { fontSize: 8, fontStyle: 'bold', color: [100, 116, 139], align: 'right' });
+                    rightY += 6;
+                    addText(dateStr, rightX, rightY, { fontSize: 10, align: 'right' });
+
+                    if (type === 'Quotation') {
+                        let validDate = new Date(doc.date || doc.createdAt);
+                        validDate.setDate(validDate.getDate() + 16);
+                        rightY += 8;
+                        addText('VALID UNTIL', rightX, rightY, { fontSize: 8, fontStyle: 'bold', color: [100, 116, 139], align: 'right' });
+                        rightY += 6;
+                        addText(formatDateLong(validDate), rightX, rightY, { fontSize: 10, align: 'right' });
+                    }
+
+                    if (type !== 'Quotation' && doc.paymentType && doc.paymentType !== 'One-Time') {
+                        rightY += 8;
+                        addText('PAYMENT TYPE', rightX, rightY, { fontSize: 8, fontStyle: 'bold', color: [100, 116, 139], align: 'right' });
+                        rightY += 6;
+                        addText(doc.paymentType, rightX, rightY, { fontSize: 10, align: 'right' });
+                    }
+
+                    yPos = Math.max(yPos, rightY) + 15;
+
+                    // Status Badge
+                    const status = doc.status || 'Pending';
+                    let statusColor = [245, 158, 11]; // Orange for pending
+                    if (status === 'Paid' || status === 'Activated' || status === 'Completed') {
+                        statusColor = [34, 197, 94]; // Green
+                    } else if (status === 'Draft') {
+                        statusColor = [100, 116, 139]; // Gray
+                    } else if (status === 'Overdue') {
+                        statusColor = [239, 68, 68]; // Red
+                    }
+
+                    pdf.setFillColor(...statusColor);
+                    const statusWidth = pdf.getTextWidth(status.toUpperCase()) + 10;
+                    pdf.roundedRect(margin, yPos, statusWidth, 8, 2, 2, 'F');
+                    addText(status.toUpperCase(), margin + 5, yPos + 5.5, { fontSize: 8, fontStyle: 'bold', color: [255, 255, 255] });
+
+                    yPos += 20;
+
+                    // Items Table
+                    pdf.setFillColor(241, 245, 249);
+                    pdf.rect(margin, yPos, pageWidth - (margin * 2), 10, 'F');
+                    
+                    addText('DESCRIPTION', margin + 5, yPos + 6.5, { fontSize: 8, fontStyle: 'bold', color: [100, 116, 139] });
+                    addText('AMOUNT (RM)', pageWidth - margin - 5, yPos + 6.5, { fontSize: 8, fontStyle: 'bold', color: [100, 116, 139], align: 'right' });
+                    
+                    yPos += 12;
+
+                    // Calculate subtotal and add items
+                    let subtotal = 0;
+                    const items = doc.items || [{ description: doc.description || 'Professional Service', amount: doc.subtotal || doc.price || 0 }];
+                    
+                    items.forEach(item => {
+                        const itemAmount = parseFloat(item.amount || 0);
+                        subtotal += itemAmount;
+                        
+                        // Check if we need a new page
+                        if (yPos > pageHeight - 60) {
+                            pdf.addPage();
+                            yPos = margin;
+                        }
+                        
+                        pdf.setDrawColor(226, 232, 240);
+                        pdf.line(margin, yPos, pageWidth - margin, yPos);
+                        
+                        yPos += 8;
+                        addWrappedText(item.description || '-', margin + 5, yPos, pageWidth - (margin * 2) - 50, { fontSize: 10 });
+                        addText(formatMYR(itemAmount).replace('RM ', ''), pageWidth - margin - 5, yPos, { fontSize: 10, align: 'right' });
+                        yPos += 10;
+                    });
+
+                    // Installment info for Invoice
+                    if (type !== 'Quotation' && doc.paymentType && doc.paymentType !== 'One-Time') {
+                        const months = doc.installmentMonths || 12;
+                        const monthlyAmt = subtotal / months;
+                        yPos += 3;
+                        pdf.setFillColor(240, 249, 255);
+                        pdf.rect(margin, yPos, pageWidth - (margin * 2), 8, 'F');
+                        yPos += 6;
+                        addText(`${doc.paymentType} Installment Plan: ${formatMYR(monthlyAmt)} / month`, margin + 5, yPos, { fontSize: 9, color: [37, 99, 235] });
+                        yPos += 8;
+                    }
+
+                    // Domain row
+                    if (doc.domain) {
+                        yPos += 3;
+                        pdf.setDrawColor(226, 232, 240);
+                        pdf.line(margin, yPos, pageWidth - margin, yPos);
+                        yPos += 8;
+                        addText(`Domain: ${doc.domain}`, margin + 5, yPos, { fontSize: 9, color: [71, 85, 105] });
+                        addText('-', pageWidth - margin - 5, yPos, { fontSize: 9, align: 'right', color: [71, 85, 105] });
+                        yPos += 8;
+                    }
+
+                    yPos += 5;
+
+                    // Totals
+                    const discount = parseFloat(doc.discount || 0);
+                    const total = subtotal - discount;
+
+                    // Subtotal
+                    pdf.setDrawColor(226, 232, 240);
+                    pdf.line(margin, yPos, pageWidth - margin, yPos);
+                    yPos += 10;
+                    addText('Subtotal', pageWidth - margin - 50, yPos, { fontSize: 10, color: [71, 85, 105], align: 'right' });
+                    addText(formatMYR(subtotal), pageWidth - margin - 5, yPos, { fontSize: 10, align: 'right' });
+
+                    // Discount
+                    if (discount > 0) {
+                        yPos += 8;
+                        addText('Discount', pageWidth - margin - 50, yPos, { fontSize: 10, color: [71, 85, 105], align: 'right' });
+                        addText(`-${formatMYR(discount)}`, pageWidth - margin - 5, yPos, { fontSize: 10, color: [239, 68, 68], align: 'right' });
+                    }
+
+                    // Total
+                    yPos += 12;
+                    pdf.setFillColor(37, 99, 235);
+                    pdf.rect(pageWidth - margin - 60, yPos - 5, 60, 15, 'F');
+                    addText(type === 'Quotation' ? 'TOTAL' : 'TOTAL PAID', pageWidth - margin - 55, yPos + 3, { fontSize: 8, fontStyle: 'bold', color: [255, 255, 255] });
+                    addText(formatMYR(total), pageWidth - margin - 5, yPos + 3, { fontSize: 12, fontStyle: 'bold', color: [255, 255, 255], align: 'right' });
+
+                    yPos += 25;
+
+                    // Payment Details for Invoice
+                    if (type !== 'Quotation') {
+                        if (yPos > pageHeight - 50) {
+                            pdf.addPage();
+                            yPos = margin;
+                        }
+                        
+                        pdf.setFillColor(248, 250, 252);
+                        pdf.rect(margin, yPos, pageWidth - (margin * 2), 20, 'F');
+                        yPos += 8;
+                        addText('Payment Details', margin + 5, yPos, { fontSize: 9, fontStyle: 'bold' });
+                        yPos += 6;
+                        addText('Payment Method: Online Transfer', margin + 5, yPos, { fontSize: 8, color: [71, 85, 105] });
+                        yPos += 5;
+                        addText(`Transaction Reference: ${doc.transactionRef || doc.number || doc.id}`, margin + 5, yPos, { fontSize: 8, color: [71, 85, 105] });
+                        yPos += 15;
+                    }
+
+                    // Terms & Conditions
+                    if (yPos > pageHeight - 60) {
+                        pdf.addPage();
+                        yPos = margin;
+                    }
+
+                    addText('Terms & Conditions Summary', margin, yPos, { fontSize: 10, fontStyle: 'bold' });
+                    yPos += 8;
+
+                    const terms = type === 'Quotation' ? [
+                        'This quotation is valid for 16 days from the date issued.',
+                        'Services delivered via DDNEX secure portal.',
+                        '50% deposit required to commence project.',
+                        'Balance payment due upon project completion.',
+                        'Full policies and terms available on official DDNEX website.'
+                    ] : [
+                        'This receipt confirms payment has been successfully received by DDNEX.',
+                        'Service includes system setup, hosting, and maintenance under agreed plan.',
+                        'All payments are non-refundable once service deployment has commenced.',
+                        'DDNEX reserves right to update service policies when required.',
+                        'Full policies and terms available on official DDNEX website.'
+                    ];
+
+                    pdf.setFillColor(250, 250, 250);
+                    const termsHeight = terms.length * 6 + 10;
+                    pdf.rect(margin, yPos, pageWidth - (margin * 2), termsHeight, 'F');
+                    yPos += 6;
+
+                    terms.forEach(term => {
+                        addText(`• ${term}`, margin + 5, yPos, { fontSize: 7, color: [100, 116, 139] });
+                        yPos += 6;
+                    });
+
+                    // Footer
+                    const footerY = pageHeight - 15;
+                    pdf.setDrawColor(226, 232, 240);
+                    pdf.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+                    
+                    addText(`${type} generated by DDNEX Billing System`, pageWidth / 2, footerY, { fontSize: 8, color: [150, 160, 170], align: 'center' });
+                    addText('support@ddnex.com', pageWidth / 2, footerY + 5, { fontSize: 8, color: [150, 160, 170], align: 'center' });
+
+                    // Generate blob
+                    const pdfBlob = pdf.output('blob');
+                    resolve(pdfBlob);
+                } catch (error) {
+                    console.error('PDF Generation Error:', error);
+                    reject(error);
+                }
+            });
+        }
+
+        // =========================================
+        // EMAIL SENDING FUNCTION (EmailJS with PDF)
+        // =========================================
+        async function sendEmailWithPDF(toEmail, toName, subject, pdfBlob, docNumber, docType) {
             try {
+                // Convert PDF blob to base64
+                const reader = new FileReader();
+                const base64Promise = new Promise((resolve, reject) => {
+                    reader.onload = () => {
+                        const base64 = reader.result.split(',')[1];
+                        resolve(base64);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(pdfBlob);
+                });
+
+                const pdfBase64 = await base64Promise;
+                const fileName = `${docType}_${docNumber}.pdf`;
+
                 const templateParams = {
                     to_email: toEmail,
                     to_name: toName || 'Client',
                     from_name: 'DDNEX Billing System',
                     from_email: 'support@ddnex.com',
                     subject: subject,
-                    message_html: htmlContent,
-                    reply_to: 'support@ddnex.com'
+                    message_html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                            <h2 style="color: #2563eb;">Your ${docType} from DDNEX</h2>
+                            <p>Dear ${toName || 'Client'},</p>
+                            <p>Please find attached your ${docType.toLowerCase()} (<strong>${docNumber}</strong>) from DDNEX.</p>
+                            <p>Attached to this email is a PDF copy of your document for your records.</p>
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                <p style="margin: 0; color: #475569;">If you have any questions, please don't hesitate to contact us.</p>
+                            </div>
+                            <p>Best regards,<br><strong>DDNEX Team</strong></p>
+                            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                            <p style="font-size: 12px; color: #64748b;">
+                                DDNEX by DD Cloud Network<br>
+                                Sungai Petani, Kedah, Malaysia<br>
+                                support@ddnex.com | www.ddnex.com
+                            </p>
+                        </div>
+                    `,
+                    reply_to: 'support@ddnex.com',
+                    attachment_name: fileName,
+                    attachment_content: pdfBase64
                 };
 
                 const response = await emailjs.send(
@@ -1710,33 +2130,162 @@
             }
         }
 
-        // Global email sending function for modal
-        window.sendEmailDirectly = async function(toEmail, subject, htmlContent, docNumber) {
+        // Check email cooldown
+        async function checkEmailCooldown(docId) {
+            const cooldownData = await window.dbOperations.getEmailCooldown(docId);
+            if (!cooldownData) return { canSend: true, remainingMs: 0 };
+            
+            const lastSent = new Date(cooldownData.lastSent);
+            const now = new Date();
+            const elapsed = now - lastSent;
+            const remainingMs = EMAIL_COOLDOWN_MS - elapsed;
+            
+            return {
+                canSend: remainingMs <= 0,
+                remainingMs: Math.max(0, remainingMs),
+                lastSent: cooldownData.lastSent
+            };
+        }
+
+        // Format time for cooldown display
+        function formatCooldownTime(ms) {
+            const totalSeconds = Math.ceil(ms / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Update cooldown timer display
+        function updateCooldownDisplay(docId) {
+            const timerEl = document.getElementById('cooldownTimer');
+            const sendBtn = document.getElementById('sendEmailBtn');
+            const forceBtn = document.getElementById('forceSendBtn');
+            
+            if (!timerEl || !sendBtn) return;
+            
+            checkEmailCooldown(docId).then(({ canSend, remainingMs }) => {
+                if (canSend) {
+                    timerEl.style.display = 'none';
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = '<i class="ri-send-plane-fill"></i> Send via EmailJS';
+                    if (forceBtn) forceBtn.style.display = 'none';
+                } else {
+                    timerEl.style.display = 'flex';
+                    timerEl.innerHTML = `
+                        <i class="ri-time-line"></i>
+                        <span>Please wait <span class="timer-display">${formatCooldownTime(remainingMs)}</span> before resending</span>
+                    `;
+                    sendBtn.disabled = true;
+                    sendBtn.innerHTML = '<i class="ri-time-line"></i> Cooldown Active';
+                    if (forceBtn) forceBtn.style.display = 'inline-flex';
+                    
+                    // Update timer every second
+                    if (cooldownInterval) clearInterval(cooldownInterval);
+                    cooldownInterval = setInterval(() => {
+                        checkEmailCooldown(docId).then(({ canSend, remainingMs }) => {
+                            if (canSend) {
+                                clearInterval(cooldownInterval);
+                                timerEl.style.display = 'none';
+                                sendBtn.disabled = false;
+                                sendBtn.innerHTML = '<i class="ri-send-plane-fill"></i> Send via EmailJS';
+                                if (forceBtn) forceBtn.style.display = 'none';
+                            } else {
+                                const timerDisplay = timerEl.querySelector('.timer-display');
+                                if (timerDisplay) {
+                                    timerDisplay.textContent = formatCooldownTime(remainingMs);
+                                }
+                            }
+                        });
+                    }, 1000);
+                }
+            });
+        }
+
+        // Global email sending function for modal (with PDF)
+        window.sendEmailDirectly = async function(toEmail, subject, docNumber, docType, docData, forceSend = false) {
             if (!toEmail) {
                 showPopup("Error", "Please enter a recipient email address.", false);
                 return;
             }
 
-            // Update status
-            const statusEl = document.getElementById('emailSendStatus');
-            if (statusEl) {
-                statusEl.className = 'email-status-indicator sending';
-                statusEl.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Sending email...';
-            }
-
-            const result = await sendEmailViaEmailJS(toEmail, 'Client', subject, htmlContent);
-
-            if (statusEl) {
-                if (result.success) {
-                    statusEl.className = 'email-status-indicator success';
-                    statusEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Email sent successfully! ${result.messageId || ''}`;
-                } else {
-                    statusEl.className = 'email-status-indicator error';
-                    statusEl.innerHTML = `<i class="ri-error-warning-fill"></i> Failed to send: ${result.error}`;
+            // Check cooldown unless force send
+            if (!forceSend) {
+                const { canSend, remainingMs } = await checkEmailCooldown(docNumber);
+                if (!canSend) {
+                    showPopup("Cooldown Active", `Please wait ${formatCooldownTime(remainingMs)} before resending, or use Force Send.`, false);
+                    return;
                 }
             }
 
-            return result;
+            // Update status
+            const statusEl = document.getElementById('emailSendStatus');
+            const progressEl = document.getElementById('pdfProgress');
+            
+            if (statusEl) {
+                statusEl.className = 'email-status-indicator sending';
+                statusEl.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Generating PDF...';
+            }
+            
+            if (progressEl) {
+                progressEl.classList.add('active');
+                progressEl.querySelector('.pdf-progress-bar-fill').style.width = '30%';
+            }
+
+            try {
+                // Generate PDF
+                const pdfBlob = await generatePDF(docData, docType);
+                
+                if (progressEl) {
+                    progressEl.querySelector('.pdf-progress-bar-fill').style.width = '60%';
+                }
+                
+                if (statusEl) {
+                    statusEl.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Sending email with PDF attachment...';
+                }
+
+                // Send email with PDF
+                const result = await sendEmailWithPDF(toEmail, 'Client', subject, pdfBlob, docNumber, docType);
+
+                if (progressEl) {
+                    progressEl.querySelector('.pdf-progress-bar-fill').style.width = '100%';
+                }
+
+                if (result.success) {
+                    // Save cooldown timestamp
+                    await window.dbOperations.setEmailCooldown(docNumber);
+                    
+                    if (statusEl) {
+                        statusEl.className = 'email-status-indicator success';
+                        statusEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Email sent successfully with PDF attachment! ${result.messageId || ''}`;
+                    }
+                    
+                    // Start cooldown display
+                    updateCooldownDisplay(docNumber);
+                    
+                    showPopup("Success", `Email sent successfully to ${toEmail} with PDF attachment.`);
+                } else {
+                    if (statusEl) {
+                        statusEl.className = 'email-status-indicator error';
+                        statusEl.innerHTML = `<i class="ri-error-warning-fill"></i> Failed to send: ${result.error}`;
+                    }
+                }
+
+                return result;
+            } catch (error) {
+                console.error('Email sending error:', error);
+                if (statusEl) {
+                    statusEl.className = 'email-status-indicator error';
+                    statusEl.innerHTML = `<i class="ri-error-warning-fill"></i> Error: ${error.message}`;
+                }
+                return { success: false, error: error.message };
+            } finally {
+                if (progressEl) {
+                    setTimeout(() => {
+                        progressEl.classList.remove('active');
+                        progressEl.querySelector('.pdf-progress-bar-fill').style.width = '0%';
+                    }, 1000);
+                }
+            }
         };
 
         // Router
@@ -1975,6 +2524,7 @@
         };
         window.closeModal = () => {
             document.getElementById('modal').classList.remove('active');
+            if (cooldownInterval) clearInterval(cooldownInterval);
         };
 
         // ================== TABLE HELPERS ==================
@@ -2756,7 +3306,7 @@
             const sortedOrders = sortByDateNewest(orders);
             
             const searchTerm = document.getElementById('invoiceSearchInput').value.toLowerCase();
-            const statusCheckboxes = document.querySelectorAll('#invoiceStatusDropdown input:checked');
+                        const statusCheckboxes = document.querySelectorAll('#invoiceStatusDropdown input:checked');
             const selectedStatuses = Array.from(statusCheckboxes).map(cb => cb.value);
 
             let filtered = sortedOrders.filter(doc => {
@@ -3683,7 +4233,7 @@
             }
         };
 
-        // ================== EMAIL TEMPLATE MODAL (EmailJS Integrated) ==================
+        // ================== EMAIL TEMPLATE MODAL (EmailJS with PDF Integrated) ==================
         window.openEmailTemplateModal = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
@@ -3717,7 +4267,6 @@
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
 
-            const htmlContent = generateProfessionalHTML(doc);
             const docTitle = type === 'Quotation' ? 'Quotation' : 'Invoice';
             const defaultSubject = `Your ${docTitle} from DDNEX - ${doc.number || id}`;
             
@@ -3725,9 +4274,11 @@
             let clientEmail = '';
             if(doc.customerEmail) clientEmail = doc.customerEmail;
 
+            currentEmailDocId = doc.number || id;
+
             const content = `
                 <div class="email-tabs">
-                    <button class="email-tab active" onclick="switchEmailTab('compose')">Send Email</button>
+                    <button class="email-tab active" onclick="switchEmailTab('compose')">Send Email with PDF</button>
                     <button class="email-tab" onclick="switchEmailTab('html')">Get HTML</button>
                 </div>
                 
@@ -3741,16 +4292,33 @@
                         <input type="text" id="emailSubject" value="${defaultSubject}">
                     </div>
                     
-                    <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="triggerSendEmail('${id}', '${type}')">
+                    <button class="btn btn-primary" style="width:100%; margin-top:8px;" id="sendEmailBtn" onclick="triggerSendEmail('${id}', '${type}')">
                         <i class="ri-send-plane-fill"></i> Send via EmailJS
                     </button>
                     
+                    <button class="btn-force-send" id="forceSendBtn" style="display:none; width:100%; margin-top:8px;" onclick="triggerForceSend('${id}', '${type}')">
+                        <i class="ri-forward-line"></i> Force Send (Skip Cooldown)
+                    </button>
+
+                    <div class="cooldown-timer" id="cooldownTimer" style="display:none;">
+                        <i class="ri-time-line"></i>
+                        <span>Please wait <span class="timer-display">5:00</span> before resending</span>
+                    </div>
+                    
                     <div id="emailSendStatus"></div>
+                    
+                    <div class="pdf-progress" id="pdfProgress">
+                        <i class="ri-file-pdf-line" style="font-size:18px; color:var(--primary);"></i>
+                        <div class="pdf-progress-bar">
+                            <div class="pdf-progress-bar-fill"></div>
+                        </div>
+                        <span style="font-size:12px; color:var(--text-muted);">Generating PDF...</span>
+                    </div>
                 </div>
                 
                 <div id="emailTabHtml" style="display:none;">
                     <p style="margin-bottom:12px; font-size:13px;">Copy the HTML code below to use in your email client.</p>
-                    <textarea id="emailCodeTextarea" style="width:100%; height:200px; font-family:monospace; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; padding:12px; resize:vertical;" readonly>${htmlContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                    <textarea id="emailCodeTextarea" style="width:100%; height:200px; font-family:monospace; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; padding:12px; resize:vertical;" readonly>${generateProfessionalHTML(doc).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
                     <div style="margin-top:12px; display:flex; gap:8px;">
                         <button class="btn btn-outline" onclick="copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Code</button>
                         <button class="btn btn-outline" onclick="downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
@@ -3759,6 +4327,11 @@
             `;
 
             openModal(`Email ${docTitle}: ${doc.number || id}`, content, closeModal, true);
+
+            // Check cooldown status after modal opens
+            setTimeout(() => {
+                updateCooldownDisplay(doc.number || id);
+            }, 100);
         };
 
         window.switchEmailTab = (tab) => {
@@ -3788,9 +4361,28 @@
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
             
-            const htmlContent = generateProfessionalHTML(doc);
+            await window.sendEmailDirectly(toEmail, subject, doc.number || id, type, doc, false);
+        };
+
+        window.triggerForceSend = async (id, type) => {
+            if(!confirm("Are you sure you want to force send this email? This will bypass the cooldown timer.")) {
+                return;
+            }
             
-            await window.sendEmailDirectly(toEmail, subject, htmlContent, doc.number || id);
+            const toEmail = document.getElementById('emailRecipient').value;
+            const subject = document.getElementById('emailSubject').value;
+            
+            // Regenerate HTML to ensure latest data
+            let doc;
+            if (type === 'Quotation') doc = await window.dbOperations.getQuotation(id);
+            else doc = await window.dbOperations.getOrder(id);
+            
+            if(!doc.items) doc.items = [];
+            const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+            doc.subtotal = subtotal;
+            doc.total = subtotal - (doc.discount || 0);
+            
+            await window.sendEmailDirectly(toEmail, subject, doc.number || id, type, doc, true);
         };
 
         window.copyEmailCode = () => {
