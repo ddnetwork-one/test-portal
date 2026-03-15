@@ -1163,6 +1163,55 @@
         }
         .popup-btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
 
+        /* Email Modal Styles */
+        .email-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 20px;
+        }
+        .email-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            background: none;
+        }
+        .email-tab:hover { color: var(--text-main); }
+        .email-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        
+        .email-preview-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-top: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .email-status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            margin-top: 16px;
+        }
+        .email-status-indicator.sending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .email-status-indicator.success {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .email-status-indicator.error {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
         /* Responsive */
         @media(max-width: 768px) {
             .sidebar { transform: translateX(-100%); width: var(--sidebar-width); }
@@ -1608,6 +1657,86 @@
             'Business Website': 899,
             'Business Portal System': 3800,
             'Custom System': 6800
+        };
+
+        // =========================================
+        // BREVO EMAIL CONFIGURATION
+        // =========================================
+        const BREVO_CONFIG = {
+            apiKey: 'xsmtpsib-2533085266d6738b429508f73c71d3fdd6cfc4e03627753ab86772d9ea02768c-tgODGJ0I63HmjvEm',
+            senderEmail: 'support@ddnex.com',
+            senderName: 'DDNEX® Billing System'
+        };
+
+        // =========================================
+        // EMAIL SENDING FUNCTION (Brevo API)
+        // =========================================
+        async function sendEmailViaBrevo(toEmail, toName, subject, htmlContent) {
+            const payload = {
+                sender: {
+                    name: BREVO_CONFIG.senderName,
+                    email: BREVO_CONFIG.senderEmail
+                },
+                to: [{
+                    email: toEmail,
+                    name: toName || 'Client'
+                }],
+                subject: subject,
+                htmlContent: htmlContent
+            };
+
+            try {
+                const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'api-key': BREVO_CONFIG.apiKey
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    return { success: true, messageId: result.messageId };
+                } else {
+                    console.error('Brevo Error:', result);
+                    return { success: false, error: result.message || 'Failed to send email' };
+                }
+            } catch (error) {
+                console.error('Email Send Error:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Global email sending function for modal
+        window.sendEmailDirectly = async function(toEmail, subject, htmlContent, docNumber) {
+            if (!toEmail) {
+                showPopup("Error", "Please enter a recipient email address.", false);
+                return;
+            }
+
+            // Update status
+            const statusEl = document.getElementById('emailSendStatus');
+            if (statusEl) {
+                statusEl.className = 'email-status-indicator sending';
+                statusEl.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Sending email...';
+            }
+
+            const result = await sendEmailViaBrevo(toEmail, 'Client', subject, htmlContent);
+
+            if (statusEl) {
+                if (result.success) {
+                    statusEl.className = 'email-status-indicator success';
+                    statusEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Email sent successfully! Message ID: ${result.messageId || 'N/A'}`;
+                } else {
+                    statusEl.className = 'email-status-indicator error';
+                    statusEl.innerHTML = `<i class="ri-error-warning-fill"></i> Failed to send: ${result.error}`;
+                }
+            }
+
+            return result;
         };
 
         // Router
@@ -3243,7 +3372,7 @@
                 updatedAt: new Date()
             };
 
-            showLoading            ("Saving...");
+            showLoading("Saving...");
             await window.dbOperations.setOrder(id, data);
             hideLoading();
             showPopup("Success", "Invoice saved successfully.");
@@ -3554,7 +3683,7 @@
             }
         };
 
-        // ================== EMAIL TEMPLATE MODAL ==================
+        // ================== EMAIL TEMPLATE MODAL (Brevo Integrated) ==================
         window.openEmailTemplateModal = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
@@ -3589,17 +3718,80 @@
             doc.total = subtotal - (doc.discount || 0);
 
             const htmlContent = generateProfessionalHTML(doc);
+            const docTitle = type === 'Quotation' ? 'Quotation' : 'Invoice';
+            const defaultSubject = `Your ${docTitle} from DDNEX® - ${doc.number || id}`;
+            
+            // Try to get client email
+            let clientEmail = '';
+            if(doc.customerEmail) clientEmail = doc.customerEmail;
+            // Could add logic here to fetch client email from Clients DB if needed
 
             const content = `
-                <p style="margin-bottom:12px; font-size:13px;">Copy the HTML code below to use in your email client (Gmail, Outlook, etc.).</p>
-                <textarea id="emailCodeTextarea" style="width:100%; height:300px; font-family:monospace; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; padding:12px; resize:vertical;" readonly>${htmlContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
-                <div style="margin-top:12px; display:flex; gap:8px;">
-                    <button class="btn btn-primary" onclick="copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Code</button>
-                    <button class="btn btn-outline" onclick="downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
+                <div class="email-tabs">
+                    <button class="email-tab active" onclick="switchEmailTab('compose')">Send Email</button>
+                    <button class="email-tab" onclick="switchEmailTab('html')">Get HTML</button>
+                </div>
+                
+                <div id="emailTabCompose">
+                    <div class="form-group-modal">
+                        <label>Recipient Email</label>
+                        <input type="email" id="emailRecipient" value="${clientEmail}" placeholder="client@example.com">
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Subject</label>
+                        <input type="text" id="emailSubject" value="${defaultSubject}">
+                    </div>
+                    
+                    <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="triggerSendEmail('${id}', '${type}')">
+                        <i class="ri-send-plane-fill"></i> Send via Brevo
+                    </button>
+                    
+                    <div id="emailSendStatus"></div>
+                </div>
+                
+                <div id="emailTabHtml" style="display:none;">
+                    <p style="margin-bottom:12px; font-size:13px;">Copy the HTML code below to use in your email client.</p>
+                    <textarea id="emailCodeTextarea" style="width:100%; height:200px; font-family:monospace; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; padding:12px; resize:vertical;" readonly>${htmlContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button class="btn btn-outline" onclick="copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Code</button>
+                        <button class="btn btn-outline" onclick="downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
+                    </div>
                 </div>
             `;
 
-            openModal(`Email Template: ${doc.number || id}`, content, closeModal, true);
+            openModal(`Email ${docTitle}: ${doc.number || id}`, content, closeModal, true);
+        };
+
+        window.switchEmailTab = (tab) => {
+            document.querySelectorAll('.email-tab').forEach(t => t.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            if(tab === 'compose') {
+                document.getElementById('emailTabCompose').style.display = 'block';
+                document.getElementById('emailTabHtml').style.display = 'none';
+            } else {
+                document.getElementById('emailTabCompose').style.display = 'none';
+                document.getElementById('emailTabHtml').style.display = 'block';
+            }
+        };
+
+        window.triggerSendEmail = async (id, type) => {
+            const toEmail = document.getElementById('emailRecipient').value;
+            const subject = document.getElementById('emailSubject').value;
+            
+            // Regenerate HTML to ensure latest data
+            let doc;
+            if (type === 'Quotation') doc = await window.dbOperations.getQuotation(id);
+            else doc = await window.dbOperations.getOrder(id);
+            
+            if(!doc.items) doc.items = [];
+            const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+            doc.subtotal = subtotal;
+            doc.total = subtotal - (doc.discount || 0);
+            
+            const htmlContent = generateProfessionalHTML(doc);
+            
+            await window.sendEmailDirectly(toEmail, subject, htmlContent, doc.number || id);
         };
 
         window.copyEmailCode = () => {
