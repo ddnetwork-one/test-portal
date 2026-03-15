@@ -1709,7 +1709,7 @@
             });
         };
 
-        // ================== DOCUMENT GENERATORS (NEW) ==================
+        // ================== DOCUMENT GENERATORS (UPDATED PRINT STYLE) ==================
 
         // Helper to format date nicely for templates (e.g., "15 March 2026")
         const formatDateLong = (dateInput) => {
@@ -1740,7 +1740,7 @@
             return `${day}/${month}/${year}`;
         };
 
-        // Generate Professional HTML Template (UPDATED LAYOUT)
+        // Generate Professional HTML Template (NEW PRINT STYLE)
         const generateProfessionalHTML = (doc) => {
             const isQuotation = doc.type === 'Quotation';
             const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
@@ -1759,64 +1759,88 @@
             // Items Logic
             let itemRows = '';
             let subtotal = 0;
+            let itemNum = 1;
             
-            // Single item logic from editor
+            // Main service
             const desc = doc.description || 'Professional Service';
             const amt = parseFloat(doc.subtotal || doc.price || 0);
             subtotal = amt;
             
-            itemRows = `
+            itemRows += `
                 <tr>
-                    <td>1</td>
+                    <td>${itemNum}</td>
                     <td>${desc}</td>
-                    <td style="text-align:right;">${formatMYR(amt)}</td>
+                    <td>${parseFloat(amt).toLocaleString()}</td>
                 </tr>
             `;
+            itemNum++;
 
-            // Installment logic for Invoice
+            // Installment row for Invoice
             if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
                 const months = doc.installmentMonths || 12;
                 const monthlyAmt = subtotal / months;
                 itemRows += `
                     <tr>
-                        <td>2</td>
-                        <td>${doc.paymentType} Plan</td>
-                        <td style="text-align:right;">${formatMYR(monthlyAmt)} / month (Total: ${formatMYR(subtotal)})</td>
+                        <td>${itemNum}</td>
+                        <td>${doc.paymentType} Installment Plan</td>
+                        <td>${parseFloat(monthlyAmt).toLocaleString()} / month</td>
                     </tr>
                 `;
+                itemNum++;
+            }
+
+            // Domain row
+            if (doc.domain) {
+                itemRows += `
+                    <tr>
+                        <td>${itemNum}</td>
+                        <td>Domain: ${doc.domain}</td>
+                        <td>-</td>
+                    </tr>
+                `;
+                itemNum++;
             }
 
             const discount = parseFloat(doc.discount || 0);
             const total = subtotal - discount;
+            
+            // Transaction Reference
+            const transactionRef = doc.transactionRef || doc.number || doc.id;
 
-            // Transaction Reference Logic
-            let transactionRef = doc.transactionRef || doc.id; 
-            // If your DB stores a specific transactionRef field, use that. 
-            // Otherwise, default to the document ID as requested.
+            // Status badge
+            const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
+                ? '<div class="badge" style="background:#34c759;">PAID</div>'
+                : '<div class="badge" style="background:#ff9500;">PENDING</div>';
 
-            // Build Payment Details Section
+            // Build Payment Details Section (Invoice only)
             let paymentDetailsSection = '';
             if (!isQuotation) {
                 paymentDetailsSection = `
-                    <h3>Payment Details</h3>
-                    <div class="meta">
-                        <strong>Payment Method:</strong> Online Transfer<br>
-                        <strong>Transaction Reference:</strong> ${transactionRef}
+                    <div class="payment-box">
+                        <strong>Payment Details</strong><br>
+                        Payment Method: Online Transfer<br>
+                        Transaction Reference: ${transactionRef}
                     </div>
                 `;
             }
 
             // Notes Logic
-            let notesHtml = `
-                <li>This document serves as an official payment receipt from DDNEX®.</li>
-                <li>The invoice has been successfully settled by the client.</li>
-                <li>Services include system setup, hosting, and maintenance under the agreed plan.</li>
-            `;
-            
+            let termsList = '';
             if (isQuotation) {
-                notesHtml = `
-                    <li>This quotation is valid for 16 days.</li>
+                termsList = `
+                    <li>This quotation is valid for 16 days from the date issued.</li>
                     <li>Services delivered via DDNEX® secure portal.</li>
+                    <li>50% deposit required to commence project.</li>
+                    <li>Balance payment due upon project completion.</li>
+                    <li>Full policies and terms are available on the official DDNEX® website.</li>
+                `;
+            } else {
+                termsList = `
+                    <li>This receipt confirms that payment has been successfully received by DDNEX®.</li>
+                    <li>The service includes system setup, hosting, and maintenance under the agreed subscription plan.</li>
+                    <li>All payments made are non-refundable once service deployment has commenced.</li>
+                    <li>DDNEX® reserves the right to update service policies or operational terms when required.</li>
+                    <li>Full policies and terms are available on the official DDNEX® website.</li>
                 `;
             }
 
@@ -1828,100 +1852,203 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${docTitle} – ${clientName}</title>
 <style>
-  body { margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f2f2f7; color: #1c1c1e; }
-  .container { max-width: 680px; margin: 30px auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
-  .header { background-color: #ffffff; padding: 40px 24px 16px; text-align: center; }
-  .header img { max-width: 140px; height: auto; margin-bottom: 12px; }
-  .company-info { font-size: 13px; color: #6e6e73; line-height: 1.5; margin-bottom: 24px; }
-  .content { padding: 32px 24px 40px; }
-  .content h2 { font-size: 24px; font-weight: 600; margin-bottom: 16px; }
-  .content h3 { font-size: 18px; font-weight: 500; margin-top: 32px; margin-bottom: 12px; }
-  .meta { font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
-  table th, table td { border-bottom: 1px solid #e5e5ea; padding: 12px 8px; text-align: left; }
-  table th { color: #6e6e73; font-weight: 500; background-color: #f7f7f7; }
-  .total { text-align: right; font-size: 16px; font-weight: 600; margin-top: 16px; }
-  .notes { font-size: 13px; color: #6e6e73; margin-top: 20px; line-height: 1.5; }
-  .notes ul { padding-left: 18px; margin: 8px 0; }
-  .footer { text-align: center; font-size: 12px; color: #8e8e93; padding: 24px 16px; border-top: 1px solid #e5e5ea; }
-  .status-paid { color: #16a34a; font-weight: 700; }
-  .status-pending { color: #d97706; font-weight: 700; }
-  @media(max-width:600px){
-    .container{width:95%!important;}
-    table th,table td{font-size:13px;}
+  body {
+    margin: 0;
+    background: #f2f2f7;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #1c1c1e;
+  }
+  .page {
+    max-width: 900px;
+    margin: auto;
+    background: #ffffff;
+    min-height: 100vh;
+    padding: 50px 60px;
+  }
+  /* HEADER */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 50px;
+  }
+  .logo img {
+    max-width: 140px;
+  }
+  .company-info {
+    font-size: 13px;
+    color: #6e6e73;
+    line-height: 1.6;
+    margin-top: 12px;
+  }
+  .invoice-info {
+    text-align: right;
+    font-size: 14px;
+  }
+  .badge {
+    display: inline-block;
+    background: #34c759;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  /* BILL */
+  .section {
+    margin-bottom: 40px;
+  }
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .bill {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+  th, td {
+    padding: 14px 10px;
+    border-bottom: 1px solid #e5e5ea;
+    text-align: left;
+  }
+  th {
+    background: #f7f7f7;
+    font-weight: 500;
+    color: #6e6e73;
+  }
+  .total-row td {
+    font-weight: 600;
+    font-size: 16px;
+  }
+  /* PAYMENT */
+  .payment-box {
+    margin-top: 25px;
+    background: #f7f7f7;
+    padding: 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  /* TERMS */
+  .terms {
+    background: #fafafa;
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: #6e6e73;
+    line-height: 1.6;
+  }
+  .terms ul {
+    padding-left: 18px;
+    margin: 8px 0;
+  }
+  /* FOOTER */
+  .footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e5ea;
+    font-size: 12px;
+    color: #8e8e93;
+    text-align: center;
+  }
+  /* MOBILE */
+  @media (max-width: 700px) {
+    .page {
+      padding: 30px 20px;
+    }
+    .header {
+      flex-direction: column;
+      gap: 20px;
+    }
+    .invoice-info {
+      text-align: left;
+    }
   }
 </style>
 </head>
 <body>
-  <div class="container">
-
+  <div class="page">
     <!-- HEADER -->
     <div class="header">
-      <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX® Logo">
-      <div class="company-info">
-        <strong>DDNEX® by DD Cloud Network</strong><br>
-        Company Registration No.: 202603040752 (MA0342542-K)<br>
-        Sungai Petani, Kedah, Malaysia<br>
-        Email: <a href="mailto:support@ddnex.com">support@ddnex.com</a> | Website: <a href="http://www.ddnex.com">www.ddnex.com</a>
+      <div>
+        <div class="logo">
+          <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX® Logo">
+        </div>
+        <div class="company-info">
+          <strong>DDNEX® by DD Cloud Network</strong><br>
+          Company Registration No.: 202603040752 (MA0342542-K)<br>
+          Sungai Petani, Kedah, Malaysia<br>
+          support@ddnex.com | www.ddnex.com
+        </div>
+      </div>
+      <div class="invoice-info">
+        ${statusBadge}
+        <strong>${docTitle}</strong><br><br>
+        ${isQuotation ? 'Quotation' : 'Invoice'} No: ${docNumber}<br>
+        Date Issued: ${dateStr}
+        ${isQuotation ? `<br>Valid Until: ${validUntil}` : ''}
       </div>
     </div>
 
-    <!-- CONTENT -->
-    <div class="content">
-      <h2>${docTitle}</h2>
-      
-      <div class="meta">
-        <strong>${docTitle.replace(' Receipt', '')} No:</strong> ${docNumber}<br>
-        <strong>Date Issued:</strong> ${dateStr}<br>
-        ${!isQuotation ? `<strong>Payment Status:</strong> <span class="${doc.status === 'Paid' ? 'status-paid' : 'status-pending'}">${doc.status || 'Unpaid'}</span>` : ''}
-      </div>
-
-      <h3>Bill To</h3>
-      <div class="meta">
+    <!-- BILL TO -->
+    <div class="section">
+      <div class="section-title">Bill To</div>
+      <div class="bill">
         <strong>${clientName}</strong><br>
         Malaysia
+        ${doc.domain ? `<br>Domain: ${doc.domain}` : ''}
       </div>
+    </div>
 
-      <h3>Services</h3>
+    <!-- SERVICES -->
+    <div class="section">
+      <div class="section-title">Services</div>
       <table>
         <tr>
-          <th>Item</th>
+          <th width="60">Item</th>
           <th>Description</th>
-          <th>Amount (RM)</th>
+          <th width="160">Amount (RM)</th>
         </tr>
         ${itemRows}
+        ${discount > 0 ? `
+        <tr>
+          <td></td>
+          <td>Discount</td>
+          <td>-${parseFloat(discount).toLocaleString()}</td>
+        </tr>
+        ` : ''}
+        <tr class="total-row">
+          <td></td>
+          <td>${isQuotation ? 'Total' : 'Total Paid'}</td>
+          <td>RM ${parseFloat(total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        </tr>
       </table>
-
-      <div class="total">
-        Total: ${formatMYR(total)}
-      </div>
-
       ${paymentDetailsSection}
+    </div>
 
-      <div class="notes">
-        <p><strong>Notes:</strong></p>
+    <!-- TERMS -->
+    <div class="section">
+      <div class="section-title">Terms & Conditions Summary</div>
+      <div class="terms">
         <ul>
-          ${notesHtml}
+          ${termsList}
         </ul>
       </div>
-
-      <h3>Terms & Conditions Summary</h3>
-      <div class="notes">
-        <ul>
-          <li>All services are provided under the DDNEX® service agreement.</li>
-          <li>Installment plans include hosting, maintenance, and system updates during the subscription period.</li>
-          <li>Payments made are non-refundable once service setup and deployment have started.</li>
-          <li>DDNEX® reserves the right to modify service policies when necessary.</li>
-          <li>Full Terms & Policies are available at www.ddnex.com.</li>
-        </ul>
-      </div>
-
     </div>
 
     <div class="footer">
-      Prepared by DDNEX® Team | support@ddnex.com
+      ${isQuotation ? 'Quotation' : 'Invoice'} generated automatically by the DDNEX® Billing System<br>
+      support@ddnex.com
     </div>
-
   </div>
 </body>
 </html>
@@ -2943,7 +3070,7 @@
             }
         };
 
-        // ================== NEW: EMAIL TEMPLATE MODAL ==================
+        // ================== EMAIL TEMPLATE MODAL ==================
         window.openEmailTemplateModal = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
@@ -2986,25 +3113,18 @@
 
         window.copyEmailCode = () => {
             const textarea = document.getElementById('emailCodeTextarea');
-            // We need the raw HTML, not the escaped version for display
-            // We re-generate it or decode it. Let's just grab the raw value from the generator logic
-            // But since the textarea shows escaped, we can copy the escaped and it will paste correctly? No.
-            // We need the raw HTML.
+            // Decode entities back to raw HTML for copying
+            const doc = new DOMParser().parseFromString(textarea.value, 'text/html');
+            const rawHtml = doc.documentElement.textContent;
             
-            // Let's grab the innerHTML of a hidden div or decode it back.
-            // Easier: Re-run the generator logic here quickly
-            // But we don't have the 'doc' object here.
-            // Better approach: Use the raw value from the text area but decode entities? 
-            // Or just store the raw HTML in a variable when generating.
-            
-            // Simpler way for the user:
-            const copyText = textarea.value;
-            // This copies the escaped HTML. The user wants to paste this into an email client.
-            // If they paste escaped HTML into Gmail 'code' view, it works.
-            
-            textarea.select();
-            document.execCommand('copy');
-            showPopup("Copied!", "HTML code copied to clipboard.");
+            navigator.clipboard.writeText(rawHtml).then(() => {
+                showPopup("Copied!", "HTML code copied to clipboard.");
+            }).catch(err => {
+                // Fallback
+                textarea.select();
+                document.execCommand('copy');
+                showPopup("Copied!", "HTML code copied to clipboard.");
+            });
         };
 
         window.downloadEmailHTML = (filename, type) => {
