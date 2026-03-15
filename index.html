@@ -4233,7 +4233,7 @@
             }
         };
 
-        // ================== EMAIL TEMPLATE MODAL (EmailJS with PDF Integrated) ==================
+        // ================== EMAIL TEMPLATE MODAL (Fixed: Download PDF + Open Mail Client) ==================
         window.openEmailTemplateModal = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
@@ -4261,24 +4261,37 @@
                 };
             }
 
-            // Calculate totals for the template
+            // Calculate totals
             if(!doc.items) doc.items = [];
             const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
 
             const docTitle = type === 'Quotation' ? 'Quotation' : 'Invoice';
-            const defaultSubject = `Your ${docTitle} from DDNEX - ${doc.number || id}`;
+            const docNumber = doc.number || id;
             
-            // Try to get client email
+            // Get client email
             let clientEmail = '';
             if(doc.customerEmail) clientEmail = doc.customerEmail;
-
-            currentEmailDocId = doc.number || id;
+            
+            currentEmailDocId = docNumber;
 
             const content = `
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <i class="ri-file-pdf-2-fill" style="font-size: 24px; color: #2563eb;"></i>
+                        <div>
+                            <h4 style="margin: 0; font-size: 14px; color: #1e40af;">PDF Document Ready</h4>
+                            <p style="margin: 0; font-size: 12px; color: #3b82f6;">Click below to download your ${docTitle}</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;" onclick="downloadPDFDirectly('${id}', '${type}')">
+                        <i class="ri-download-line"></i> Download ${docTitle} PDF
+                    </button>
+                </div>
+
                 <div class="email-tabs">
-                    <button class="email-tab active" onclick="switchEmailTab('compose')">Send Email with PDF</button>
+                    <button class="email-tab active" onclick="switchEmailTab('compose')">Send via Email</button>
                     <button class="email-tab" onclick="switchEmailTab('html')">Get HTML</button>
                 </div>
                 
@@ -4289,11 +4302,25 @@
                     </div>
                     <div class="form-group-modal">
                         <label>Subject</label>
-                        <input type="text" id="emailSubject" value="${defaultSubject}">
+                        <input type="text" id="emailSubject" value="Your ${docTitle} from DDNEX - ${docNumber}">
                     </div>
                     
-                    <button class="btn btn-primary" style="width:100%; margin-top:8px;" id="sendEmailBtn" onclick="triggerSendEmail('${id}', '${type}')">
-                        <i class="ri-send-plane-fill"></i> Send via EmailJS
+                    <div class="form-group-modal">
+                        <label>Message</label>
+                        <textarea id="emailBody" rows="4" style="width:100%; padding: 12px; border: 1px solid var(--border-light); border-radius: 8px; font-size: 14px;">Dear ${doc.clientName || 'Client'},
+
+Please find attached your ${docTitle} (${docNumber}) from DDNEX.
+
+Total Amount: ${formatMYR(doc.total)}
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+DDNEX Team</textarea>
+                    </div>
+                    
+                    <button class="btn btn-primary" style="width:100%; margin-top:8px;" id="sendEmailBtn" onclick="triggerEmailClient('${id}', '${type}')">
+                        <i class="ri-mail-send-line"></i> Open Mail Client & Send
                     </button>
                     
                     <button class="btn-force-send" id="forceSendBtn" style="display:none; width:100%; margin-top:8px;" onclick="triggerForceSend('${id}', '${type}')">
@@ -4312,7 +4339,7 @@
                         <div class="pdf-progress-bar">
                             <div class="pdf-progress-bar-fill"></div>
                         </div>
-                        <span style="font-size:12px; color:var(--text-muted);">Generating PDF...</span>
+                        <span style="font-size:12px; color:var(--text-muted);">Processing...</span>
                     </div>
                 </div>
                 
@@ -4321,17 +4348,143 @@
                     <textarea id="emailCodeTextarea" style="width:100%; height:200px; font-family:monospace; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; padding:12px; resize:vertical;" readonly>${generateProfessionalHTML(doc).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
                     <div style="margin-top:12px; display:flex; gap:8px;">
                         <button class="btn btn-outline" onclick="copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Code</button>
-                        <button class="btn btn-outline" onclick="downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
+                        <button class="btn btn-outline" onclick="downloadEmailHTML('${docNumber}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
                     </div>
                 </div>
             `;
 
-            openModal(`Email ${docTitle}: ${doc.number || id}`, content, closeModal, true);
+            openModal(`Email ${docTitle}: ${docNumber}`, content, closeModal, true);
 
-            // Check cooldown status after modal opens
+            // Check cooldown status
             setTimeout(() => {
-                updateCooldownDisplay(doc.number || id);
+                updateCooldownDisplay(docNumber);
             }, 100);
+        };
+
+        // Direct PDF Download Function
+        window.downloadPDFDirectly = async (id, type) => {
+            const statusEl = document.getElementById('emailSendStatus');
+            const progressEl = document.getElementById('pdfProgress');
+            
+            if (progressEl) {
+                progressEl.classList.add('active');
+                progressEl.querySelector('.pdf-progress-bar-fill').style.width = '30%';
+            }
+            
+            try {
+                let doc;
+                if (type === 'Quotation') doc = await window.dbOperations.getQuotation(id);
+                else doc = await window.dbOperations.getOrder(id);
+                
+                if(!doc.items) doc.items = [];
+                const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+                doc.subtotal = subtotal;
+                doc.total = subtotal - (doc.discount || 0);
+
+                if (progressEl) progressEl.querySelector('.pdf-progress-bar-fill').style.width = '70%';
+
+                // Generate PDF
+                const pdfBlob = await generatePDF(doc, type);
+                
+                if (progressEl) progressEl.querySelector('.pdf-progress-bar-fill').style.width = '100%';
+
+                // Download PDF
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${type}_${doc.number || id}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                if (statusEl) {
+                    statusEl.className = 'email-status-indicator success';
+                    statusEl.innerHTML = '<i class="ri-checkbox-circle-fill"></i> PDF Downloaded successfully! Check your downloads folder.';
+                }
+                
+                showPopup("Downloaded", "PDF has been downloaded to your device.");
+                
+            } catch (error) {
+                console.error('PDF Download Error:', error);
+                if (statusEl) {
+                    statusEl.className = 'email-status-indicator error';
+                    statusEl.innerHTML = `<i class="ri-error-warning-fill"></i> Error: ${error.message}`;
+                }
+            } finally {
+                if (progressEl) {
+                    setTimeout(() => {
+                        progressEl.classList.remove('active');
+                        progressEl.querySelector('.pdf-progress-bar-fill').style.width = '0%';
+                    }, 1000);
+                }
+            }
+        };
+
+        // Open Default Email Client
+        window.triggerEmailClient = async (id, type) => {
+            const docNumber = currentEmailDocId;
+            
+            // Check cooldown
+            const { canSend, remainingMs } = await checkEmailCooldown(docNumber);
+            if (!canSend) {
+                showPopup("Cooldown Active", `Please wait ${formatCooldownTime(remainingMs)} before resending, or use Force Send.`, false);
+                return;
+            }
+
+            const toEmail = document.getElementById('emailRecipient').value;
+            const subject = document.getElementById('emailSubject').value;
+            const body = document.getElementById('emailBody').value;
+
+            if (!toEmail) {
+                showPopup("Error", "Please enter a recipient email address.", false);
+                return;
+            }
+
+            // Open default mail client
+            const mailtoLink = `mailto:${toEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.location.href = mailtoLink;
+
+            // Save cooldown timestamp
+            await window.dbOperations.setEmailCooldown(docNumber);
+            updateCooldownDisplay(docNumber);
+
+            const statusEl = document.getElementById('emailSendStatus');
+            if (statusEl) {
+                statusEl.className = 'email-status-indicator success';
+                statusEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Mail client opened. Please attach the downloaded PDF and send.`;
+            }
+        };
+
+        // Force Send
+        window.triggerForceSend = async (id, type) => {
+            if(!confirm("Are you sure you want to force send? This will bypass the cooldown timer.")) {
+                return;
+            }
+            
+            const docNumber = currentEmailDocId;
+            const toEmail = document.getElementById('emailRecipient').value;
+            const subject = document.getElementById('emailSubject').value;
+            const body = document.getElementById('emailBody').value;
+
+            if (!toEmail) {
+                showPopup("Error", "Please enter a recipient email address.", false);
+                return;
+            }
+
+            // Open mail client
+            const mailtoLink = `mailto:${toEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.location.href = mailtoLink;
+
+            // Reset cooldown
+            await window.dbOperations.setEmailCooldown(docNumber);
+            updateCooldownDisplay(docNumber);
+
+            const statusEl = document.getElementById('emailSendStatus');
+            if (statusEl) {
+                statusEl.className = 'email-status-indicator success';
+                statusEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Mail client opened (Force Send). Please attach the PDF and send.`;
+            }
         };
 
         window.switchEmailTab = (tab) => {
@@ -4347,56 +4500,11 @@
             }
         };
 
-        window.triggerSendEmail = async (id, type) => {
-            const toEmail = document.getElementById('emailRecipient').value;
-            const subject = document.getElementById('emailSubject').value;
-            
-            // Regenerate HTML to ensure latest data
-            let doc;
-            if (type === 'Quotation') doc = await window.dbOperations.getQuotation(id);
-            else doc = await window.dbOperations.getOrder(id);
-            
-            if(!doc.items) doc.items = [];
-            const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
-            doc.subtotal = subtotal;
-            doc.total = subtotal - (doc.discount || 0);
-            
-            await window.sendEmailDirectly(toEmail, subject, doc.number || id, type, doc, false);
-        };
-
-        window.triggerForceSend = async (id, type) => {
-            if(!confirm("Are you sure you want to force send this email? This will bypass the cooldown timer.")) {
-                return;
-            }
-            
-            const toEmail = document.getElementById('emailRecipient').value;
-            const subject = document.getElementById('emailSubject').value;
-            
-            // Regenerate HTML to ensure latest data
-            let doc;
-            if (type === 'Quotation') doc = await window.dbOperations.getQuotation(id);
-            else doc = await window.dbOperations.getOrder(id);
-            
-            if(!doc.items) doc.items = [];
-            const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
-            doc.subtotal = subtotal;
-            doc.total = subtotal - (doc.discount || 0);
-            
-            await window.sendEmailDirectly(toEmail, subject, doc.number || id, type, doc, true);
-        };
-
         window.copyEmailCode = () => {
             const textarea = document.getElementById('emailCodeTextarea');
-            const doc = new DOMParser().parseFromString(textarea.value, 'text/html');
-            const rawHtml = doc.documentElement.textContent;
-            
-            navigator.clipboard.writeText(rawHtml).then(() => {
-                showPopup("Copied!", "HTML code copied to clipboard.");
-            }).catch(err => {
-                textarea.select();
-                document.execCommand('copy');
-                showPopup("Copied!", "HTML code copied to clipboard.");
-            });
+            textarea.select();
+            document.execCommand('copy');
+            showPopup("Copied!", "HTML code copied to clipboard.");
         };
 
         window.downloadEmailHTML = (filename, type) => {
