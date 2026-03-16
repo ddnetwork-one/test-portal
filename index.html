@@ -991,7 +991,7 @@
             border: 1px solid var(--border-light);
         }
         /* Larger Modal for Email */
-        .modal-content.large { max-width: 800px; }
+        .modal-content.large { max-width: 860px; }
         .modal-overlay.active .modal-content { transform: translateY(0) scale(1); }
         .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; }
         .modal-header h3 { font-size: 18px; font-weight: 700; font-family: var(--font-heading); }
@@ -1244,6 +1244,35 @@
             border-radius: 6px;
             font-size: 13px;
             color: #1e40af;
+        }
+
+        /* Email Grid Layout */
+        .email-modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 768px) {
+            .email-modal-grid { grid-template-columns: 1fr; }
+        }
+
+        .email-info-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .email-info-box h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+        .email-info-box p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
         }
 
         /* Responsive */
@@ -1682,8 +1711,8 @@
         // =========================================
         const EMAILJS_CONFIG = {
             publicKey: 'dN7qLgPS_8B-K-SSq',
-            serviceId: 'service_fkiuk6k', // Replace with your EmailJS service ID
-            templateId: 'template_7ch5l34' // Replace with your EmailJS template ID
+            serviceId: 'service_fkiuk6k',
+            templateId: 'template_7ch5l34'
         };
 
         // Initialize EmailJS when the script loads
@@ -1709,7 +1738,7 @@
         };
 
         // =========================================
-        // EMAIL SENDING FUNCTION (EmailJS)
+        // EMAIL SENDING FUNCTION (EmailJS) - Cross-client compatible
         // =========================================
         async function sendEmailViaEmailJS(toEmail, toName, subject, htmlContent) {
             try {
@@ -1764,7 +1793,7 @@
                 // Show cooldown UI
                 const statusEl = document.getElementById('emailSendStatus');
                 if (statusEl) {
-                    statusEl.className = 'email-status-indicator sending'; // warning color
+                    statusEl.className = 'email-status-indicator sending';
                     statusEl.innerHTML = `
                         <div class="email-cooldown-box">
                             <p><i class="ri-time-line"></i> Please wait <strong>${remaining}</strong> seconds before sending another email.</p>
@@ -1790,7 +1819,7 @@
             if (statusEl) {
                 if (result.success) {
                     statusEl.className = 'email-status-indicator success';
-                    statusEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Email sent successfully!`;
+                    statusEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Email sent successfully to ${toEmail}!`;
                 } else {
                     statusEl.className = 'email-status-indicator error';
                     statusEl.innerHTML = `<i class="ri-error-warning-fill"></i> Failed to send: ${result.error}`;
@@ -2157,7 +2186,10 @@
             return `${day}/${month}/${year}`;
         };
 
-        const generateProfessionalHTML = (doc) => {
+        // =========================================
+        // EMAIL HTML GENERATOR - Cross-client compatible
+        // =========================================
+        const generateEmailFriendlyHTML = (doc) => {
             const isQuotation = doc.type === 'Quotation';
             const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
             const clientName = doc.clientName || doc.customerName || 'Client';
@@ -2171,17 +2203,15 @@
                 validUntil = formatDateLong(d);
             }
 
-            // Items Logic - FIXED to handle current editor state and saved state
+            // Items Logic
             let itemRows = '';
             let subtotal = 0;
             let itemNum = 1;
             
-            // Ensure items array exists
             if(!doc.items || !Array.isArray(doc.items)) {
                 doc.items = [{description: doc.description || 'Service', amount: doc.subtotal || doc.price || doc.total || 0}];
             }
 
-            // Filter out empty items
             const validItems = doc.items.filter(item => item.description || item.amount);
 
             if(validItems.length > 0) {
@@ -2190,22 +2220,21 @@
                     subtotal += itemAmt;
                     itemRows += `
                         <tr>
-                            <td>${itemNum}</td>
-                            <td>${item.description || '-'}</td>
-                            <td>${parseFloat(itemAmt).toLocaleString()}</td>
+                            <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${itemNum}</td>
+                            <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${item.description || '-'}</td>
+                            <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">${parseFloat(itemAmt).toLocaleString()}</td>
                         </tr>
                     `;
                     itemNum++;
                 });
             } else {
-                 // Fallback if for some reason items are empty but total exists
                  const fallbackAmt = parseFloat(doc.total || doc.subtotal || doc.price || 0);
                  subtotal = fallbackAmt;
                  itemRows += `
                     <tr>
-                        <td>1</td>
-                        <td>Professional Service</td>
-                        <td>${parseFloat(fallbackAmt).toLocaleString()}</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">1</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">Professional Service</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">${parseFloat(fallbackAmt).toLocaleString()}</td>
                     </tr>
                  `;
             }
@@ -2216,9 +2245,9 @@
                 const monthlyAmt = subtotal / months;
                 itemRows += `
                     <tr>
-                        <td>${itemNum}</td>
-                        <td>${doc.paymentType} Installment Plan</td>
-                        <td>${parseFloat(monthlyAmt).toLocaleString()} / month</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${itemNum}</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${doc.paymentType} Installment Plan</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">${parseFloat(monthlyAmt).toLocaleString()} / month</td>
                     </tr>
                 `;
                 itemNum++;
@@ -2228,9 +2257,9 @@
             if (doc.domain) {
                 itemRows += `
                     <tr>
-                        <td>${itemNum}</td>
-                        <td>Domain: ${doc.domain}</td>
-                        <td>-</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${itemNum}</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">Domain: ${doc.domain}</td>
+                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">-</td>
                     </tr>
                 `;
                 itemNum++;
@@ -2242,13 +2271,13 @@
             const transactionRef = doc.transactionRef || doc.number || doc.id;
 
             const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
-                ? '<div class="badge" style="background:#34c759;">PAID</div>'
-                : '<div class="badge" style="background:#ff9500;">PENDING</div>';
+                ? '<span style="display:inline-block;background:#34c759;color:#ffffff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;">PAID</span>'
+                : '<span style="display:inline-block;background:#ff9500;color:#ffffff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;">PENDING</span>';
 
             let paymentDetailsSection = '';
             if (!isQuotation) {
                 paymentDetailsSection = `
-                    <div class="payment-box">
+                    <div style="margin-top:25px;background:#f7f7f7;padding:18px;border-radius:12px;font-size:14px;line-height:1.6;">
                         <strong>Payment Details</strong><br>
                         Payment Method: Online Transfer<br>
                         Transaction Reference: ${transactionRef}
@@ -2259,220 +2288,122 @@
             let termsList = '';
             if (isQuotation) {
                 termsList = `
-                    <li>This quotation is valid for 16 days from the date issued.</li>
-                    <li>Services delivered via DDNEX secure portal.</li>
-                    <li>50% deposit required to commence project.</li>
-                    <li>Balance payment due upon project completion.</li>
-                    <li>Full policies and terms are available on the official DDNEX website.</li>
+                    <li style="margin-bottom:8px;">This quotation is valid for 16 days from the date issued.</li>
+                    <li style="margin-bottom:8px;">Services delivered via DDNEX secure portal.</li>
+                    <li style="margin-bottom:8px;">50% deposit required to commence project.</li>
+                    <li style="margin-bottom:8px;">Balance payment due upon project completion.</li>
+                    <li style="margin-bottom:8px;">Full policies and terms are available on the official DDNEX website.</li>
                 `;
             } else {
                 termsList = `
-                    <li>This receipt confirms that payment has been successfully received by DDNEX.</li>
-                    <li>The service includes system setup, hosting, and maintenance under the agreed subscription plan.</li>
-                    <li>All payments made are non-refundable once service deployment has commenced.</li>
-                    <li>DDNEX reserves the right to update service policies or operational terms when required.</li>
-                    <li>Full policies and terms are available on the official DDNEX website.</li>
+                    <li style="margin-bottom:8px;">This receipt confirms that payment has been successfully received by DDNEX.</li>
+                    <li style="margin-bottom:8px;">The service includes system setup, hosting, and maintenance under the agreed subscription plan.</li>
+                    <li style="margin-bottom:8px;">All payments made are non-refundable once service deployment has commenced.</li>
+                    <li style="margin-bottom:8px;">DDNEX reserves the right to update service policies or operational terms when required.</li>
+                    <li style="margin-bottom:8px;">Full policies and terms are available on the official DDNEX website.</li>
                 `;
             }
 
-            return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${docTitle} - ${clientName}</title>
-<style>
-  body {
-    margin: 0;
-    background: #f2f2f7;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #1c1c1e;
-  }
-  .page {
-    max-width: 900px;
-    margin: auto;
-    background: #ffffff;
-    min-height: 100vh;
-    padding: 50px 60px;
-  }
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 50px;
-  }
-  .logo img {
-    max-width: 140px;
-  }
-  .company-info {
-    font-size: 13px;
-    color: #6e6e73;
-    line-height: 1.6;
-    margin-top: 12px;
-  }
-  .invoice-info {
-    text-align: right;
-    font-size: 14px;
-  }
-  .badge {
-    display: inline-block;
-    background: #34c759;
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 6px 14px;
-    border-radius: 20px;
-    margin-bottom: 10px;
-  }
-  .section {
-    margin-bottom: 40px;
-  }
-  .section-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 14px;
-  }
-  .bill {
-    font-size: 14px;
-    line-height: 1.6;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-    margin-top: 10px;
-  }
-  th, td {
-    padding: 14px 10px;
-    border-bottom: 1px solid #e5e5ea;
-    text-align: left;
-  }
-  th {
-    background: #f7f7f7;
-    font-weight: 500;
-    color: #6e6e73;
-  }
-  .total-row td {
-    font-weight: 600;
-    font-size: 16px;
-  }
-  .payment-box {
-    margin-top: 25px;
-    background: #f7f7f7;
-    padding: 18px;
-    border-radius: 12px;
-    font-size: 14px;
-    line-height: 1.6;
-  }
-  .terms {
-    background: #fafafa;
-    padding: 20px;
-    border-radius: 12px;
-    font-size: 13px;
-    color: #6e6e73;
-    line-height: 1.6;
-  }
-  .terms ul {
-    padding-left: 18px;
-    margin: 8px 0;
-  }
-  .footer {
-    margin-top: 60px;
-    padding-top: 20px;
-    border-top: 1px solid #e5e5ea;
-    font-size: 12px;
-    color: #8e8e93;
-    text-align: center;
-  }
-  @media (max-width: 700px) {
-    .page {
-      padding: 30px 20px;
-    }
-    .header {
-      flex-direction: column;
-      gap: 20px;
-    }
-    .invoice-info {
-      text-align: left;
-    }
-  }
-</style>
-</head>
-<body>
-  <div class="page">
-    <div class="header">
-      <div>
-        <div class="logo">
-          <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX Logo">
-        </div>
-        <div class="company-info">
-          <strong>DDNEX by DD Cloud Network</strong><br>
-          Company Registration No.: 202603040752 (MA0342542-K)<br>
-          Sungai Petani, Kedah, Malaysia<br>
-          support@ddnex.com | www.ddnex.com
-        </div>
-      </div>
-      <div class="invoice-info">
-        ${statusBadge}
-        <strong>${docTitle}</strong><br><br>
-        ${isQuotation ? 'Quotation' : 'Invoice'} No: ${docNumber}<br>
-        Date Issued: ${dateStr}
-        ${isQuotation ? `<br>Valid Until: ${validUntil}` : ''}
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Bill To</div>
-      <div class="bill">
-        <strong>${clientName}</strong><br>
-        Malaysia
-        ${doc.domain ? `<br>Domain: ${doc.domain}` : ''}
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Services</div>
-      <table>
-        <tr>
-          <th width="60">Item</th>
-          <th>Description</th>
-          <th width="160">Amount (RM)</th>
-        </tr>
-        ${itemRows}
-        ${discount > 0 ? `
-        <tr>
-          <td></td>
-          <td>Discount</td>
-          <td>-${parseFloat(discount).toLocaleString()}</td>
-        </tr>
-        ` : ''}
-        <tr class="total-row">
-          <td></td>
-          <td>${isQuotation ? 'Total' : 'Total Paid'}</td>
-          <td>RM ${parseFloat(total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-        </tr>
-      </table>
-      ${paymentDetailsSection}
-    </div>
-
-    <div class="section">
-      <div class="section-title">Terms & Conditions Summary</div>
-      <div class="terms">
-        <ul>
-          ${termsList}
-        </ul>
-      </div>
-    </div>
-
-    <div class="footer">
-      ${isQuotation ? 'Quotation' : 'Invoice'} generated automatically by the DDNEX Billing System<br>
-      support@ddnex.com
-    </div>
-  </div>
-</body>
-</html>
+            // Contact info for PDF request
+            const contactInfo = `
+                <div style="margin-top:24px;background:#f0f9ff;padding:16px;border-radius:8px;border-left:4px solid #2563eb;">
+                    <p style="margin:0 0 8px 0;font-size:14px;color:#1e40af;">
+                        <strong>Need a PDF copy of this ${isQuotation ? 'quotation' : 'invoice'}?</strong>
+                    </p>
+                    <p style="margin:0;font-size:14px;color:#1e40af;">
+                        Please contact us at <a href="tel:+60122600969" style="color:#2563eb;text-decoration:none;font-weight:700;">+60122600969</a> to request your official PDF receipt.
+                    </p>
+                </div>
             `;
+
+            // Email-client compatible HTML with inline styles
+            return `
+<div style="background-color:#f2f2f7;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <div style="max-width:900px;margin:0 auto;background:#ffffff;min-height:100vh;padding:50px 60px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+        
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:50px;">
+            <div>
+                <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="max-width:140px;">
+                <p style="font-size:13px;color:#6e6e73;line-height:1.6;margin-top:12px;">
+                    <strong>DDNEX by DD Cloud Network</strong><br>
+                    Company Registration No.: 202603040752 (MA0342542-K)<br>
+                    Sungai Petani, Kedah, Malaysia<br>
+                    support@ddnex.com | www.ddnex.com
+                </p>
+            </div>
+            <div style="text-align:right;font-size:14px;">
+                ${statusBadge}
+                <p style="margin-top:10px;"><strong>${docTitle}</strong></p>
+                <p style="margin-top:8px;">
+                    ${isQuotation ? 'Quotation' : 'Invoice'} No: <strong>${docNumber}</strong><br>
+                    Date Issued: ${dateStr}
+                    ${isQuotation ? `<br>Valid Until: ${validUntil}` : ''}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Bill To -->
+        <div style="margin-bottom:40px;">
+            <p style="font-size:18px;font-weight:600;margin-bottom:14px;">Bill To</p>
+            <div style="font-size:14px;line-height:1.6;">
+                <strong>${clientName}</strong><br>
+                Malaysia
+                ${doc.domain ? `<br>Domain: ${doc.domain}` : ''}
+            </div>
+        </div>
+        
+        <!-- Services Table -->
+        <div style="margin-bottom:40px;">
+            <p style="font-size:18px;font-weight:600;margin-bottom:14px;">Services</p>
+            <table width="100%" style="border-collapse:collapse;font-size:14px;">
+                <tr>
+                    <th width="60" style="padding:12px 16px;text-align:left;border-bottom:1px solid #e5e5ea;background:#f7f7f7;font-weight:500;color:#6e6e73;">Item</th>
+                    <th style="padding:12px 16px;text-align:left;border-bottom:1px solid #e5e5ea;background:#f7f7f7;font-weight:500;color:#6e6e73;">Description</th>
+                    <th width="160" style="padding:12px 16px;text-align:right;border-bottom:1px solid #e5e5ea;background:#f7f7f7;font-weight:500;color:#6e6e73;">Amount (RM)</th>
+                </tr>
+                ${itemRows}
+                ${discount > 0 ? `
+                <tr>
+                    <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;"></td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">Discount</td>
+                    <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">-${parseFloat(discount).toLocaleString()}</td>
+                </tr>
+                ` : ''}
+                <tr>
+                    <td colspan="2" style="padding:16px;text-align:right;font-weight:600;font-size:16px;border:none;">${isQuotation ? 'Total' : 'Total Paid'}</td>
+                    <td style="padding:16px;text-align:right;font-weight:600;font-size:16px;border:none;">RM ${parseFloat(total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                </tr>
+            </table>
+            ${paymentDetailsSection}
+        </div>
+        
+        <!-- Terms -->
+        <div style="margin-bottom:40px;">
+            <p style="font-size:18px;font-weight:600;margin-bottom:14px;">Terms & Conditions Summary</p>
+            <div style="background:#fafafa;padding:20px;border-radius:12px;font-size:13px;color:#6e6e73;line-height:1.6;">
+                <ul style="padding-left:18px;margin:8px 0;">
+                    ${termsList}
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Contact for PDF -->
+        ${contactInfo}
+        
+        <!-- Footer -->
+        <div style="margin-top:60px;padding-top:20px;border-top:1px solid #e5e5ea;font-size:12px;color:#8e8e93;text-align:center;">
+            <p style="margin:0 0 4px 0;">${isQuotation ? 'Quotation' : 'Invoice'} generated automatically by the DDNEX Billing System</p>
+            <p style="margin:0;">support@ddnex.com</p>
+        </div>
+        
+    </div>
+</div>
+            `;
+        };
+
+        const generateProfessionalHTML = (doc) => {
+            return generateEmailFriendlyHTML(doc);
         };
 
         // ================== SECTION RENDERERS ==================
@@ -3719,7 +3650,7 @@
                     number: newInvId,
                     type: 'Invoice',
                     source: 'Portal',
-                    status: 'Draft', // Converted invoices start as Draft
+                    status: 'Draft',
                     paymentType: 'One-Time'
                 };
                 await window.dbOperations.setOrder(newInvId, invData);
@@ -3791,7 +3722,7 @@
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
 
-            const htmlContent = generateProfessionalHTML(doc);
+            const htmlContent = generateEmailFriendlyHTML(doc);
             const docTitle = type === 'Quotation' ? 'Quotation' : 'Invoice';
             const defaultSubject = `Your ${docTitle} from DDNEX - ${doc.number || id}`;
             
@@ -3805,33 +3736,64 @@
                     <button class="email-tab" onclick="switchEmailTab('html')">Get HTML</button>
                 </div>
                 
-                <div id="emailTabCompose">
-                    <div class="form-group-modal">
-                        <label>Recipient Email</label>
-                        <input type="email" id="emailRecipient" value="${clientEmail}" placeholder="client@example.com">
-                    </div>
-                    <div class="form-group-modal">
-                        <label>Subject</label>
-                        <input type="text" id="emailSubject" value="${defaultSubject}">
+                <div class="email-modal-grid">
+                    <div>
+                        <div id="emailTabCompose">
+                            <div class="form-group-modal">
+                                <label>Recipient Email</label>
+                                <input type="email" id="emailRecipient" value="${clientEmail}" placeholder="client@example.com">
+                            </div>
+                            <div class="form-group-modal">
+                                <label>Subject</label>
+                                <input type="text" id="emailSubject" value="${defaultSubject}">
+                            </div>
+                            
+                            <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="triggerSendEmail('${id}', '${type}', false)">
+                                <i class="ri-send-plane-fill"></i> Send via EmailJS
+                            </button>
+                            
+                            <div id="emailSendStatus"></div>
+                            
+                            <div class="pdf-link-info">
+                                <p><i class="ri-information-line"></i> <strong>Note:</strong> The email contains full document details. For PDF receipt requests, clients should contact <strong>+60122600969</strong>.</p>
+                            </div>
+                        </div>
+                        
+                        <div id="emailTabHtml" style="display:none;">
+                            <p style="margin-bottom:12px; font-size:13px;">Copy the HTML code below to use in your email client.</p>
+                            <textarea id="emailCodeTextarea" style="width:100%; height:200px; font-family:monospace; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; padding:12px; resize:vertical;" readonly>${htmlContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                            <div style="margin-top:12px; display:flex; gap:8px;">
+                                <button class="btn btn-outline" onclick="copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Code</button>
+                                <button class="btn btn-outline" onclick="downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
+                            </div>
+                        </div>
                     </div>
                     
-                    <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="triggerSendEmail('${id}', '${type}', false)">
-                        <i class="ri-send-plane-fill"></i> Send via EmailJS
-                    </button>
-                    
-                    <div id="emailSendStatus"></div>
-                    
-                    <div class="pdf-link-info">
-                        <p><i class="ri-information-line"></i> <strong>Note:</strong> The email will contain the full invoice/quotation details directly in the body. No external links are needed.</p>
-                    </div>
-                </div>
-                
-                <div id="emailTabHtml" style="display:none;">
-                    <p style="margin-bottom:12px; font-size:13px;">Copy the HTML code below to use in your email client.</p>
-                    <textarea id="emailCodeTextarea" style="width:100%; height:200px; font-family:monospace; font-size:12px; border:1px solid #e2e8f0; border-radius:8px; padding:12px; resize:vertical;" readonly>${htmlContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
-                    <div style="margin-top:12px; display:flex; gap:8px;">
-                        <button class="btn btn-outline" onclick="copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Code</button>
-                        <button class="btn btn-outline" onclick="downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
+                    <div>
+                        <div class="email-info-box">
+                            <h4><i class="ri-file-text-line"></i> Document Info</h4>
+                            <p><strong>Type:</strong> ${docTitle}</p>
+                            <p><strong>Number:</strong> ${doc.number || id}</p>
+                            <p><strong>Client:</strong> ${doc.clientName || 'N/A'}</p>
+                            <p><strong>Total:</strong> ${formatMYR(doc.total)}</p>
+                        </div>
+                        
+                        <div class="email-info-box">
+                            <h4><i class="ri-information-line"></i> Email Compatibility</h4>
+                            <p>This email is optimized for:</p>
+                            <p style="margin-top:8px;">
+                                <span style="display:inline-block;background:#fef3c7;color:#92400e;padding:4px 8px;border-radius:4px;font-size:12px;margin:2px;">Gmail</span>
+                                <span style="display:inline-block;background:#dbeafe;color:#1e40af;padding:4px 8px;border-radius:4px;font-size:12px;margin:2px;">Outlook</span>
+                                <span style="display:inline-block;background:#e0e7ff;color:#4f46e5;padding:4px 8px;border-radius:4px;font-size:12px;margin:2px;">Yahoo</span>
+                                <span style="display:inline-block;background:#f3e8ff;color:#7c3aed;padding:4px 8px;border-radius:4px;font-size:12px;margin:2px;">Apple Mail</span>
+                            </p>
+                        </div>
+                        
+                        <div class="email-info-box">
+                            <h4><i class="ri-phone-line"></i> Contact for PDF</h4>
+                            <p>For PDF receipt requests, kindly contact:</p>
+                            <p style="font-size:18px;font-weight:700;color:#2563eb;margin-top:8px;">+60122600969</p>
+                        </div>
                     </div>
                 </div>
             `;
@@ -3866,17 +3828,10 @@
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
             
-            // Generate HTML content directly
-            const rawHtmlContent = generateProfessionalHTML(doc);
+            // Generate email-client compatible HTML
+            const emailHtml = generateEmailFriendlyHTML(doc);
             
-            // Inject inline styles for email clients (wrapper)
-            const emailHtmlWithStyles = `
-                <div style="background-color: #f2f2f7; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-                    ${rawHtmlContent}
-                </div>
-            `;
-            
-            await window.sendEmailDirectly(toEmail, subject, emailHtmlWithStyles, doc.number || id, forceSend);
+            await window.sendEmailDirectly(toEmail, subject, emailHtml, doc.number || id, forceSend);
         };
 
         window.copyEmailCode = () => {
@@ -3949,7 +3904,7 @@
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
             
-            const rawHtml = generateProfessionalHTML(doc);
+            const rawHtml = generateEmailFriendlyHTML(doc);
             
             const printArea = document.getElementById('printArea');
             printArea.innerHTML = rawHtml;
