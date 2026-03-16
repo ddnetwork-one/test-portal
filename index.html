@@ -1396,6 +1396,27 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        
+        /* Team Selection Styles */
+        .team-select-container {
+            margin-top: 8px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .team-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .team-option:last-child { border-bottom: none; }
+        .team-option:hover { background: var(--bg-body); }
+        .team-option input { margin: 0; }
 
         /* Responsive */
         @media(max-width: 768px) {
@@ -1834,6 +1855,16 @@
             updateUser: async (id, data) => await updateDoc(doc(db, 'users_ddnex', id), data),
             deleteUser: async (id) => await deleteDoc(doc(db, 'users_ddnex', id)),
             
+            // Team Operations
+            getTeam: async () => {
+                const q = query(getCol('team'));
+                const snap = await getDocs(q);
+                return snap.docs.map(d => ({id: d.id, ...d.data()}));
+            },
+            addTeamMember: async (data) => await addDoc(getCol('team'), data),
+            updateTeamMember: async (id, data) => await updateDoc(doc(db, 'team_ddnex', id), data),
+            deleteTeamMember: async (id) => await deleteDoc(doc(db, 'team_ddnex', id)),
+            
             getClients: async () => {
                 const q = query(getCol('clients'));
                 const snap = await getDocs(q);
@@ -1926,7 +1957,7 @@
         // =========================================
         // EMAIL SENDING FUNCTION (EmailJS)
         // =========================================
-        async function sendEmailViaEmailJS(toEmail, toName, subject, htmlContent) {
+        async function sendEmailViaEmailJS(toEmail, toName, subject, htmlContent, ccEmails = '', bccEmails = '') {
             try {
                 const templateParams = {
                     to_email: toEmail,
@@ -1935,7 +1966,9 @@
                     from_email: 'support@ddnex.com',
                     subject: subject,
                     message_html: htmlContent,
-                    reply_to: 'support@ddnex.com'
+                    reply_to: 'support@ddnex.com',
+                    cc_email: ccEmails,
+                    bcc_email: bccEmails
                 };
 
                 const response = await emailjs.send(
@@ -1962,7 +1995,7 @@
         }
 
         // Global email sending function for modal
-        window.sendEmailDirectly = async function(toEmail, subject, htmlContent, docNumber, forceSend = false) {
+        window.sendEmailDirectly = async function(toEmail, subject, htmlContent, docNumber, forceSend = false, ccEmails = '', bccEmails = '') {
             if (!toEmail) {
                 showPopup("Error", "Please enter a recipient email address.", false);
                 return;
@@ -1996,7 +2029,7 @@
                 statusEl.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Sending email...';
             }
 
-            const result = await sendEmailViaEmailJS(toEmail, 'Client', subject, htmlContent);
+            const result = await sendEmailViaEmailJS(toEmail, 'Client', subject, htmlContent, ccEmails, bccEmails);
 
             if (statusEl) {
                 if (result.success) {
@@ -3820,9 +3853,6 @@ const generateFullTemplateHTML = (doc) => {
             if(pClient) pClient.textContent = client || 'Select Client';
             if(pAddress) pAddress.textContent = address || '';
             
-            // Handle Attn display in preview (might need to add element dynamically if not present, but we added it in main render)
-            // Just updating text content for address is enough.
-            
             if(pDate) pDate.textContent = formatDate(dateVal);
             if(pSubtotal) pSubtotal.textContent = formatMYR(subtotal);
             if(pDiscount) pDiscount.textContent = `-${formatMYR(discount)}`;
@@ -4354,7 +4384,7 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
-        // ================== EMAIL TEMPLATE MODAL (Updated with Summary) ==================
+        // ================== EMAIL TEMPLATE MODAL (Updated with CC/BCC) ==================
         window.openEmailTemplateModal = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
@@ -4425,6 +4455,15 @@ const generateFullTemplateHTML = (doc) => {
                 </div>
             `).join('');
 
+            // Fetch Team Members for CC/BCC
+            const teamMembers = await window.dbOperations.getTeam();
+            const teamOptionsHtml = teamMembers.map(m => `
+                <label class="team-option">
+                    <input type="checkbox" value="${m.email}" data-name="${m.name}">
+                    <span>${m.name} <small style="color:#64748b;">(${m.email})</small></span>
+                </label>
+            `).join('');
+
             const content = `
                 <div class="email-tabs">
                     <button class="email-tab active" onclick="switchEmailTab('send')">Send Email</button>
@@ -4439,6 +4478,22 @@ const generateFullTemplateHTML = (doc) => {
                                 <label>Recipient Email</label>
                                 <input type="email" id="emailRecipient" value="${clientEmail}" placeholder="client@example.com">
                             </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group-modal">
+                                    <label>CC Team</label>
+                                    <div class="team-select-container" id="ccTeamContainer">
+                                        ${teamOptionsHtml || '<p style="padding:10px; font-size:13px; color:#64748b;">No team members added yet.</p>'}
+                                    </div>
+                                </div>
+                                <div class="form-group-modal">
+                                    <label>BCC Team</label>
+                                    <div class="team-select-container" id="bccTeamContainer">
+                                         ${teamOptionsHtml || '<p style="padding:10px; font-size:13px; color:#64748b;">No team members added yet.</p>'}
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="form-group-modal">
                                 <label>Subject</label>
                                 <input type="text" id="emailSubject" value="${defaultSubject}">
@@ -4506,6 +4561,7 @@ const generateFullTemplateHTML = (doc) => {
                             <h4><i class="ri-information-line"></i> Email Info</h4>
                             <p style="font-size:12px;">The email sent will be <strong>summarized</strong> with item details.</p>
                             <p style="font-size:12px; margin-top:8px;">Compatible with all major email clients.</p>
+                            <p style="font-size:12px; margin-top:8px;"><strong>CC/BCC:</strong> Select team members on the left to include them.</p>
                         </div>
                         
                         <div class="email-info-box">
@@ -4544,6 +4600,14 @@ const generateFullTemplateHTML = (doc) => {
             const toEmail = document.getElementById('emailRecipient').value;
             const subject = document.getElementById('emailSubject').value;
             
+            // Collect CC Emails
+            const ccCheckboxes = document.querySelectorAll('#ccTeamContainer input:checked');
+            const ccEmails = Array.from(ccCheckboxes).map(cb => cb.value).join(',');
+            
+            // Collect BCC Emails
+            const bccCheckboxes = document.querySelectorAll('#bccTeamContainer input:checked');
+            const bccEmails = Array.from(bccCheckboxes).map(cb => cb.value).join(',');
+            
             let doc;
             if (type === 'Quotation') doc = await window.dbOperations.getQuotation(id);
             else doc = await window.dbOperations.getOrder(id);
@@ -4567,7 +4631,7 @@ const generateFullTemplateHTML = (doc) => {
             // Use SUMMARIZED version for email
             const emailHtml = generateSummarizedEmailHTML(doc);
             
-            await window.sendEmailDirectly(toEmail, subject, emailHtml, doc.number || id, forceSend);
+            await window.sendEmailDirectly(toEmail, subject, emailHtml, doc.number || id, forceSend, ccEmails, bccEmails);
         };
 
         window.copyEmailCode = () => {
@@ -4792,6 +4856,8 @@ const generateFullTemplateHTML = (doc) => {
         // --- Settings / User Management ---
         async function renderSettingsSection() {
             let usersHtml = '';
+            let teamHtml = '';
+            
             if (currentUser && currentUser.role === 'SuperAdmin') {
                 const users = await window.dbOperations.getUsers();
                 usersHtml = `
@@ -4828,10 +4894,38 @@ const generateFullTemplateHTML = (doc) => {
                         </div>
                     </div>
                 `;
+
+                const team = await window.dbOperations.getTeam();
+                teamHtml = `
+                    <div class="card" style="margin-bottom:24px;">
+                        <div class="card-header">
+                            <h3>Internal Team (For CC/BCC)</h3>
+                            <button class="btn btn-primary" onclick="openTeamModal()"><i class="ri-team-line"></i> Add Member</button>
+                        </div>
+                        <div class="card-body no-padding">
+                            <table class="data-table">
+                                <thead><tr><th>Name</th><th>Email</th><th>Actions</th></tr></thead>
+                                <tbody id="teamTableBody">
+                                    ${team.map(m => `
+                                        <tr>
+                                            <td>${m.name}</td>
+                                            <td>${m.email}</td>
+                                            <td>
+                                                <button class="action-btn" onclick="editTeamMember('${m.id}', '${encodeURIComponent(JSON.stringify(m))}')"><i class="ri-edit-line"></i></button>
+                                                <button class="action-btn danger" onclick="deleteTeamMember('${m.id}')"><i class="ri-delete-bin-line"></i></button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
             }
 
             document.getElementById('mainContent').innerHTML = `
                 ${usersHtml}
+                ${teamHtml}
                 <div class="settings-section">
                     <div class="settings-section-header"><h3>Preferences</h3><p>System Configuration</p></div>
                     <div class="settings-section-body">
@@ -4978,6 +5072,71 @@ const generateFullTemplateHTML = (doc) => {
             if(confirm("Delete this user?")) {
                 showLoading("Deleting...");
                 await window.dbOperations.deleteUser(id);
+                renderSettingsSection();
+                hideLoading();
+            }
+        };
+
+        // --- TEAM MODAL & ACTIONS ---
+        window.openTeamModal = () => {
+            openModal('Add Team Member', `
+                <div class="form-group-modal">
+                    <label>Name</label>
+                    <input type="text" id="tName" placeholder="John Doe">
+                </div>
+                <div class="form-group-modal">
+                    <label>Email</label>
+                    <input type="email" id="tEmail" placeholder="john@company.com">
+                </div>
+            `, async () => {
+                const data = {
+                    name: document.getElementById('tName').value,
+                    email: document.getElementById('tEmail').value
+                };
+                
+                if(!data.name || !data.email) {
+                    showPopup("Error", "Name and Email are required.", false);
+                    return;
+                }
+
+                showLoading("Saving...");
+                await window.dbOperations.addTeamMember(data);
+                closeModal();
+                renderSettingsSection(); 
+                hideLoading();
+                showPopup("Success", "Team member added.");
+            });
+        };
+
+        window.editTeamMember = (id, dataStr) => {
+            const m = JSON.parse(decodeURIComponent(dataStr));
+            openModal('Edit Team Member', `
+                <div class="form-group-modal">
+                    <label>Name</label>
+                    <input type="text" id="tName" value="${m.name}">
+                </div>
+                <div class="form-group-modal">
+                    <label>Email</label>
+                    <input type="email" id="tEmail" value="${m.email}">
+                </div>
+            `, async () => {
+                const data = {
+                    name: document.getElementById('tName').value,
+                    email: document.getElementById('tEmail').value
+                };
+
+                showLoading("Updating...");
+                await window.dbOperations.updateTeamMember(id, data);
+                closeModal();
+                renderSettingsSection();
+                hideLoading();
+            });
+        };
+
+        window.deleteTeamMember = async (id) => {
+            if(confirm("Delete this team member?")) {
+                showLoading("Deleting...");
+                await window.dbOperations.deleteTeamMember(id);
                 renderSettingsSection();
                 hideLoading();
             }
@@ -5214,3 +5373,4 @@ const generateFullTemplateHTML = (doc) => {
     </script>
 </body>
 </html>
+```
