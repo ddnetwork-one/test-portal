@@ -2299,14 +2299,13 @@
         };
 
         // =========================================
-        // PROFESSIONAL SUMMARIZED EMAIL HTML - Mobile Friendly
+        // UPDATED: PROFESSIONAL SUMMARIZED EMAIL HTML
         // =========================================
         const generateSummarizedEmailHTML = (doc) => {
             const isQuotation = doc.type === 'Quotation';
-            const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
-            const clientName = doc.clientName || doc.customerName || 'Client';
+            const docTitle = isQuotation ? 'Quotation Summary' : 'Order Summary';
+            const clientName = doc.clientName || doc.customerName || 'Valued Customer';
             const docNumber = doc.number || doc.id;
-            const dateStr = formatDateLong(doc.date || doc.createdAt);
             
             // Items Logic
             let itemRows = '';
@@ -2328,184 +2327,175 @@
                 return hasDesc || hasAmount;
             });
 
-            if (validItems.length > 0) {
-                validItems.forEach(item => {
-                    const itemAmt = parseFloat(item.amount || 0);
-                    subtotal += itemAmt;
-                    itemRows += `
-                        <tr>
-                            <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;">${item.description || 'Service'}</td>
-                            <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;font-size:14px;">${formatMYR(itemAmt)}</td>
-                        </tr>
-                    `;
-                });
-            } else {
+            // Generate item rows - max 2 items shown prominently, rest combined
+            let displayItems = validItems.slice(0, 2);
+            let otherItemsTotal = 0;
+            
+            if (validItems.length > 2) {
+                for (let i = 2; i < validItems.length; i++) {
+                    otherItemsTotal += parseFloat(validItems[i].amount || 0);
+                }
+            }
+
+            displayItems.forEach(item => {
+                const itemAmt = parseFloat(item.amount || 0);
+                subtotal += itemAmt;
+                itemRows += `
+                    <tr style="border-bottom:1px solid #f1f1f1;">
+                        <td style="padding:12px;font-size:14px;color:#333;">${item.description || 'Service'}</td>
+                        <td align="center" style="padding:12px;font-size:14px;color:#333;">1</td>
+                        <td align="right" style="padding:12px;font-size:14px;color:#333;">RM ${parseFloat(itemAmt).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            });
+
+            if (otherItemsTotal > 0) {
+                subtotal += otherItemsTotal;
+                itemRows += `
+                    <tr style="border-bottom:1px solid #f1f1f1;">
+                        <td style="padding:12px;font-size:14px;color:#333;">Other Items</td>
+                        <td align="center" style="padding:12px;font-size:14px;color:#333;">-</td>
+                        <td align="right" style="padding:12px;font-size:14px;color:#333;">RM ${parseFloat(otherItemsTotal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            }
+
+            // Fallback if no valid items
+            if (validItems.length === 0) {
                 const fallbackAmount = parseFloat(doc.total || doc.grandTotal || doc.subtotal || doc.price || 0);
                 subtotal = fallbackAmount;
                 itemRows = `
-                    <tr>
-                        <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;">Professional Service</td>
-                        <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;font-size:14px;">${formatMYR(fallbackAmount)}</td>
+                    <tr style="border-bottom:1px solid #f1f1f1;">
+                        <td style="padding:12px;font-size:14px;color:#333;">Professional Service</td>
+                        <td align="center" style="padding:12px;font-size:14px;color:#333;">1</td>
+                        <td align="right" style="padding:12px;font-size:14px;color:#333;">RM ${parseFloat(fallbackAmount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     </tr>
                 `;
             }
 
             const discount = parseFloat(doc.discount || 0);
             const total = subtotal - discount;
-
-            const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
-                ? '<span style="display:inline-block;background:#22c55e;color:#ffffff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;">PAID</span>'
-                : '<span style="display:inline-block;background:#f59e0b;color:#ffffff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;">PENDING</span>';
-
-            // Payment info for invoice
-            let paymentInfo = '';
-            if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
-                const months = doc.installmentMonths || 12;
-                const cycle = doc.installmentCycle || 1;
-                paymentInfo = `
-                    <tr>
-                        <td style="padding:10px 0;font-size:13px;color:#64748b;">Payment Plan</td>
-                        <td style="padding:10px 0;text-align:right;font-size:13px;font-weight:600;">${doc.paymentType} Installment</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:6px 0;font-size:13px;color:#64748b;">Cycle</td>
-                        <td style="padding:6px 0;text-align:right;font-size:13px;font-weight:600;">Month ${cycle} of ${months}</td>
-                    </tr>
-                `;
-            }
-
-            // Domain info
-            let domainInfo = '';
-            if (doc.domain) {
-                domainInfo = `
-                    <tr>
-                        <td style="padding:6px 0;font-size:13px;color:#64748b;">Domain</td>
-                        <td style="padding:6px 0;text-align:right;font-size:13px;font-weight:600;">${doc.domain}</td>
-                    </tr>
-                `;
-            }
+            const tax = 0; // Tax calculation can be added if needed
+            
+            // Format numbers
+            const formatRM = (val) => parseFloat(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
             return `
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${docTitle} - DDNEX</title>
-    <!--[if mso]>
-    <style type="text/css">
-        table {border-collapse: collapse;}
-        .mso-padding-alt {padding: 0 !important;}
-    </style>
-    <![endif]-->
+<meta charset="UTF-8">
+<title>${docTitle}</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-    
-    <!-- Wrapper Table -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;">
-        <tr>
-            <td align="center" style="padding:20px 10px;">
-                
-                <!-- Main Container -->
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
-                    
-                    <!-- Header -->
-                    <tr>
-                        <td style="background:linear-gradient(135deg,#1e40af 0%,#2563eb 100%);padding:28px 24px;text-align:center;">
-                            <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" width="100" style="height:auto;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;">
-                            <p style="margin:0 0 4px 0;font-size:11px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:2px;font-weight:600;">${docTitle}</p>
-                            <p style="margin:0;font-size:18px;color:#ffffff;font-weight:800;">${docNumber}</p>
-                        </td>
-                    </tr>
-                    
-                    <!-- Body -->
-                    <tr>
-                        <td style="padding:28px 24px;">
-                            
-                            <!-- Status Badge -->
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center" style="padding-bottom:20px;">
-                                        ${statusBadge}
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <!-- Client & Date Info -->
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-                                <tr>
-                                    <td style="padding:10px 0;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;">Client</td>
-                                    <td style="padding:10px 0;text-align:right;font-size:14px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${clientName}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding:10px 0;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;">Date Issued</td>
-                                    <td style="padding:10px 0;text-align:right;font-size:14px;font-weight:500;color:#0f172a;border-bottom:1px solid #f1f5f9;">${dateStr}</td>
-                                </tr>
-                                ${domainInfo}
-                                ${paymentInfo}
-                            </table>
-                            
-                            <!-- Items Section -->
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:12px;margin-bottom:20px;">
-                                <tr>
-                                    <td style="padding:16px;">
-                                        <p style="margin:0 0 12px 0;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Items</p>
-                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                            ${itemRows}
-                                        </table>
-                                        
-                                        ${discount > 0 ? `
-                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
-                                            <tr>
-                                                <td style="padding:8px 0;font-size:13px;color:#64748b;">Discount</td>
-                                                <td style="padding:8px 0;text-align:right;font-size:13px;font-weight:600;color:#dc2626;">-${formatMYR(discount)}</td>
-                                            </tr>
-                                        </table>
-                                        ` : ''}
-                                        
-                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;border-top:2px solid #e2e8f0;">
-                                            <tr>
-                                                <td style="padding:12px 0;font-size:14px;font-weight:700;color:#0f172a;">Total</td>
-                                                <td style="padding:12px 0;text-align:right;font-size:20px;font-weight:800;color:#2563eb;">${formatMYR(total)}</td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <!-- CTA Button -->
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center" style="padding:8px 0;">
-                                        <a href="https://ddnex.com" style="display:inline-block;background:#2563eb;color:#ffffff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">Visit DDNEX Portal</a>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                        </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background:#f8fafc;padding:20px 24px;text-align:center;border-top:1px solid #e2e8f0;">
-                            <p style="margin:0 0 6px 0;font-size:13px;font-weight:600;color:#0f172a;">DDNEX by DD Cloud Network</p>
-                            <p style="margin:0;font-size:12px;color:#64748b;">support@ddnex.com</p>
-                        </td>
-                    </tr>
-                    
-                </table>
-                
-                <!-- Bottom Spacing -->
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                    <tr>
-                        <td style="height:20px;"></td>
-                    </tr>
-                </table>
-                
-            </td>
-        </tr>
-    </table>
-    
+
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+<tr>
+<td align="center">
+
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;padding:30px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+
+<!-- HEADER -->
+<tr>
+<td style="padding-bottom:20px;border-bottom:1px solid #eee;">
+<h2 style="margin:0;color:#111;">${docTitle}</h2>
+<p style="margin:5px 0 0;color:#666;font-size:14px;">
+ ${isQuotation ? 'Quotation' : 'Order'} ID: ${docNumber}
+</p>
+</td>
+</tr>
+
+<!-- CUSTOMER -->
+<tr>
+<td style="padding:20px 0;">
+<p style="margin:0;font-size:14px;color:#333;">
+Hello ${clientName},
+</p>
+
+<p style="margin:8px 0 0;font-size:14px;color:#555;">
+Thank you for your ${isQuotation ? 'quotation request' : 'order'}. Here is your summary.
+</p>
+</td>
+</tr>
+
+<!-- ITEMS TABLE -->
+<tr>
+<td>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+
+<tr style="background:#fafafa;border-bottom:1px solid #eee;">
+<th align="left" style="padding:12px;font-size:13px;color:#666;">Item</th>
+<th align="center" style="padding:12px;font-size:13px;color:#666;">Qty</th>
+<th align="right" style="padding:12px;font-size:13px;color:#666;">Price</th>
+</tr>
+
+ ${itemRows}
+
+</table>
+
+</td>
+</tr>
+
+<!-- TOTAL -->
+<tr>
+<td style="padding-top:20px;border-top:1px solid #eee;">
+
+<table width="100%">
+
+<tr>
+<td style="font-size:14px;color:#666;">Subtotal</td>
+<td align="right" style="font-size:14px;color:#333;">RM ${formatRM(subtotal)}</td>
+</tr>
+
+ ${discount > 0 ? `
+<tr>
+<td style="font-size:14px;color:#dc2626;">Discount</td>
+<td align="right" style="font-size:14px;color:#dc2626;">-RM ${formatRM(discount)}</td>
+</tr>
+` : ''}
+
+<tr>
+<td style="font-size:14px;color:#666;">Tax</td>
+<td align="right" style="font-size:14px;color:#333;">RM ${formatRM(tax)}</td>
+</tr>
+
+<tr>
+<td style="padding-top:10px;font-size:16px;font-weight:bold;color:#111;">
+Total
+</td>
+<td align="right" style="padding-top:10px;font-size:16px;font-weight:bold;color:#111;">
+RM ${formatRM(total)}
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+<td style="padding-top:25px;border-top:1px solid #eee;">
+
+<p style="margin:0;font-size:13px;color:#777;">
+If you have any questions, please reply to this email.
+</p>
+
+<p style="margin:6px 0 0;font-size:13px;color:#999;">
+© 2026 DDNEX. All rights reserved.
+</p>
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
 </body>
 </html>
             `;
