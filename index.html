@@ -2417,7 +2417,7 @@ const generateSummarizedEmailHTML = (doc) => {
 };
 
 // =========================================
-// FULL TEMPLATE HTML - A4 Print Version (UPDATED)
+// FULL TEMPLATE HTML - A4 Print Version (ADJUSTABLE & CENTERED)
 // =========================================
 const generateFullTemplateHTML = (doc) => {
     const isQuotation = doc.type === 'Quotation';
@@ -2558,35 +2558,27 @@ const generateFullTemplateHTML = (doc) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${docTitle} - ${docNumber}</title>
     <style>
+        /* ========================================
+           ADJUSTABLE SIZE VARIABLES
+           Change these values to customize size
+           ======================================== */
+        :root {
+            --page-width: 210mm;    /* Default A4 Width */
+            --page-height: 297mm;   /* Default A4 Height */
+            --page-padding: 20mm;   /* Margin inside the page */
+        }
+
+        /* Print Rules */
         @page {
-            size: A4;
+            size: var(--page-width) var(--page-height);
             margin: 0;
         }
-        @media print {
-            html, body {
-                width: 210mm;
-                height: 297mm;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            .page {
-                width: 210mm;
-                min-height: 297mm;
-                padding: 20mm;
-                margin: 0;
-                box-shadow: none;
-            }
+
+        /* General Reset */
+        * {
+            box-sizing: border-box;
         }
-        @media screen {
-            .page {
-                width: 210mm;
-                min-height: 297mm;
-                padding: 20mm;
-                margin: 20px auto;
-                box-shadow: 0 0 20px rgba(0,0,0,0.1);
-                background: white;
-            }
-        }
+
         body {
             margin: 0;
             padding: 0;
@@ -2594,6 +2586,45 @@ const generateFullTemplateHTML = (doc) => {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            
+            /* Centering Mechanism */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* The Page Container */
+        .page {
+            width: var(--page-width);
+            min-height: var(--page-height);
+            padding: var(--page-padding);
+            background: white;
+            position: relative; /* Needed for absolute footer positioning */
+            overflow: hidden; /* Prevents content bleed */
+        }
+
+        /* Screen View Shadow */
+        @media screen {
+            .page {
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+                margin: 40px 0;
+            }
+        }
+
+        /* Print View */
+        @media print {
+            body {
+                background: none;
+                min-height: auto;
+                display: block; /* Reset flex for printing */
+            }
+            .page {
+                margin: 0;
+                box-shadow: none;
+                /* Force page breaks correctly */
+                page-break-after: always; 
+            }
         }
     </style>
 </head>
@@ -2722,7 +2753,7 @@ const generateFullTemplateHTML = (doc) => {
         </div>
         
         <!-- FOOTER -->
-        <div style="position:absolute;bottom:20mm;left:20mm;right:20mm;border-top:1px solid #e5e7eb;padding-top:16px;text-align:center;">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:var(--page-padding);padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;">
             <p style="margin:0;font-size:9px;color:#9ca3af;">
                 This document was generated electronically by the DDNEX Billing System
             </p>
