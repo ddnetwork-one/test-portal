@@ -1370,43 +1370,70 @@
         }
         @media(max-width: 768px) { .mobile-menu-btn { display: flex; } }
         
-        /* Print Styles - A4 Full Page */
-        @media print {
-            @page {
-                size: A4;
-                margin: 0;
-            }
-            
-            body * { visibility: hidden; }
-            #printArea, #printArea * { visibility: visible; }
-            #printArea { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 210mm;
-                height: 297mm;
-                min-height: 297mm;
-                background: white; 
-                padding: 0;
-                margin: 0;
-            }
-            
-            #printArea .print-container {
-                width: 100%;
-                height: 100%;
-                min-height: 297mm;
-                padding: 15mm 20mm;
-                box-sizing: border-box;
-            }
-            
-            .no-print { display: none !important; }
-            
-            /* Force full page */
-            html, body {
-                width: 210mm;
-                height: 297mm;
-            }
-        }
+/* Print Styles - A4 Full Page Single Sheet */
+@media print {
+    @page {
+        size: A4;
+        margin: 0;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    
+    body * {
+        visibility: hidden;
+    }
+    
+    #printArea,
+    #printArea * {
+        visibility: visible;
+    }
+    
+    #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 210mm;
+        height: 297mm;
+        min-height: 297mm;
+        max-height: 297mm;
+        background: white;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+    }
+    
+    #printArea .print-container {
+        width: 210mm;
+        height: 297mm;
+        min-height: 297mm;
+        max-height: 297mm;
+        padding: 12mm 18mm;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        page-break-after: avoid;
+        page-break-before: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    /* Force single page */
+    html, body {
+        width: 210mm;
+        height: 297mm;
+    }
+    
+    /* Prevent page breaks */
+    #printArea * {
+        page-break-inside: avoid;
+    }
+}
     </style>
 </head>
 <body>
@@ -2484,133 +2511,133 @@
             `;
         };
 
-        // =========================================
-        // FULL TEMPLATE HTML - For PDF/Download (A4 Full Page)
-        // =========================================
-        const generateFullTemplateHTML = (doc) => {
-            const isQuotation = doc.type === 'Quotation';
-            const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
-            const clientName = doc.clientName || doc.customerName || 'Client';
-            const docNumber = doc.number || doc.id;
-            const dateStr = formatDateLong(doc.date || doc.createdAt);
-            
-            let validUntil = '-';
-            if (isQuotation) {
-                let d = new Date(doc.date || doc.createdAt);
-                d.setDate(d.getDate() + 16);
-                validUntil = formatDateLong(d);
-            }
+// =========================================
+// FULL TEMPLATE HTML - For PDF/Download (A4 Full Page - Single Sheet)
+// =========================================
+const generateFullTemplateHTML = (doc) => {
+    const isQuotation = doc.type === 'Quotation';
+    const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
+    const clientName = doc.clientName || doc.customerName || 'Client';
+    const docNumber = doc.number || doc.id;
+    const dateStr = formatDateLong(doc.date || doc.createdAt);
+    
+    let validUntil = '-';
+    if (isQuotation) {
+        let d = new Date(doc.date || doc.createdAt);
+        d.setDate(d.getDate() + 16);
+        validUntil = formatDateLong(d);
+    }
 
-            let itemRows = '';
-            let subtotal = 0;
-            let itemNum = 1;
-            
-            let itemsList = [];
-            if (doc.items && Array.isArray(doc.items) && doc.items.length > 0) {
-                itemsList = doc.items;
-            } else if (doc.description || doc.subtotal || doc.price || doc.total) {
-                itemsList = [{
-                    description: doc.description || 'Professional Service',
-                    amount: parseFloat(doc.subtotal || doc.price || doc.total || 0)
-                }];
-            }
+    let itemRows = '';
+    let subtotal = 0;
+    let itemNum = 1;
+    
+    let itemsList = [];
+    if (doc.items && Array.isArray(doc.items) && doc.items.length > 0) {
+        itemsList = doc.items;
+    } else if (doc.description || doc.subtotal || doc.price || doc.total) {
+        itemsList = [{
+            description: doc.description || 'Professional Service',
+            amount: parseFloat(doc.subtotal || doc.price || doc.total || 0)
+        }];
+    }
 
-            const validItems = itemsList.filter(item => {
-                const hasDesc = item.description && item.description.trim() !== '';
-                const hasAmount = parseFloat(item.amount || 0) > 0;
-                return hasDesc || hasAmount;
-            });
+    const validItems = itemsList.filter(item => {
+        const hasDesc = item.description && item.description.trim() !== '';
+        const hasAmount = parseFloat(item.amount || 0) > 0;
+        return hasDesc || hasAmount;
+    });
 
-            if (validItems.length > 0) {
-                validItems.forEach(item => {
-                    const itemAmt = parseFloat(item.amount || 0);
-                    subtotal += itemAmt;
-                    itemRows += `
-                        <tr>
-                            <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${itemNum}</td>
-                            <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${item.description || 'Service'}</td>
-                            <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:15px;">${parseFloat(itemAmt).toLocaleString()}</td>
-                        </tr>
-                    `;
-                    itemNum++;
-                });
-            } else {
-                const fallbackAmt = parseFloat(doc.total || doc.grandTotal || doc.subtotal || doc.price || 0);
-                subtotal = fallbackAmt;
-                itemRows += `
-                    <tr>
-                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">1</td>
-                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">Professional Service</td>
-                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:15px;">${parseFloat(fallbackAmt).toLocaleString()}</td>
-                    </tr>
-                `;
-                itemNum = 2;
-            }
+    if (validItems.length > 0) {
+        validItems.forEach(item => {
+            const itemAmt = parseFloat(item.amount || 0);
+            subtotal += itemAmt;
+            itemRows += `
+                <tr>
+                    <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">${itemNum}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">${item.description || 'Service'}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:14px;">${parseFloat(itemAmt).toLocaleString()}</td>
+                </tr>
+            `;
+            itemNum++;
+        });
+    } else {
+        const fallbackAmt = parseFloat(doc.total || doc.grandTotal || doc.subtotal || doc.price || 0);
+        subtotal = fallbackAmt;
+        itemRows = `
+            <tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">1</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">Professional Service</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:14px;">${parseFloat(fallbackAmt).toLocaleString()}</td>
+            </tr>
+        `;
+        itemNum = 2;
+    }
 
-            if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
-                const months = doc.installmentMonths || 12;
-                const monthlyAmt = subtotal / months;
-                itemRows += `
-                    <tr>
-                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${itemNum}</td>
-                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${doc.paymentType} Installment Plan</td>
-                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:15px;">${parseFloat(monthlyAmt).toLocaleString()} / month</td>
-                    </tr>
-                `;
-                itemNum++;
-            }
+    if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
+        const months = doc.installmentMonths || 12;
+        const monthlyAmt = subtotal / months;
+        itemRows += `
+            <tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">${itemNum}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">${doc.paymentType} Installment Plan</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:14px;">${parseFloat(monthlyAmt).toLocaleString()} / month</td>
+            </tr>
+        `;
+        itemNum++;
+    }
 
-            if (doc.domain) {
-                itemRows += `
-                    <tr>
-                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${itemNum}</td>
-                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">Domain: ${doc.domain}</td>
-                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:15px;">-</td>
-                    </tr>
-                `;
-                itemNum++;
-            }
+    if (doc.domain) {
+        itemRows += `
+            <tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">${itemNum}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">Domain: ${doc.domain}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:14px;">-</td>
+            </tr>
+        `;
+        itemNum++;
+    }
 
-            const discount = parseFloat(doc.discount || 0);
-            const total = subtotal - discount;
-            
-            const transactionRef = doc.transactionRef || doc.number || doc.id;
+    const discount = parseFloat(doc.discount || 0);
+    const total = subtotal - discount;
+    
+    const transactionRef = doc.transactionRef || doc.number || doc.id;
 
-            const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
-                ? '<span style="display:inline-block;background:#22c55e;color:#ffffff;font-size:13px;font-weight:700;padding:8px 18px;border-radius:24px;">PAID</span>'
-                : '<span style="display:inline-block;background:#f59e0b;color:#ffffff;font-size:13px;font-weight:700;padding:8px 18px;border-radius:24px;">PENDING</span>';
+    const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
+        ? '<span style="display:inline-block;background:#22c55e;color:#ffffff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;">PAID</span>'
+        : '<span style="display:inline-block;background:#f59e0b;color:#ffffff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;">PENDING</span>';
 
-            let paymentDetailsSection = '';
-            if (!isQuotation) {
-                paymentDetailsSection = `
-                    <div style="margin-top:30px;background:#f7f7f7;padding:20px;border-radius:12px;font-size:15px;line-height:1.8;">
-                        <strong style="font-size:16px;">Payment Details</strong><br><br>
-                        Payment Method: Online Transfer<br>
-                        Transaction Reference: ${transactionRef}
-                    </div>
-                `;
-            }
+    let paymentDetailsSection = '';
+    if (!isQuotation) {
+        paymentDetailsSection = `
+            <div style="margin-top:20px;background:#f7f7f7;padding:14px;border-radius:10px;font-size:13px;line-height:1.7;">
+                <strong style="font-size:14px;">Payment Details</strong><br><br>
+                Payment Method: Online Transfer<br>
+                Transaction Reference: ${transactionRef}
+            </div>
+        `;
+    }
 
-            let termsList = '';
-            if (isQuotation) {
-                termsList = `
-                    <li style="margin-bottom:10px;line-height:1.6;">This quotation is valid for 16 days from the date issued.</li>
-                    <li style="margin-bottom:10px;line-height:1.6;">Services delivered via DDNEX secure portal.</li>
-                    <li style="margin-bottom:10px;line-height:1.6;">50% deposit required to commence project.</li>
-                    <li style="margin-bottom:10px;line-height:1.6;">Balance payment due upon project completion.</li>
-                    <li style="margin-bottom:10px;line-height:1.6;">Full policies and terms are available on the official DDNEX website.</li>
-                `;
-            } else {
-                termsList = `
-                    <li style="margin-bottom:10px;line-height:1.6;">This receipt confirms that payment has been successfully received by DDNEX.</li>
-                    <li style="margin-bottom:10px;line-height:1.6;">The service includes system setup, hosting, and maintenance under the agreed subscription plan.</li>
-                    <li style="margin-bottom:10px;line-height:1.6;">All payments made are non-refundable once service deployment has commenced.</li>
-                    <li style="margin-bottom:10px;line-height:1.6;">DDNEX reserves the right to update service policies or operational terms when required.</li>
-                    <li style="margin-bottom:10px;line-height:1.6;">Full policies and terms are available on the official DDNEX website.</li>
-                `;
-            }
+    let termsList = '';
+    if (isQuotation) {
+        termsList = `
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">This quotation is valid for 16 days from the date issued.</li>
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">Services delivered via DDNEX secure portal.</li>
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">50% deposit required to commence project.</li>
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">Balance payment due upon project completion.</li>
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">Full policies and terms are available on the official DDNEX website.</li>
+        `;
+    } else {
+        termsList = `
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">This receipt confirms that payment has been successfully received by DDNEX.</li>
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">The service includes system setup, hosting, and maintenance under the agreed subscription plan.</li>
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">All payments made are non-refundable once service deployment has commenced.</li>
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">DDNEX reserves the right to update service policies or operational terms when required.</li>
+            <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">Full policies and terms are available on the official DDNEX website.</li>
+        `;
+    }
 
-            return `
+    return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2631,35 +2658,44 @@
             width: 210mm;
             height: 297mm;
             min-height: 297mm;
+            max-height: 297mm;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
             background: #ffffff;
+            overflow: hidden;
         }
         .print-container {
             width: 210mm;
             height: 297mm;
             min-height: 297mm;
-            padding: 18mm 22mm;
+            max-height: 297mm;
+            padding: 14mm 20mm;
             display: flex;
             flex-direction: column;
+            page-break-after: avoid;
+            page-break-before: avoid;
+            page-break-inside: avoid;
+        }
+        .print-container * {
+            page-break-inside: avoid;
         }
         .header-section {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 40px;
+            margin-bottom: 24px;
         }
         .company-info {
             max-width: 55%;
         }
         .company-logo {
-            max-width: 130px;
-            margin-bottom: 14px;
+            max-width: 110px;
+            margin-bottom: 10px;
         }
         .company-details {
-            font-size: 13px;
+            font-size: 11px;
             color: #6e6e73;
-            line-height: 1.7;
+            line-height: 1.6;
         }
         .company-details strong {
             color: #1d1d1f;
@@ -2668,92 +2704,92 @@
             text-align: right;
         }
         .status-badge-container {
-            margin-bottom: 12px;
-        }
-        .doc-title {
-            font-size: 15px;
-            font-weight: 600;
             margin-bottom: 8px;
         }
+        .doc-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
         .doc-meta {
-            font-size: 14px;
-            line-height: 1.8;
+            font-size: 12px;
+            line-height: 1.7;
         }
         .bill-to-section {
-            margin-bottom: 36px;
+            margin-bottom: 20px;
         }
         .bill-to-title {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 600;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             color: #1d1d1f;
         }
         .bill-to-details {
-            font-size: 15px;
-            line-height: 1.7;
+            font-size: 13px;
+            line-height: 1.6;
         }
         .services-section {
             flex: 1;
-            margin-bottom: 30px;
+            margin-bottom: 16px;
         }
         .services-title {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 600;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             color: #1d1d1f;
         }
         .services-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 15px;
+            font-size: 13px;
         }
         .services-table th {
-            padding: 14px 16px;
+            padding: 10px 12px;
             text-align: left;
             border-bottom: 1px solid #e5e5ea;
             background: #f7f7f7;
             font-weight: 500;
             color: #6e6e73;
-            font-size: 13px;
+            font-size: 11px;
         }
         .services-table td {
-            padding: 14px 16px;
+            padding: 10px 12px;
             border-bottom: 1px solid #e5e5ea;
         }
         .payment-section {
-            margin-top: 28px;
+            margin-top: 16px;
             background: #f7f7f7;
-            padding: 20px;
-            border-radius: 12px;
-            font-size: 15px;
-            line-height: 1.8;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.7;
         }
         .terms-section {
             margin-bottom: auto;
         }
         .terms-title {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 600;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             color: #1d1d1f;
         }
         .terms-box {
             background: #fafafa;
-            padding: 20px;
-            border-radius: 12px;
-            font-size: 14px;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 12px;
             color: #6e6e73;
-            line-height: 1.7;
+            line-height: 1.5;
         }
         .terms-box ul {
-            padding-left: 20px;
+            padding-left: 18px;
         }
         .footer-section {
-            margin-top: 40px;
-            padding-top: 18px;
+            margin-top: auto;
+            padding-top: 14px;
             border-top: 1px solid #e5e5ea;
             text-align: center;
-            font-size: 12px;
+            font-size: 10px;
             color: #8e8e93;
         }
     </style>
@@ -2799,9 +2835,9 @@
             <table class="services-table">
                 <thead>
                     <tr>
-                        <th width="60">Item</th>
+                        <th width="50">Item</th>
                         <th>Description</th>
-                        <th width="160" style="text-align:right;">Amount (RM)</th>
+                        <th width="140" style="text-align:right;">Amount (RM)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -2814,8 +2850,8 @@
                     </tr>
                     ` : ''}
                     <tr>
-                        <td colspan="2" style="padding:18px 16px;text-align:right;font-weight:600;font-size:17px;border:none;">${isQuotation ? 'Total' : 'Total Paid'}</td>
-                        <td style="padding:18px 16px;text-align:right;font-weight:700;font-size:17px;border:none;">RM ${parseFloat(total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td colspan="2" style="padding:12px;text-align:right;font-weight:600;font-size:15px;border:none;">${isQuotation ? 'Total' : 'Total Paid'}</td>
+                        <td style="padding:12px;text-align:right;font-weight:700;font-size:15px;border:none;">RM ${parseFloat(total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     </tr>
                 </tbody>
             </table>
@@ -2834,15 +2870,15 @@
         
         <!-- Footer -->
         <div class="footer-section">
-            <p style="margin:0 0 4px 0;">${isQuotation ? 'Quotation' : 'Invoice'} generated automatically by the DDNEX Billing System</p>
+            <p style="margin:0 0 3px 0;">${isQuotation ? 'Quotation' : 'Invoice'} generated automatically by the DDNEX Billing System</p>
             <p style="margin:0;">support@ddnex.com</p>
         </div>
         
     </div>
 </body>
 </html>
-            `;
-        };
+    `;
+};
 
         // ================== SECTION RENDERERS ==================
 
