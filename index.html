@@ -3527,6 +3527,7 @@ const generateFullTemplateHTML = (doc) => {
                              <button class="btn btn-success" onclick="saveInvoice('${id}')"><i class="ri-save-line"></i> Save</button>
                              <button class="btn btn-primary" onclick="printDocument('${id}', 'Invoice')"><i class="ri-printer-line"></i> Print</button>
                              <button class="btn btn-outline" onclick="openEmailTemplateModal('${id}', 'Invoice')"><i class="ri-mail-line"></i> Email</button>
+                             <button class="btn btn-danger" onclick="deleteDocGeneric('${id}', 'Invoice')"><i class="ri-delete-bin-line"></i> Delete</button>
                         </div>
                     </div>
                     
@@ -3887,13 +3888,55 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
+        // FIXED: Commit Invoice - Now auto-saves before changing status
         window.commitInvoice = async (id) => {
-            if(confirm("Commit this invoice? Status will change to 'Unpaid' and can be printed.")) {
-                const data = await window.dbOperations.getOrder(id);
-                if(data) {
-                    await window.dbOperations.setOrder(id, { status: 'Unpaid' });
-                    showPopup("Committed", "Invoice is now ready for client.");
+            if(confirm("Commit this invoice? This will save all changes and change status to 'Unpaid'. The invoice will then be ready for printing and emailing.")) {
+                showLoading("Saving and committing...");
+                
+                // First, gather all current form data
+                const type = window.currentPaymentType || 'One-Time';
+                let months = 1;
+                if(type === '12-Month') months = 12;
+                if(type === '24-Month') months = 24;
+
+                const subtotal = window.currentItems.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+                const discount = parseFloat(document.getElementById('editDiscount')?.value || 0);
+                const grandTotal = subtotal - discount;
+                const monthlyAmount = grandTotal / months;
+                const cycle = parseInt(document.getElementById('editCycle')?.value || 1);
+
+                const invoiceTotal = (type === 'One-Time') ? grandTotal : monthlyAmount;
+
+                const data = {
+                    number: id,
+                    clientName: document.getElementById('editClient')?.value || '',
+                    clientAddress: document.getElementById('editClientAddress')?.value || '',
+                    attnTo: document.getElementById('editAttn')?.value || '',
+                    domain: document.getElementById('editDomain')?.value || '', 
+                    date: document.getElementById('editDate')?.value || new Date().toISOString().split('T')[0],
+                    status: 'Unpaid', // Set status to Unpaid
+                    items: window.currentItems,
+                    discount: discount,
+                    total: invoiceTotal, 
+                    grandTotal: grandTotal, 
+                    subtotal: subtotal,
+                    paymentType: type,
+                    installmentMonths: months,
+                    installmentCycle: cycle,
+                    type: 'Invoice',
+                    updatedAt: new Date()
+                };
+
+                try {
+                    await window.dbOperations.setOrder(id, data);
+                    hideLoading();
+                    showPopup("Committed", "Invoice has been saved and committed successfully. Status is now 'Unpaid'.");
+                    // Re-render the editor to reflect the new status
                     renderInvoiceEditor(id);
+                } catch (error) {
+                    console.error("Error committing invoice:", error);
+                    hideLoading();
+                    showPopup("Error", "Failed to commit invoice. Please try again.", false);
                 }
             }
         };
@@ -3933,9 +3976,15 @@ const generateFullTemplateHTML = (doc) => {
             };
 
             showLoading("Saving...");
-            await window.dbOperations.setOrder(id, data);
-            hideLoading();
-            showPopup("Success", "Invoice saved successfully.");
+            try {
+                await window.dbOperations.setOrder(id, data);
+                hideLoading();
+                showPopup("Success", "Invoice saved successfully.");
+            } catch (error) {
+                console.error("Error saving invoice:", error);
+                hideLoading();
+                showPopup("Error", "Failed to save invoice. Please try again.", false);
+            }
         };
 
         // --- QUOTATION EDITOR (Updated with Address & Attn) ---
@@ -3980,6 +4029,7 @@ const generateFullTemplateHTML = (doc) => {
                              <button class="btn btn-success" onclick="saveQuotation('${id}')"><i class="ri-save-line"></i> Save Quotation</button>
                              <button class="btn btn-primary" onclick="printDocument('${id}', 'Quotation')"><i class="ri-printer-line"></i> Print</button>
                              <button class="btn btn-outline" onclick="openEmailTemplateModal('${id}', 'Quotation')"><i class="ri-mail-line"></i> Email</button>
+                             <button class="btn btn-danger" onclick="deleteDocGeneric('${id}', 'Quotation')"><i class="ri-delete-bin-line"></i> Delete</button>
                         </div>
                     </div>
                     
@@ -4178,13 +4228,41 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
+        // FIXED: Commit Quotation - Now auto-saves before changing status
         window.commitQuotation = async (id) => {
-            if(confirm("Commit this quotation? Status will change to 'Pending'.")) {
-                const data = await window.dbOperations.getQuotation(id);
-                if(data) {
-                    await window.dbOperations.setQuotation(id, { status: 'Pending' });
-                    showPopup("Committed", "Quotation is now ready for client.");
+            if(confirm("Commit this quotation? This will save all changes and change status to 'Pending'. The quotation will then be ready for sending to client.")) {
+                showLoading("Saving and committing...");
+                
+                // First, gather all current form data
+                const subtotal = window.currentQuotationItems.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+                const discount = parseFloat(document.getElementById('editQDiscount')?.value || 0);
+                const total = subtotal - discount;
+
+                const data = {
+                    number: id,
+                    clientName: document.getElementById('editQClient')?.value || '',
+                    clientAddress: document.getElementById('editQClientAddress')?.value || '',
+                    attnTo: document.getElementById('editQAttn')?.value || '',
+                    date: document.getElementById('editQDate')?.value || new Date().toISOString().split('T')[0],
+                    status: 'Pending', // Set status to Pending
+                    items: window.currentQuotationItems,
+                    discount: discount,
+                    subtotal: subtotal,
+                    total: total,
+                    type: 'Quotation',
+                    updatedAt: new Date()
+                };
+
+                try {
+                    await window.dbOperations.setQuotation(id, data);
+                    hideLoading();
+                    showPopup("Committed", "Quotation has been saved and committed successfully. Status is now 'Pending'.");
+                    // Re-render the editor to reflect the new status
                     renderQuotationEditor(id);
+                } catch (error) {
+                    console.error("Error committing quotation:", error);
+                    hideLoading();
+                    showPopup("Error", "Failed to commit quotation. Please try again.", false);
                 }
             }
         };
@@ -4210,9 +4288,15 @@ const generateFullTemplateHTML = (doc) => {
             };
 
             showLoading("Saving...");
-            await window.dbOperations.setQuotation(id, data);
-            hideLoading();
-            showPopup("Success", "Quotation saved successfully.");
+            try {
+                await window.dbOperations.setQuotation(id, data);
+                hideLoading();
+                showPopup("Success", "Quotation saved successfully.");
+            } catch (error) {
+                console.error("Error saving quotation:", error);
+                hideLoading();
+                showPopup("Error", "Failed to save quotation. Please try again.", false);
+            }
         };
 
         window.convertToInvoice = async (qId) => {
@@ -4244,14 +4328,29 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
         
+        // FIXED: Delete Document - Now properly deletes and navigates back
         window.deleteDocGeneric = async (id, type) => {
-            if(confirm("Delete this document?")) {
+            if(confirm(`Are you sure you want to delete this ${type}? This action cannot be undone.`)) {
                 showLoading("Deleting...");
-                if(type === 'Quotation') await window.dbOperations.deleteQuotation(id);
-                else await window.dbOperations.deleteOrder(id);
-                hideLoading();
-                if(type === 'Quotation') renderQuotationsSection();
-                else renderCashbillSection();
+                try {
+                    if(type === 'Quotation') {
+                        await window.dbOperations.deleteQuotation(id);
+                        hideLoading();
+                        showPopup("Deleted", "Quotation has been deleted successfully.", true, () => {
+                            navigateTo('/quotations');
+                        });
+                    } else {
+                        await window.dbOperations.deleteOrder(id);
+                        hideLoading();
+                        showPopup("Deleted", "Invoice has been deleted successfully.", true, () => {
+                            navigateTo('/cashbill');
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error deleting document:", error);
+                    hideLoading();
+                    showPopup("Error", "Failed to delete document. Please try again.", false);
+                }
             }
         };
 
