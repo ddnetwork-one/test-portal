@@ -179,6 +179,14 @@
             box-shadow: var(--shadow-xl), 0 0 80px rgba(15, 98, 254, 0.1);
             animation: slideUp 0.6s var(--ease-bounce);
         }
+        .login-card.error-shake {
+            animation: slideUp 0.6s var(--ease-bounce), shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+            20%, 40%, 60%, 80% { transform: translateX(8px); }
+        }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -213,6 +221,32 @@
         .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); outline: none; }
         .form-input:focus + i, .form-input-wrapper:has(.form-input:focus) i { color: var(--primary); }
         
+        /* Error state for form inputs */
+        .form-input.error {
+            border-color: var(--accent-red);
+            background: #fef2f2;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+        .form-input.error + i { color: var(--accent-red); }
+        
+        /* Login error message */
+        .login-error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: flex-start;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        .login-error-message.show { display: flex; }
+        .login-error-message i { color: var(--accent-red); font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+        .login-error-message .error-content { flex: 1; }
+        .login-error-message .error-title { font-weight: 600; color: #991b1b; font-size: 14px; margin-bottom: 4px; }
+        .login-error-message .error-text { font-size: 13px; color: #b91c1c; line-height: 1.5; }
+        
         .btn-login {
             width: 100%;
             padding: 14px;
@@ -231,6 +265,21 @@
         .btn-login:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4); }
         .btn-login:active { transform: translateY(0); }
         .btn-login:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        /* Reset password link */
+        .reset-password-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-light);
+        }
+        .reset-password-link button {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .reset-password-link button:hover { color: var(--primary-dark); text-decoration: underline; }
 
         /* =========================================
            DASHBOARD LAYOUT
@@ -254,6 +303,12 @@
             box-shadow: var(--shadow-sm);
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); }
+        .sidebar.fully-hidden { 
+            width: 0; 
+            transform: translateX(-100%);
+            border-right: none;
+            box-shadow: none;
+        }
         .sidebar-header {
             height: var(--header-height);
             padding: 0 20px;
@@ -261,11 +316,13 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--border-light);
+            min-width: 0;
         }
         .sidebar-logo { display: flex; align-items: center; gap: 10px; overflow: hidden; }
         .sidebar-logo img { height: 32px; flex-shrink: 0; }
         .sidebar-logo span { font-weight: 800; font-size: 18px; font-family: var(--font-heading); white-space: nowrap; transition: opacity 0.2s; }
         .sidebar.collapsed .sidebar-logo span { opacity: 0; width: 0; }
+        .sidebar.fully-hidden .sidebar-logo span { opacity: 0; width: 0; }
         .sidebar-toggle {
             width: 32px; height: 32px;
             border-radius: 8px;
@@ -279,7 +336,20 @@
         .sidebar-toggle:hover { background: var(--bg-body); color: var(--primary); }
         .sidebar.collapsed .sidebar-toggle i { transform: rotate(180deg); }
         
-        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        /* Sidebar menu toggle button (separate from collapse) */
+        .sidebar-menu-toggle {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .sidebar-menu-toggle:hover { background: var(--bg-body); color: var(--primary); }
+        
+        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; overflow-x: hidden; }
         .nav-section-title {
             font-size: 11px;
             font-weight: 700;
@@ -293,6 +363,7 @@
             transition: opacity 0.2s;
         }
         .sidebar.collapsed .nav-section-title { opacity: 0; }
+        .sidebar.fully-hidden .nav-section-title { opacity: 0; }
         .nav-item {
             display: flex;
             align-items: center;
@@ -310,6 +381,7 @@
         .nav-item i { font-size: 20px; flex-shrink: 0; width: 24px; text-align: center; }
         .nav-item span { white-space: nowrap; transition: opacity 0.2s; }
         .sidebar.collapsed .nav-item span { opacity: 0; width: 0; }
+        .sidebar.fully-hidden .nav-item span { opacity: 0; width: 0; }
         .nav-item:hover { background: var(--bg-body); color: var(--text-main); }
         .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
         .nav-item.active::before {
@@ -345,6 +417,7 @@
         }
         .user-info-mini { white-space: nowrap; overflow: hidden; transition: opacity 0.2s; }
         .sidebar.collapsed .user-info-mini { opacity: 0; width: 0; }
+        .sidebar.fully-hidden .user-info-mini { opacity: 0; width: 0; }
         .user-info-mini .name { font-weight: 600; font-size: 14px; }
         .user-info-mini .role { font-size: 12px; color: var(--text-muted); }
         .btn-logout {
@@ -365,10 +438,12 @@
         .btn-logout:hover { border-color: var(--accent-red); color: var(--accent-red); background: #fef2f2; }
         .btn-logout span { transition: opacity 0.2s; }
         .sidebar.collapsed .btn-logout span { display: none; }
+        .sidebar.fully-hidden .btn-logout span { display: none; }
 
         /* Main Content Area */
         .main-wrapper { flex: 1; margin-left: var(--sidebar-width); transition: margin-left 0.3s var(--ease); min-height: 100vh; display: flex; flex-direction: column; }
         .sidebar.collapsed ~ .main-wrapper { margin-left: var(--sidebar-collapsed); }
+        .sidebar.fully-hidden ~ .main-wrapper { margin-left: 0; }
 
         /* Top Header */
         .top-header {
@@ -1525,7 +1600,7 @@
     <!-- Login Page -->
     <div class="login-page hidden" id="loginPage">
         <div class="login-bg-grid"></div>
-        <div class="login-card">
+        <div class="login-card" id="loginCard">
             <div class="login-logo">
                 <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX®">
                 <span>Portal</span>
@@ -1533,6 +1608,15 @@
             <div class="login-title">
                 <h1>Internal Access</h1>
                 <p>Sign in to access DDNEX Management System</p>
+            </div>
+
+            <!-- Login Error Message -->
+            <div class="login-error-message" id="loginErrorMsg">
+                <i class="ri-error-warning-fill"></i>
+                <div class="error-content">
+                    <div class="error-title">Incorrect password.</div>
+                    <div class="error-text">If you are experiencing difficulties, please contact IT Support.</div>
+                </div>
             </div>
 
             <form id="loginForm" onsubmit="handleLogin(event)">
@@ -1556,6 +1640,11 @@
                 </button>
             </form>
             
+            <!-- Reset Password Link -->
+            <div class="reset-password-link">
+                <button type="button" onclick="openResetPasswordModal()">Forgot your password? Reset it here</button>
+            </div>
+            
             <div style="margin-top: 20px; text-align: center; font-size: 11px; color: var(--text-muted);">
                 <p>DDNEX Internal Management System v2.5</p>
                 <p style="margin-top: 4px;">Authorized Personnel Only</p>
@@ -1572,11 +1661,16 @@
                     <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX®">
                     <span>Portal</span>
                 </div>
-                <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
-                    <i class="ri-arrow-left-s-line"></i>
-                </button>
+                <div style="display: flex; gap: 4px;">
+                    <button class="sidebar-menu-toggle" onclick="toggleSidebarMenu()" aria-label="Toggle Menu" title="Hide/Show Menu">
+                        <i class="ri-menu-fold-line" id="menuToggleIcon"></i>
+                    </button>
+                    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar" title="Collapse/Expand Sidebar">
+                        <i class="ri-arrow-left-s-line"></i>
+                    </button>
+                </div>
             </div>
-            <nav class="sidebar-nav">
+            <nav class="sidebar-nav" id="sidebarNav">
                 <div class="nav-section-title">Main Menu</div>
                 <div class="nav-item" data-route="/dashboard">
                     <i class="ri-dashboard-line"></i>
@@ -1619,7 +1713,7 @@
                     <span>Profile</span>
                 </div>
             </nav>
-            <div class="sidebar-footer">
+            <div class="sidebar-footer" id="sidebarFooter">
                 <div class="user-mini-card">
                     <div class="user-avatar" id="sidebarAvatar">DD</div>
                     <div class="user-info-mini">
@@ -1819,9 +1913,10 @@
                     
                     if (userData.password === password) {
                         if (userData.status === 'suspended') {
-                            window.showPopup("Access Denied", "Your account has been suspended.", false);
+                            window.showLoginError("Access Denied", "Your account has been suspended. Please contact IT Support.");
                             return;
                         }
+                        window.clearLoginError();
                         window.onUserLoggedIn({ 
                             uid: userDoc.id, 
                             displayName: userData.name, 
@@ -1830,14 +1925,14 @@
                             userId: userData.userId
                         });
                     } else {
-                        window.showPopup("Login Failed", "Invalid User ID or Password.", false);
+                        window.showLoginError("Incorrect password.", "If you are experiencing difficulties, please contact IT Support.");
                     }
                 } else {
-                    window.showPopup("Login Failed", "User not found.", false);
+                    window.showLoginError("Incorrect password.", "If you are experiencing difficulties, please contact IT Support.");
                 }
             } catch (error) {
                 console.error(error);
-                window.showPopup("Error", "Connection error. Try again.", false);
+                window.showLoginError("Connection Error", "Unable to connect. Please try again.");
             }
         };
 
@@ -1942,6 +2037,9 @@
         let currentRoute = '/auth/login';
         let emailLastSentTimestamp = localStorage.getItem('ddnex_last_email_sent') ? parseInt(localStorage.getItem('ddnex_last_email_sent')) : 0;
         
+        // Sidebar State
+        let sidebarMenuHidden = false;
+        
         // Pagination State
         let invoicePageState = { page: 1, perPage: 20, filteredData: [] };
         let quotationPageState = { page: 1, perPage: 20, filteredData: [] };
@@ -1952,6 +2050,110 @@
             'Business Website': 899,
             'Business Portal System': 3800,
             'Custom System': 6800
+        };
+
+        // =========================================
+        // LOGIN ERROR HANDLING
+        // =========================================
+        window.showLoginError = (title, message) => {
+            const errorBox = document.getElementById('loginErrorMsg');
+            const loginCard = document.getElementById('loginCard');
+            const passwordInput = document.getElementById('password');
+            
+            errorBox.querySelector('.error-title').textContent = title;
+            errorBox.querySelector('.error-text').textContent = message;
+            errorBox.classList.add('show');
+            loginCard.classList.add('error-shake');
+            passwordInput.classList.add('error');
+            
+            setTimeout(() => {
+                loginCard.classList.remove('error-shake');
+            }, 500);
+        };
+
+        window.clearLoginError = () => {
+            const errorBox = document.getElementById('loginErrorMsg');
+            const passwordInput = document.getElementById('password');
+            
+            errorBox.classList.remove('show');
+            passwordInput.classList.remove('error');
+        };
+
+        // =========================================
+        // RESET PASSWORD MODAL
+        // =========================================
+        window.openResetPasswordModal = () => {
+            openModal('Reset Password', `
+                <div class="form-group-modal">
+                    <label>Your Email Address</label>
+                    <input type="email" id="resetEmail" placeholder="Enter your registered email">
+                </div>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
+                    A password reset link will be sent to your email address if an account exists.
+                </p>
+            `, async () => {
+                const email = document.getElementById('resetEmail').value;
+                if (!email) {
+                    showPopup("Error", "Please enter your email address.", false);
+                    return;
+                }
+                
+                showLoading("Sending reset link...");
+                
+                // Check if user exists with this email
+                try {
+                    const users = await window.dbOperations.getUsers();
+                    const user = users.find(u => u.email === email);
+                    
+                    if (user) {
+                        // Send password reset email via EmailJS
+                        const resetLink = `https://ddnex.com/reset-password?uid=${user.userId}`;
+                        const htmlContent = `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+                                <div style="text-align: center; margin-bottom: 30px;">
+                                    <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="max-width: 120px;">
+                                </div>
+                                <div style="background: #ffffff; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0;">
+                                    <h2 style="color: #0f172a; margin-bottom: 16px;">Password Reset Request</h2>
+                                    <p style="color: #475569; font-size: 15px; margin-bottom: 20px;">
+                                        Hello ${user.name},<br><br>
+                                        We received a request to reset your password. Your current login details are:
+                                    </p>
+                                    <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                                        <p style="margin: 0; font-size: 14px;"><strong>User ID:</strong> ${user.userId}</p>
+                                        <p style="margin: 8px 0 0 0; font-size: 14px;"><strong>Password:</strong> ${user.password}</p>
+                                    </div>
+                                    <p style="color: #64748b; font-size: 13px;">
+                                        If you did not request this, please ignore this email or contact IT Support.
+                                    </p>
+                                </div>
+                                <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 24px;">
+                                    © 2025 DDNEX. All rights reserved.
+                                </p>
+                            </div>
+                        `;
+                        
+                        const result = await sendEmailViaEmailJS(email, user.name, 'DDNEX Password Reset', htmlContent);
+                        
+                        hideLoading();
+                        closeModal();
+                        
+                        if (result.success) {
+                            showPopup("Email Sent", "Your password has been sent to your email address. Please check your inbox.", true);
+                        } else {
+                            showPopup("Error", "Failed to send reset email. Please contact IT Support.", false);
+                        }
+                    } else {
+                        hideLoading();
+                        closeModal();
+                        showPopup("Email Sent", "If an account exists with this email, you will receive a reset link.", true);
+                    }
+                } catch (error) {
+                    console.error("Reset password error:", error);
+                    hideLoading();
+                    showPopup("Error", "Failed to process request. Please try again.", false);
+                }
+            });
         };
 
         // =========================================
@@ -2185,6 +2387,7 @@
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('dashboardApp').classList.remove('visible');
             document.getElementById('loginForm').reset();
+            window.clearLoginError();
             window.history.pushState({ path: '/auth/login' }, '', '/auth/login');
         };
 
@@ -2262,10 +2465,29 @@
             closePopup();
         };
 
-        // Sidebar Toggle
+        // Sidebar Toggle - Collapse/Expand (icons only)
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
         }
+        
+        // Sidebar Menu Toggle - Fully Hide/Show
+        function toggleSidebarMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const menuIcon = document.getElementById('menuToggleIcon');
+            
+            sidebarMenuHidden = !sidebarMenuHidden;
+            
+            if (sidebarMenuHidden) {
+                sidebar.classList.add('fully-hidden');
+                sidebar.classList.remove('collapsed');
+                menuIcon.className = 'ri-menu-unfold-line';
+            } else {
+                sidebar.classList.remove('fully-hidden');
+                menuIcon.className = 'ri-menu-fold-line';
+            }
+        }
+        
         function toggleMobileSidebar() {
             document.getElementById('sidebar').classList.toggle('mobile-open');
         }
@@ -3311,7 +3533,7 @@ const generateFullTemplateHTML = (doc) => {
                 <td>${formatMYR(amount)}</td>
                 <td><span class="status ${statusClass}">${doc.status || 'Draft'}</span></td>
                 <td onclick="event.stopPropagation()">
-                    <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', 'Invoice')"><i class="ri-printer-line"></i></button>
+                    <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', 'Invoice', '${doc.number || doc.id}')"><i class="ri-printer-line"></i></button>
                     <button class="action-btn" title="Email" onclick="openEmailTemplateModal('${doc.id}', 'Invoice')"><i class="ri-mail-line"></i></button>
                     <button class="action-btn danger" title="Delete" onclick="deleteDocGeneric('${doc.id}', 'Invoice')"><i class="ri-delete-bin-line"></i></button>
                 </td>
@@ -3421,7 +3643,7 @@ const generateFullTemplateHTML = (doc) => {
                 <td>${formatMYR(amount)}</td>
                 <td><span class="status ${statusClass}">${doc.status || 'Draft'}</span></td>
                 <td onclick="event.stopPropagation()">
-                    <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', 'Quotation')"><i class="ri-printer-line"></i></button>
+                    <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', 'Quotation', '${doc.number || doc.id}')"><i class="ri-printer-line"></i></button>
                     <button class="action-btn" title="Email" onclick="openEmailTemplateModal('${doc.id}', 'Quotation')"><i class="ri-mail-line"></i></button>
                     <button class="action-btn danger" title="Delete" onclick="deleteDocGeneric('${doc.id}', 'Quotation')"><i class="ri-delete-bin-line"></i></button>
                 </td>
@@ -3558,7 +3780,7 @@ const generateFullTemplateHTML = (doc) => {
                                 <button class="btn btn-warning" onclick="commitInvoice('${id}')"><i class="ri-check-double-line"></i> Commit</button>
                              ` : ''}
                              <button class="btn btn-success" onclick="saveInvoice('${id}')"><i class="ri-save-line"></i> Save</button>
-                             <button class="btn btn-primary" onclick="printDocument('${id}', 'Invoice')"><i class="ri-printer-line"></i> Print</button>
+                             <button class="btn btn-primary" onclick="printDocument('${id}', 'Invoice', '${data.number || id}')"><i class="ri-printer-line"></i> Print</button>
                              <button class="btn btn-outline" onclick="openEmailTemplateModal('${id}', 'Invoice')"><i class="ri-mail-line"></i> Email</button>
                              <button class="btn btn-danger" onclick="deleteDocGeneric('${id}', 'Invoice')"><i class="ri-delete-bin-line"></i> Delete</button>
                         </div>
@@ -4057,7 +4279,7 @@ const generateFullTemplateHTML = (doc) => {
                                 <button class="btn btn-warning" onclick="commitQuotation('${id}')"><i class="ri-check-double-line"></i> Commit</button>
                              ` : ''}
                              <button class="btn btn-success" onclick="saveQuotation('${id}')"><i class="ri-save-line"></i> Save Quotation</button>
-                             <button class="btn btn-primary" onclick="printDocument('${id}', 'Quotation')"><i class="ri-printer-line"></i> Print</button>
+                             <button class="btn btn-primary" onclick="printDocument('${id}', 'Quotation', '${data.number || id}')"><i class="ri-printer-line"></i> Print</button>
                              <button class="btn btn-outline" onclick="openEmailTemplateModal('${id}', 'Quotation')"><i class="ri-mail-line"></i> Email</button>
                              <button class="btn btn-danger" onclick="deleteDocGeneric('${id}', 'Quotation')"><i class="ri-delete-bin-line"></i> Delete</button>
                         </div>
@@ -4540,7 +4762,7 @@ const generateFullTemplateHTML = (doc) => {
                             <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="btn btn-outline" onclick="copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Full HTML</button>
                                 <button class="btn btn-outline" onclick="downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
-                                <button class="btn btn-primary" onclick="printDocument('${id}', '${type}')"><i class="ri-printer-line"></i> Print PDF</button>
+                                <button class="btn btn-primary" onclick="printDocument('${id}', '${type}', '${doc.number || id}')"><i class="ri-printer-line"></i> Print PDF</button>
                             </div>
                             
                             <textarea id="emailCodeTextarea" style="width:100%; height:250px; font-family:monospace; font-size:11px; border:1px solid #e2e8f0; border-radius:8px; padding:12px; resize:vertical; margin-top:16px;" readonly>${fullTemplateHTML.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
@@ -4664,14 +4886,14 @@ const generateFullTemplateHTML = (doc) => {
             URL.revokeObjectURL(url);
         };
 
-        // Print Logic - Uses FULL template
-        window.printDocument = async (id, type) => {
+        // Print Logic - Uses FULL template - Now with custom PDF name
+        window.printDocument = async (id, type, docNumber) => {
             let doc;
             if (type === 'Quotation') {
                 doc = await window.dbOperations.getQuotation(id);
                 if(!doc) doc = { 
                     type: 'Quotation', 
-                    number: id, 
+                    number: docNumber || id, 
                     clientName: document.getElementById('editQClient')?.value || '',
                     clientAddress: document.getElementById('editQClientAddress')?.value || '',
                     attnTo: document.getElementById('editQAttn')?.value || '',
@@ -4683,7 +4905,7 @@ const generateFullTemplateHTML = (doc) => {
                 doc = await window.dbOperations.getOrder(id);
                 if(!doc) doc = { 
                     type: 'Invoice', 
-                    number: id, 
+                    number: docNumber || id, 
                     clientName: document.getElementById('editClient')?.value || '',
                     clientAddress: document.getElementById('editClientAddress')?.value || '',
                     attnTo: document.getElementById('editAttn')?.value || '',
@@ -4718,7 +4940,16 @@ const generateFullTemplateHTML = (doc) => {
             const printArea = document.getElementById('printArea');
             printArea.innerHTML = rawHtml;
             printArea.style.display = 'block';
+            
+            // Set document title for PDF name
+            const originalTitle = document.title;
+            document.title = docNumber || doc.number || id;
+            
             window.print();
+            
+            // Restore original title
+            document.title = originalTitle;
+            
             printArea.style.display = 'none';
         };
 
@@ -5373,4 +5604,3 @@ const generateFullTemplateHTML = (doc) => {
     </script>
 </body>
 </html>
-```
