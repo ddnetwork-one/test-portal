@@ -1709,20 +1709,6 @@
         };
 
         // =========================================
-        // PDF GENERATION HELPER (Data URI)
-        // =========================================
-        // Note: In a real production environment, generating a full PDF client-side 
-        // without a heavy library is limited. We use a Data URI that triggers a print dialog.
-        // This acts as a "Download PDF" link because browsers offer "Save as PDF" in print preview.
-        
-        const generatePdfDataUri = (htmlContent) => {
-            // We encode the HTML content. 
-            // When clicked, it opens the HTML. The user can then Print to PDF.
-            // Full PDF binary generation requires a library like jsPDF, which is excluded to keep code clean.
-            return 'data:text/html;charset=utf-8,' + encodeURIComponent(htmlContent);
-        };
-
-        // =========================================
         // EMAIL SENDING FUNCTION (EmailJS)
         // =========================================
         async function sendEmailViaEmailJS(toEmail, toName, subject, htmlContent) {
@@ -2185,39 +2171,43 @@
                 validUntil = formatDateLong(d);
             }
 
-            // Items Logic
+            // Items Logic - FIXED to handle current editor state and saved state
             let itemRows = '';
             let subtotal = 0;
             let itemNum = 1;
             
-            // Check if custom items exist
-            if(doc.items && Array.isArray(doc.items)) {
-                doc.items.forEach(item => {
+            // Ensure items array exists
+            if(!doc.items || !Array.isArray(doc.items)) {
+                doc.items = [{description: doc.description || 'Service', amount: doc.subtotal || doc.price || doc.total || 0}];
+            }
+
+            // Filter out empty items
+            const validItems = doc.items.filter(item => item.description || item.amount);
+
+            if(validItems.length > 0) {
+                validItems.forEach(item => {
                     const itemAmt = parseFloat(item.amount || 0);
                     subtotal += itemAmt;
                     itemRows += `
                         <tr>
                             <td>${itemNum}</td>
-                            <td>${item.description}</td>
+                            <td>${item.description || '-'}</td>
                             <td>${parseFloat(itemAmt).toLocaleString()}</td>
                         </tr>
                     `;
                     itemNum++;
                 });
             } else {
-                // Legacy single item
-                const desc = doc.description || 'Professional Service';
-                const amt = parseFloat(doc.subtotal || doc.price || 0);
-                subtotal = amt;
-                
-                itemRows += `
+                 // Fallback if for some reason items are empty but total exists
+                 const fallbackAmt = parseFloat(doc.total || doc.subtotal || doc.price || 0);
+                 subtotal = fallbackAmt;
+                 itemRows += `
                     <tr>
-                        <td>${itemNum}</td>
-                        <td>${desc}</td>
-                        <td>${parseFloat(amt).toLocaleString()}</td>
+                        <td>1</td>
+                        <td>Professional Service</td>
+                        <td>${parseFloat(fallbackAmt).toLocaleString()}</td>
                     </tr>
-                `;
-                itemNum++;
+                 `;
             }
 
             // Installment row for Invoice
@@ -2804,7 +2794,7 @@
 
         const renderInvoiceRow = (doc) => {
             const dateStr = formatDate(doc.date || doc.createdAt);
-            const clientName = doc.customerName || doc.clientName || 'N/A';
+            const clientName = doc.clientName || doc.customerName || 'N/A';
             const amount = doc.total || doc.price || doc.finalPrice || 0;
             let statusClass = doc.status ? doc.status.toLowerCase() : 'pending';
             if(statusClass === 'activated') statusClass = 'activated';
@@ -3440,6 +3430,7 @@
                 discount: discount,
                 total: invoiceTotal, 
                 grandTotal: grandTotal, 
+                subtotal: subtotal,
                 paymentType: type,
                 installmentMonths: months,
                 installmentCycle: cycle,
@@ -3761,29 +3752,37 @@
         // ================== EMAIL TEMPLATE MODAL (EmailJS Integrated) ==================
         window.openEmailTemplateModal = async (id, type) => {
             let doc;
+            // Fetch fresh data to ensure items are correct
             if (type === 'Quotation') {
                 doc = await window.dbOperations.getQuotation(id);
-                if(!doc) doc = { 
-                    type: 'Quotation', 
-                    number: id, 
-                    clientName: document.getElementById('editQClient')?.value || '', 
-                    items: window.currentQuotationItems, 
-                    discount: parseFloat(document.getElementById('editQDiscount')?.value || 0),
-                    date: document.getElementById('editQDate')?.value 
-                };
             } else {
                 doc = await window.dbOperations.getOrder(id);
-                if(!doc) doc = { 
-                    type: 'Invoice', 
-                    number: id, 
-                    clientName: document.getElementById('editClient')?.value || '', 
-                    domain: document.getElementById('editDomain')?.value || '',
-                    items: window.currentItems, 
-                    discount: parseFloat(document.getElementById('editDiscount')?.value || 0),
-                    paymentType: window.currentPaymentType,
-                    installmentCycle: document.getElementById('editCycle')?.value,
-                    date: document.getElementById('editDate')?.value
-                };
+            }
+
+            // Fallback: if doc is null (new unsaved doc), use current editor state
+            if (!doc) {
+                if (type === 'Quotation') {
+                     doc = { 
+                        type: 'Quotation', 
+                        number: id, 
+                        clientName: document.getElementById('editQClient')?.value || '', 
+                        items: window.currentQuotationItems, 
+                        discount: parseFloat(document.getElementById('editQDiscount')?.value || 0),
+                        date: document.getElementById('editQDate')?.value 
+                    };
+                } else {
+                     doc = { 
+                        type: 'Invoice', 
+                        number: id, 
+                        clientName: document.getElementById('editClient')?.value || '', 
+                        domain: document.getElementById('editDomain')?.value || '',
+                        items: window.currentItems, 
+                        discount: parseFloat(document.getElementById('editDiscount')?.value || 0),
+                        paymentType: window.currentPaymentType,
+                        installmentCycle: document.getElementById('editCycle')?.value,
+                        date: document.getElementById('editDate')?.value
+                    };
+                }
             }
 
             // Calculate totals for the template
@@ -3796,11 +3795,6 @@
             const docTitle = type === 'Quotation' ? 'Quotation' : 'Invoice';
             const defaultSubject = `Your ${docTitle} from DDNEX - ${doc.number || id}`;
             
-            // Generate PDF Link (Data URI approach for Print-to-PDF functionality)
-            // Note: This link opens the HTML. The client can use "Print to PDF" in the browser.
-            // Alternatively, you can host this HTML or generate a PDF binary server-side.
-            const pdfLink = generatePdfDataUri(htmlContent);
-
             // Try to get client email
             let clientEmail = '';
             if(doc.customerEmail) clientEmail = doc.customerEmail;
@@ -3828,7 +3822,7 @@
                     <div id="emailSendStatus"></div>
                     
                     <div class="pdf-link-info">
-                        <p><i class="ri-information-line"></i> <strong>PDF Version:</strong> The email sent to the client includes a link to view the document. The client can use the browser's "Print to PDF" feature to save it.</p>
+                        <p><i class="ri-information-line"></i> <strong>Note:</strong> The email will contain the full invoice/quotation details directly in the body. No external links are needed.</p>
                     </div>
                 </div>
                 
@@ -3872,27 +3866,17 @@
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
             
-            // Generate HTML content
+            // Generate HTML content directly
             const rawHtmlContent = generateProfessionalHTML(doc);
             
-            // Inject Download Link Button into the email HTML
-            // We encode the HTML to a Data URI so it opens in a new tab for printing/saving
-            const pdfLink = generatePdfDataUri(rawHtmlContent);
-            
-            const downloadBtn = `
-                <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                    <p style="margin-bottom: 15px; font-family: sans-serif;">Click the button below to view and save your document:</p>
-                    <a href="${pdfLink}" target="_blank" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-family: sans-serif; font-weight: 600; display: inline-block;">
-                        View / Download PDF
-                    </a>
-                    <p style="font-size: 12px; color: #64748b; margin-top: 10px; font-family: sans-serif;">Opens in a new tab. Use "Save as PDF" from your browser's print menu.</p>
+            // Inject inline styles for email clients (wrapper)
+            const emailHtmlWithStyles = `
+                <div style="background-color: #f2f2f7; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                    ${rawHtmlContent}
                 </div>
             `;
             
-            // Inject the button at the top of the email content
-            const emailHtmlWithLink = downloadBtn + rawHtmlContent;
-            
-            await window.sendEmailDirectly(toEmail, subject, emailHtmlWithLink, doc.number || id, forceSend);
+            await window.sendEmailDirectly(toEmail, subject, emailHtmlWithStyles, doc.number || id, forceSend);
         };
 
         window.copyEmailCode = () => {
@@ -3930,6 +3914,7 @@
             let doc;
             if (type === 'Quotation') {
                 doc = await window.dbOperations.getQuotation(id);
+                // Fallback to current editor state if not saved yet
                 if(!doc) doc = { 
                     type: 'Quotation', 
                     number: id, 
@@ -3940,6 +3925,7 @@
                 };
             } else {
                 doc = await window.dbOperations.getOrder(id);
+                 // Fallback to current editor state if not saved yet
                 if(!doc) doc = { 
                     type: 'Invoice', 
                     number: id, 
@@ -3953,7 +3939,12 @@
                 };
             }
 
+            // Ensure items exist for print
             if(!doc.items) doc.items = [];
+            if(doc.items.length === 0 && (doc.total || doc.subtotal)) {
+                 doc.items = [{description: 'Service', amount: doc.total || doc.subtotal}];
+            }
+            
             const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
