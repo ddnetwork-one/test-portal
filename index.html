@@ -2241,392 +2241,502 @@
             return `${day}/${month}/${year}`;
         };
 
-        // =========================================
-        // SUMMARIZED EMAIL HTML - For Sending (FIXED)
-        // =========================================
-        const generateSummarizedEmailHTML = (doc) => {
-            const isQuotation = doc.type === 'Quotation';
-            const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
-            const clientName = doc.clientName || doc.customerName || 'Client';
-            const docNumber = doc.number || doc.id;
-            const dateStr = formatDateLong(doc.date || doc.createdAt);
-            
-            // Items Logic - FIXED: Better handling of items array
-            let itemRows = '';
-            let subtotal = 0;
-            
-            // Ensure items is always an array
-            let itemsList = [];
-            if (doc.items && Array.isArray(doc.items) && doc.items.length > 0) {
-                itemsList = doc.items;
-            } else if (doc.description || doc.subtotal || doc.price || doc.total) {
-                // Fallback: create single item from legacy fields
-                itemsList = [{
-                    description: doc.description || 'Professional Service',
-                    amount: parseFloat(doc.subtotal || doc.price || doc.total || 0)
-                }];
-            }
+// =========================================
+// SUMMARIZED EMAIL HTML - Mobile Friendly (UPDATED)
+// =========================================
+const generateSummarizedEmailHTML = (doc) => {
+    const isQuotation = doc.type === 'Quotation';
+    const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
+    const clientName = doc.clientName || doc.customerName || 'Client';
+    const docNumber = doc.number || doc.id;
+    const dateStr = formatDateShort(doc.date || doc.createdAt);
+    
+    // Items Logic
+    let itemRows = '';
+    let subtotal = 0;
+    
+    let itemsList = [];
+    if (doc.items && Array.isArray(doc.items) && doc.items.length > 0) {
+        itemsList = doc.items;
+    } else if (doc.description || doc.subtotal || doc.price || doc.total) {
+        itemsList = [{
+            description: doc.description || 'Professional Service',
+            amount: parseFloat(doc.subtotal || doc.price || doc.total || 0)
+        }];
+    }
 
-            // Filter valid items and build rows
-            const validItems = itemsList.filter(item => {
-                const hasDesc = item.description && item.description.trim() !== '';
-                const hasAmount = parseFloat(item.amount || 0) > 0;
-                return hasDesc || hasAmount;
-            });
+    const validItems = itemsList.filter(item => {
+        const hasDesc = item.description && item.description.trim() !== '';
+        const hasAmount = parseFloat(item.amount || 0) > 0;
+        return hasDesc || hasAmount;
+    });
 
-            if (validItems.length > 0) {
-                validItems.forEach(item => {
-                    const itemAmt = parseFloat(item.amount || 0);
-                    subtotal += itemAmt;
-                    itemRows += `
-                        <div class="item-row-summary">
-                            <span>${item.description || 'Service'}</span>
-                            <strong>${formatMYR(itemAmt)}</strong>
-                        </div>
-                    `;
-                });
-            } else {
-                // Ultimate fallback if no valid items
-                const fallbackAmount = parseFloat(doc.total || doc.grandTotal || doc.subtotal || doc.price || 0);
-                subtotal = fallbackAmount;
-                itemRows = `
-                    <div class="item-row-summary">
-                        <span>Professional Service</span>
-                        <strong>${formatMYR(fallbackAmount)}</strong>
-                    </div>
-                `;
-            }
-
-            const discount = parseFloat(doc.discount || 0);
-            const total = subtotal - discount;
-
-            const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
-                ? '<span style="display:inline-block;background:#34c759;color:#ffffff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;">PAID</span>'
-                : '<span style="display:inline-block;background:#ff9500;color:#ffffff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;">PENDING</span>';
-
-            // Payment info for invoice
-            let paymentInfo = '';
-            if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
-                const months = doc.installmentMonths || 12;
-                const cycle = doc.installmentCycle || 1;
-                paymentInfo = `
-                    <div style="background:#f0f9ff;padding:12px;border-radius:8px;margin-top:16px;border-left:3px solid #2563eb;">
-                        <p style="margin:0;font-size:13px;color:#1e40af;"><strong>Payment Plan:</strong> ${doc.paymentType} Installment</p>
-                        <p style="margin:4px 0 0 0;font-size:13px;color:#1e40af;"><strong>Cycle:</strong> Month ${cycle} of ${months}</p>
-                    </div>
-                `;
-            }
-
-            // Domain info
-            let domainInfo = '';
-            if (doc.domain) {
-                domainInfo = `
-                    <tr>
-                        <td style="padding:8px 0;color:#64748b;">Domain:</td>
-                        <td style="padding:8px 0;text-align:right;font-weight:600;">${doc.domain}</td>
-                    </tr>
-                `;
-            }
-
-            // For PDF contact
-            const pdfContact = `
-                <div style="background:#f8fafc;padding:16px;border-radius:8px;margin-top:24px;border:1px solid #e2e8f0;">
-                    <p style="margin:0 0 8px 0;font-size:13px;color:#475569;">
-                        <i class="ri-file-pdf-line" style="color:#ef4444;"></i> Need a PDF copy?
-                    </p>
-                    <p style="margin:0;font-size:13px;color:#475569;">
-                        Contact us at <strong style="color:#2563eb;">+60122600969</strong> or reply to this email.
-                    </p>
-                </div>
+    if (validItems.length > 0) {
+        validItems.forEach(item => {
+            const itemAmt = parseFloat(item.amount || 0);
+            subtotal += itemAmt;
+            itemRows += `
+                <tr>
+                    <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${item.description || 'Service'}</td>
+                    <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right;font-size:13px;font-weight:600;color:#111827;">${formatMYR(itemAmt)}</td>
+                </tr>
             `;
+        });
+    } else {
+        const fallbackAmount = parseFloat(doc.total || doc.grandTotal || doc.subtotal || doc.price || 0);
+        subtotal = fallbackAmount;
+        itemRows = `
+            <tr>
+                <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">Professional Service</td>
+                <td style="padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right;font-size:13px;font-weight:600;color:#111827;">${formatMYR(fallbackAmount)}</td>
+            </tr>
+        `;
+    }
 
-            return `
-<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;padding:32px;">
+    const discount = parseFloat(doc.discount || 0);
+    const total = subtotal - discount;
 
-    <!-- Header -->
-    <div style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid #e2e8f0;">
-        <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="max-width:120px;margin-bottom:16px;">
-        <h1 style="margin:0;font-size:22px;font-weight:800;color:#0f172a;">${docTitle}</h1>
-        <p style="margin:8px 0 0 0;font-size:14px;color:#64748b;">${docNumber}</p>
-    </div>
+    const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
+        ? '<span style="display:inline-block;background:#22c55e;color:#fff;font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;">PAID</span>'
+        : '<span style="display:inline-block;background:#f59e0b;color:#fff;font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;">PENDING</span>';
 
-    <!-- Client & Date Info -->
-    <table style="width:100%;margin-bottom:24px;font-size:14px;">
-        <tr>
-            <td style="padding:8px 0;color:#64748b;vertical-align:top;">Bill To:</td>
-            <td style="padding:8px 0;text-align:right;font-weight:600;">${clientName}</td>
-        </tr>
-        <tr>
-            <td style="padding:8px 0;color:#64748b;">Date:</td>
-            <td style="padding:8px 0;text-align:right;">${dateStr}</td>
-        </tr>
-        ${domainInfo}
-        <tr>
-            <td style="padding:8px 0;color:#64748b;">Status:</td>
-            <td style="padding:8px 0;text-align:right;">${statusBadge}</td>
-        </tr>
-    </table>
+    // Payment info for invoice
+    let paymentInfo = '';
+    if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
+        const months = doc.installmentMonths || 12;
+        const cycle = doc.installmentCycle || 1;
+        paymentInfo = `
+            <tr>
+                <td style="padding:6px 0;font-size:12px;color:#6b7280;">Payment Plan</td>
+                <td style="padding:6px 0;text-align:right;font-size:12px;font-weight:600;color:#2563eb;">${doc.paymentType} (${cycle}/${months})</td>
+            </tr>
+        `;
+    }
 
-    <!-- Items Section -->
-    <div style="background:#f8fafc;border-radius:12px;padding:20px;margin-bottom:24px;">
-        <h3 style="margin:0 0 16px 0;font-size:14px;color:#0f172a;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Items Purchased</h3>
-        <div style="background:#ffffff;border-radius:8px;padding:16px;">
-            ${itemRows}
-        </div>
-        
-        ${discount > 0 ? `
-        <div style="display:flex;justify-content:space-between;padding:12px 0;margin-top:12px;border-top:1px dashed #e2e8f0;font-size:14px;color:#64748b;">
-            <span>Discount</span>
-            <span style="color:#dc2626;">-${formatMYR(discount)}</span>
-        </div>
-        ` : ''}
-        
-        <div style="display:flex;justify-content:space-between;padding:16px 0;margin-top:12px;border-top:2px solid #e2e8f0;">
-            <span style="font-size:16px;font-weight:700;color:#0f172a;">Total</span>
-            <span style="font-size:20px;font-weight:800;color:#2563eb;">${formatMYR(total)}</span>
-        </div>
-    </div>
-
-    ${paymentInfo}
-
-    ${pdfContact}
-
-    <!-- Footer -->
-    <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e2e8f0;text-align:center;">
-        <p style="margin:0;font-size:13px;color:#64748b;">
-            DDNEX by DD Cloud Network
-        </p>
-        <p style="margin:4px 0 0 0;font-size:12px;color:#94a3b8;">
-            support@ddnex.com | +60122600969
-        </p>
-    </div>
-
-</div>
-            `;
-        };
-
-        // =========================================
-        // FULL TEMPLATE HTML - For PDF/Download (FIXED)
-        // =========================================
-        const generateFullTemplateHTML = (doc) => {
-            const isQuotation = doc.type === 'Quotation';
-            const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
-            const clientName = doc.clientName || doc.customerName || 'Client';
-            const docNumber = doc.number || doc.id;
-            const dateStr = formatDateLong(doc.date || doc.createdAt);
-            
-            let validUntil = '-';
-            if (isQuotation) {
-                let d = new Date(doc.date || doc.createdAt);
-                d.setDate(d.getDate() + 16);
-                validUntil = formatDateLong(d);
-            }
-
-            let itemRows = '';
-            let subtotal = 0;
-            let itemNum = 1;
-            
-            // FIXED: Better handling of items array
-            let itemsList = [];
-            if (doc.items && Array.isArray(doc.items) && doc.items.length > 0) {
-                itemsList = doc.items;
-            } else if (doc.description || doc.subtotal || doc.price || doc.total) {
-                itemsList = [{
-                    description: doc.description || 'Professional Service',
-                    amount: parseFloat(doc.subtotal || doc.price || doc.total || 0)
-                }];
-            }
-
-            const validItems = itemsList.filter(item => {
-                const hasDesc = item.description && item.description.trim() !== '';
-                const hasAmount = parseFloat(item.amount || 0) > 0;
-                return hasDesc || hasAmount;
-            });
-
-            if (validItems.length > 0) {
-                validItems.forEach(item => {
-                    const itemAmt = parseFloat(item.amount || 0);
-                    subtotal += itemAmt;
-                    itemRows += `
-                        <tr>
-                            <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${itemNum}</td>
-                            <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${item.description || 'Service'}</td>
-                            <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">${parseFloat(itemAmt).toLocaleString()}</td>
-                        </tr>
-                    `;
-                    itemNum++;
-                });
-            } else {
-                const fallbackAmt = parseFloat(doc.total || doc.grandTotal || doc.subtotal || doc.price || 0);
-                subtotal = fallbackAmt;
-                itemRows += `
-                    <tr>
-                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">1</td>
-                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">Professional Service</td>
-                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">${parseFloat(fallbackAmt).toLocaleString()}</td>
-                    </tr>
-                `;
-                itemNum = 2;
-            }
-
-            if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
-                const months = doc.installmentMonths || 12;
-                const monthlyAmt = subtotal / months;
-                itemRows += `
-                    <tr>
-                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${itemNum}</td>
-                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${doc.paymentType} Installment Plan</td>
-                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">${parseFloat(monthlyAmt).toLocaleString()} / month</td>
-                    </tr>
-                `;
-                itemNum++;
-            }
-
-            if (doc.domain) {
-                itemRows += `
-                    <tr>
-                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${itemNum}</td>
-                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">Domain: ${doc.domain}</td>
-                        <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">-</td>
-                    </tr>
-                `;
-                itemNum++;
-            }
-
-            const discount = parseFloat(doc.discount || 0);
-            const total = subtotal - discount;
-            
-            const transactionRef = doc.transactionRef || doc.number || doc.id;
-
-            const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
-                ? '<span style="display:inline-block;background:#34c759;color:#ffffff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;">PAID</span>'
-                : '<span style="display:inline-block;background:#ff9500;color:#ffffff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;">PENDING</span>';
-
-            let paymentDetailsSection = '';
-            if (!isQuotation) {
-                paymentDetailsSection = `
-                    <div style="margin-top:25px;background:#f7f7f7;padding:18px;border-radius:12px;font-size:14px;line-height:1.6;">
-                        <strong>Payment Details</strong><br>
-                        Payment Method: Online Transfer<br>
-                        Transaction Reference: ${transactionRef}
-                    </div>
-                `;
-            }
-
-            let termsList = '';
-            if (isQuotation) {
-                termsList = `
-                    <li style="margin-bottom:8px;">This quotation is valid for 16 days from the date issued.</li>
-                    <li style="margin-bottom:8px;">Services delivered via DDNEX secure portal.</li>
-                    <li style="margin-bottom:8px;">50% deposit required to commence project.</li>
-                    <li style="margin-bottom:8px;">Balance payment due upon project completion.</li>
-                    <li style="margin-bottom:8px;">Full policies and terms are available on the official DDNEX website.</li>
-                `;
-            } else {
-                termsList = `
-                    <li style="margin-bottom:8px;">This receipt confirms that payment has been successfully received by DDNEX.</li>
-                    <li style="margin-bottom:8px;">The service includes system setup, hosting, and maintenance under the agreed subscription plan.</li>
-                    <li style="margin-bottom:8px;">All payments made are non-refundable once service deployment has commenced.</li>
-                    <li style="margin-bottom:8px;">DDNEX reserves the right to update service policies or operational terms when required.</li>
-                    <li style="margin-bottom:8px;">Full policies and terms are available on the official DDNEX website.</li>
-                `;
-            }
-
-            const contactInfo = `
-                <div style="margin-top:24px;background:#f0f9ff;padding:16px;border-radius:8px;border-left:4px solid #2563eb;">
-                    <p style="margin:0 0 8px 0;font-size:14px;color:#1e40af;">
-                        <strong>Need a PDF copy of this ${isQuotation ? 'quotation' : 'invoice'}?</strong>
-                    </p>
-                    <p style="margin:0;font-size:14px;color:#1e40af;">
-                        Please contact us at <a href="tel:+60122600969" style="color:#2563eb;text-decoration:none;font-weight:700;">+60122600969</a> to request your official PDF receipt.
-                    </p>
-                </div>
-            `;
-
-            return `
-<div style="background-color:#f2f2f7;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <div style="max-width:900px;margin:0 auto;background:#ffffff;min-height:100vh;padding:50px 60px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${docTitle}</title>
+</head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    
+    <!-- Mobile-Optimized Container -->
+    <div style="max-width:100%;width:100%;margin:0 auto;background:#ffffff;">
         
         <!-- Header -->
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:50px;">
-            <div>
-                <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="max-width:140px;">
-                <p style="font-size:13px;color:#6e6e73;line-height:1.6;margin-top:12px;">
-                    <strong>DDNEX by DD Cloud Network</strong><br>
-                    Company Registration No.: 202603040752 (MA0342542-K)<br>
-                    Sungai Petani, Kedah, Malaysia<br>
-                    support@ddnex.com | www.ddnex.com
-                </p>
-            </div>
-            <div style="text-align:right;font-size:14px;">
-                ${statusBadge}
-                <p style="margin-top:10px;"><strong>${docTitle}</strong></p>
-                <p style="margin-top:8px;">
-                    ${isQuotation ? 'Quotation' : 'Invoice'} No: <strong>${docNumber}</strong><br>
-                    Date Issued: ${dateStr}
-                    ${isQuotation ? `<br>Valid Until: ${validUntil}` : ''}
-                </p>
-            </div>
+        <div style="background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);padding:20px 16px;text-align:center;">
+            <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="max-width:80px;height:auto;margin-bottom:8px;">
+            <h1 style="margin:0;font-size:16px;font-weight:700;color:#ffffff;">${docTitle}</h1>
+            <p style="margin:4px 0 0 0;font-size:12px;color:#bfdbfe;">${docNumber}</p>
         </div>
         
-        <!-- Bill To -->
-        <div style="margin-bottom:40px;">
-            <p style="font-size:18px;font-weight:600;margin-bottom:14px;">Bill To</p>
-            <div style="font-size:14px;line-height:1.6;">
-                <strong>${clientName}</strong><br>
-                Malaysia
-                ${doc.domain ? `<br>Domain: ${doc.domain}` : ''}
-            </div>
+        <!-- Status Bar -->
+        <div style="background:#f8fafc;padding:12px 16px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:#6b7280;">Status</span>
+            ${statusBadge}
         </div>
         
-        <!-- Services Table -->
-        <div style="margin-bottom:40px;">
-            <p style="font-size:18px;font-weight:600;margin-bottom:14px;">Services</p>
-            <table width="100%" style="border-collapse:collapse;font-size:14px;">
+        <!-- Client Info -->
+        <div style="padding:16px;background:#ffffff;border-bottom:1px solid #e5e7eb;">
+            <table style="width:100%;font-size:13px;">
                 <tr>
-                    <th width="60" style="padding:12px 16px;text-align:left;border-bottom:1px solid #e5e5ea;background:#f7f7f7;font-weight:500;color:#6e6e73;">Item</th>
-                    <th style="padding:12px 16px;text-align:left;border-bottom:1px solid #e5e5ea;background:#f7f7f7;font-weight:500;color:#6e6e73;">Description</th>
-                    <th width="160" style="padding:12px 16px;text-align:right;border-bottom:1px solid #e5e5ea;background:#f7f7f7;font-weight:500;color:#6e6e73;">Amount (RM)</th>
+                    <td style="padding:4px 0;color:#6b7280;width:40%;">Client</td>
+                    <td style="padding:4px 0;font-weight:600;color:#111827;">${clientName}</td>
                 </tr>
-                ${itemRows}
-                ${discount > 0 ? `
                 <tr>
-                    <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;"></td>
-                    <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">Discount</td>
-                    <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">-${parseFloat(discount).toLocaleString()}</td>
+                    <td style="padding:4px 0;color:#6b7280;">Date</td>
+                    <td style="padding:4px 0;color:#374151;">${dateStr}</td>
+                </tr>
+                ${doc.domain ? `
+                <tr>
+                    <td style="padding:4px 0;color:#6b7280;">Domain</td>
+                    <td style="padding:4px 0;color:#2563eb;font-weight:500;">${doc.domain}</td>
                 </tr>
                 ` : ''}
-                <tr>
-                    <td colspan="2" style="padding:16px;text-align:right;font-weight:600;font-size:16px;border:none;">${isQuotation ? 'Total' : 'Total Paid'}</td>
-                    <td style="padding:16px;text-align:right;font-weight:600;font-size:16px;border:none;">RM ${parseFloat(total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                </tr>
             </table>
-            ${paymentDetailsSection}
         </div>
         
-        <!-- Terms -->
-        <div style="margin-bottom:40px;">
-            <p style="font-size:18px;font-weight:600;margin-bottom:14px;">Terms & Conditions Summary</p>
-            <div style="background:#fafafa;padding:20px;border-radius:12px;font-size:13px;color:#6e6e73;line-height:1.6;">
-                <ul style="padding-left:18px;margin:8px 0;">
+        <!-- Items Section -->
+        <div style="padding:16px;">
+            <p style="margin:0 0 8px 0;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Items</p>
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;font-size:11px;font-weight:600;color:#9ca3af;padding:4px 0;">Description</th>
+                        <th style="text-align:right;font-size:11px;font-weight:600;color:#9ca3af;padding:4px 0;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemRows}
+                </tbody>
+            </table>
+            
+            ${discount > 0 ? `
+            <table style="width:100%;margin-top:8px;">
+                <tr>
+                    <td style="font-size:12px;color:#6b7280;">Subtotal</td>
+                    <td style="text-align:right;font-size:12px;color:#374151;">${formatMYR(subtotal)}</td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#dc2626;">Discount</td>
+                    <td style="text-align:right;font-size:12px;color:#dc2626;">-${formatMYR(discount)}</td>
+                </tr>
+            </table>
+            ` : ''}
+        </div>
+        
+        <!-- Total Section -->
+        <div style="background:#f8fafc;padding:16px;border-top:2px solid #e5e7eb;">
+            <table style="width:100%;">
+                ${paymentInfo}
+                <tr>
+                    <td style="font-size:14px;font-weight:700;color:#111827;">Total</td>
+                    <td style="text-align:right;font-size:20px;font-weight:800;color:#2563eb;">${formatMYR(total)}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- Footer -->
+        <div style="padding:16px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0;font-size:12px;color:#6b7280;">
+                DDNEX by DD Cloud Network
+            </p>
+            <p style="margin:4px 0 0 0;font-size:11px;color:#9ca3af;">
+                support@ddnex.com | +60122600969
+            </p>
+        </div>
+        
+    </div>
+    
+</body>
+</html>
+    `;
+};
+
+// =========================================
+// FULL TEMPLATE HTML - A4 Print Version (UPDATED)
+// =========================================
+const generateFullTemplateHTML = (doc) => {
+    const isQuotation = doc.type === 'Quotation';
+    const docTitle = isQuotation ? 'QUOTATION' : 'INVOICE RECEIPT';
+    const clientName = doc.clientName || doc.customerName || 'Client';
+    const docNumber = doc.number || doc.id;
+    const dateStr = formatDateLong(doc.date || doc.createdAt);
+    
+    let validUntil = '-';
+    if (isQuotation) {
+        let d = new Date(doc.date || doc.createdAt);
+        d.setDate(d.getDate() + 16);
+        validUntil = formatDateLong(d);
+    }
+
+    let itemRows = '';
+    let subtotal = 0;
+    let itemNum = 1;
+    
+    let itemsList = [];
+    if (doc.items && Array.isArray(doc.items) && doc.items.length > 0) {
+        itemsList = doc.items;
+    } else if (doc.description || doc.subtotal || doc.price || doc.total) {
+        itemsList = [{
+            description: doc.description || 'Professional Service',
+            amount: parseFloat(doc.subtotal || doc.price || doc.total || 0)
+        }];
+    }
+
+    const validItems = itemsList.filter(item => {
+        const hasDesc = item.description && item.description.trim() !== '';
+        const hasAmount = parseFloat(item.amount || 0) > 0;
+        return hasDesc || hasAmount;
+    });
+
+    if (validItems.length > 0) {
+        validItems.forEach(item => {
+            const itemAmt = parseFloat(item.amount || 0);
+            subtotal += itemAmt;
+            itemRows += `
+                <tr>
+                    <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;text-align:center;font-size:11px;color:#374151;">${itemNum}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;font-size:11px;color:#111827;">${item.description || 'Service'}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;text-align:right;font-size:11px;color:#111827;font-family:'Courier New',monospace;">${parseFloat(itemAmt).toLocaleString('en-MY', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                </tr>
+            `;
+            itemNum++;
+        });
+    } else {
+        const fallbackAmt = parseFloat(doc.total || doc.grandTotal || doc.subtotal || doc.price || 0);
+        subtotal = fallbackAmt;
+        itemRows += `
+            <tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;text-align:center;font-size:11px;color:#374151;">1</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;font-size:11px;color:#111827;">Professional Service</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;text-align:right;font-size:11px;color:#111827;font-family:'Courier New',monospace;">${parseFloat(fallbackAmt).toLocaleString('en-MY', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            </tr>
+        `;
+        itemNum = 2;
+    }
+
+    if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
+        const months = doc.installmentMonths || 12;
+        const monthlyAmt = subtotal / months;
+        itemRows += `
+            <tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;text-align:center;font-size:11px;color:#374151;">${itemNum}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;font-size:11px;color:#111827;">${doc.paymentType} Installment Plan</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;text-align:right;font-size:11px;color:#111827;font-family:'Courier New',monospace;">${parseFloat(monthlyAmt).toLocaleString('en-MY', {minimumFractionDigits: 2, maximumFractionDigits: 2})} / mo</td>
+            </tr>
+        `;
+        itemNum++;
+    }
+
+    if (doc.domain) {
+        itemRows += `
+            <tr>
+                <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;text-align:center;font-size:11px;color:#374151;">${itemNum}</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;font-size:11px;color:#111827;">Domain Registration: <strong>${doc.domain}</strong></td>
+                <td style="padding:10px 12px;border-bottom:1px solid #d1d5db;text-align:right;font-size:11px;color:#9ca3af;">Included</td>
+            </tr>
+        `;
+        itemNum++;
+    }
+
+    const discount = parseFloat(doc.discount || 0);
+    const total = subtotal - discount;
+    
+    const transactionRef = doc.transactionRef || doc.number || doc.id;
+
+    const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
+        ? '<span style="display:inline-block;background:#dcfce7;color:#166534;font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;">PAID</span>'
+        : '<span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;">PENDING</span>';
+
+    let paymentDetailsSection = '';
+    if (!isQuotation) {
+        paymentDetailsSection = `
+            <div style="margin-top:24px;padding:16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;">
+                <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.5px;">Payment Information</p>
+                <table style="width:100%;font-size:10px;">
+                    <tr>
+                        <td style="color:#6b7280;width:120px;">Payment Method</td>
+                        <td style="color:#111827;font-weight:500;">Online Transfer / FPX</td>
+                    </tr>
+                    <tr>
+                        <td style="color:#6b7280;padding-top:4px;">Transaction Ref</td>
+                        <td style="color:#111827;font-weight:500;font-family:'Courier New',monospace;">${transactionRef}</td>
+                    </tr>
+                </table>
+            </div>
+        `;
+    }
+
+    let termsList = '';
+    if (isQuotation) {
+        termsList = `
+            <li style="margin-bottom:6px;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">This quotation is valid for <strong>16 days</strong> from the date issued.</li>
+            <li style="margin-bottom:6px;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">All services are delivered via DDNEX secure portal infrastructure.</li>
+            <li style="margin-bottom:6px;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">A <strong>50% deposit</strong> is required to commence the project.</li>
+            <li style="margin-bottom:6px;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">The remaining balance is due upon project completion.</li>
+            <li style="margin-bottom:0;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">Full policies and terms are available on the official DDNEX website.</li>
+        `;
+    } else {
+        termsList = `
+            <li style="margin-bottom:6px;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">This receipt confirms that payment has been successfully received by DDNEX.</li>
+            <li style="margin-bottom:6px;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">The service includes system setup, hosting, and maintenance under the agreed subscription plan.</li>
+            <li style="margin-bottom:6px;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">All payments made are <strong>non-refundable</strong> once service deployment has commenced.</li>
+            <li style="margin-bottom:6px;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">DDNEX reserves the right to update service policies or operational terms when required.</li>
+            <li style="margin-bottom:0;padding-left:4px;font-size:10px;line-height:1.5;color:#4b5563;">Full policies and terms are available on the official DDNEX website.</li>
+        `;
+    }
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${docTitle} - ${docNumber}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        @media print {
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .page {
+                width: 210mm;
+                min-height: 297mm;
+                padding: 20mm;
+                margin: 0;
+                box-shadow: none;
+            }
+        }
+        @media screen {
+            .page {
+                width: 210mm;
+                min-height: 297mm;
+                padding: 20mm;
+                margin: 20px auto;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                background: white;
+            }
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f3f4f6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        
+        <!-- HEADER SECTION -->
+        <table style="width:100%;margin-bottom:40px;">
+            <tr>
+                <td style="vertical-align:top;width:50%;">
+                    <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="height:36px;margin-bottom:12px;">
+                    <p style="margin:0;font-size:10px;color:#6b7280;line-height:1.6;">
+                        <strong style="color:#111827;">DDNEX by DD Cloud Network</strong><br>
+                        Company Registration No.: 202603040752 (MA0342542-K)<br>
+                        Sungai Petani, Kedah, Malaysia<br>
+                        <span style="color:#2563eb;">support@ddnex.com</span> | <span style="color:#2563eb;">www.ddnex.com</span>
+                    </p>
+                </td>
+                <td style="vertical-align:top;text-align:right;">
+                    ${statusBadge}
+                    <h1 style="margin:10px 0 0 0;font-size:22px;font-weight:800;color:#111827;letter-spacing:2px;">${docTitle}</h1>
+                    <table style="margin-top:12px;font-size:10px;margin-left:auto;">
+                        <tr>
+                            <td style="color:#6b7280;padding:2px 8px 2px 0;">Document No</td>
+                            <td style="color:#111827;font-weight:600;font-family:'Courier New',monospace;">${docNumber}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#6b7280;padding:2px 8px 2px 0;">Date Issued</td>
+                            <td style="color:#111827;">${dateStr}</td>
+                        </tr>
+                        ${isQuotation ? `
+                        <tr>
+                            <td style="color:#6b7280;padding:2px 8px 2px 0;">Valid Until</td>
+                            <td style="color:#111827;">${validUntil}</td>
+                        </tr>
+                        ` : ''}
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- BILL TO SECTION -->
+        <div style="margin-bottom:32px;">
+            <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Bill To</p>
+            <table style="font-size:11px;">
+                <tr>
+                    <td style="font-size:14px;font-weight:700;color:#111827;padding-bottom:4px;">${clientName}</td>
+                </tr>
+                <tr>
+                    <td style="color:#6b7280;">Malaysia</td>
+                </tr>
+                ${doc.domain ? `
+                <tr>
+                    <td style="color:#2563eb;font-weight:500;padding-top:4px;">Domain: ${doc.domain}</td>
+                </tr>
+                ` : ''}
+            </table>
+        </div>
+        
+        <!-- SERVICES TABLE -->
+        <div style="margin-bottom:32px;">
+            <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Services / Items</p>
+            <table style="width:100%;border-collapse:collapse;border:1px solid #d1d5db;">
+                <thead>
+                    <tr style="background:#f9fafb;">
+                        <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:600;color:#374151;border-bottom:1px solid #d1d5db;width:40px;">NO</th>
+                        <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:600;color:#374151;border-bottom:1px solid #d1d5db;">DESCRIPTION</th>
+                        <th style="padding:10px 12px;text-align:right;font-size:10px;font-weight:600;color:#374151;border-bottom:1px solid #d1d5db;width:120px;">AMOUNT (RM)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemRows}
+                </tbody>
+            </table>
+            
+            <!-- TOTALS -->
+            <table style="width:100%;margin-top:16px;">
+                <tr>
+                    <td></td>
+                    <td style="width:180px;">
+                        <table style="width:100%;font-size:11px;">
+                            <tr>
+                                <td style="padding:6px 0;color:#6b7280;">Subtotal</td>
+                                <td style="padding:6px 0;text-align:right;font-family:'Courier New',monospace;color:#374151;">${parseFloat(subtotal).toLocaleString('en-MY', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            </tr>
+                            ${discount > 0 ? `
+                            <tr>
+                                <td style="padding:6px 0;color:#dc2626;">Discount</td>
+                                <td style="padding:6px 0;text-align:right;font-family:'Courier New',monospace;color:#dc2626;">-${parseFloat(discount).toLocaleString('en-MY', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            </tr>
+                            ` : ''}
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            
+            <!-- GRAND TOTAL BOX -->
+            <table style="width:100%;margin-top:8px;">
+                <tr>
+                    <td></td>
+                    <td style="width:180px;">
+                        <div style="background:#111827;color:#ffffff;padding:12px 16px;border-radius:6px;">
+                            <table style="width:100%;">
+                                <tr>
+                                    <td style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">${isQuotation ? 'Total' : 'Total Paid'}</td>
+                                    <td style="text-align:right;font-size:16px;font-weight:800;font-family:'Courier New',monospace;">${parseFloat(total).toLocaleString('en-MY', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        ${paymentDetailsSection}
+        
+        <!-- TERMS & CONDITIONS -->
+        <div style="margin-bottom:32px;">
+            <p style="margin:0 0 8px 0;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;">Terms &amp; Conditions Summary</p>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:16px;">
+                <ul style="margin:0;padding-left:16px;list-style-type:disc;">
                     ${termsList}
                 </ul>
             </div>
         </div>
         
-        <!-- Contact for PDF -->
-        ${contactInfo}
-        
-        <!-- Footer -->
-        <div style="margin-top:60px;padding-top:20px;border-top:1px solid #e5e5ea;font-size:12px;color:#8e8e93;text-align:center;">
-            <p style="margin:0 0 4px 0;">${isQuotation ? 'Quotation' : 'Invoice'} generated automatically by the DDNEX Billing System</p>
-            <p style="margin:0;">support@ddnex.com</p>
+        <!-- FOOTER -->
+        <div style="position:absolute;bottom:20mm;left:20mm;right:20mm;border-top:1px solid #e5e7eb;padding-top:16px;text-align:center;">
+            <p style="margin:0;font-size:9px;color:#9ca3af;">
+                This document was generated electronically by the DDNEX Billing System
+            </p>
+            <p style="margin:4px 0 0 0;font-size:9px;color:#d1d5db;">
+                DDNEX &copy; ${new Date().getFullYear()} DD Cloud Network. All rights reserved.
+            </p>
         </div>
         
     </div>
-</div>
-            `;
-        };
+
+</body>
+</html>
+    `;
+};
 
         // ================== SECTION RENDERERS ==================
 
