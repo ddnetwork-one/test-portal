@@ -83,6 +83,64 @@
         input, select, textarea { font-family: inherit; font-size: 15px; }
 
         /* =========================================
+           SKELETON LOADING STATES
+           ========================================= */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s infinite;
+            border-radius: 4px;
+            display: inline-block;
+            line-height: 1;
+            color: transparent !important;
+        }
+        .skeleton * { visibility: hidden !important; }
+        .skeleton img { opacity: 0; }
+        .skeleton-circle { border-radius: 50%; }
+        
+        @keyframes skeleton-shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .loading-skeleton-block {
+            height: 1em;
+            margin-bottom: 0.5em;
+        }
+        
+        .loading-skeleton-block.sm { width: 40%; }
+        .loading-skeleton-block.md { width: 70%; }
+        .loading-skeleton-block.lg { width: 90%; }
+        .loading-skeleton-block.xl { width: 100%; height: 2em; }
+
+        /* =========================================
+           INITIAL LOADING OVERLAY (Pre-login check)
+           ========================================= */
+        #initialLoader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-body);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #initialLoader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        #initialLoader .spinner-large {
+            width: 48px; height: 48px;
+            border: 3px solid var(--border-light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* =========================================
            LOGIN PAGE
            ========================================= */
         .login-page {
@@ -1105,8 +1163,7 @@
             animation: spin 0.8s linear infinite;
         }
         .loading-text { font-size: 14px; color: var(--text-muted); font-weight: 500; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
+        
         /* =========================================
            POPUP
            ========================================= */
@@ -1438,8 +1495,14 @@
 </head>
 <body>
 
+    <!-- Initial Loader (Before Auth Check) -->
+    <div id="initialLoader">
+        <div class="spinner-large"></div>
+        <div style="margin-top:16px; font-weight:600; color:var(--text-muted);">Initializing Portal...</div>
+    </div>
+
     <!-- Login Page -->
-    <div class="login-page" id="loginPage">
+    <div class="login-page hidden" id="loginPage">
         <div class="login-bg-grid"></div>
         <div class="login-card">
             <div class="login-logo">
@@ -1585,6 +1648,7 @@
             <!-- Main Content -->
             <main class="main-content" id="mainContent">
                 <!-- Content Injected via JS -->
+                <div class="skeleton" style="width:100%; height: 400px; display:block;"></div>
             </main>
         </div>
     </div>
@@ -1844,7 +1908,7 @@
 
         // State
         let currentUser = null;
-        let currentRoute = '/login/auth';
+        let currentRoute = '/auth/login';
         let emailLastSentTimestamp = localStorage.getItem('ddnex_last_email_sent') ? parseInt(localStorage.getItem('ddnex_last_email_sent')) : 0;
         
         // Pagination State
@@ -1949,7 +2013,7 @@
 
         // Router
         function navigateTo(path) {
-            if (!currentUser && path !== '/login/auth') return;
+            if (!currentUser && path !== '/auth/login') return;
             
             window.history.pushState({ path }, '', path);
             currentRoute = path;
@@ -2067,7 +2131,12 @@
             });
 
             const path = window.location.pathname || '/dashboard';
-            navigateTo(path);
+            // If path is login or root, go to dashboard
+            if(path === '/auth/login' || path === '/') {
+                navigateTo('/dashboard');
+            } else {
+                navigateTo(path);
+            }
         };
 
         window.handleLogout = () => {
@@ -2083,7 +2152,7 @@
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('dashboardApp').classList.remove('visible');
             document.getElementById('loginForm').reset();
-            window.history.pushState({ path: '/login/auth' }, '', '/login/auth');
+            window.history.pushState({ path: '/auth/login' }, '', '/auth/login');
         };
 
         // Utility Functions
@@ -2299,15 +2368,13 @@
         };
 
         // =========================================
-        // UPDATED: PROFESSIONAL SUMMARIZED EMAIL HTML (Extended Background)
+        // UPDATED: PROFESSIONAL SUMMARIZED EMAIL HTML
         // =========================================
         const generateSummarizedEmailHTML = (doc) => {
             const isQuotation = doc.type === 'Quotation';
             const docTitle = isQuotation ? 'Quotation Summary' : 'Order Summary';
             const clientName = doc.clientName || doc.customerName || 'Valued Customer';
             const docNumber = doc.number || doc.id;
-            const clientAddress = doc.clientAddress || '';
-            const attnTo = doc.attnTo || '';
             
             // Items Logic
             let itemRows = '';
@@ -2382,16 +2449,6 @@
             // Format numbers
             const formatRM = (val) => parseFloat(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-            // Build address and attn HTML
-            let addressHtml = '';
-            if (clientAddress) {
-                addressHtml = `<br><span style="color:#666;font-size:13px;">${clientAddress.replace(/\n/g, '<br>')}</span>`;
-            }
-            let attnHtml = '';
-            if (attnTo) {
-                attnHtml = `<br><span style="color:#888;font-size:12px;">Attn: ${attnTo}</span>`;
-            }
-
             return `
 <!DOCTYPE html>
 <html>
@@ -2402,8 +2459,7 @@
 
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
 
-<!-- Extended background wrapper to hide EmailJS branding -->
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0; background:#f5f5f5; min-height: 2000px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
 <tr>
 <td align="center">
 
@@ -2423,7 +2479,7 @@
 <tr>
 <td style="padding:20px 0;">
 <p style="margin:0;font-size:14px;color:#333;">
-Hello <strong>${clientName}</strong>,${attnHtml}${addressHtml}
+Hello ${clientName},
 </p>
 
 <p style="margin:8px 0 0;font-size:14px;color:#555;">
@@ -2505,11 +2561,6 @@ If you have any questions, please reply to this email.
 
 </table>
 
-<!-- Extra spacing to push EmailJS branding further down -->
-<table width="600" cellpadding="0" cellspacing="0" style="background:#f5f5f5;">
-<tr><td style="height:1500px;"></td></tr>
-</table>
-
 </td>
 </tr>
 </table>
@@ -2521,15 +2572,16 @@ If you have any questions, please reply to this email.
 
 // =========================================
 // FULL TEMPLATE HTML - For PDF/Download (A4 Full Page - Single Sheet)
+// Updated with Address & Attn To fields
 // =========================================
 const generateFullTemplateHTML = (doc) => {
     const isQuotation = doc.type === 'Quotation';
     const docTitle = isQuotation ? 'Quotation' : 'Invoice Receipt';
     const clientName = doc.clientName || doc.customerName || 'Client';
-    const clientAddress = doc.clientAddress || 'Malaysia';
-    const attnTo = doc.attnTo || '';
     const docNumber = doc.number || doc.id;
     const dateStr = formatDateLong(doc.date || doc.createdAt);
+    const clientAddress = doc.clientAddress || '';
+    const attnTo = doc.attnTo || '';
     
     let validUntil = '-';
     if (isQuotation) {
@@ -2646,9 +2698,9 @@ const generateFullTemplateHTML = (doc) => {
             <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">Full policies and terms are available on the official DDNEX website.</li>
         `;
     }
-
-    // Format address for display
-    const formattedAddress = clientAddress.replace(/\n/g, '<br>');
+    
+    const addressHtml = clientAddress ? clientAddress.replace(/\n/g, '<br>') : 'Malaysia';
+    const attnHtml = attnTo ? `<br>Attn: ${attnTo}` : '';
 
     return `
 <!DOCTYPE html>
@@ -2836,10 +2888,9 @@ const generateFullTemplateHTML = (doc) => {
         <div class="bill-to-section">
             <div class="bill-to-title">Bill To</div>
             <div class="bill-to-details">
-                <strong>${clientName}</strong>
-                ${attnTo ? `<br><span style="color:#666;">Attn: ${attnTo}</span>` : ''}
-                <br>${formattedAddress}
-                ${doc.domain ? `<br><span style="color:#666;">Domain: ${doc.domain}</span>` : ''}
+                <strong>${clientName}</strong>${attnHtml}<br>
+                ${addressHtml}
+                ${doc.domain ? `<br>Domain: ${doc.domain}` : ''}
             </div>
         </div>
         
@@ -3497,8 +3548,8 @@ const generateFullTemplateHTML = (doc) => {
                                     <div class="doc-preview-meta-item">
                                         <label>Bill To</label>
                                         <p id="previewClient">${data.clientName || data.customerName || 'Select Client'}</p>
-                                        <p id="previewAttn" style="font-size:13px; color:#64748b; font-weight:400; margin-top:2px;">${data.attnTo ? 'Attn: ' + data.attnTo : ''}</p>
-                                        <p id="previewAddress" style="font-size:12px; color:#94a3b8; font-weight:400; margin-top:2px; white-space:pre-line;">${data.clientAddress || ''}</p>
+                                        ${data.attnTo ? `<p style="font-size:12px; color:#64748b;">Attn: ${data.attnTo}</p>` : ''}
+                                        <p style="font-size:12px; color:#64748b; white-space: pre-wrap;" id="previewAddress">${data.clientAddress || ''}</p>
                                         ${isWebsiteOrder && data.customerEmail ? `<p style="font-size:12px; color:#64748b;">${data.customerEmail}</p>` : ''}
                                     </div>
                                     <div class="doc-preview-meta-item" style="text-align:right;">
@@ -3568,15 +3619,15 @@ const generateFullTemplateHTML = (doc) => {
                                     </div>
                                     
                                     <div class="form-group-modal">
-                                        <label>Attn To</label>
-                                        <input type="text" id="editAttn" value="${data.attnTo || ''}" placeholder="Contact person name" oninput="updateInvoicePreview()">
+                                        <label>Attn To (Optional)</label>
+                                        <input type="text" id="editAttn" value="${data.attnTo || ''}" placeholder="Contact Person Name" oninput="updateInvoicePreview()">
                                     </div>
                                     
                                     <div class="form-group-modal">
                                         <label>Client Address</label>
-                                        <textarea id="editAddress" rows="3" placeholder="Full address" oninput="updateInvoicePreview()" style="resize:vertical;">${data.clientAddress || ''}</textarea>
+                                        <textarea id="editClientAddress" rows="3" placeholder="Full address..." oninput="updateInvoicePreview()" style="resize:vertical;">${data.clientAddress || ''}</textarea>
                                     </div>
-                                    
+
                                     <div class="form-group-modal">
                                         <label>Domain</label>
                                         <input type="text" id="editDomain" value="${data.domain || ''}" placeholder="example.com" oninput="updateInvoicePreview()">
@@ -3745,8 +3796,8 @@ const generateFullTemplateHTML = (doc) => {
 
         window.updateInvoicePreview = () => {
             const client = document.getElementById('editClient')?.value;
+            const address = document.getElementById('editClientAddress')?.value;
             const attn = document.getElementById('editAttn')?.value;
-            const address = document.getElementById('editAddress')?.value;
             const domain = document.getElementById('editDomain')?.value;
             const dateVal = document.getElementById('editDate')?.value;
             const discount = parseFloat(document.getElementById('editDiscount')?.value || 0);
@@ -3755,7 +3806,6 @@ const generateFullTemplateHTML = (doc) => {
             const grandTotal = subtotal - discount;
 
             const pClient = document.getElementById('previewClient');
-            const pAttn = document.getElementById('previewAttn');
             const pAddress = document.getElementById('previewAddress');
             const pDate = document.getElementById('previewDate');
             const pSubtotal = document.getElementById('previewSubtotal');
@@ -3767,8 +3817,11 @@ const generateFullTemplateHTML = (doc) => {
             const instMeta = document.getElementById('installmentPreviewMeta');
             
             if(pClient) pClient.textContent = client || 'Select Client';
-            if(pAttn) pAttn.textContent = attn ? 'Attn: ' + attn : '';
             if(pAddress) pAddress.textContent = address || '';
+            
+            // Handle Attn display in preview (might need to add element dynamically if not present, but we added it in main render)
+            // Just updating text content for address is enough.
+            
             if(pDate) pDate.textContent = formatDate(dateVal);
             if(pSubtotal) pSubtotal.textContent = formatMYR(subtotal);
             if(pDiscount) pDiscount.textContent = `-${formatMYR(discount)}`;
@@ -3862,7 +3915,7 @@ const generateFullTemplateHTML = (doc) => {
             const data = {
                 number: id,
                 clientName: document.getElementById('editClient')?.value || '',
-                clientAddress: document.getElementById('editAddress')?.value || '',
+                clientAddress: document.getElementById('editClientAddress')?.value || '',
                 attnTo: document.getElementById('editAttn')?.value || '',
                 domain: document.getElementById('editDomain')?.value || '', 
                 date: document.getElementById('editDate')?.value || new Date().toISOString().split('T')[0],
@@ -3947,8 +4000,8 @@ const generateFullTemplateHTML = (doc) => {
                                 <div class="doc-preview-meta-item">
                                     <label>Bill To</label>
                                     <p id="previewClient">${data.clientName || 'Select Client'}</p>
-                                    <p id="previewQAttn" style="font-size:13px; color:#64748b; font-weight:400; margin-top:2px;">${data.attnTo ? 'Attn: ' + data.attnTo : ''}</p>
-                                    <p id="previewQAddress" style="font-size:12px; color:#94a3b8; font-weight:400; margin-top:2px; white-space:pre-line;">${data.clientAddress || ''}</p>
+                                    ${data.attnTo ? `<p style="font-size:12px; color:#64748b;">Attn: ${data.attnTo}</p>` : ''}
+                                    <p style="font-size:12px; color:#64748b; white-space: pre-wrap;" id="previewAddress">${data.clientAddress || ''}</p>
                                 </div>
                                 <div class="doc-preview-meta-item" style="text-align:right;">
                                     <label>Date</label>
@@ -3996,17 +4049,14 @@ const generateFullTemplateHTML = (doc) => {
                                         ${clientOptions}
                                     </select>
                                 </div>
-                                
                                 <div class="form-group-modal">
-                                    <label>Attn To</label>
-                                    <input type="text" id="editQAttn" value="${data.attnTo || ''}" placeholder="Contact person name" oninput="updateQuotationPreview()">
+                                    <label>Attn To (Optional)</label>
+                                    <input type="text" id="editQAttn" value="${data.attnTo || ''}" placeholder="Contact Person Name" oninput="updateQuotationPreview()">
                                 </div>
-                                
                                 <div class="form-group-modal">
                                     <label>Client Address</label>
-                                    <textarea id="editQAddress" rows="3" placeholder="Full address" oninput="updateQuotationPreview()" style="resize:vertical;">${data.clientAddress || ''}</textarea>
+                                    <textarea id="editQClientAddress" rows="3" placeholder="Full address..." oninput="updateQuotationPreview()" style="resize:vertical;">${data.clientAddress || ''}</textarea>
                                 </div>
-                                
                                 <div class="form-group-modal">
                                     <label>Date</label>
                                     <input type="date" id="editQDate" value="${data.date}" onchange="updateQuotationPreview()">
@@ -4091,8 +4141,7 @@ const generateFullTemplateHTML = (doc) => {
 
         window.updateQuotationPreview = () => {
             const client = document.getElementById('editQClient')?.value;
-            const attn = document.getElementById('editQAttn')?.value;
-            const address = document.getElementById('editQAddress')?.value;
+            const address = document.getElementById('editQClientAddress')?.value;
             const dateVal = document.getElementById('editQDate')?.value;
             const discount = parseFloat(document.getElementById('editQDiscount')?.value || 0);
 
@@ -4100,8 +4149,7 @@ const generateFullTemplateHTML = (doc) => {
             const total = subtotal - discount;
 
             if(document.getElementById('previewClient')) document.getElementById('previewClient').textContent = client || 'Select Client';
-            if(document.getElementById('previewQAttn')) document.getElementById('previewQAttn').textContent = attn ? 'Attn: ' + attn : '';
-            if(document.getElementById('previewQAddress')) document.getElementById('previewQAddress').textContent = address || '';
+            if(document.getElementById('previewAddress')) document.getElementById('previewAddress').textContent = address || '';
             if(document.getElementById('previewDate')) document.getElementById('previewDate').textContent = formatDate(dateVal);
 
             const tbody = document.getElementById('previewQuotationItemsBody');
@@ -4149,7 +4197,7 @@ const generateFullTemplateHTML = (doc) => {
             const data = {
                 number: id,
                 clientName: document.getElementById('editQClient')?.value || '',
-                clientAddress: document.getElementById('editQAddress')?.value || '',
+                clientAddress: document.getElementById('editQClientAddress')?.value || '',
                 attnTo: document.getElementById('editQAttn')?.value || '',
                 date: document.getElementById('editQDate')?.value || new Date().toISOString().split('T')[0],
                 status: document.getElementById('editQStatus')?.value || 'Draft',
@@ -4222,8 +4270,7 @@ const generateFullTemplateHTML = (doc) => {
                         type: 'Quotation', 
                         number: id, 
                         clientName: document.getElementById('editQClient')?.value || '', 
-                        clientAddress: document.getElementById('editQAddress')?.value || '',
-                        attnTo: document.getElementById('editQAttn')?.value || '',
+                        clientAddress: document.getElementById('editQClientAddress')?.value || '',
                         items: window.currentQuotationItems, 
                         discount: parseFloat(document.getElementById('editQDiscount')?.value || 0),
                         date: document.getElementById('editQDate')?.value 
@@ -4233,8 +4280,7 @@ const generateFullTemplateHTML = (doc) => {
                         type: 'Invoice', 
                         number: id, 
                         clientName: document.getElementById('editClient')?.value || '', 
-                        clientAddress: document.getElementById('editAddress')?.value || '',
-                        attnTo: document.getElementById('editAttn')?.value || '',
+                        clientAddress: document.getElementById('editClientAddress')?.value || '',
                         domain: document.getElementById('editDomain')?.value || '',
                         items: window.currentItems, 
                         discount: parseFloat(document.getElementById('editDiscount')?.value || 0),
@@ -4280,10 +4326,6 @@ const generateFullTemplateHTML = (doc) => {
                 </div>
             `).join('');
 
-            // Build address preview
-            const addressPreview = doc.clientAddress ? `<br><span style="font-size:12px; color:#94a3b8;">${doc.clientAddress.replace(/\n/g, '<br>')}</span>` : '';
-            const attnPreview = doc.attnTo ? `<br><span style="font-size:13px; color:#64748b;">Attn: ${doc.attnTo}</span>` : '';
-
             const content = `
                 <div class="email-tabs">
                     <button class="email-tab active" onclick="switchEmailTab('send')">Send Email</button>
@@ -4314,7 +4356,7 @@ const generateFullTemplateHTML = (doc) => {
                                     <table style="width:100%; font-size:14px; margin-bottom:16px;">
                                         <tr>
                                             <td style="color:#64748b;">Client:</td>
-                                            <td style="text-align:right; font-weight:600;">${doc.clientName || 'N/A'}${attnPreview}${addressPreview}</td>
+                                            <td style="text-align:right; font-weight:600;">${doc.clientName || 'N/A'}</td>
                                         </tr>
                                         <tr>
                                             <td style="color:#64748b;">Total:</td>
@@ -4358,7 +4400,6 @@ const generateFullTemplateHTML = (doc) => {
                             <p><strong>Type:</strong> ${docTitle}</p>
                             <p><strong>Number:</strong> ${doc.number || id}</p>
                             <p><strong>Client:</strong> ${doc.clientName || 'N/A'}</p>
-                            ${doc.attnTo ? `<p><strong>Attn:</strong> ${doc.attnTo}</p>` : ''}
                             <p><strong>Total:</strong> ${formatMYR(doc.total)}</p>
                         </div>
                         
@@ -4468,8 +4509,8 @@ const generateFullTemplateHTML = (doc) => {
                 if(!doc) doc = { 
                     type: 'Quotation', 
                     number: id, 
-                    clientName: document.getElementById('editQClient')?.value || '', 
-                    clientAddress: document.getElementById('editQAddress')?.value || '',
+                    clientName: document.getElementById('editQClient')?.value || '',
+                    clientAddress: document.getElementById('editQClientAddress')?.value || '',
                     attnTo: document.getElementById('editQAttn')?.value || '',
                     items: window.currentQuotationItems, 
                     discount: parseFloat(document.getElementById('editQDiscount')?.value || 0),
@@ -4480,8 +4521,8 @@ const generateFullTemplateHTML = (doc) => {
                 if(!doc) doc = { 
                     type: 'Invoice', 
                     number: id, 
-                    clientName: document.getElementById('editClient')?.value || '', 
-                    clientAddress: document.getElementById('editAddress')?.value || '',
+                    clientName: document.getElementById('editClient')?.value || '',
+                    clientAddress: document.getElementById('editClientAddress')?.value || '',
                     attnTo: document.getElementById('editAttn')?.value || '',
                     domain: document.getElementById('editDomain')?.value || '',
                     items: window.currentItems, 
@@ -5049,16 +5090,25 @@ const generateFullTemplateHTML = (doc) => {
             setupNavigation();
             
             const savedUser = localStorage.getItem('ddnex_user');
+            const initialLoader = document.getElementById('initialLoader');
+            
             if (savedUser) {
                 try {
                     const userObj = JSON.parse(savedUser);
+                    // We have a user, show dashboard immediately
+                    initialLoader.classList.add('hidden');
                     window.onUserLoggedIn(userObj);
                 } catch (e) {
                     localStorage.removeItem('ddnex_user');
-                    window.history.pushState({ path: '/login/auth' }, '', '/login/auth');
+                    initialLoader.classList.add('hidden');
+                    document.getElementById('loginPage').classList.remove('hidden');
+                    window.history.pushState({ path: '/auth/login' }, '', '/auth/login');
                 }
             } else {
-                window.history.pushState({ path: '/login/auth' }, '', '/login/auth');
+                // No user, show login after a tiny delay or immediately
+                initialLoader.classList.add('hidden');
+                document.getElementById('loginPage').classList.remove('hidden');
+                window.history.pushState({ path: '/auth/login' }, '', '/auth/login');
             }
         });
 
