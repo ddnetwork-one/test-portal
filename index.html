@@ -56,6 +56,7 @@
             
             --sidebar-width: 280px;
             --sidebar-collapsed: 72px;
+            --sidebar-hidden: 0px;
             --header-height: 64px;
             --radius-sm: 8px;
             --radius-md: 12px;
@@ -179,14 +180,23 @@
             box-shadow: var(--shadow-xl), 0 0 80px rgba(15, 98, 254, 0.1);
             animation: slideUp 0.6s var(--ease-bounce);
         }
-        .login-card.error-shake {
-            animation: slideUp 0.6s var(--ease-bounce), shake 0.5s ease-in-out;
+        
+        /* Error state for login card */
+        .login-card.error-state {
+            animation: shake 0.5s ease-in-out;
+            border-color: var(--accent-red);
         }
+        .login-card.error-state .form-input {
+            border-color: var(--accent-red);
+            background: #fff5f5;
+        }
+
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
-            20%, 40%, 60%, 80% { transform: translateX(8px); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
         }
+
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -197,6 +207,21 @@
         .login-title { text-align: center; margin-bottom: 32px; }
         .login-title h1 { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; font-family: var(--font-heading); }
         .login-title p { color: var(--text-muted); font-size: 14px; }
+        
+        .login-error-message {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #b91c1c;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        .login-error-message.visible { display: flex; }
+
         .form-group { margin-bottom: 20px; text-align: left; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
         .form-input-wrapper { position: relative; }
@@ -221,32 +246,6 @@
         .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); outline: none; }
         .form-input:focus + i, .form-input-wrapper:has(.form-input:focus) i { color: var(--primary); }
         
-        /* Error state for form inputs */
-        .form-input.error {
-            border-color: var(--accent-red);
-            background: #fef2f2;
-            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
-        }
-        .form-input.error + i { color: var(--accent-red); }
-        
-        /* Login error message */
-        .login-error-message {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: var(--radius-sm);
-            padding: 14px 16px;
-            margin-bottom: 20px;
-            display: none;
-            align-items: flex-start;
-            gap: 12px;
-            animation: fadeIn 0.3s ease;
-        }
-        .login-error-message.show { display: flex; }
-        .login-error-message i { color: var(--accent-red); font-size: 20px; flex-shrink: 0; margin-top: 2px; }
-        .login-error-message .error-content { flex: 1; }
-        .login-error-message .error-title { font-weight: 600; color: #991b1b; font-size: 14px; margin-bottom: 4px; }
-        .login-error-message .error-text { font-size: 13px; color: #b91c1c; line-height: 1.5; }
-        
         .btn-login {
             width: 100%;
             padding: 14px;
@@ -265,21 +264,22 @@
         .btn-login:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4); }
         .btn-login:active { transform: translateY(0); }
         .btn-login:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-
-        /* Reset password link */
-        .reset-password-link {
-            text-align: center;
+        
+        .login-footer-actions {
             margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-light);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
-        .reset-password-link button {
-            color: var(--primary);
-            font-size: 14px;
-            font-weight: 500;
+        
+        .btn-reset-pw {
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
             transition: color 0.2s;
         }
-        .reset-password-link button:hover { color: var(--primary-dark); text-decoration: underline; }
+        .btn-reset-pw:hover { color: var(--primary); text-decoration: underline; }
 
         /* =========================================
            DASHBOARD LAYOUT
@@ -302,13 +302,17 @@
             transition: width 0.3s var(--ease), transform 0.3s var(--ease);
             box-shadow: var(--shadow-sm);
         }
+        
+        /* Collapsed State (Icons only) */
         .sidebar.collapsed { width: var(--sidebar-collapsed); }
-        .sidebar.fully-hidden { 
-            width: 0; 
-            transform: translateX(-100%);
+        
+        /* Hidden State (Fully hidden) */
+        .sidebar.hidden-sidebar {
+            width: 0;
             border-right: none;
-            box-shadow: none;
+            overflow: hidden;
         }
+        
         .sidebar-header {
             height: var(--header-height);
             padding: 0 20px;
@@ -316,13 +320,17 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--border-light);
-            min-width: 0;
+            flex-shrink: 0;
         }
         .sidebar-logo { display: flex; align-items: center; gap: 10px; overflow: hidden; }
         .sidebar-logo img { height: 32px; flex-shrink: 0; }
         .sidebar-logo span { font-weight: 800; font-size: 18px; font-family: var(--font-heading); white-space: nowrap; transition: opacity 0.2s; }
         .sidebar.collapsed .sidebar-logo span { opacity: 0; width: 0; }
-        .sidebar.fully-hidden .sidebar-logo span { opacity: 0; width: 0; }
+        .sidebar.hidden-sidebar .sidebar-header { padding: 0; }
+        .sidebar.hidden-sidebar .sidebar-logo { opacity: 0; }
+
+        .sidebar-actions { display: flex; gap: 4px; }
+        
         .sidebar-toggle {
             width: 32px; height: 32px;
             border-radius: 8px;
@@ -336,20 +344,7 @@
         .sidebar-toggle:hover { background: var(--bg-body); color: var(--primary); }
         .sidebar.collapsed .sidebar-toggle i { transform: rotate(180deg); }
         
-        /* Sidebar menu toggle button (separate from collapse) */
-        .sidebar-menu-toggle {
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-        .sidebar-menu-toggle:hover { background: var(--bg-body); color: var(--primary); }
-        
-        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; overflow-x: hidden; }
+        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
         .nav-section-title {
             font-size: 11px;
             font-weight: 700;
@@ -363,7 +358,6 @@
             transition: opacity 0.2s;
         }
         .sidebar.collapsed .nav-section-title { opacity: 0; }
-        .sidebar.fully-hidden .nav-section-title { opacity: 0; }
         .nav-item {
             display: flex;
             align-items: center;
@@ -381,7 +375,6 @@
         .nav-item i { font-size: 20px; flex-shrink: 0; width: 24px; text-align: center; }
         .nav-item span { white-space: nowrap; transition: opacity 0.2s; }
         .sidebar.collapsed .nav-item span { opacity: 0; width: 0; }
-        .sidebar.fully-hidden .nav-item span { opacity: 0; width: 0; }
         .nav-item:hover { background: var(--bg-body); color: var(--text-main); }
         .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
         .nav-item.active::before {
@@ -394,7 +387,7 @@
             border-radius: 0 4px 4px 0;
         }
 
-        .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border-light); }
+        .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--border-light); flex-shrink: 0; }
         .user-mini-card {
             display: flex;
             align-items: center;
@@ -417,7 +410,6 @@
         }
         .user-info-mini { white-space: nowrap; overflow: hidden; transition: opacity 0.2s; }
         .sidebar.collapsed .user-info-mini { opacity: 0; width: 0; }
-        .sidebar.fully-hidden .user-info-mini { opacity: 0; width: 0; }
         .user-info-mini .name { font-weight: 600; font-size: 14px; }
         .user-info-mini .role { font-size: 12px; color: var(--text-muted); }
         .btn-logout {
@@ -438,12 +430,11 @@
         .btn-logout:hover { border-color: var(--accent-red); color: var(--accent-red); background: #fef2f2; }
         .btn-logout span { transition: opacity 0.2s; }
         .sidebar.collapsed .btn-logout span { display: none; }
-        .sidebar.fully-hidden .btn-logout span { display: none; }
 
         /* Main Content Area */
         .main-wrapper { flex: 1; margin-left: var(--sidebar-width); transition: margin-left 0.3s var(--ease); min-height: 100vh; display: flex; flex-direction: column; }
         .sidebar.collapsed ~ .main-wrapper { margin-left: var(--sidebar-collapsed); }
-        .sidebar.fully-hidden ~ .main-wrapper { margin-left: 0; }
+        .sidebar.hidden-sidebar ~ .main-wrapper { margin-left: 0; }
 
         /* Top Header */
         .top-header {
@@ -621,6 +612,7 @@
         }
         .action-btn:hover { background: var(--bg-body); color: var(--primary); }
         .action-btn.danger:hover { background: #fef2f2; color: var(--accent-red); }
+        .action-btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
 
         /* Filter/Search Bar */
         .filter-bar { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
@@ -1493,6 +1485,22 @@
         .team-option:hover { background: var(--bg-body); }
         .team-option input { margin: 0; }
 
+        /* Permission Grid for Admin */
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        .permission-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+        .permission-item label { font-size: 13px; font-weight: 500; }
+
         /* Responsive */
         @media(max-width: 768px) {
             .sidebar { transform: translateX(-100%); width: var(--sidebar-width); }
@@ -1609,14 +1617,11 @@
                 <h1>Internal Access</h1>
                 <p>Sign in to access DDNEX Management System</p>
             </div>
-
-            <!-- Login Error Message -->
+            
+            <!-- Error Message Box -->
             <div class="login-error-message" id="loginErrorMsg">
                 <i class="ri-error-warning-fill"></i>
-                <div class="error-content">
-                    <div class="error-title">Incorrect password.</div>
-                    <div class="error-text">If you are experiencing difficulties, please contact IT Support.</div>
-                </div>
+                <span id="loginErrorText">Incorrect password. If you are experiencing difficulties, please contact IT Support.</span>
             </div>
 
             <form id="loginForm" onsubmit="handleLogin(event)">
@@ -1640,14 +1645,12 @@
                 </button>
             </form>
             
-            <!-- Reset Password Link -->
-            <div class="reset-password-link">
-                <button type="button" onclick="openResetPasswordModal()">Forgot your password? Reset it here</button>
-            </div>
-            
-            <div style="margin-top: 20px; text-align: center; font-size: 11px; color: var(--text-muted);">
-                <p>DDNEX Internal Management System v2.5</p>
-                <p style="margin-top: 4px;">Authorized Personnel Only</p>
+            <div class="login-footer-actions">
+                <button class="btn-reset-pw" onclick="openResetPasswordModal()">Forgot Password? Request Reset</button>
+                <div style="font-size: 11px; color: var(--text-muted);">
+                    <p>DDNEX Internal Management System v2.5</p>
+                    <p style="margin-top: 4px;">Authorized Personnel Only</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1661,16 +1664,16 @@
                     <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX®">
                     <span>Portal</span>
                 </div>
-                <div style="display: flex; gap: 4px;">
-                    <button class="sidebar-menu-toggle" onclick="toggleSidebarMenu()" aria-label="Toggle Menu" title="Hide/Show Menu">
-                        <i class="ri-menu-fold-line" id="menuToggleIcon"></i>
-                    </button>
-                    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar" title="Collapse/Expand Sidebar">
+                <div class="sidebar-actions">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle Sidebar" id="toggleCollapseBtn">
                         <i class="ri-arrow-left-s-line"></i>
+                    </button>
+                    <button class="sidebar-toggle" onclick="hideSidebar()" aria-label="Hide Sidebar" id="toggleHideBtn">
+                        <i class="ri-menu-fold-line"></i>
                     </button>
                 </div>
             </div>
-            <nav class="sidebar-nav" id="sidebarNav">
+            <nav class="sidebar-nav">
                 <div class="nav-section-title">Main Menu</div>
                 <div class="nav-item" data-route="/dashboard">
                     <i class="ri-dashboard-line"></i>
@@ -1713,7 +1716,7 @@
                     <span>Profile</span>
                 </div>
             </nav>
-            <div class="sidebar-footer" id="sidebarFooter">
+            <div class="sidebar-footer">
                 <div class="user-mini-card">
                     <div class="user-avatar" id="sidebarAvatar">DD</div>
                     <div class="user-info-mini">
@@ -1735,6 +1738,9 @@
                 <div class="header-left">
                     <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
                         <i class="ri-menu-line"></i>
+                    </button>
+                    <button class="sidebar-toggle" onclick="showSidebar()" style="display:none;" id="showSidebarBtn">
+                        <i class="ri-menu-unfold-line"></i>
                     </button>
                     <div>
                         <h1 class="page-title-header" id="pageTitle">Dashboard</h1>
@@ -1807,7 +1813,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, setDoc, orderBy, limit, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -1823,8 +1829,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.firebaseDB = db;
         window.firebaseAuth = auth;
+        window.firebaseDB = db;
 
         const getCol = (name) => collection(db, `${name}_ddnex`);
 
@@ -1882,6 +1888,7 @@
             const qSuper = query(getCol('users'), where('userId', '==', '001'), where('role', '==', 'SuperAdmin'));
             const superSnap = await getDocs(qSuper);
             
+            // Auto-create SuperAdmin if not exists
             if (superSnap.empty && userId === '001' && password === '1234') {
                  await setDoc(doc(db, 'users_ddnex', 'superadmin_001'), {
                     userId: '001',
@@ -1890,6 +1897,7 @@
                     role: 'SuperAdmin',
                     status: 'active',
                     password: '1234', 
+                    permissions: { all: true }, // Full access
                     createdAt: new Date()
                 });
                 
@@ -1897,10 +1905,11 @@
                     uid: 'superadmin_001', 
                     displayName: 'Super Administrator', 
                     email: 'admin@ddnex.com',
-                    role: 'SuperAdmin'
+                    role: 'SuperAdmin',
+                    permissions: { all: true }
                 };
                 window.onUserLoggedIn(userMock);
-                return;
+                return { success: true };
             }
 
             try {
@@ -1913,27 +1922,51 @@
                     
                     if (userData.password === password) {
                         if (userData.status === 'suspended') {
-                            window.showLoginError("Access Denied", "Your account has been suspended. Please contact IT Support.");
-                            return;
+                            return { success: false, error: 'Account suspended' };
                         }
-                        window.clearLoginError();
                         window.onUserLoggedIn({ 
                             uid: userDoc.id, 
                             displayName: userData.name, 
                             email: userData.email,
                             role: userData.role,
-                            userId: userData.userId
+                            userId: userData.userId,
+                            permissions: userData.permissions || {}
                         });
+                        return { success: true };
                     } else {
-                        window.showLoginError("Incorrect password.", "If you are experiencing difficulties, please contact IT Support.");
+                        return { success: false, error: 'Wrong password' };
                     }
                 } else {
-                    window.showLoginError("Incorrect password.", "If you are experiencing difficulties, please contact IT Support.");
+                    return { success: false, error: 'User not found' };
                 }
             } catch (error) {
                 console.error(error);
-                window.showLoginError("Connection Error", "Unable to connect. Please try again.");
+                return { success: false, error: 'Connection error' };
             }
+        };
+
+        // Password Reset (SuperAdmin Only)
+        window.sendPasswordReset = async (email) => {
+            try {
+                await sendPasswordResetMessage(auth, email);
+                return { success: true };
+            } catch (error) {
+                console.error("Reset Error:", error);
+                return { success: false, error: error.message };
+            }
+        };
+
+        // Helper to manually set new password in Firestore (since we can't access Firebase Auth users directly easily without Admin SDK)
+        // This 'reset' essentially sets a known temp password for the user in Firestore
+        window.adminResetUserPassword = async (userId, newPassword) => {
+            const q = query(getCol('users'), where('userId', '==', userId));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                const userDoc = snap.docs[0];
+                await updateDoc(doc(db, 'users_ddnex', userDoc.id), { password: newPassword });
+                return true;
+            }
+            return false;
         };
 
         window.handleHardcodedLogout = () => {
@@ -2037,9 +2070,6 @@
         let currentRoute = '/auth/login';
         let emailLastSentTimestamp = localStorage.getItem('ddnex_last_email_sent') ? parseInt(localStorage.getItem('ddnex_last_email_sent')) : 0;
         
-        // Sidebar State
-        let sidebarMenuHidden = false;
-        
         // Pagination State
         let invoicePageState = { page: 1, perPage: 20, filteredData: [] };
         let quotationPageState = { page: 1, perPage: 20, filteredData: [] };
@@ -2052,108 +2082,13 @@
             'Custom System': 6800
         };
 
-        // =========================================
-        // LOGIN ERROR HANDLING
-        // =========================================
-        window.showLoginError = (title, message) => {
-            const errorBox = document.getElementById('loginErrorMsg');
-            const loginCard = document.getElementById('loginCard');
-            const passwordInput = document.getElementById('password');
-            
-            errorBox.querySelector('.error-title').textContent = title;
-            errorBox.querySelector('.error-text').textContent = message;
-            errorBox.classList.add('show');
-            loginCard.classList.add('error-shake');
-            passwordInput.classList.add('error');
-            
-            setTimeout(() => {
-                loginCard.classList.remove('error-shake');
-            }, 500);
-        };
-
-        window.clearLoginError = () => {
-            const errorBox = document.getElementById('loginErrorMsg');
-            const passwordInput = document.getElementById('password');
-            
-            errorBox.classList.remove('show');
-            passwordInput.classList.remove('error');
-        };
-
-        // =========================================
-        // RESET PASSWORD MODAL
-        // =========================================
-        window.openResetPasswordModal = () => {
-            openModal('Reset Password', `
-                <div class="form-group-modal">
-                    <label>Your Email Address</label>
-                    <input type="email" id="resetEmail" placeholder="Enter your registered email">
-                </div>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
-                    A password reset link will be sent to your email address if an account exists.
-                </p>
-            `, async () => {
-                const email = document.getElementById('resetEmail').value;
-                if (!email) {
-                    showPopup("Error", "Please enter your email address.", false);
-                    return;
-                }
-                
-                showLoading("Sending reset link...");
-                
-                // Check if user exists with this email
-                try {
-                    const users = await window.dbOperations.getUsers();
-                    const user = users.find(u => u.email === email);
-                    
-                    if (user) {
-                        // Send password reset email via EmailJS
-                        const resetLink = `https://ddnex.com/reset-password?uid=${user.userId}`;
-                        const htmlContent = `
-                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-                                <div style="text-align: center; margin-bottom: 30px;">
-                                    <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="max-width: 120px;">
-                                </div>
-                                <div style="background: #ffffff; border-radius: 12px; padding: 30px; border: 1px solid #e2e8f0;">
-                                    <h2 style="color: #0f172a; margin-bottom: 16px;">Password Reset Request</h2>
-                                    <p style="color: #475569; font-size: 15px; margin-bottom: 20px;">
-                                        Hello ${user.name},<br><br>
-                                        We received a request to reset your password. Your current login details are:
-                                    </p>
-                                    <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-                                        <p style="margin: 0; font-size: 14px;"><strong>User ID:</strong> ${user.userId}</p>
-                                        <p style="margin: 8px 0 0 0; font-size: 14px;"><strong>Password:</strong> ${user.password}</p>
-                                    </div>
-                                    <p style="color: #64748b; font-size: 13px;">
-                                        If you did not request this, please ignore this email or contact IT Support.
-                                    </p>
-                                </div>
-                                <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 24px;">
-                                    © 2025 DDNEX. All rights reserved.
-                                </p>
-                            </div>
-                        `;
-                        
-                        const result = await sendEmailViaEmailJS(email, user.name, 'DDNEX Password Reset', htmlContent);
-                        
-                        hideLoading();
-                        closeModal();
-                        
-                        if (result.success) {
-                            showPopup("Email Sent", "Your password has been sent to your email address. Please check your inbox.", true);
-                        } else {
-                            showPopup("Error", "Failed to send reset email. Please contact IT Support.", false);
-                        }
-                    } else {
-                        hideLoading();
-                        closeModal();
-                        showPopup("Email Sent", "If an account exists with this email, you will receive a reset link.", true);
-                    }
-                } catch (error) {
-                    console.error("Reset password error:", error);
-                    hideLoading();
-                    showPopup("Error", "Failed to process request. Please try again.", false);
-                }
-            });
+        // Permission Check Helper
+        const hasPermission = (permName) => {
+            if (!currentUser) return false;
+            if (currentUser.role === 'SuperAdmin') return true; // SuperAdmin has all
+            if (currentUser.permissions && currentUser.permissions.all) return true;
+            if (currentUser.permissions && currentUser.permissions[permName]) return true;
+            return false;
         };
 
         // =========================================
@@ -2339,10 +2274,26 @@
             e.preventDefault();
             const uid = document.getElementById('userId').value;
             const pass = document.getElementById('password').value;
+            const loginCard = document.getElementById('loginCard');
+            const errorMsg = document.getElementById('loginErrorMsg');
+            
+            // Reset error state
+            loginCard.classList.remove('error-state');
+            errorMsg.classList.remove('visible');
             
             showLoading("Authenticating...");
-            window.handleHardcodedLogin(uid, pass).finally(() => {
+            window.handleHardcodedLogin(uid, pass).then(result => {
                 hideLoading();
+                if (!result.success) {
+                    // Show error
+                    loginCard.classList.add('error-state');
+                    errorMsg.classList.add('visible');
+                    if(result.error === 'Account suspended') {
+                        errorMsg.querySelector('span').textContent = "Your account has been suspended. Please contact IT Support.";
+                    } else {
+                         errorMsg.querySelector('span').textContent = "Incorrect password. If you are experiencing difficulties, please contact IT Support.";
+                    }
+                }
             });
         };
 
@@ -2387,8 +2338,33 @@
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('dashboardApp').classList.remove('visible');
             document.getElementById('loginForm').reset();
-            window.clearLoginError();
+            
+            // Clear errors
+            document.getElementById('loginCard').classList.remove('error-state');
+            document.getElementById('loginErrorMsg').classList.remove('visible');
+            
             window.history.pushState({ path: '/auth/login' }, '', '/auth/login');
+        };
+
+        // Reset Password Modal
+        window.openResetPasswordModal = () => {
+            const content = `
+                <p style="margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">
+                    If you have forgotten your password, please contact the Super Administrator to reset it for you.
+                </p>
+                <div class="form-group-modal">
+                    <label>Your User ID</label>
+                    <input type="text" id="resetUserId" placeholder="e.g. 001">
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                    Note: This feature is currently manual. Please contact IT Support directly.
+                </p>
+            `;
+            
+            openModal("Password Reset", content, () => {
+                showPopup("Info", "Please contact your Super Administrator or IT Support to reset your password.", true);
+                closeModal();
+            });
         };
 
         // Utility Functions
@@ -2465,26 +2441,36 @@
             closePopup();
         };
 
-        // Sidebar Toggle - Collapse/Expand (icons only)
+        // Sidebar Toggle
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
+            sidebar.classList.remove('hidden-sidebar');
             sidebar.classList.toggle('collapsed');
+            updateSidebarButtons();
         }
         
-        // Sidebar Menu Toggle - Fully Hide/Show
-        function toggleSidebarMenu() {
+        function hideSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const menuIcon = document.getElementById('menuToggleIcon');
+            sidebar.classList.add('hidden-sidebar');
+            sidebar.classList.remove('collapsed');
+            updateSidebarButtons();
+        }
+        
+        function showSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.remove('hidden-sidebar');
+            sidebar.classList.remove('collapsed');
+            updateSidebarButtons();
+        }
+        
+        function updateSidebarButtons() {
+            const sidebar = document.getElementById('sidebar');
+            const showBtn = document.getElementById('showSidebarBtn');
             
-            sidebarMenuHidden = !sidebarMenuHidden;
-            
-            if (sidebarMenuHidden) {
-                sidebar.classList.add('fully-hidden');
-                sidebar.classList.remove('collapsed');
-                menuIcon.className = 'ri-menu-unfold-line';
+            if(sidebar.classList.contains('hidden-sidebar')) {
+                showBtn.style.display = 'flex';
             } else {
-                sidebar.classList.remove('fully-hidden');
-                menuIcon.className = 'ri-menu-fold-line';
+                showBtn.style.display = 'none';
             }
         }
         
@@ -3383,6 +3369,7 @@ const generateFullTemplateHTML = (doc) => {
         // --- CLIENTS ---
         async function renderClientsSection() {
             const clients = await window.dbOperations.getClients();
+            const canDelete = hasPermission('delete_client');
             
             document.getElementById('mainContent').innerHTML = `
                 <div class="filter-bar">
@@ -3395,7 +3382,7 @@ const generateFullTemplateHTML = (doc) => {
                     </button>
                 </div>
                 <div class="client-grid" id="clientGrid">
-                    ${clients.map(c => renderClientCard(c)).join('')}
+                    ${clients.map(c => renderClientCard(c, canDelete)).join('')}
                 </div>
             `;
 
@@ -3426,12 +3413,13 @@ const generateFullTemplateHTML = (doc) => {
             let cleaned = phone.replace(/\D/g, '');
             if(cleaned.startsWith('0')) cleaned = '6' + cleaned;
             if(!cleaned.startsWith('6')) cleaned = '6' + cleaned;
+
             
             const text = encodeURIComponent(`Hello ${name}, this is a reminder from DDNEX.`);
             return `https://wa.me/${cleaned}?text=${text}`;
         };
 
-        const renderClientCard = (c) => `
+        const renderClientCard = (c, canDelete) => `
             <div class="client-card" id="client-card-${c.id}">
                 <div class="client-header">
                     <div class="client-avatar" style="background: ${c.color || '#0f62fe'}20; color: ${c.color || '#0f62fe'};">${getInitials(c.name)}</div>
@@ -3454,7 +3442,7 @@ const generateFullTemplateHTML = (doc) => {
                 <div class="client-actions">
                     <a href="${formatWhatsApp(c.phone, c.name)}" target="_blank" rel="noopener noreferrer" class="btn-sm btn-whatsapp"><i class="ri-whatsapp-line"></i> Reminder</a>
                     <button class="btn-sm btn-outline-sm" onclick="editClient('${c.id}')"><i class="ri-edit-line"></i> Edit</button>
-                    <button class="btn-sm btn-outline-sm" style="border-color:#fecaca; color:#dc2626;" onclick="deleteClient('${c.id}')"><i class="ri-delete-bin-line"></i></button>
+                    ${canDelete ? `<button class="btn-sm btn-outline-sm" style="border-color:#fecaca; color:#dc2626;" onclick="deleteClient('${c.id}')"><i class="ri-delete-bin-line"></i></button>` : ''}
                 </div>
             </div>
         `;
@@ -3463,6 +3451,7 @@ const generateFullTemplateHTML = (doc) => {
         async function renderCashbillSection() {
             const orders = await window.dbOperations.getOrders();
             const sortedOrders = sortByDateNewest(orders);
+            const canDelete = hasPermission('delete_invoice');
 
             invoicePageState.filteredData = sortedOrders;
             invoicePageState.page = 1;
@@ -3514,10 +3503,10 @@ const generateFullTemplateHTML = (doc) => {
                 </div>
             `;
 
-            renderPagination(invoicePageState, 'invoiceTableBody', renderInvoiceRow);
+            renderPagination(invoicePageState, 'invoiceTableBody', (doc) => renderInvoiceRow(doc, canDelete));
         }
 
-        const renderInvoiceRow = (doc) => {
+        const renderInvoiceRow = (doc, canDelete) => {
             const dateStr = formatDate(doc.date || doc.createdAt);
             const clientName = doc.clientName || doc.customerName || 'N/A';
             const amount = doc.total || doc.price || doc.finalPrice || 0;
@@ -3533,9 +3522,9 @@ const generateFullTemplateHTML = (doc) => {
                 <td>${formatMYR(amount)}</td>
                 <td><span class="status ${statusClass}">${doc.status || 'Draft'}</span></td>
                 <td onclick="event.stopPropagation()">
-                    <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', 'Invoice', '${doc.number || doc.id}')"><i class="ri-printer-line"></i></button>
+                    <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', 'Invoice')"><i class="ri-printer-line"></i></button>
                     <button class="action-btn" title="Email" onclick="openEmailTemplateModal('${doc.id}', 'Invoice')"><i class="ri-mail-line"></i></button>
-                    <button class="action-btn danger" title="Delete" onclick="deleteDocGeneric('${doc.id}', 'Invoice')"><i class="ri-delete-bin-line"></i></button>
+                    ${canDelete ? `<button class="action-btn danger" title="Delete" onclick="deleteDocGeneric('${doc.id}', 'Invoice')"><i class="ri-delete-bin-line"></i></button>` : ''}
                 </td>
             </tr>
             `;
@@ -3544,6 +3533,7 @@ const generateFullTemplateHTML = (doc) => {
         window.filterInvoices = async () => {
             const orders = await window.dbOperations.getOrders();
             const sortedOrders = sortByDateNewest(orders);
+            const canDelete = hasPermission('delete_invoice');
             
             const searchTerm = document.getElementById('invoiceSearchInput').value.toLowerCase();
             const statusCheckboxes = document.querySelectorAll('#invoiceStatusDropdown input:checked');
@@ -3560,7 +3550,7 @@ const generateFullTemplateHTML = (doc) => {
 
             invoicePageState.filteredData = filtered;
             invoicePageState.page = 1;
-            renderPagination(invoicePageState, 'invoiceTableBody', renderInvoiceRow);
+            renderPagination(invoicePageState, 'invoiceTableBody', (doc) => renderInvoiceRow(doc, canDelete));
 
             const label = document.getElementById('invoiceStatusLabel');
             if(selectedStatuses.length === 0) {
@@ -3576,6 +3566,7 @@ const generateFullTemplateHTML = (doc) => {
         async function renderQuotationsSection() {
             const quotations = await window.dbOperations.getQuotations();
             const sortedQuotations = sortByDateNewest(quotations);
+            const canDelete = hasPermission('delete_quotation');
 
             quotationPageState.filteredData = sortedQuotations;
             quotationPageState.page = 1;
@@ -3625,10 +3616,10 @@ const generateFullTemplateHTML = (doc) => {
                 </div>
             `;
 
-            renderPagination(quotationPageState, 'quotationTableBody', renderQuotationRow);
+            renderPagination(quotationPageState, 'quotationTableBody', (doc) => renderQuotationRow(doc, canDelete));
         }
 
-        const renderQuotationRow = (doc) => {
+        const renderQuotationRow = (doc, canDelete) => {
             const dateStr = formatDate(doc.date || doc.createdAt);
             const clientName = doc.clientName || 'N/A';
             const amount = doc.total || 0;
@@ -3643,9 +3634,9 @@ const generateFullTemplateHTML = (doc) => {
                 <td>${formatMYR(amount)}</td>
                 <td><span class="status ${statusClass}">${doc.status || 'Draft'}</span></td>
                 <td onclick="event.stopPropagation()">
-                    <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', 'Quotation', '${doc.number || doc.id}')"><i class="ri-printer-line"></i></button>
+                    <button class="action-btn" title="Print" onclick="printDocument('${doc.id}', 'Quotation')"><i class="ri-printer-line"></i></button>
                     <button class="action-btn" title="Email" onclick="openEmailTemplateModal('${doc.id}', 'Quotation')"><i class="ri-mail-line"></i></button>
-                    <button class="action-btn danger" title="Delete" onclick="deleteDocGeneric('${doc.id}', 'Quotation')"><i class="ri-delete-bin-line"></i></button>
+                    ${canDelete ? `<button class="action-btn danger" title="Delete" onclick="deleteDocGeneric('${doc.id}', 'Quotation')"><i class="ri-delete-bin-line"></i></button>` : ''}
                 </td>
             </tr>
             `;
@@ -3654,6 +3645,7 @@ const generateFullTemplateHTML = (doc) => {
         window.filterQuotations = async () => {
             const quotations = await window.dbOperations.getQuotations();
             const sortedQuotations = sortByDateNewest(quotations);
+            const canDelete = hasPermission('delete_quotation');
             
             const searchTerm = document.getElementById('quotationSearchInput').value.toLowerCase();
             const statusCheckboxes = document.querySelectorAll('#quotationStatusDropdown input:checked');
@@ -3670,7 +3662,7 @@ const generateFullTemplateHTML = (doc) => {
 
             quotationPageState.filteredData = filtered;
             quotationPageState.page = 1;
-            renderPagination(quotationPageState, 'quotationTableBody', renderQuotationRow);
+            renderPagination(quotationPageState, 'quotationTableBody', (doc) => renderQuotationRow(doc, canDelete));
 
             const label = document.getElementById('quotationStatusLabel');
             if(selectedStatuses.length === 0) {
@@ -3738,6 +3730,7 @@ const generateFullTemplateHTML = (doc) => {
         // INVOICE EDITOR
         async function renderInvoiceEditor(id) {
             let data = await window.dbOperations.getOrder(id);
+            const canDelete = hasPermission('delete_invoice');
             
             if (!data) {
                 data = {
@@ -3780,9 +3773,9 @@ const generateFullTemplateHTML = (doc) => {
                                 <button class="btn btn-warning" onclick="commitInvoice('${id}')"><i class="ri-check-double-line"></i> Commit</button>
                              ` : ''}
                              <button class="btn btn-success" onclick="saveInvoice('${id}')"><i class="ri-save-line"></i> Save</button>
-                             <button class="btn btn-primary" onclick="printDocument('${id}', 'Invoice', '${data.number || id}')"><i class="ri-printer-line"></i> Print</button>
+                             <button class="btn btn-primary" onclick="printDocument('${id}', 'Invoice')"><i class="ri-printer-line"></i> Print</button>
                              <button class="btn btn-outline" onclick="openEmailTemplateModal('${id}', 'Invoice')"><i class="ri-mail-line"></i> Email</button>
-                             <button class="btn btn-danger" onclick="deleteDocGeneric('${id}', 'Invoice')"><i class="ri-delete-bin-line"></i> Delete</button>
+                             ${canDelete ? `<button class="btn btn-danger" onclick="deleteDocGeneric('${id}', 'Invoice')"><i class="ri-delete-bin-line"></i> Delete</button>` : ''}
                         </div>
                     </div>
                     
@@ -4140,12 +4133,11 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
-        // FIXED: Commit Invoice - Now auto-saves before changing status
+        // FIXED: Commit Invoice
         window.commitInvoice = async (id) => {
             if(confirm("Commit this invoice? This will save all changes and change status to 'Unpaid'. The invoice will then be ready for printing and emailing.")) {
                 showLoading("Saving and committing...");
                 
-                // First, gather all current form data
                 const type = window.currentPaymentType || 'One-Time';
                 let months = 1;
                 if(type === '12-Month') months = 12;
@@ -4166,7 +4158,7 @@ const generateFullTemplateHTML = (doc) => {
                     attnTo: document.getElementById('editAttn')?.value || '',
                     domain: document.getElementById('editDomain')?.value || '', 
                     date: document.getElementById('editDate')?.value || new Date().toISOString().split('T')[0],
-                    status: 'Unpaid', // Set status to Unpaid
+                    status: 'Unpaid',
                     items: window.currentItems,
                     discount: discount,
                     total: invoiceTotal, 
@@ -4183,7 +4175,6 @@ const generateFullTemplateHTML = (doc) => {
                     await window.dbOperations.setOrder(id, data);
                     hideLoading();
                     showPopup("Committed", "Invoice has been saved and committed successfully. Status is now 'Unpaid'.");
-                    // Re-render the editor to reflect the new status
                     renderInvoiceEditor(id);
                 } catch (error) {
                     console.error("Error committing invoice:", error);
@@ -4242,6 +4233,8 @@ const generateFullTemplateHTML = (doc) => {
         // --- QUOTATION EDITOR (Updated with Address & Attn) ---
         async function renderQuotationEditor(id) {
             let data = await window.dbOperations.getQuotation(id);
+            const canDelete = hasPermission('delete_quotation');
+            
             if (!data) {
                 data = {
                     number: id,
@@ -4279,9 +4272,9 @@ const generateFullTemplateHTML = (doc) => {
                                 <button class="btn btn-warning" onclick="commitQuotation('${id}')"><i class="ri-check-double-line"></i> Commit</button>
                              ` : ''}
                              <button class="btn btn-success" onclick="saveQuotation('${id}')"><i class="ri-save-line"></i> Save Quotation</button>
-                             <button class="btn btn-primary" onclick="printDocument('${id}', 'Quotation', '${data.number || id}')"><i class="ri-printer-line"></i> Print</button>
+                             <button class="btn btn-primary" onclick="printDocument('${id}', 'Quotation')"><i class="ri-printer-line"></i> Print</button>
                              <button class="btn btn-outline" onclick="openEmailTemplateModal('${id}', 'Quotation')"><i class="ri-mail-line"></i> Email</button>
-                             <button class="btn btn-danger" onclick="deleteDocGeneric('${id}', 'Quotation')"><i class="ri-delete-bin-line"></i> Delete</button>
+                             ${canDelete ? `<button class="btn btn-danger" onclick="deleteDocGeneric('${id}', 'Quotation')"><i class="ri-delete-bin-line"></i> Delete</button>` : ''}
                         </div>
                     </div>
                     
@@ -4480,12 +4473,11 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
-        // FIXED: Commit Quotation - Now auto-saves before changing status
+        // FIXED: Commit Quotation
         window.commitQuotation = async (id) => {
-            if(confirm("Commit this quotation? This will save all changes and change status to 'Pending'. The quotation will then be ready for sending to client.")) {
+            if(confirm("Commit this quotation? This will save all changes and change status to 'Pending'.")) {
                 showLoading("Saving and committing...");
                 
-                // First, gather all current form data
                 const subtotal = window.currentQuotationItems.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
                 const discount = parseFloat(document.getElementById('editQDiscount')?.value || 0);
                 const total = subtotal - discount;
@@ -4496,7 +4488,7 @@ const generateFullTemplateHTML = (doc) => {
                     clientAddress: document.getElementById('editQClientAddress')?.value || '',
                     attnTo: document.getElementById('editQAttn')?.value || '',
                     date: document.getElementById('editQDate')?.value || new Date().toISOString().split('T')[0],
-                    status: 'Pending', // Set status to Pending
+                    status: 'Pending',
                     items: window.currentQuotationItems,
                     discount: discount,
                     subtotal: subtotal,
@@ -4508,13 +4500,12 @@ const generateFullTemplateHTML = (doc) => {
                 try {
                     await window.dbOperations.setQuotation(id, data);
                     hideLoading();
-                    showPopup("Committed", "Quotation has been saved and committed successfully. Status is now 'Pending'.");
-                    // Re-render the editor to reflect the new status
+                    showPopup("Committed", "Quotation has been saved and committed successfully.");
                     renderQuotationEditor(id);
                 } catch (error) {
                     console.error("Error committing quotation:", error);
                     hideLoading();
-                    showPopup("Error", "Failed to commit quotation. Please try again.", false);
+                    showPopup("Error", "Failed to commit quotation.", false);
                 }
             }
         };
@@ -4547,7 +4538,7 @@ const generateFullTemplateHTML = (doc) => {
             } catch (error) {
                 console.error("Error saving quotation:", error);
                 hideLoading();
-                showPopup("Error", "Failed to save quotation. Please try again.", false);
+                showPopup("Error", "Failed to save quotation.", false);
             }
         };
 
@@ -4580,7 +4571,7 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
         
-        // FIXED: Delete Document - Now properly deletes and navigates back
+        // FIXED: Delete Document
         window.deleteDocGeneric = async (id, type) => {
             if(confirm(`Are you sure you want to delete this ${type}? This action cannot be undone.`)) {
                 showLoading("Deleting...");
@@ -4601,12 +4592,12 @@ const generateFullTemplateHTML = (doc) => {
                 } catch (error) {
                     console.error("Error deleting document:", error);
                     hideLoading();
-                    showPopup("Error", "Failed to delete document. Please try again.", false);
+                    showPopup("Error", "Failed to delete document.", false);
                 }
             }
         };
 
-        // ================== EMAIL TEMPLATE MODAL (Updated with CC/BCC) ==================
+        // ================== EMAIL TEMPLATE MODAL ==================
         window.openEmailTemplateModal = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
@@ -4642,10 +4633,8 @@ const generateFullTemplateHTML = (doc) => {
                 }
             }
 
-            // FIXED: Ensure items array is properly initialized
             if(!doc.items || !Array.isArray(doc.items)) {
                 doc.items = [];
-                // Try to get values from legacy fields
                 const fallbackAmount = parseFloat(doc.subtotal || doc.price || doc.total || doc.grandTotal || 0);
                 if (fallbackAmount > 0 || doc.description) {
                     doc.items = [{
@@ -4659,7 +4648,6 @@ const generateFullTemplateHTML = (doc) => {
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
 
-            // Generate BOTH versions
             const summarizedHTML = generateSummarizedEmailHTML(doc);
             const fullTemplateHTML = generateFullTemplateHTML(doc);
             
@@ -4669,7 +4657,6 @@ const generateFullTemplateHTML = (doc) => {
             let clientEmail = '';
             if(doc.customerEmail) clientEmail = doc.customerEmail;
 
-            // Build items summary for preview
             const itemsSummary = doc.items.map(item => `
                 <div class="item-row-summary">
                     <span>${item.description || '-'}</span>
@@ -4677,7 +4664,6 @@ const generateFullTemplateHTML = (doc) => {
                 </div>
             `).join('');
 
-            // Fetch Team Members for CC/BCC
             const teamMembers = await window.dbOperations.getTeam();
             const teamOptionsHtml = teamMembers.map(m => `
                 <label class="team-option">
@@ -4694,7 +4680,6 @@ const generateFullTemplateHTML = (doc) => {
                 
                 <div class="email-modal-grid">
                     <div>
-                        <!-- SEND EMAIL TAB -->
                         <div id="emailTabSend">
                             <div class="form-group-modal">
                                 <label>Recipient Email</label>
@@ -4705,13 +4690,13 @@ const generateFullTemplateHTML = (doc) => {
                                 <div class="form-group-modal">
                                     <label>CC Team</label>
                                     <div class="team-select-container" id="ccTeamContainer">
-                                        ${teamOptionsHtml || '<p style="padding:10px; font-size:13px; color:#64748b;">No team members added yet.</p>'}
+                                        ${teamOptionsHtml || '<p style="padding:10px; font-size:13px; color:#64748b;">No team members.</p>'}
                                     </div>
                                 </div>
                                 <div class="form-group-modal">
                                     <label>BCC Team</label>
                                     <div class="team-select-container" id="bccTeamContainer">
-                                         ${teamOptionsHtml || '<p style="padding:10px; font-size:13px; color:#64748b;">No team members added yet.</p>'}
+                                         ${teamOptionsHtml || '<p style="padding:10px; font-size:13px; color:#64748b;">No team members.</p>'}
                                     </div>
                                 </div>
                             </div>
@@ -4721,9 +4706,8 @@ const generateFullTemplateHTML = (doc) => {
                                 <input type="text" id="emailSubject" value="${defaultSubject}">
                             </div>
                             
-                            <!-- Email Preview -->
                             <div style="margin-top:16px;">
-                                <label style="font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; display:block;">Email Preview (Summarized)</label>
+                                <label style="font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:8px; display:block;">Email Preview</label>
                                 <div class="email-summary-preview">
                                     <div style="text-align:center; margin-bottom:20px;">
                                         <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="max-width:100px; margin-bottom:12px;">
@@ -4752,24 +4736,22 @@ const generateFullTemplateHTML = (doc) => {
                             <div id="emailSendStatus"></div>
                         </div>
                         
-                        <!-- DOWNLOAD / COPY TAB -->
                         <div id="emailTabDownload" style="display:none;">
                             <div class="email-info-box" style="background:#fef3c7; border-color:#fcd34d;">
                                 <h4 style="color:#92400e;"><i class="ri-information-line"></i> Full Template</h4>
-                                <p style="color:#92400e;">Use this for PDF printing or copying the complete invoice/quotation design.</p>
+                                <p style="color:#92400e;">Use this for PDF printing or copying the complete design.</p>
                             </div>
                             
                             <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="btn btn-outline" onclick="copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Full HTML</button>
                                 <button class="btn btn-outline" onclick="downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
-                                <button class="btn btn-primary" onclick="printDocument('${id}', '${type}', '${doc.number || id}')"><i class="ri-printer-line"></i> Print PDF</button>
+                                <button class="btn btn-primary" onclick="printDocument('${id}', '${type}')"><i class="ri-printer-line"></i> Print PDF</button>
                             </div>
                             
                             <textarea id="emailCodeTextarea" style="width:100%; height:250px; font-family:monospace; font-size:11px; border:1px solid #e2e8f0; border-radius:8px; padding:12px; resize:vertical; margin-top:16px;" readonly>${fullTemplateHTML.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
                         </div>
                     </div>
                     
-                    <!-- RIGHT SIDEBAR -->
                     <div>
                         <div class="email-info-box">
                             <h4><i class="ri-file-text-line"></i> Document Info</h4>
@@ -4781,24 +4763,12 @@ const generateFullTemplateHTML = (doc) => {
                         
                         <div class="email-info-box">
                             <h4><i class="ri-information-line"></i> Email Info</h4>
-                            <p style="font-size:12px;">The email sent will be <strong>summarized</strong> with item details.</p>
-                            <p style="font-size:12px; margin-top:8px;">Compatible with all major email clients.</p>
-                            <p style="font-size:12px; margin-top:8px;"><strong>CC/BCC:</strong> Select team members on the left to include them.</p>
-                        </div>
-                        
-                        <div class="email-info-box">
-                            <h4><i class="ri-mail-line"></i> Email Compatibility</h4>
-                            <p style="margin-top:8px;">
-                                <span style="display:inline-block;background:#fef3c7;color:#92400e;padding:4px 8px;border-radius:4px;font-size:11px;margin:2px;">Gmail</span>
-                                <span style="display:inline-block;background:#dbeafe;color:#1e40af;padding:4px 8px;border-radius:4px;font-size:11px;margin:2px;">Outlook</span>
-                                <span style="display:inline-block;background:#e0e7ff;color:#4f46e5;padding:4px 8px;border-radius:4px;font-size:11px;margin:2px;">Yahoo</span>
-                            </p>
+                            <p style="font-size:12px;">The email sent will be <strong>summarized</strong>.</p>
                         </div>
                     </div>
                 </div>
             `;
 
-            // Store the HTML for later use
             window.currentEmailHTML = summarizedHTML;
             window.currentFullHTML = fullTemplateHTML;
 
@@ -4822,11 +4792,9 @@ const generateFullTemplateHTML = (doc) => {
             const toEmail = document.getElementById('emailRecipient').value;
             const subject = document.getElementById('emailSubject').value;
             
-            // Collect CC Emails
             const ccCheckboxes = document.querySelectorAll('#ccTeamContainer input:checked');
             const ccEmails = Array.from(ccCheckboxes).map(cb => cb.value).join(',');
             
-            // Collect BCC Emails
             const bccCheckboxes = document.querySelectorAll('#bccTeamContainer input:checked');
             const bccEmails = Array.from(bccCheckboxes).map(cb => cb.value).join(',');
             
@@ -4834,7 +4802,6 @@ const generateFullTemplateHTML = (doc) => {
             if (type === 'Quotation') doc = await window.dbOperations.getQuotation(id);
             else doc = await window.dbOperations.getOrder(id);
             
-            // FIXED: Ensure items array is properly handled
             if(!doc.items || !Array.isArray(doc.items)) {
                 doc.items = [];
                 const fallbackAmount = parseFloat(doc.subtotal || doc.price || doc.total || doc.grandTotal || 0);
@@ -4850,7 +4817,6 @@ const generateFullTemplateHTML = (doc) => {
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
             
-            // Use SUMMARIZED version for email
             const emailHtml = generateSummarizedEmailHTML(doc);
             
             await window.sendEmailDirectly(toEmail, subject, emailHtml, doc.number || id, forceSend, ccEmails, bccEmails);
@@ -4886,14 +4852,14 @@ const generateFullTemplateHTML = (doc) => {
             URL.revokeObjectURL(url);
         };
 
-        // Print Logic - Uses FULL template - Now with custom PDF name
-        window.printDocument = async (id, type, docNumber) => {
+        // Print Logic - Uses FULL template
+        window.printDocument = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
                 doc = await window.dbOperations.getQuotation(id);
                 if(!doc) doc = { 
                     type: 'Quotation', 
-                    number: docNumber || id, 
+                    number: id, 
                     clientName: document.getElementById('editQClient')?.value || '',
                     clientAddress: document.getElementById('editQClientAddress')?.value || '',
                     attnTo: document.getElementById('editQAttn')?.value || '',
@@ -4905,7 +4871,7 @@ const generateFullTemplateHTML = (doc) => {
                 doc = await window.dbOperations.getOrder(id);
                 if(!doc) doc = { 
                     type: 'Invoice', 
-                    number: docNumber || id, 
+                    number: id, 
                     clientName: document.getElementById('editClient')?.value || '',
                     clientAddress: document.getElementById('editClientAddress')?.value || '',
                     attnTo: document.getElementById('editAttn')?.value || '',
@@ -4918,7 +4884,6 @@ const generateFullTemplateHTML = (doc) => {
                 };
             }
 
-            // FIXED: Ensure items array is properly handled
             if(!doc.items || !Array.isArray(doc.items)) {
                 doc.items = [];
                 const fallbackAmount = parseFloat(doc.subtotal || doc.price || doc.total || doc.grandTotal || 0);
@@ -4934,22 +4899,21 @@ const generateFullTemplateHTML = (doc) => {
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
             
-            // Use FULL template for printing
             const rawHtml = generateFullTemplateHTML(doc);
             
             const printArea = document.getElementById('printArea');
             printArea.innerHTML = rawHtml;
             printArea.style.display = 'block';
-            
-            // Set document title for PDF name
+
+            // Set the document title to the ID for PDF naming
             const originalTitle = document.title;
-            document.title = docNumber || doc.number || id;
-            
+            document.title = doc.number || id;
+
             window.print();
             
             // Restore original title
             document.title = originalTitle;
-            
+
             printArea.style.display = 'none';
         };
 
@@ -4979,7 +4943,7 @@ const generateFullTemplateHTML = (doc) => {
         };
 
         window.deleteProject = async (id) => {
-             if(confirm("Delete project?")) {
+             if(confirm("Delete project?") && hasPermission('delete_project')) {
                  showLoading("Deleting...");
                  await window.dbOperations.deleteProject(id);
                  renderProjectsSection();
@@ -4994,6 +4958,8 @@ const generateFullTemplateHTML = (doc) => {
                 const dateB = b.deadline ? new Date(b.deadline) : new Date(0);
                 return dateB - dateA;
             });
+            
+            const canDelete = hasPermission('delete_project');
 
             document.getElementById('mainContent').innerHTML = `
                 <div class="filter-bar">
@@ -5026,7 +4992,7 @@ const generateFullTemplateHTML = (doc) => {
                                         <td>${formatDate(p.deadline)}</td>
                                         <td>
                                             <button class="action-btn" title="Edit" onclick="editProject('${p.id}')"><i class="ri-edit-line"></i></button>
-                                            <button class="action-btn danger" title="Delete" onclick="deleteProject('${p.id}')"><i class="ri-delete-bin-line"></i></button>
+                                            ${canDelete ? `<button class="action-btn danger" title="Delete" onclick="deleteProject('${p.id}')"><i class="ri-delete-bin-line"></i></button>` : ''}
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -5088,8 +5054,9 @@ const generateFullTemplateHTML = (doc) => {
         async function renderSettingsSection() {
             let usersHtml = '';
             let teamHtml = '';
+            const isSuperAdmin = currentUser && currentUser.role === 'SuperAdmin';
             
-            if (currentUser && currentUser.role === 'SuperAdmin') {
+            if (isSuperAdmin) {
                 const users = await window.dbOperations.getUsers();
                 usersHtml = `
                     <div class="card" style="margin-bottom:24px;">
@@ -5116,6 +5083,7 @@ const generateFullTemplateHTML = (doc) => {
                                                 ${u.role !== 'SuperAdmin' ? `
                                                 <button class="action-btn" onclick="editUser('${u.id}', '${encodeURIComponent(JSON.stringify(u))}')"><i class="ri-edit-line"></i></button>
                                                 <button class="action-btn danger" onclick="deleteUser('${u.id}')"><i class="ri-delete-bin-line"></i></button>
+                                                <button class="action-btn" onclick="adminResetPassword('${u.userId}')" title="Reset Password"><i class="ri-key-line"></i></button>
                                                 ` : '<span style="color:#ccc; font-size:12px;">Protected</span>'}
                                             </td>
                                         </tr>
@@ -5168,7 +5136,7 @@ const generateFullTemplateHTML = (doc) => {
                 </div>
             `;
             
-            if (currentUser && currentUser.role === 'SuperAdmin') {
+            if (isSuperAdmin) {
                 const searchInput = document.getElementById('userSearchInput');
                 searchInput.addEventListener('keyup', (e) => {
                     const term = e.target.value.toLowerCase();
@@ -5180,6 +5148,34 @@ const generateFullTemplateHTML = (doc) => {
                 });
             }
         }
+
+        // Admin Password Reset
+        window.adminResetPassword = (userId) => {
+            openModal('Reset User Password', `
+                <p style="margin-bottom:16px; font-size:14px; color:var(--text-secondary);">
+                    Set a new password for user ID: <strong>${userId}</strong>.
+                </p>
+                <div class="form-group-modal">
+                    <label>New Password</label>
+                    <input type="text" id="newAdminPassword" placeholder="Enter new password">
+                </div>
+            `, async () => {
+                const newPass = document.getElementById('newAdminPassword').value;
+                if(!newPass) {
+                    showPopup("Error", "Password cannot be empty.", false);
+                    return;
+                }
+                showLoading("Resetting...");
+                const success = await window.adminResetUserPassword(userId, newPass);
+                hideLoading();
+                if(success) {
+                    showPopup("Success", "Password reset successfully.");
+                    closeModal();
+                } else {
+                    showPopup("Error", "Failed to reset password.", false);
+                }
+            });
+        };
 
         // --- USER MODAL & ACTIONS ---
         window.openUserModal = async () => {
@@ -5214,6 +5210,37 @@ const generateFullTemplateHTML = (doc) => {
                         </select>
                     </div>
                 </div>
+                
+                <div class="form-group-modal">
+                    <label>Permissions (For Admin/Staff)</label>
+                    <div class="permissions-grid">
+                        <div class="permission-item">
+                            <label>Edit Crew</label>
+                            <input type="checkbox" id="perm_edit_crew">
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Crew</label>
+                            <input type="checkbox" id="perm_delete_crew">
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Invoice</label>
+                            <input type="checkbox" id="perm_delete_invoice">
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Quotation</label>
+                            <input type="checkbox" id="perm_delete_quotation">
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Client</label>
+                            <input type="checkbox" id="perm_delete_client">
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Project</label>
+                            <input type="checkbox" id="perm_delete_project">
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-group-modal">
                     <label>Status</label>
                     <select id="uStatus">
@@ -5228,7 +5255,15 @@ const generateFullTemplateHTML = (doc) => {
                     email: document.getElementById('uEmail').value,
                     password: document.getElementById('uPass').value,
                     role: document.getElementById('uRole').value,
-                    status: document.getElementById('uStatus').value
+                    status: document.getElementById('uStatus').value,
+                    permissions: {
+                        edit_crew: document.getElementById('perm_edit_crew').checked,
+                        delete_crew: document.getElementById('perm_delete_crew').checked,
+                        delete_invoice: document.getElementById('perm_delete_invoice').checked,
+                        delete_quotation: document.getElementById('perm_delete_quotation').checked,
+                        delete_client: document.getElementById('perm_delete_client').checked,
+                        delete_project: document.getElementById('perm_delete_project').checked
+                    }
                 };
                 
                 if(!data.name || !data.password) {
@@ -5281,12 +5316,50 @@ const generateFullTemplateHTML = (doc) => {
                         </select>
                     </div>
                 </div>
+                
+                <div class="form-group-modal">
+                    <label>Permissions</label>
+                    <div class="permissions-grid">
+                        <div class="permission-item">
+                            <label>Edit Crew</label>
+                            <input type="checkbox" id="perm_edit_crew" ${u.permissions?.edit_crew ? 'checked' : ''}>
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Crew</label>
+                            <input type="checkbox" id="perm_delete_crew" ${u.permissions?.delete_crew ? 'checked' : ''}>
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Invoice</label>
+                            <input type="checkbox" id="perm_delete_invoice" ${u.permissions?.delete_invoice ? 'checked' : ''}>
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Quotation</label>
+                            <input type="checkbox" id="perm_delete_quotation" ${u.permissions?.delete_quotation ? 'checked' : ''}>
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Client</label>
+                            <input type="checkbox" id="perm_delete_client" ${u.permissions?.delete_client ? 'checked' : ''}>
+                        </div>
+                        <div class="permission-item">
+                            <label>Delete Project</label>
+                            <input type="checkbox" id="perm_delete_project" ${u.permissions?.delete_project ? 'checked' : ''}>
+                        </div>
+                    </div>
+                </div>
             `, async () => {
                 const updateData = {
                     name: document.getElementById('uName').value,
                     email: document.getElementById('uEmail').value,
                     role: document.getElementById('uRole').value,
-                    status: document.getElementById('uStatus').value
+                    status: document.getElementById('uStatus').value,
+                    permissions: {
+                        edit_crew: document.getElementById('perm_edit_crew').checked,
+                        delete_crew: document.getElementById('perm_delete_crew').checked,
+                        delete_invoice: document.getElementById('perm_delete_invoice').checked,
+                        delete_quotation: document.getElementById('perm_delete_quotation').checked,
+                        delete_client: document.getElementById('perm_delete_client').checked,
+                        delete_project: document.getElementById('perm_delete_project').checked
+                    }
                 };
                 const newPass = document.getElementById('uPass').value;
                 if(newPass) updateData.password = newPass;
@@ -5365,7 +5438,7 @@ const generateFullTemplateHTML = (doc) => {
         };
 
         window.deleteTeamMember = async (id) => {
-            if(confirm("Delete this team member?")) {
+            if(confirm("Delete this team member?") && hasPermission('delete_crew')) {
                 showLoading("Deleting...");
                 await window.dbOperations.deleteTeamMember(id);
                 renderSettingsSection();
@@ -5445,7 +5518,7 @@ const generateFullTemplateHTML = (doc) => {
         };
 
         window.deleteClient = async (id) => {
-            if(confirm("Delete this client?")) {
+            if(confirm("Delete this client?") && hasPermission('delete_client')) {
                 showLoading("Deleting...");
                 await window.dbOperations.deleteClient(id);
                 renderClientsSection();
@@ -5584,7 +5657,6 @@ const generateFullTemplateHTML = (doc) => {
             if (savedUser) {
                 try {
                     const userObj = JSON.parse(savedUser);
-                    // We have a user, show dashboard immediately
                     initialLoader.classList.add('hidden');
                     window.onUserLoggedIn(userObj);
                 } catch (e) {
@@ -5594,7 +5666,6 @@ const generateFullTemplateHTML = (doc) => {
                     window.history.pushState({ path: '/auth/login' }, '', '/auth/login');
                 }
             } else {
-                // No user, show login after a tiny delay or immediately
                 initialLoader.classList.add('hidden');
                 document.getElementById('loginPage').classList.remove('hidden');
                 window.history.pushState({ path: '/auth/login' }, '', '/auth/login');
