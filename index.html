@@ -1575,7 +1575,7 @@
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, setDoc, orderBy, limit, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
-          apiKey: "AIzaSyAwf31b-wpYQwPbd-3DxnqGVRw8g3xq938",
+          apiKey: "AIzaSyAwf31b-wpYwPbd-3DxnqGVRw8g3xq938",
           authDomain: "ddnetwork-database.firebaseapp.com",
           projectId: "ddnetwork-database",
           storageBucket: "ddnetwork-database.firebasestorage.app",
@@ -2242,7 +2242,7 @@
         };
 
         // =========================================
-        // SUMMARIZED EMAIL HTML - For Sending
+        // SUMMARIZED EMAIL HTML - For Sending (FIXED)
         // =========================================
         const generateSummarizedEmailHTML = (doc) => {
             const isQuotation = doc.type === 'Quotation';
@@ -2251,27 +2251,50 @@
             const docNumber = doc.number || doc.id;
             const dateStr = formatDateLong(doc.date || doc.createdAt);
             
-            // Items Logic
+            // Items Logic - FIXED: Better handling of items array
             let itemRows = '';
             let subtotal = 0;
             
-            if(!doc.items || !Array.isArray(doc.items)) {
-                doc.items = [{description: doc.description || 'Service', amount: doc.subtotal || doc.price || doc.total || 0}];
+            // Ensure items is always an array
+            let itemsList = [];
+            if (doc.items && Array.isArray(doc.items) && doc.items.length > 0) {
+                itemsList = doc.items;
+            } else if (doc.description || doc.subtotal || doc.price || doc.total) {
+                // Fallback: create single item from legacy fields
+                itemsList = [{
+                    description: doc.description || 'Professional Service',
+                    amount: parseFloat(doc.subtotal || doc.price || doc.total || 0)
+                }];
             }
 
-            const validItems = doc.items.filter(item => item.description || item.amount);
+            // Filter valid items and build rows
+            const validItems = itemsList.filter(item => {
+                const hasDesc = item.description && item.description.trim() !== '';
+                const hasAmount = parseFloat(item.amount || 0) > 0;
+                return hasDesc || hasAmount;
+            });
 
-            if(validItems.length > 0) {
+            if (validItems.length > 0) {
                 validItems.forEach(item => {
                     const itemAmt = parseFloat(item.amount || 0);
                     subtotal += itemAmt;
                     itemRows += `
                         <div class="item-row-summary">
-                            <span>${item.description || '-'}</span>
+                            <span>${item.description || 'Service'}</span>
                             <strong>${formatMYR(itemAmt)}</strong>
                         </div>
                     `;
                 });
+            } else {
+                // Ultimate fallback if no valid items
+                const fallbackAmount = parseFloat(doc.total || doc.grandTotal || doc.subtotal || doc.price || 0);
+                subtotal = fallbackAmount;
+                itemRows = `
+                    <div class="item-row-summary">
+                        <span>Professional Service</span>
+                        <strong>${formatMYR(fallbackAmount)}</strong>
+                    </div>
+                `;
             }
 
             const discount = parseFloat(doc.discount || 0);
@@ -2383,7 +2406,7 @@
         };
 
         // =========================================
-        // FULL TEMPLATE HTML - For PDF/Download
+        // FULL TEMPLATE HTML - For PDF/Download (FIXED)
         // =========================================
         const generateFullTemplateHTML = (doc) => {
             const isQuotation = doc.type === 'Quotation';
@@ -2403,35 +2426,47 @@
             let subtotal = 0;
             let itemNum = 1;
             
-            if(!doc.items || !Array.isArray(doc.items)) {
-                doc.items = [{description: doc.description || 'Service', amount: doc.subtotal || doc.price || doc.total || 0}];
+            // FIXED: Better handling of items array
+            let itemsList = [];
+            if (doc.items && Array.isArray(doc.items) && doc.items.length > 0) {
+                itemsList = doc.items;
+            } else if (doc.description || doc.subtotal || doc.price || doc.total) {
+                itemsList = [{
+                    description: doc.description || 'Professional Service',
+                    amount: parseFloat(doc.subtotal || doc.price || doc.total || 0)
+                }];
             }
 
-            const validItems = doc.items.filter(item => item.description || item.amount);
+            const validItems = itemsList.filter(item => {
+                const hasDesc = item.description && item.description.trim() !== '';
+                const hasAmount = parseFloat(item.amount || 0) > 0;
+                return hasDesc || hasAmount;
+            });
 
-            if(validItems.length > 0) {
+            if (validItems.length > 0) {
                 validItems.forEach(item => {
                     const itemAmt = parseFloat(item.amount || 0);
                     subtotal += itemAmt;
                     itemRows += `
                         <tr>
                             <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${itemNum}</td>
-                            <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${item.description || '-'}</td>
+                            <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">${item.description || 'Service'}</td>
                             <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">${parseFloat(itemAmt).toLocaleString()}</td>
                         </tr>
                     `;
                     itemNum++;
                 });
             } else {
-                 const fallbackAmt = parseFloat(doc.total || doc.subtotal || doc.price || 0);
-                 subtotal = fallbackAmt;
-                 itemRows += `
+                const fallbackAmt = parseFloat(doc.total || doc.grandTotal || doc.subtotal || doc.price || 0);
+                subtotal = fallbackAmt;
+                itemRows += `
                     <tr>
                         <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">1</td>
                         <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;">Professional Service</td>
                         <td style="padding:12px 16px;border-bottom:1px solid #e5e5ea;text-align:right;">${parseFloat(fallbackAmt).toLocaleString()}</td>
                     </tr>
-                 `;
+                `;
+                itemNum = 2;
             }
 
             if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
@@ -3893,7 +3928,19 @@
                 }
             }
 
-            if(!doc.items) doc.items = [];
+            // FIXED: Ensure items array is properly initialized
+            if(!doc.items || !Array.isArray(doc.items)) {
+                doc.items = [];
+                // Try to get values from legacy fields
+                const fallbackAmount = parseFloat(doc.subtotal || doc.price || doc.total || doc.grandTotal || 0);
+                if (fallbackAmount > 0 || doc.description) {
+                    doc.items = [{
+                        description: doc.description || 'Professional Service',
+                        amount: fallbackAmount
+                    }];
+                }
+            }
+            
             const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
@@ -4040,7 +4087,18 @@
             if (type === 'Quotation') doc = await window.dbOperations.getQuotation(id);
             else doc = await window.dbOperations.getOrder(id);
             
-            if(!doc.items) doc.items = [];
+            // FIXED: Ensure items array is properly handled
+            if(!doc.items || !Array.isArray(doc.items)) {
+                doc.items = [];
+                const fallbackAmount = parseFloat(doc.subtotal || doc.price || doc.total || doc.grandTotal || 0);
+                if (fallbackAmount > 0 || doc.description) {
+                    doc.items = [{
+                        description: doc.description || 'Professional Service',
+                        amount: fallbackAmount
+                    }];
+                }
+            }
+            
             const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
             doc.subtotal = subtotal;
             doc.total = subtotal - (doc.discount || 0);
@@ -4109,9 +4167,16 @@
                 };
             }
 
-            if(!doc.items) doc.items = [];
-            if(doc.items.length === 0 && (doc.total || doc.subtotal)) {
-                 doc.items = [{description: 'Service', amount: doc.total || doc.subtotal}];
+            // FIXED: Ensure items array is properly handled
+            if(!doc.items || !Array.isArray(doc.items)) {
+                doc.items = [];
+                const fallbackAmount = parseFloat(doc.subtotal || doc.price || doc.total || doc.grandTotal || 0);
+                if (fallbackAmount > 0 || doc.description) {
+                    doc.items = [{
+                        description: doc.description || 'Professional Service',
+                        amount: fallbackAmount
+                    }];
+                }
             }
             
             const subtotal = doc.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
