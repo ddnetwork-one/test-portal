@@ -1370,24 +1370,42 @@
         }
         @media(max-width: 768px) { .mobile-menu-btn { display: flex; } }
         
-        /* Print Styles */
+        /* Print Styles - A4 Full Page */
         @media print {
             @page {
-                size: A4 portrait;
+                size: A4;
                 margin: 0;
             }
+            
             body * { visibility: hidden; }
             #printArea, #printArea * { visibility: visible; }
-            #printArea {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                background: white;
+            #printArea { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 210mm;
+                height: 297mm;
+                min-height: 297mm;
+                background: white; 
                 padding: 0;
                 margin: 0;
             }
+            
+            #printArea .print-container {
+                width: 100%;
+                height: 100%;
+                min-height: 297mm;
+                padding: 15mm 20mm;
+                box-sizing: border-box;
+            }
+            
             .no-print { display: none !important; }
+            
+            /* Force full page */
+            html, body {
+                width: 210mm;
+                height: 297mm;
+            }
         }
     </style>
 </head>
@@ -2254,7 +2272,7 @@
         };
 
         // =========================================
-        // SUMMARIZED EMAIL HTML - Mobile Friendly
+        // PROFESSIONAL SUMMARIZED EMAIL HTML - Mobile Friendly
         // =========================================
         const generateSummarizedEmailHTML = (doc) => {
             const isQuotation = doc.type === 'Quotation';
@@ -2289,8 +2307,8 @@
                     subtotal += itemAmt;
                     itemRows += `
                         <tr>
-                            <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">${item.description || 'Service'}</td>
-                            <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; text-align: right; white-space: nowrap;">${formatMYR(itemAmt)}</td>
+                            <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;">${item.description || 'Service'}</td>
+                            <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;font-size:14px;">${formatMYR(itemAmt)}</td>
                         </tr>
                     `;
                 });
@@ -2299,8 +2317,8 @@
                 subtotal = fallbackAmount;
                 itemRows = `
                     <tr>
-                        <td style="padding: 10px 0;">Professional Service</td>
-                        <td style="padding: 10px 0; text-align: right;">${formatMYR(fallbackAmount)}</td>
+                        <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;">Professional Service</td>
+                        <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;font-size:14px;">${formatMYR(fallbackAmount)}</td>
                     </tr>
                 `;
             }
@@ -2309,8 +2327,8 @@
             const total = subtotal - discount;
 
             const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
-                ? '<span style="display:inline-block;background:#34c759;color:#ffffff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;">PAID</span>'
-                : '<span style="display:inline-block;background:#ff9500;color:#ffffff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;">PENDING</span>';
+                ? '<span style="display:inline-block;background:#22c55e;color:#ffffff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;">PAID</span>'
+                : '<span style="display:inline-block;background:#f59e0b;color:#ffffff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px;">PENDING</span>';
 
             // Payment info for invoice
             let paymentInfo = '';
@@ -2319,9 +2337,12 @@
                 const cycle = doc.installmentCycle || 1;
                 paymentInfo = `
                     <tr>
-                        <td style="padding-top: 12px; color: #2563eb; font-size: 13px;" colspan="2">
-                            <strong>Payment Plan:</strong> ${doc.paymentType} Installment (Month ${cycle} of ${months})
-                        </td>
+                        <td style="padding:10px 0;font-size:13px;color:#64748b;">Payment Plan</td>
+                        <td style="padding:10px 0;text-align:right;font-size:13px;font-weight:600;">${doc.paymentType} Installment</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#64748b;">Cycle</td>
+                        <td style="padding:6px 0;text-align:right;font-size:13px;font-weight:600;">Month ${cycle} of ${months}</td>
                     </tr>
                 `;
             }
@@ -2331,135 +2352,140 @@
             if (doc.domain) {
                 domainInfo = `
                     <tr>
-                        <td style="color:#64748b; font-size:13px;">Domain</td>
-                        <td style="text-align:right; font-size:13px;">${doc.domain}</td>
+                        <td style="padding:6px 0;font-size:13px;color:#64748b;">Domain</td>
+                        <td style="padding:6px 0;text-align:right;font-size:13px;font-weight:600;">${doc.domain}</td>
                     </tr>
                 `;
             }
 
             return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        /* Mobile Responsive Styles */
-        @media only screen and (max-width: 600px) {
-            .email-container { width: 100% !important; padding: 16px !important; }
-            .email-header img { max-width: 100px !important; }
-            .email-header h1 { font-size: 18px !important; }
-            .email-table { font-size: 13px !important; }
-            .email-total { font-size: 18px !important; }
-            .email-footer { font-size: 11px !important; }
-        }
+    <title>${docTitle} - DDNEX</title>
+    <!--[if mso]>
+    <style type="text/css">
+        table {border-collapse: collapse;}
+        .mso-padding-alt {padding: 0 !important;}
     </style>
+    <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-
-    <center>
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" class="email-container" style="background: #ffffff; margin: 20px auto; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-            
-            <!-- Header -->
-            <tr>
-                <td align="center" style="padding: 32px 24px; background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%); border-bottom: 1px solid #e2e8f0;" class="email-header">
-                    <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="max-width: 120px; margin-bottom: 16px; display: block;">
-                    <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a;">${docTitle}</h1>
-                    <p style="margin: 8px 0 0 0; font-size: 13px; color: #64748b;">${docNumber}</p>
-                </td>
-            </tr>
-
-            <!-- Info Section -->
-            <tr>
-                <td style="padding: 24px;">
-                    <table width="100%" style="font-size: 14px; color: #0f172a;" class="email-table">
-                        <tr>
-                            <td style="color: #64748b; padding-bottom: 8px; width: 50%;">Bill To</td>
-                            <td style="color: #64748b; padding-bottom: 8px; text-align: right; width: 50%;">Date</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">${clientName}</td>
-                            <td style="text-align: right;">${dateStr}</td>
-                        </tr>
-                        ${domainInfo}
-                        <tr>
-                            <td style="padding-top: 8px;">Status</td>
-                            <td style="padding-top: 8px; text-align: right;">${statusBadge}</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-
-            <!-- Items Table -->
-            <tr>
-                <td style="padding: 0 24px 24px;">
-                    <div style="background: #f8fafc; border-radius: 12px; padding: 16px;">
-                        <table width="100%" style="font-size: 14px; color: #334155;" class="email-table">
-                            <thead>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+    
+    <!-- Wrapper Table -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;">
+        <tr>
+            <td align="center" style="padding:20px 10px;">
+                
+                <!-- Main Container -->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#1e40af 0%,#2563eb 100%);padding:28px 24px;text-align:center;">
+                            <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" width="100" style="height:auto;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;">
+                            <p style="margin:0 0 4px 0;font-size:11px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:2px;font-weight:600;">${docTitle}</p>
+                            <p style="margin:0;font-size:18px;color:#ffffff;font-weight:800;">${docNumber}</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:28px 24px;">
+                            
+                            <!-- Status Badge -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
-                                    <th colspan="2" style="text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; padding-bottom: 12px;">Items Purchased</th>
+                                    <td align="center" style="padding-bottom:20px;">
+                                        ${statusBadge}
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                ${itemRows}
-                            </tbody>
-                        </table>
-                    </div>
-                </td>
-            </tr>
-
-            <!-- Totals & Payment Info -->
-            <tr>
-                <td style="padding: 0 24px 24px;">
-                    ${discount > 0 ? `
-                    <table width="100%" style="font-size: 14px; margin-bottom: 8px;">
-                        <tr>
-                            <td style="color: #64748b;">Discount</td>
-                            <td style="text-align: right; color: #dc2626;">-${formatMYR(discount)}</td>
-                        </tr>
-                    </table>
-                    ` : ''}
+                            </table>
+                            
+                            <!-- Client & Date Info -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+                                <tr>
+                                    <td style="padding:10px 0;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;">Client</td>
+                                    <td style="padding:10px 0;text-align:right;font-size:14px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${clientName}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 0;font-size:13px;color:#64748b;border-bottom:1px solid #f1f5f9;">Date Issued</td>
+                                    <td style="padding:10px 0;text-align:right;font-size:14px;font-weight:500;color:#0f172a;border-bottom:1px solid #f1f5f9;">${dateStr}</td>
+                                </tr>
+                                ${domainInfo}
+                                ${paymentInfo}
+                            </table>
+                            
+                            <!-- Items Section -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:12px;margin-bottom:20px;">
+                                <tr>
+                                    <td style="padding:16px;">
+                                        <p style="margin:0 0 12px 0;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Items</p>
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                            ${itemRows}
+                                        </table>
+                                        
+                                        ${discount > 0 ? `
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+                                            <tr>
+                                                <td style="padding:8px 0;font-size:13px;color:#64748b;">Discount</td>
+                                                <td style="padding:8px 0;text-align:right;font-size:13px;font-weight:600;color:#dc2626;">-${formatMYR(discount)}</td>
+                                            </tr>
+                                        </table>
+                                        ` : ''}
+                                        
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;border-top:2px solid #e2e8f0;">
+                                            <tr>
+                                                <td style="padding:12px 0;font-size:14px;font-weight:700;color:#0f172a;">Total</td>
+                                                <td style="padding:12px 0;text-align:right;font-size:20px;font-weight:800;color:#2563eb;">${formatMYR(total)}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- CTA Button -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center" style="padding:8px 0;">
+                                        <a href="https://ddnex.com" style="display:inline-block;background:#2563eb;color:#ffffff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">Visit DDNEX Portal</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                        </td>
+                    </tr>
                     
-                    <table width="100%" style="font-size: 16px; border-top: 2px solid #e2e8f0; padding-top: 12px;" class="email-table">
-                        <tr>
-                            <td style="font-weight: 700; padding-top: 8px;">Total</td>
-                            <td style="text-align: right; font-weight: 800; color: #2563eb; font-size: 22px;" class="email-total">${formatMYR(total)}</td>
-                        </tr>
-                    </table>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background:#f8fafc;padding:20px 24px;text-align:center;border-top:1px solid #e2e8f0;">
+                            <p style="margin:0 0 6px 0;font-size:13px;font-weight:600;color:#0f172a;">DDNEX by DD Cloud Network</p>
+                            <p style="margin:0;font-size:12px;color:#64748b;">support@ddnex.com</p>
+                        </td>
+                    </tr>
                     
-                    ${paymentInfo}
-                </td>
-            </tr>
-
-            <!-- Contact CTA -->
-            <tr>
-                <td style="padding: 0 24px 24px;">
-                    <div style="background: #eff6ff; border-left: 4px solid #2563eb; border-radius: 8px; padding: 16px; margin-top: 16px;">
-                        <p style="margin: 0 0 8px 0; font-size: 14px; color: #1e40af; font-weight: 600;">
-                            Need a PDF copy?
-                        </p>
-                        <p style="margin: 0; font-size: 13px; color: #2563eb;">
-                            Contact us at <strong style="font-size: 15px;">+60122600969</strong> or reply to this email.
-                        </p>
-                    </div>
-                </td>
-            </tr>
-
-            <!-- Footer -->
-            <tr>
-                <td style="padding: 24px; background: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0;" class="email-footer">
-                    <p style="margin: 0; font-size: 12px; color: #64748b;">DDNEX by DD Cloud Network</p>
-                    <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">support@ddnex.com</p>
-                </td>
-            </tr>
-        </table>
-    </center>
+                </table>
+                
+                <!-- Bottom Spacing -->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="height:20px;"></td>
+                    </tr>
+                </table>
+                
+            </td>
+        </tr>
+    </table>
+    
 </body>
 </html>
             `;
         };
 
         // =========================================
-        // FULL TEMPLATE HTML - For PDF/Download (A4 Optimized)
+        // FULL TEMPLATE HTML - For PDF/Download (A4 Full Page)
         // =========================================
         const generateFullTemplateHTML = (doc) => {
             const isQuotation = doc.type === 'Quotation';
@@ -2501,9 +2527,9 @@
                     subtotal += itemAmt;
                     itemRows += `
                         <tr>
-                            <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; font-size:14px;">${itemNum}</td>
-                            <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; font-size:14px;">${item.description || 'Service'}</td>
-                            <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; text-align:right; font-size:14px;">${parseFloat(itemAmt).toLocaleString()}</td>
+                            <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${itemNum}</td>
+                            <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${item.description || 'Service'}</td>
+                            <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:15px;">${parseFloat(itemAmt).toLocaleString()}</td>
                         </tr>
                     `;
                     itemNum++;
@@ -2513,9 +2539,9 @@
                 subtotal = fallbackAmt;
                 itemRows += `
                     <tr>
-                        <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; font-size:14px;">1</td>
-                        <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; font-size:14px;">Professional Service</td>
-                        <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; text-align:right; font-size:14px;">${parseFloat(fallbackAmt).toLocaleString()}</td>
+                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">1</td>
+                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">Professional Service</td>
+                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:15px;">${parseFloat(fallbackAmt).toLocaleString()}</td>
                     </tr>
                 `;
                 itemNum = 2;
@@ -2526,9 +2552,9 @@
                 const monthlyAmt = subtotal / months;
                 itemRows += `
                     <tr>
-                        <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; font-size:14px;">${itemNum}</td>
-                        <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; font-size:14px;">${doc.paymentType} Installment Plan</td>
-                        <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; text-align:right; font-size:14px;">${parseFloat(monthlyAmt).toLocaleString()} / month</td>
+                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${itemNum}</td>
+                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${doc.paymentType} Installment Plan</td>
+                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:15px;">${parseFloat(monthlyAmt).toLocaleString()} / month</td>
                     </tr>
                 `;
                 itemNum++;
@@ -2537,9 +2563,9 @@
             if (doc.domain) {
                 itemRows += `
                     <tr>
-                        <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; font-size:14px;">${itemNum}</td>
-                        <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; font-size:14px;">Domain: ${doc.domain}</td>
-                        <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; text-align:right; font-size:14px;">-</td>
+                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">${itemNum}</td>
+                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;font-size:15px;">Domain: ${doc.domain}</td>
+                        <td style="padding:14px 16px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:15px;">-</td>
                     </tr>
                 `;
                 itemNum++;
@@ -2551,14 +2577,14 @@
             const transactionRef = doc.transactionRef || doc.number || doc.id;
 
             const statusBadge = doc.status === 'Paid' || doc.status === 'Activated' || doc.status === 'Completed' 
-                ? '<span style="display:inline-block;background:#34c759;color:#ffffff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;">PAID</span>'
-                : '<span style="display:inline-block;background:#ff9500;color:#ffffff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;">PENDING</span>';
+                ? '<span style="display:inline-block;background:#22c55e;color:#ffffff;font-size:13px;font-weight:700;padding:8px 18px;border-radius:24px;">PAID</span>'
+                : '<span style="display:inline-block;background:#f59e0b;color:#ffffff;font-size:13px;font-weight:700;padding:8px 18px;border-radius:24px;">PENDING</span>';
 
             let paymentDetailsSection = '';
             if (!isQuotation) {
                 paymentDetailsSection = `
-                    <div style="margin-top:20px; background:#f8fafc; padding:16px; border-radius:10px; font-size:14px; line-height:1.6; border: 1px solid #e2e8f0;">
-                        <strong style="color: #0f172a;">Payment Details</strong><br>
+                    <div style="margin-top:30px;background:#f7f7f7;padding:20px;border-radius:12px;font-size:15px;line-height:1.8;">
+                        <strong style="font-size:16px;">Payment Details</strong><br><br>
                         Payment Method: Online Transfer<br>
                         Transaction Reference: ${transactionRef}
                     </div>
@@ -2568,64 +2594,199 @@
             let termsList = '';
             if (isQuotation) {
                 termsList = `
-                    <li style="margin-bottom:6px; font-size: 13px;">This quotation is valid for 16 days from the date issued.</li>
-                    <li style="margin-bottom:6px; font-size: 13px;">Services delivered via DDNEX secure portal.</li>
-                    <li style="margin-bottom:6px; font-size: 13px;">50% deposit required to commence project.</li>
-                    <li style="margin-bottom:6px; font-size: 13px;">Balance payment due upon project completion.</li>
-                    <li style="margin-bottom:6px; font-size: 13px;">Full policies available on the official DDNEX website.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">This quotation is valid for 16 days from the date issued.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">Services delivered via DDNEX secure portal.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">50% deposit required to commence project.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">Balance payment due upon project completion.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">Full policies and terms are available on the official DDNEX website.</li>
                 `;
             } else {
                 termsList = `
-                    <li style="margin-bottom:6px; font-size: 13px;">This receipt confirms payment has been received by DDNEX.</li>
-                    <li style="margin-bottom:6px; font-size: 13px;">Service includes setup, hosting, and maintenance under the agreed plan.</li>
-                    <li style="margin-bottom:6px; font-size: 13px;">Payments made are non-refundable once service deployment has commenced.</li>
-                    <li style="margin-bottom:6px; font-size: 13px;">DDNEX reserves the right to update service policies when required.</li>
-                    <li style="margin-bottom:6px; font-size: 13px;">Full policies available on the official DDNEX website.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">This receipt confirms that payment has been successfully received by DDNEX.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">The service includes system setup, hosting, and maintenance under the agreed subscription plan.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">All payments made are non-refundable once service deployment has commenced.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">DDNEX reserves the right to update service policies or operational terms when required.</li>
+                    <li style="margin-bottom:10px;line-height:1.6;">Full policies and terms are available on the official DDNEX website.</li>
                 `;
             }
 
-            const contactInfo = `
-                <div style="margin-top:24px; background:#f0f9ff; padding:16px; border-radius:8px; border-left:4px solid #2563eb;">
-                    <p style="margin:0 0 8px 0; font-size:14px; color:#1e40af;">
-                        <strong>Need a PDF copy?</strong>
-                    </p>
-                    <p style="margin:0; font-size:14px; color:#1e40af;">
-                        Contact us at <strong style="color:#2563eb;">+60122600969</strong> to request your official PDF receipt.
-                    </p>
-                </div>
-            `;
-
-            // A4 Width approx 800px for content with margins
             return `
-<div style="background-color:#ffffff; padding:0; margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
-    <div style="max-width:800px; margin:0 auto; padding:40px 48px; min-height:100vh;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${docTitle} - ${docNumber}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 210mm;
+            height: 297mm;
+            min-height: 297mm;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background: #ffffff;
+        }
+        .print-container {
+            width: 210mm;
+            height: 297mm;
+            min-height: 297mm;
+            padding: 18mm 22mm;
+            display: flex;
+            flex-direction: column;
+        }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+        .company-info {
+            max-width: 55%;
+        }
+        .company-logo {
+            max-width: 130px;
+            margin-bottom: 14px;
+        }
+        .company-details {
+            font-size: 13px;
+            color: #6e6e73;
+            line-height: 1.7;
+        }
+        .company-details strong {
+            color: #1d1d1f;
+        }
+        .doc-info {
+            text-align: right;
+        }
+        .status-badge-container {
+            margin-bottom: 12px;
+        }
+        .doc-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .doc-meta {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .bill-to-section {
+            margin-bottom: 36px;
+        }
+        .bill-to-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: #1d1d1f;
+        }
+        .bill-to-details {
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .services-section {
+            flex: 1;
+            margin-bottom: 30px;
+        }
+        .services-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: #1d1d1f;
+        }
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+        .services-table th {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e5ea;
+            background: #f7f7f7;
+            font-weight: 500;
+            color: #6e6e73;
+            font-size: 13px;
+        }
+        .services-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e5e5ea;
+        }
+        .payment-section {
+            margin-top: 28px;
+            background: #f7f7f7;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+        .terms-section {
+            margin-bottom: auto;
+        }
+        .terms-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: #1d1d1f;
+        }
+        .terms-box {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #6e6e73;
+            line-height: 1.7;
+        }
+        .terms-box ul {
+            padding-left: 20px;
+        }
+        .footer-section {
+            margin-top: 40px;
+            padding-top: 18px;
+            border-top: 1px solid #e5e5ea;
+            text-align: center;
+            font-size: 12px;
+            color: #8e8e93;
+        }
+    </style>
+</head>
+<body>
+    <div class="print-container">
         
         <!-- Header -->
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px;">
-            <div>
-                <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="max-width:130px;">
-                <p style="font-size:12px; color:#6e6e73; line-height:1.5; margin-top:10px;">
+        <div class="header-section">
+            <div class="company-info">
+                <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" class="company-logo">
+                <div class="company-details">
                     <strong>DDNEX by DD Cloud Network</strong><br>
-                    Co. Reg: 202603040752 (MA0342542-K)<br>
+                    Company Registration No.: 202603040752 (MA0342542-K)<br>
                     Sungai Petani, Kedah, Malaysia<br>
-                    support@ddnex.com
-                </p>
+                    support@ddnex.com | www.ddnex.com
+                </div>
             </div>
-            <div style="text-align:right; font-size:14px;">
-                ${statusBadge}
-                <p style="margin-top:10px; color: #64748b;"><strong>${docTitle}</strong></p>
-                <p style="margin-top:8px; color: #0f172a;">
-                    No: <strong>${docNumber}</strong><br>
-                    Date: ${dateStr}
+            <div class="doc-info">
+                <div class="status-badge-container">${statusBadge}</div>
+                <div class="doc-title"><strong>${docTitle}</strong></div>
+                <div class="doc-meta">
+                    ${isQuotation ? 'Quotation' : 'Invoice'} No: <strong>${docNumber}</strong><br>
+                    Date Issued: ${dateStr}
                     ${isQuotation ? `<br>Valid Until: ${validUntil}` : ''}
-                </p>
+                </div>
             </div>
         </div>
         
         <!-- Bill To -->
-        <div style="margin-bottom:30px;">
-            <p style="font-size:16px; font-weight:600; margin-bottom:10px; color:#0f172a;">Bill To</p>
-            <div style="font-size:14px; line-height:1.5; color: #334155;">
+        <div class="bill-to-section">
+            <div class="bill-to-title">Bill To</div>
+            <div class="bill-to-details">
                 <strong>${clientName}</strong><br>
                 Malaysia
                 ${doc.domain ? `<br>Domain: ${doc.domain}` : ''}
@@ -2633,50 +2794,53 @@
         </div>
         
         <!-- Services Table -->
-        <div style="margin-bottom:30px;">
-            <p style="font-size:16px; font-weight:600; margin-bottom:10px; color:#0f172a;">Services</p>
-            <table width="100%" style="border-collapse:collapse; font-size:14px;">
-                <tr>
-                    <th width="50" style="padding:10px 12px; text-align:left; border-bottom:2px solid #e2e8f0; background:#f8fafc; font-weight:600; color:#64748b; font-size:12px;">Item</th>
-                    <th style="padding:10px 12px; text-align:left; border-bottom:2px solid #e2e8f0; background:#f8fafc; font-weight:600; color:#64748b; font-size:12px;">Description</th>
-                    <th width="140" style="padding:10px 12px; text-align:right; border-bottom:2px solid #e2e8f0; background:#f8fafc; font-weight:600; color:#64748b; font-size:12px;">Amount (RM)</th>
-                </tr>
-                ${itemRows}
-                ${discount > 0 ? `
-                <tr>
-                    <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0;"></td>
-                    <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0;">Discount</td>
-                    <td style="padding:10px 12px; border-bottom:1px solid #e2e8f0; text-align:right;">-${parseFloat(discount).toLocaleString()}</td>
-                </tr>
-                ` : ''}
-                <tr>
-                    <td colspan="2" style="padding:16px 12px; text-align:right; font-weight:700; font-size:16px; border:none;">${isQuotation ? 'Total' : 'Total Paid'}</td>
-                    <td style="padding:16px 12px; text-align:right; font-weight:800; font-size:18px; border:none; color:#2563eb;">RM ${parseFloat(total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                </tr>
+        <div class="services-section">
+            <div class="services-title">Services</div>
+            <table class="services-table">
+                <thead>
+                    <tr>
+                        <th width="60">Item</th>
+                        <th>Description</th>
+                        <th width="160" style="text-align:right;">Amount (RM)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemRows}
+                    ${discount > 0 ? `
+                    <tr>
+                        <td style="border-bottom:1px solid #e5e5ea;"></td>
+                        <td style="border-bottom:1px solid #e5e5ea;">Discount</td>
+                        <td style="border-bottom:1px solid #e5e5ea;text-align:right;">-${parseFloat(discount).toLocaleString()}</td>
+                    </tr>
+                    ` : ''}
+                    <tr>
+                        <td colspan="2" style="padding:18px 16px;text-align:right;font-weight:600;font-size:17px;border:none;">${isQuotation ? 'Total' : 'Total Paid'}</td>
+                        <td style="padding:18px 16px;text-align:right;font-weight:700;font-size:17px;border:none;">RM ${parseFloat(total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                </tbody>
             </table>
             ${paymentDetailsSection}
         </div>
         
         <!-- Terms -->
-        <div style="margin-bottom:30px;">
-            <p style="font-size:16px; font-weight:600; margin-bottom:10px; color:#0f172a;">Terms & Conditions Summary</p>
-            <div style="background:#fafafa; padding:16px 20px; border-radius:10px; font-size:13px; color:#475569; line-height:1.5;">
-                <ul style="padding-left:18px; margin:0;">
+        <div class="terms-section">
+            <div class="terms-title">Terms & Conditions Summary</div>
+            <div class="terms-box">
+                <ul>
                     ${termsList}
                 </ul>
             </div>
         </div>
         
-        <!-- Contact for PDF -->
-        ${contactInfo}
-        
         <!-- Footer -->
-        <div style="margin-top:48px; padding-top:20px; border-top:1px solid #e2e8f0; font-size:11px; color:#94a3b8; text-align:center;">
-            <p style="margin:0;">${isQuotation ? 'Quotation' : 'Invoice'} generated automatically by DDNEX Billing System</p>
+        <div class="footer-section">
+            <p style="margin:0 0 4px 0;">${isQuotation ? 'Quotation' : 'Invoice'} generated automatically by the DDNEX Billing System</p>
+            <p style="margin:0;">support@ddnex.com</p>
         </div>
         
     </div>
-</div>
+</body>
+</html>
             `;
         };
 
@@ -2971,6 +3135,7 @@
 
                     <button class="btn btn-primary" onclick="createNewInvoice()">
                         <i class="ri-file-add-line"></i> Create Invoice
+                    </button>
                 </div>
                 <div class="card">
                     <div class="card-body no-padding">
@@ -3979,9 +4144,10 @@
                 }
             }
 
-            // Ensure items array is properly initialized
+            // FIXED: Ensure items array is properly initialized
             if(!doc.items || !Array.isArray(doc.items)) {
                 doc.items = [];
+                // Try to get values from legacy fields
                 const fallbackAmount = parseFloat(doc.subtotal || doc.price || doc.total || doc.grandTotal || 0);
                 if (fallbackAmount > 0 || doc.description) {
                     doc.items = [{
@@ -4093,8 +4259,7 @@
                         <div class="email-info-box">
                             <h4><i class="ri-information-line"></i> Email Info</h4>
                             <p style="font-size:12px;">The email sent will be <strong>summarized</strong> with item details.</p>
-                            <p style="font-size:12px; margin-top:8px;">For full PDF receipt, client can contact:</p>
-                            <p style="font-size:16px; font-weight:700; color:#2563eb; margin-top:4px;">+60122600969</p>
+                            <p style="font-size:12px; margin-top:8px;">Compatible with all major email clients.</p>
                         </div>
                         
                         <div class="email-info-box">
@@ -4137,7 +4302,7 @@
             if (type === 'Quotation') doc = await window.dbOperations.getQuotation(id);
             else doc = await window.dbOperations.getOrder(id);
             
-            // Ensure items array is properly handled
+            // FIXED: Ensure items array is properly handled
             if(!doc.items || !Array.isArray(doc.items)) {
                 doc.items = [];
                 const fallbackAmount = parseFloat(doc.subtotal || doc.price || doc.total || doc.grandTotal || 0);
@@ -4217,7 +4382,7 @@
                 };
             }
 
-            // Ensure items array is properly handled
+            // FIXED: Ensure items array is properly handled
             if(!doc.items || !Array.isArray(doc.items)) {
                 doc.items = [];
                 const fallbackAmount = parseFloat(doc.subtotal || doc.price || doc.total || doc.grandTotal || 0);
