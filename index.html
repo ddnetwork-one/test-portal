@@ -35,6 +35,8 @@
             --info-bg: #dbeafe;
             --wa-color: #25D366;
             --wa-bg: #dcfce7;
+            --purple: #8b5cf6;
+            --purple-bg: #ede9fe;
             
             --bg-body: #f8fafc;
             --bg-sidebar: #ffffff;
@@ -64,6 +66,76 @@
         button { cursor: pointer; border: none; font-family: inherit; transition: var(--transition); }
         input, select, textarea { font-family: inherit; }
 
+        /* --- ANNOUNCEMENT BANNER --- */
+        .announcement-banner {
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 0;
+            overflow: hidden;
+            display: none;
+            position: relative;
+            height: 40px;
+        }
+        .announcement-banner.active {
+            display: block;
+        }
+        .announcement-banner.critical {
+            background: linear-gradient(90deg, var(--danger), #dc2626);
+        }
+        .announcement-banner.warning {
+            background: linear-gradient(90deg, var(--warning), #d97706);
+        }
+        .announcement-banner.success {
+            background: linear-gradient(90deg, var(--success), #059669);
+        }
+        .announcement-content {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            white-space: nowrap;
+            animation: marquee 20s linear infinite;
+            padding-left: 100%;
+        }
+        .announcement-banner:hover .announcement-content {
+            animation-play-state: paused;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        .announcement-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .announcement-item i {
+            font-size: 1.1rem;
+        }
+        .announcement-close {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .announcement-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
         /* --- LOADING OVERLAY --- */
         .loading-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -76,37 +148,6 @@
         .loading-overlay.active { opacity: 1; pointer-events: auto; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(2, 132, 199, 0.1); border-left-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* --- ANNOUNCEMENT BANNER --- */
-        .announcement-banner {
-            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 0.9rem;
-            position: relative;
-            z-index: 60;
-            display: none; 
-            animation: slideDown 0.5s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-        }
-        .announcement-banner.show { display: flex; }
-        .announcement-banner .close-banner {
-            position: absolute;
-            right: 15px;
-            background: none;
-            border: none;
-            color: white;
-            opacity: 0.8;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        .announcement-banner .close-banner:hover { opacity: 1; }
-        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
 
         /* --- SEARCH INPUT --- */
         .search-container { position: relative; width: 100%; max-width: 300px; }
@@ -289,6 +330,8 @@
         .btn-wa:hover { background: var(--wa-bg); }
         .btn-reset { color: var(--warning); border-color: #fef3c7; background: #fff; }
         .btn-reset:hover { background: var(--warning-bg); }
+        .btn-purple { background: var(--purple); color: white; border: none; }
+        .btn-purple:hover { background: #7c3aed; }
 
         /* --- PAGINATION --- */
         .pagination-bar {
@@ -380,6 +423,7 @@
         .cal-day.today.active { border-color: white; }
         .cal-day.disabled { color: #cbd5e1; cursor: not-allowed; background: #f1f5f9; }
         .cal-day.empty { cursor: default; }
+        .cal-day.holiday { background: var(--danger-bg); color: var(--danger); }
         .slots-header { padding: 15px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
         .slots-list { padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         
@@ -535,17 +579,107 @@
         .view-section { display: none; }
         .view-section.active { display: block; }
 
-        /* --- SETTINGS PAGE STYLES --- */
-        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .settings-card { border: 1px solid var(--border-light); border-radius: var(--radius); padding: 20px; background: white; }
-        .holiday-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
-        .holiday-item .date { font-weight: 700; color: var(--danger); }
-        .holiday-item .reason { color: var(--text-main); font-size: 0.9rem; }
+        /* --- ANNOUNCEMENT & HOLIDAY MANAGEMENT STYLES --- */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+        
+        .announcement-card {
+            background: linear-gradient(135deg, var(--primary-light), white);
+            border: 1px solid var(--primary);
+        }
+        
+        .holiday-card {
+            background: linear-gradient(135deg, var(--danger-bg), white);
+            border: 1px solid var(--danger);
+        }
+
+        .announcement-preview {
+            background: var(--primary);
+            border-radius: var(--radius);
+            padding: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .announcement-preview.critical {
+            background: var(--danger);
+        }
+        .announcement-preview.warning {
+            background: var(--warning);
+        }
+        .announcement-preview.success {
+            background: var(--success);
+        }
+        .announcement-preview-text {
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            animation: marquee 10s linear infinite;
+        }
+
+        .holiday-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .holiday-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-light);
+        }
+        .holiday-item:hover {
+            background: white;
+            border-color: var(--primary-light);
+        }
+        .holiday-date {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .holiday-name {
+            font-weight: 600;
+        }
+        .holiday-type {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--danger-bg);
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .color-picker-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: var(--transition);
+        }
+        .color-option:hover, .color-option.active {
+            transform: scale(1.1);
+            border-color: var(--text-main);
+        }
+        .color-primary { background: var(--primary); }
+        .color-danger { background: var(--danger); }
+        .color-warning { background: var(--warning); }
+        .color-success { background: var(--success); }
 
         /* --- PRINT STYLES --- */
         @media print {
             body { background: white; height: auto; overflow: visible; display: block; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .sidebar, header, .mobile-menu-btn, .no-print, .view-section:not(#view-bill-detail), .announcement-banner { display: none !important; }
+            .sidebar, header, .mobile-menu-btn, .no-print, .view-section:not(#view-bill-detail) { display: none !important; }
             .main-wrapper, .content-area { overflow: visible; height: auto; display: block; padding: 0; margin: 0; }
             #view-bill-detail { display: block !important; padding: 0; background: white; width: 100%; position: static; }
             .invoice-box { border: none; margin: 0; padding: 0; max-width: 100%; width: 100%; page-break-inside: avoid; box-shadow: none; }
@@ -588,7 +722,6 @@
             .invoice-summary { justify-content: flex-start; }
             .invoice-summary-box { width: 100%; border: none; background: transparent; padding: 0; }
             .permissions-grid { grid-template-columns: 1fr; }
-            .announcement-banner { font-size: 0.8rem; padding: 8px 40px 8px 15px; text-align: left; }
         }
 
         @media (max-width: 480px) {
@@ -604,13 +737,6 @@
     </style>
 </head>
 <body>
-
-    <!-- ANNOUNCEMENT BANNER -->
-    <div class="announcement-banner" id="announcementBanner">
-        <i class="fa-solid fa-bullhorn"></i>
-        <span id="bannerText">Loading announcements...</span>
-        <button class="close-banner" onclick="hideBanner()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
 
     <!-- LOGIN -->
     <div id="login-screen">
@@ -731,11 +857,10 @@
                 </svg>
                 Slot Mgmt
             </li>
-             <!-- NEW SETTINGS MENU ITEM -->
-             <li class="nav-item" onclick="navigateTo('settings')">
+            <li class="nav-item" onclick="navigateTo('settings')">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12 20h9"/>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
                 </svg>
                 Settings
             </li>
@@ -753,6 +878,16 @@
 
     <!-- MAIN CONTENT -->
     <div class="main-wrapper">
+        <!-- ANNOUNCEMENT BANNER -->
+        <div id="announcementBanner" class="announcement-banner">
+            <div class="announcement-content" id="announcementContent">
+                <!-- Announcements will be inserted here -->
+            </div>
+            <button class="announcement-close" onclick="closeAnnouncementBanner()">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
         <header>
             <div style="display:flex; align-items:center; gap:12px;">
                 <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
@@ -1181,6 +1316,83 @@
                 </div>
             </section>
 
+            <!-- SETTINGS - NEW SECTION -->
+            <section id="view-settings" class="view-section">
+                <div class="settings-grid">
+                    <!-- Announcement Management -->
+                    <div class="section-card announcement-card">
+                        <div class="table-header">
+                            <h3><i class="fa-solid fa-bullhorn" style="color:var(--primary); margin-right:8px;"></i>Announcement Banner</h3>
+                            <div class="toggle-switch" style="margin-left:auto;">
+                                <input type="checkbox" id="announcement-toggle" onchange="toggleAnnouncement(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom:15px;">
+                            <label style="font-size:0.8rem; font-weight:700; color:var(--text-light); display:block; margin-bottom:5px;">Announcement Message</label>
+                            <textarea id="announcement-text" class="form-input" rows="3" placeholder="Enter announcement message..." oninput="updateAnnouncementPreview()"></textarea>
+                        </div>
+
+                        <div style="margin-bottom:15px;">
+                            <label style="font-size:0.8rem; font-weight:700; color:var(--text-light); display:block; margin-bottom:5px;">Banner Style</label>
+                            <div class="color-picker-row">
+                                <div class="color-option color-primary active" onclick="selectAnnouncementColor('primary')" data-color="primary" title="Info"></div>
+                                <div class="color-option color-danger" onclick="selectAnnouncementColor('danger')" data-color="danger" title="Critical"></div>
+                                <div class="color-option color-warning" onclick="selectAnnouncementColor('warning')" data-color="warning" title="Warning"></div>
+                                <div class="color-option color-success" onclick="selectAnnouncementColor('success')" data-color="success" title="Success"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:15px;">
+                            <label style="font-size:0.8rem; font-weight:700; color:var(--text-light); display:block; margin-bottom:5px;">Display Location</label>
+                            <div style="display:flex; gap:15px;">
+                                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600;">
+                                    <input type="checkbox" id="show-portal" checked> Portal
+                                </label>
+                                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:600;">
+                                    <input type="checkbox" id="show-website"> Main Website
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="announcement-preview" id="announcement-preview">
+                            <div class="announcement-preview-text" id="announcement-preview-text">
+                                Preview text will appear here...
+                            </div>
+                        </div>
+
+                        <div style="margin-top:15px; display:flex; gap:10px;">
+                            <button class="btn-primary" style="width:auto; padding:10px 20px;" onclick="saveAnnouncement()">
+                                <i class="fa-solid fa-save"></i> Save Announcement
+                            </button>
+                            <button class="btn-sm btn-delete" onclick="clearAnnouncement()">
+                                <i class="fa-solid fa-trash"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Holiday / Clinic Off Days Management -->
+                    <div class="section-card holiday-card">
+                        <div class="table-header">
+                            <h3><i class="fa-solid fa-calendar-xmark" style="color:var(--danger); margin-right:8px;"></i>Clinic Off Days</h3>
+                            <button class="btn-sm btn-delete" onclick="openAddHoliday()"><i class="fa-solid fa-plus"></i> Add Off Day</button>
+                        </div>
+
+                        <div class="holiday-list" id="holiday-list">
+                            <!-- Holiday items will be populated here -->
+                        </div>
+
+                        <div style="margin-top:15px; padding-top:15px; border-top:1px solid var(--border-light);">
+                            <p style="font-size:0.75rem; color:var(--text-light);">
+                                <i class="fa-solid fa-info-circle"></i> 
+                                Off days will automatically close all slots for that date. Patients cannot book on these dates.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
              <!-- BOOKING -->
              <section id="view-booking" class="view-section">
                 <div class="section-card">
@@ -1289,51 +1501,6 @@
                             </div>
                         </div>
                     </form>
-                </div>
-            </section>
-
-            <!-- NEW: SETTINGS SECTION -->
-            <section id="view-settings" class="view-section">
-                <div class="settings-grid">
-                    <!-- Announcement Settings -->
-                    <div class="section-card">
-                        <div class="table-header">
-                            <h3><i class="fa-solid fa-bullhorn" style="color:var(--primary); margin-right:8px;"></i>Announcement Banner</h3>
-                        </div>
-                        <div style="margin-bottom: 15px;">
-                            <label style="font-size:0.8rem; font-weight:700; display:block; margin-bottom:5px;">Message</label>
-                            <textarea id="settings-announcement-msg" class="form-input" rows="3" placeholder="Enter announcement message (Leave empty to hide)"></textarea>
-                        </div>
-                        <div style="margin-bottom: 15px;">
-                            <label style="font-size:0.8rem; font-weight:700; display:block; margin-bottom:5px;">Type</label>
-                            <select id="settings-announcement-type" class="form-input">
-                                <option value="info">Information (Blue)</option>
-                                <option value="warning">Warning (Orange)</option>
-                                <option value="success">Success (Green)</option>
-                                <option value="danger">Urgent (Red)</option>
-                            </select>
-                        </div>
-                        <button class="btn-primary" style="width:auto; padding:10px 20px;" onclick="saveAnnouncement()"><i class="fa-solid fa-save"></i> Save Announcement</button>
-                    </div>
-
-                    <!-- Holiday/Closure Settings -->
-                    <div class="section-card">
-                        <div class="table-header">
-                            <h3><i class="fa-solid fa-calendar-xmark" style="color:var(--danger); margin-right:8px;"></i>Holiday / Closure Settings</h3>
-                        </div>
-                        <div style="margin-bottom: 15px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-                            <div class="table-header-actions" style="margin-bottom: 10px;">
-                                <input type="date" id="holiday-date" class="form-input" style="width: auto;">
-                                <input type="text" id="holiday-reason" class="form-input" placeholder="Reason (e.g. Hari Raya)" style="flex: 1;">
-                            </div>
-                            <button class="btn-sm btn-bill" onclick="addHoliday()"><i class="fa-solid fa-plus"></i> Add Holiday</button>
-                        </div>
-                        
-                        <h4 style="font-size: 0.9rem; margin-bottom: 10px; color: var(--text-light);">Upcoming Holidays</h4>
-                        <div id="holidays-list" style="max-height: 300px; overflow-y: auto;">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -1634,6 +1801,48 @@
         </div>
     </div>
 
+    <!-- 10. ADD HOLIDAY MODAL -->
+    <div class="modal-overlay" id="holidayModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-calendar-xmark" style="color:var(--danger);"></i> Add Clinic Off Day</h3>
+                <button onclick="closeModal('holidayModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-holiday-id">
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.8rem; font-weight:700;">Holiday Name</label>
+                    <input type="text" id="holiday-name" class="form-input" placeholder="e.g., Hari Raya Puasa">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.8rem; font-weight:700;">Start Date</label>
+                    <input type="date" id="holiday-start" class="form-input">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.8rem; font-weight:700;">End Date (Optional)</label>
+                    <input type="date" id="holiday-end" class="form-input" placeholder="Leave blank for single day">
+                    <small style="color:var(--text-light); display:block; margin-top:4px;">For multi-day holidays, select the end date.</small>
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.8rem; font-weight:700;">Holiday Type</label>
+                    <select id="holiday-type" class="form-input">
+                        <option value="public">Public Holiday</option>
+                        <option value="custom">Custom Off Day</option>
+                        <option value="event">Special Event</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.8rem; font-weight:700;">Description (Optional)</label>
+                    <textarea id="holiday-desc" class="form-input" rows="2" placeholder="Additional notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-sm" onclick="closeModal('holidayModal')">Cancel</button>
+                <button class="btn-primary" style="width:auto; padding:10px 20px;" onclick="saveHoliday()">Save Off Day</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div id="toast">
         <i class="fa-solid fa-circle-check" style="color:#4ade80;"></i> 
@@ -1651,7 +1860,7 @@
     <noscript>You need to <a href="https://www.openwidget.com/enable-javascript" rel="noopener nofollow">enable JavaScript</a> to use communication tool powered by <a href="https://www.openwidget.com/" rel="noopener nofollow" target="_blank">OpenWidget</a></noscript>
 
     <script>
-        // --- UPDATED FIREBASE CONFIGURATION ---
+        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyCbwfnGjssByz2uq-8F2eZ_kUISBdqpgrQ",
             authDomain: "klinikpergigianazam-sp.firebaseapp.com",
@@ -1674,7 +1883,8 @@
         let staff = [];
         let appointments = [];
         let slotExceptions = []; 
-        let globalSettings = {}; // NEW: Store global settings
+        let holidays = [];
+        let announcement = null;
 
         const todayStr = new Date().toISOString().split('T')[0];
         
@@ -1690,6 +1900,7 @@
         let currentBillAppt = null;
         let historyPatientId = null;
         let currentExportType = null; 
+        let selectedAnnouncementColor = 'primary';
 
         // Sort State
         let sortState = {
@@ -1864,15 +2075,18 @@
 
             const eSnap = await db.collection('klinikazam_slots').get();
             slotExceptions = eSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            
-            // NEW: Fetch Global Settings
-            const settingsSnap = await db.collection('klinikazam_settings').doc('global').get();
-            if(settingsSnap.exists) {
-                globalSettings = settingsSnap.data();
+
+            // Fetch holidays
+            const hSnap = await db.collection('klinikazam_holidays').orderBy('startDate', 'desc').get();
+            holidays = hSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            // Fetch announcement
+            const annSnap = await db.collection('klinikazam_settings').doc('announcement').get();
+            if(annSnap.exists) {
+                announcement = annSnap.data();
             } else {
-                globalSettings = {};
+                announcement = null;
             }
-            updateAnnouncementBanner();
 
             const currentViewId = document.querySelector('.view-section.active')?.id.replace('view-', '');
             
@@ -1895,10 +2109,13 @@
                     populateCashBillServices();
                 }
             }
-            if(currentViewId === 'settings') renderSettings();
+            if(currentViewId === 'settings') {
+                renderSettings();
+            }
 
             populateServiceDropdowns();
             applyRoleBasedUI();
+            renderAnnouncementBanner();
         }
 
         // --- AUTHENTICATION ---
@@ -1961,9 +2178,9 @@
                 'dashboard':'Dashboard', 'appointments':'Appointments', 'booking':'New Booking', 
                 'cashbill':'Cashbill', 'billing':'Reports', 'staff':'Staff', 
                 'patients':'Patients', 'services':'Services', 'slots':'Slot Management', 
-                'bill-detail':'Bill Details', 'settings': 'Settings' 
+                'bill-detail':'Bill Details', 'settings':'Settings'
             };
-            document.getElementById('pageTitle').innerText = titles[viewId] || 'Clinic Portal';
+                        document.getElementById('pageTitle').innerText = titles[viewId] || 'Clinic Portal';
 
             if(document.getElementById('sidebar').classList.contains('mobile-open')) toggleMobileMenu();
 
@@ -2089,6 +2306,291 @@
             return `${d}/${m}/${y}`;
         }
 
+        // --- ANNOUNCEMENT BANNER FUNCTIONS ---
+        function renderAnnouncementBanner() {
+            const banner = document.getElementById('announcementBanner');
+            const content = document.getElementById('announcementContent');
+            
+            if(!announcement || !announcement.isActive) {
+                banner.classList.remove('active');
+                return;
+            }
+
+            // Check if banner should show on portal
+            if(!announcement.showPortal) {
+                banner.classList.remove('active');
+                return;
+            }
+
+            banner.className = 'announcement-banner active';
+            if(announcement.color) {
+                banner.classList.add(announcement.color);
+            }
+
+            content.innerHTML = `
+                <div class="announcement-item">
+                    <i class="fa-solid fa-bullhorn"></i>
+                    <span>${announcement.text}</span>
+                </div>
+            `;
+        }
+
+        function closeAnnouncementBanner() {
+            document.getElementById('announcementBanner').classList.remove('active');
+        }
+
+        // --- SETTINGS RENDER ---
+        function renderSettings() {
+            // Render Announcement
+            if(announcement) {
+                document.getElementById('announcement-toggle').checked = announcement.isActive || false;
+                document.getElementById('announcement-text').value = announcement.text || '';
+                document.getElementById('show-portal').checked = announcement.showPortal !== false;
+                document.getElementById('show-website').checked = announcement.showWebsite || false;
+                
+                selectedAnnouncementColor = announcement.color || 'primary';
+                document.querySelectorAll('.color-option').forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.color === selectedAnnouncementColor);
+                });
+                
+                updateAnnouncementPreview();
+            } else {
+                document.getElementById('announcement-toggle').checked = false;
+                document.getElementById('announcement-text').value = '';
+                document.getElementById('show-portal').checked = true;
+                document.getElementById('show-website').checked = false;
+            }
+
+            // Render Holidays
+            renderHolidays();
+        }
+
+        function renderHolidays() {
+            const list = document.getElementById('holiday-list');
+            list.innerHTML = '';
+
+            if(holidays.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-light);"><i class="fa-solid fa-calendar-check" style="font-size:2rem; margin-bottom:10px; opacity:0.3;"></i><br>No off days configured.</div>';
+                return;
+            }
+
+            holidays.forEach(h => {
+                const typeLabels = {
+                    'public': 'Public Holiday',
+                    'custom': 'Custom Off',
+                    'event': 'Special Event'
+                };
+                const typeLabel = typeLabels[h.type] || 'Off Day';
+                
+                let dateDisplay = formatDateDisplay(h.startDate);
+                if(h.endDate && h.endDate !== h.startDate) {
+                    dateDisplay += ' - ' + formatDateDisplay(h.endDate);
+                }
+
+                list.innerHTML += `
+                    <div class="holiday-item">
+                        <div>
+                            <div class="holiday-name">${h.name}</div>
+                            <div class="holiday-date">${dateDisplay}</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="holiday-type">${typeLabel}</span>
+                            <button class="btn-sm btn-delete" onclick="deleteHoliday('${h.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateAnnouncementPreview() {
+            const text = document.getElementById('announcement-text').value || 'Preview text will appear here...';
+            const preview = document.getElementById('announcement-preview');
+            const previewText = document.getElementById('announcement-preview-text');
+            
+            preview.className = 'announcement-preview ' + selectedAnnouncementColor;
+            previewText.innerText = text;
+        }
+
+        function selectAnnouncementColor(color) {
+            selectedAnnouncementColor = color;
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.color === color);
+            });
+            updateAnnouncementPreview();
+        }
+
+        async function saveAnnouncement() {
+            const isActive = document.getElementById('announcement-toggle').checked;
+            const text = document.getElementById('announcement-text').value;
+            const showPortal = document.getElementById('show-portal').checked;
+            const showWebsite = document.getElementById('show-website').checked;
+
+            if(!text.trim()) {
+                showToast("Please enter announcement text");
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const annData = {
+                    id: 'announcement',
+                    isActive: isActive,
+                    text: text,
+                    color: selectedAnnouncementColor,
+                    showPortal: showPortal,
+                    showWebsite: showWebsite,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: currentUser.id
+                };
+
+                await db.collection('klinikazam_settings').doc('announcement').set(annData);
+                announcement = annData;
+                renderAnnouncementBanner();
+                showToast("Announcement saved successfully");
+            } catch(e) {
+                console.error(e);
+                showToast("Error saving announcement");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function clearAnnouncement() {
+            if(!confirm("Are you sure you want to clear the announcement?")) return;
+            
+            showLoading(true);
+            try {
+                await db.collection('klinikazam_settings').doc('announcement').delete();
+                announcement = null;
+                document.getElementById('announcement-text').value = '';
+                document.getElementById('announcement-toggle').checked = false;
+                document.getElementById('show-portal').checked = true;
+                document.getElementById('show-website').checked = false;
+                selectedAnnouncementColor = 'primary';
+                document.querySelectorAll('.color-option').forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.color === 'primary');
+                });
+                updateAnnouncementPreview();
+                renderAnnouncementBanner();
+                showToast("Announcement cleared");
+            } catch(e) {
+                console.error(e);
+                showToast("Error clearing announcement");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function toggleAnnouncement(isActive) {
+            // Just update UI, actual save happens on Save button
+        }
+
+        // --- HOLIDAY FUNCTIONS ---
+        function openAddHoliday() {
+            document.getElementById('edit-holiday-id').value = '';
+            document.getElementById('holiday-name').value = '';
+            document.getElementById('holiday-start').value = '';
+            document.getElementById('holiday-end').value = '';
+            document.getElementById('holiday-type').value = 'public';
+            document.getElementById('holiday-desc').value = '';
+            showModal('holidayModal');
+        }
+
+        async function saveHoliday() {
+            const name = document.getElementById('holiday-name').value;
+            const startDate = document.getElementById('holiday-start').value;
+            const endDate = document.getElementById('holiday-end').value || startDate;
+            const type = document.getElementById('holiday-type').value;
+            const desc = document.getElementById('holiday-desc').value;
+
+            if(!name || !startDate) {
+                showToast("Please enter holiday name and start date");
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const holidayData = {
+                    id: Date.now().toString(),
+                    name: name,
+                    startDate: startDate,
+                    endDate: endDate,
+                    type: type,
+                    description: desc,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdBy: currentUser.id
+                };
+
+                await db.collection('klinikazam_holidays').doc(holidayData.id).set(holidayData);
+                
+                // Also create closed slots for these dates
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const batch = db.batch();
+                
+                for(let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const dateStr = getLocalDateStr(d);
+                    const closedRef = db.collection('klinikazam_slots').doc();
+                    batch.set(closedRef, {
+                        id: closedRef.id,
+                        date: dateStr,
+                        type: 'closed',
+                        reason: name
+                    });
+                }
+                
+                await batch.commit();
+                
+                holidays.unshift(holidayData);
+                renderHolidays();
+                closeModal('holidayModal');
+                showToast("Off day added successfully");
+            } catch(e) {
+                console.error(e);
+                showToast("Error saving off day");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function deleteHoliday(id) {
+            if(!confirm("Are you sure you want to delete this off day?")) return;
+            
+            showLoading(true);
+            try {
+                const h = holidays.find(x => x.id === id);
+                
+                // Remove from holidays collection
+                await db.collection('klinikazam_holidays').doc(id).delete();
+                
+                // Remove closed slots
+                if(h) {
+                    const start = new Date(h.startDate);
+                    const end = new Date(h.endDate || h.startDate);
+                    const batch = db.batch();
+                    
+                    for(let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                        const dateStr = getLocalDateStr(d);
+                        const closedSlots = slotExceptions.filter(e => e.date === dateStr && e.type === 'closed');
+                        closedSlots.forEach(slot => {
+                            batch.delete(db.collection('klinikazam_slots').doc(slot.id));
+                        });
+                    }
+                    
+                    await batch.commit();
+                }
+                
+                holidays = holidays.filter(x => x.id !== id);
+                renderHolidays();
+                showToast("Off day deleted");
+            } catch(e) {
+                console.error(e);
+                showToast("Error deleting off day");
+            } finally {
+                showLoading(false);
+            }
+        }
+
         // --- PAGINATION HELPERS ---
         function getPaginatedData(array, viewKey) {
             const config = paginationConfig[viewKey] || { page: 1, limit: 10 };
@@ -2104,7 +2606,7 @@
             };
         }
 
-        function renderPaginationControls        (viewKey, totalItems) {
+        function renderPaginationControls(viewKey, totalItems) {
             const container = document.getElementById(`pag-${viewKey}`);
             if(!container) return;
 
@@ -2163,150 +2665,6 @@
             if(type === 'appointments' || type === 'history') renderAppointments();
             if(type === 'cashbill') renderCashbillList();
             if(type === 'billing') renderBilling();
-        }
-
-        // --- NEW: SETTINGS & ANNOUNCEMENT LOGIC ---
-        function renderSettings() {
-            // 1. Render Announcement Inputs
-            document.getElementById('settings-announcement-msg').value = globalSettings.announcementMsg || '';
-            document.getElementById('settings-announcement-type').value = globalSettings.announcementType || 'info';
-
-            // 2. Render Holidays List
-            const list = document.getElementById('holidays-list');
-            list.innerHTML = '';
-
-            // Filter holidays from slotExceptions
-            const holidays = slotExceptions.filter(e => e.type === 'closed').sort((a,b) => a.date.localeCompare(b.date));
-            
-            // Also check if the holiday has a reason stored in globalSettings.holidaysReasons map
-            const reasons = globalSettings.holidaysReasons || {};
-
-            if(holidays.length === 0) {
-                list.innerHTML = '<div style="text-align:center; color:var(--text-light); padding: 20px;">No holidays set.</div>';
-            } else {
-                holidays.forEach(h => {
-                    const reason = reasons[h.date] || 'Clinic Closed';
-                    list.innerHTML += `
-                        <div class="holiday-item">
-                            <div>
-                                <span class="date">${formatDateDisplay(h.date)}</span>
-                                <span style="margin: 0 10px;">-</span>
-                                <span class="reason">${reason}</span>
-                            </div>
-                            <button class="btn-sm btn-delete" onclick="removeHoliday('${h.id}', '${h.date}')"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    `;
-                });
-            }
-        }
-
-        function updateAnnouncementBanner() {
-            const banner = document.getElementById('announcementBanner');
-            const text = document.getElementById('bannerText');
-            const msg = globalSettings.announcementMsg;
-            
-            if(msg) {
-                text.innerText = msg;
-                banner.classList.add('show');
-                
-                // Set color based on type
-                const type = globalSettings.announcementType || 'info';
-                banner.style.background = '';
-                if(type === 'warning') banner.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
-                if(type === 'danger') banner.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
-                if(type === 'success') banner.style.background = 'linear-gradient(90deg, #10b981, #059669)';
-                // default 'info' uses CSS class (primary color)
-            } else {
-                banner.classList.remove('show');
-            }
-        }
-
-        function hideBanner() {
-            document.getElementById('announcementBanner').classList.remove('show');
-        }
-
-        async function saveAnnouncement() {
-            const msg = document.getElementById('settings-announcement-msg').value;
-            const type = document.getElementById('settings-announcement-type').value;
-
-            try {
-                await db.collection('klinikazam_settings').doc('global').set({
-                    announcementMsg: msg,
-                    announcementType: type
-                }, { merge: true });
-
-                globalSettings.announcementMsg = msg;
-                globalSettings.announcementType = type;
-                
-                updateAnnouncementBanner();
-                showToast("Announcement Saved");
-            } catch(e) {
-                console.error(e);
-                showToast("Error saving announcement");
-            }
-        }
-
-        async function addHoliday() {
-            const date = document.getElementById('holiday-date').value;
-            const reason = document.getElementById('holiday-reason').value;
-
-            if(!date) {
-                showToast("Please select a date");
-                return;
-            }
-
-            // Check if already exists
-            const exists = slotExceptions.find(e => e.date === date && e.type === 'closed');
-            if(exists) {
-                showToast("This date is already marked as holiday");
-                return;
-            }
-
-            try {
-                const newId = Date.now().toString();
-                
-                // Add to slot exceptions
-                await db.collection('klinikazam_slots').doc(newId).set({
-                    id: newId,
-                    date: date,
-                    type: 'closed'
-                });
-
-                // Add reason to settings
-                const reasons = globalSettings.holidaysReasons || {};
-                reasons[date] = reason || 'Clinic Closed';
-                await db.collection('klinikazam_settings').doc('global').set({
-                    holidaysReasons: reasons
-                }, { merge: true });
-
-                await refreshData();
-                showToast("Holiday Added");
-            } catch(e) {
-                console.error(e);
-                showToast("Error adding holiday");
-            }
-        }
-
-        async function removeHoliday(id, dateStr) {
-            if(confirm("Remove this holiday?")) {
-                try {
-                    await db.collection('klinikazam_slots').doc(id).delete();
-                    
-                    // Remove reason
-                    if(globalSettings.holidaysReasons && globalSettings.holidaysReasons[dateStr]) {
-                        delete globalSettings.holidaysReasons[dateStr];
-                        await db.collection('klinikazam_settings').doc('global').set({
-                            holidaysReasons: globalSettings.holidaysReasons
-                        }, { merge: true });
-                    }
-
-                    await refreshData();
-                    showToast("Holiday Removed");
-                } catch(e) {
-                    console.error(e);
-                    showToast("Error removing holiday");
-                }
-            }
         }
 
         // --- EXPORT FUNCTIONS ---
@@ -3224,21 +3582,39 @@
                 
                 const isSunday = dayDate.getDay() === 0;
                 const isPast = dateStr < minBookingDate;
-                const isHoliday = slotExceptions.some(e => e.date === dateStr && e.type === 'closed');
+
+                // Check for holidays
+                const isHoliday = holidays.some(h => {
+                    const start = h.startDate;
+                    const end = h.endDate || h.startDate;
+                    return dateStr >= start && dateStr <= end;
+                });
 
                 if(isPast) classes += ' disabled';
                 
                 if(dateStr === getLocalDateStr(new Date())) classes += ' today'; 
                 if(selectedBookingDate === dateStr) classes += ' active';
                 el.className = classes;
+                el.innerText = i;
                 
+                const isClosed = slotExceptions.some(e => e.date === dateStr && e.type === 'closed');
                 const bookedCount = appointments.filter(a => a.date === dateStr && a.status !== 'Cancelled' && a.status !== 'Completed').length;
                 const blockedCount = slotExceptions.filter(e => e.date === dateStr && e.type === 'blocked').length;
                 const totalUnavailable = bookedCount + blockedCount;
                 const isFull = totalUnavailable >= defaultSlots.length;
 
-                if(isHoliday || isFull || isPast || isSunday) classes += ' disabled';
+                if(isHoliday || isClosed || isFull || isPast || isSunday) classes += ' disabled';
+                if(isHoliday) classes += ' holiday';
                 el.className = classes;
+                
+                if(isHoliday) {
+                    const h = holidays.find(h => {
+                        const start = h.startDate;
+                        const end = h.endDate || h.startDate;
+                        return dateStr >= start && dateStr <= end;
+                    });
+                    el.title = h ? h.name : 'Holiday';
+                }
                 
                 if(!classes.includes('disabled')) {
                     el.onclick = () => selectDate(dateStr);
@@ -3249,9 +3625,7 @@
                     el.onclick = () => showToast("Clinic is closed on Sundays.");
                     el.title = "Clinic Closed";
                 } else if (isHoliday) {
-                    const holidayInfo = globalSettings.holidaysReasons || {};
-                    el.onclick = () => showToast(`Clinic Closed: ${holidayInfo[dateStr] || 'Holiday'}`);
-                    el.title = "Holiday";
+                    el.onclick = () => showToast("Clinic is closed for holiday.");
                 }
 
                 grid.appendChild(el);
@@ -3270,12 +3644,16 @@
                 showToast("Please Booking at least one day earlier.");
                 return;
             }
-            
-            // Check if holiday
-            const isHoliday = slotExceptions.some(e => e.date === dateStr && e.type === 'closed');
+
+            // Check if date is a holiday
+            const isHoliday = holidays.some(h => {
+                const start = h.startDate;
+                const end = h.endDate || h.startDate;
+                return dateStr >= start && dateStr <= end;
+            });
+
             if(isHoliday) {
-                const holidayInfo = globalSettings.holidaysReasons || {};
-                showToast(`Cannot book: Clinic is closed for ${holidayInfo[dateStr] || 'Holiday'}`);
+                showToast("Clinic is closed on this date (Holiday).");
                 return;
             }
 
@@ -4161,9 +4539,16 @@
 
             if(!dateVal) return;
 
+            // Check for holiday
+            const isHoliday = holidays.some(h => {
+                const start = h.startDate;
+                const end = h.endDate || h.startDate;
+                return dateVal >= start && dateVal <= end;
+            });
+
             const isClosed = slotExceptions.some(e => e.date === dateVal && e.type === 'closed');
             
-            if(isClosed) {
+            if(isHoliday || isClosed) {
                 statusIndicator.className = "status-indicator status-closed";
                 statusIndicator.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Closed`;
             } else {
@@ -4173,13 +4558,26 @@
 
             grid.innerHTML = '';
 
+            if(isHoliday) {
+                const h = holidays.find(h => {
+                    const start = h.startDate;
+                    const end = h.endDate || h.startDate;
+                    return dateVal >= start && dateVal <= end;
+                });
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align:center; padding: 40px; background: var(--danger-bg); border-radius: 12px; border: 1px dashed var(--danger);">
+                        <h4 style="color:var(--danger); margin-bottom: 10px;"><i class="fa-solid fa-calendar-xmark"></i> ${h ? h.name : 'Holiday'}</h4>
+                        <p style="color:var(--text-light); margin-bottom: 20px;">Clinic is closed for this holiday. All slots are unavailable.</p>
+                    </div>
+                `;
+                return;
+            }
+
             if(isClosed) {
-                const holidayInfo = globalSettings.holidaysReasons || {};
-                const reason = holidayInfo[dateVal] || 'Closed';
                 grid.innerHTML = `
                     <div style="grid-column: 1/-1; text-align:center; padding: 40px; background: var(--danger-bg); border-radius: 12px; border: 1px dashed var(--danger);">
                         <h4 style="color:var(--danger); margin-bottom: 10px;">Clinic is Closed</h4>
-                        <p style="color:var(--text-light); margin-bottom: 20px;">Reason: ${reason}</p>
+                        <p style="color:var(--text-light); margin-bottom: 20px;">No slots are available for booking.</p>
                         <button class="btn-primary" style="width:auto; background: var(--success); box-shadow: none;" onclick="toggleClinicStatus('${dateVal}', true)">
                             <i class="fa-solid fa-door-open"></i> Open Clinic
                         </button>
@@ -4265,15 +4663,6 @@
                     if (closedRef) {
                         await db.collection('klinikazam_slots').doc(closedRef.id).delete();
                     }
-                    
-                    // Remove from holiday reasons
-                    if(globalSettings.holidaysReasons && globalSettings.holidaysReasons[date]) {
-                        delete globalSettings.holidaysReasons[date];
-                        await db.collection('klinikazam_settings').doc('global').set({
-                            holidaysReasons: globalSettings.holidaysReasons
-                        }, { merge: true });
-                    }
-
                     await refreshData();
                     showToast("Clinic is now Open");
                     showLoading(false);
