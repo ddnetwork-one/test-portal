@@ -959,12 +959,17 @@
         }
         .btn-add-item:hover { border-color: var(--primary); background: var(--primary-light); }
         
-        /* Payment Options UI */
+        /* Payment Options UI - Updated Grid */
         .payment-options-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 8px;
             margin-bottom: 16px;
+        }
+        @media (max-width: 600px) {
+            .payment-options-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         .payment-option-btn {
             padding: 10px;
@@ -991,6 +996,17 @@
         .installment-info-box.visible { display: block; }
         .installment-stat { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; }
         .installment-stat strong { color: var(--primary); }
+
+        /* Custom Duration Input */
+        .custom-duration-input {
+            margin-top: 12px;
+            padding: 12px;
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: var(--radius-sm);
+            display: none;
+        }
+        .custom-duration-input.visible { display: block; }
 
         /* =========================================
            PRICING SECTION
@@ -1574,7 +1590,7 @@
             .kanban-board { grid-template-columns: 1fr; }
             .doc-editor-grid { grid-template-columns: 1fr; }
             .doc-preview-meta { grid-template-columns: 1fr; }
-            .payment-options-grid { grid-template-columns: 1fr; }
+            .payment-options-grid { grid-template-columns: repeat(2, 1fr); }
             .pricing-container { flex-direction: column; align-items: center; }
             .pricing-card { max-width: 100%; }
             .item-row { grid-template-columns: 1fr; }
@@ -2173,6 +2189,19 @@
             'Business Portal System': 3800,
             'Custom System': 6800
         };
+        
+        // =========================================
+        // UPDATED: PAYMENT PLAN OPTIONS
+        // =========================================
+        const PAYMENT_PLANS = [
+            { id: 'One-Time', label: 'One-Time', duration: 1 },
+            { id: '3-Month', label: '3 Month', duration: 3 },
+            { id: '6-Month', label: '6 Month', duration: 6 },
+            { id: '12-Month', label: '12 Month', duration: 12 },
+            { id: '18-Month', label: '18 Month', duration: 18 },
+            { id: '24-Month', label: '24 Month', duration: 24 },
+            { id: 'Custom', label: 'Custom', duration: null }
+        ];
 
         // Permission Check Helper
         const hasPermission = (permName) => {
@@ -2202,7 +2231,7 @@
         window.generateRandomPassword = (length = 12) => {
             const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-            numbers = '0123456789';
+            const numbers = '0123456789';
             const special = '!@#$%^&*';
             const allChars = uppercase + lowercase + numbers + special;
             
@@ -2740,6 +2769,34 @@
         };
 
         // =========================================
+        // HELPER: Get Payment Plan Display Name
+        // =========================================
+        const getPaymentPlanDisplay = (paymentType, customMonths) => {
+            const plan = PAYMENT_PLANS.find(p => p.id === paymentType);
+            if (plan) {
+                if (plan.id === 'Custom') {
+                    return `${customMonths || 1}-Month Custom`;
+                }
+                return plan.label;
+            }
+            return paymentType || 'One-Time';
+        };
+
+        // =========================================
+        // HELPER: Get Months from Payment Type
+        // =========================================
+        const getMonthsFromPaymentType = (paymentType, customMonths) => {
+            const plan = PAYMENT_PLANS.find(p => p.id === paymentType);
+            if (plan) {
+                if (plan.id === 'Custom') {
+                    return parseInt(customMonths) || 1;
+                }
+                return plan.duration;
+            }
+            return 1;
+        };
+
+        // =========================================
         // UPDATED: PROFESSIONAL SUMMARIZED EMAIL HTML
         // =========================================
         const generateSummarizedEmailHTML = (doc) => {
@@ -2747,6 +2804,11 @@
             const docTitle = isQuotation ? 'Quotation Summary' : 'Order Summary';
             const clientName = doc.clientName || doc.customerName || 'Valued Customer';
             const docNumber = doc.number || doc.id;
+            
+            // Get payment plan info
+            const months = getMonthsFromPaymentType(doc.paymentType, doc.customMonths);
+            const paymentPlanDisplay = getPaymentPlanDisplay(doc.paymentType, doc.customMonths);
+            const isInstallment = doc.paymentType && doc.paymentType !== 'One-Time';
             
             // Items Logic
             let itemRows = '';
@@ -2815,11 +2877,32 @@
             }
 
             const discount = parseFloat(doc.discount || 0);
-            const total = subtotal - discount;
-            const tax = 0; // Tax calculation can be added if needed
+            const grandTotal = subtotal - discount;
+            
+            // Calculate monthly payment if installment
+            const totalAmount = grandTotal;
+            const monthlyPayment = isInstallment ? (grandTotal / months) : grandTotal;
+            const currentCycle = doc.installmentCycle || 1;
             
             // Format numbers
             const formatRM = (val) => parseFloat(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // Payment plan section for email
+            let paymentPlanSection = '';
+            if (!isQuotation && isInstallment) {
+                paymentPlanSection = `
+                    <tr style="background:#f0f9ff;">
+                        <td colspan="3" style="padding:12px;font-size:14px;color:#0369a1;font-weight:600;">
+                            Payment Plan: ${paymentPlanDisplay} Installment
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:12px;font-size:14px;color:#666;">Monthly Payment (Cycle ${currentCycle} of ${months})</td>
+                        <td align="center" style="padding:12px;font-size:14px;color:#333;">-</td>
+                        <td align="right" style="padding:12px;font-size:14px;color:#0369a1;font-weight:700;">RM ${formatRM(monthlyPayment)}</td>
+                    </tr>
+                `;
+            }
 
             return `
 <!DOCTYPE html>
@@ -2844,6 +2927,7 @@
 <p style="margin:5px 0 0;color:#666;font-size:14px;">
  ${isQuotation ? 'Quotation' : 'Order'} ID: ${docNumber}
 </p>
+ ${isInstallment ? `<p style="margin:5px 0 0;color:#0369a1;font-size:13px;font-weight:600;">Payment Plan: ${paymentPlanDisplay}</p>` : ''}
 </td>
 </tr>
 
@@ -2873,6 +2957,7 @@ Thank you for your ${isQuotation ? 'quotation request' : 'order'}. Here is your 
 </tr>
 
  ${itemRows}
+ ${paymentPlanSection}
 
 </table>
 
@@ -2897,19 +2982,25 @@ Thank you for your ${isQuotation ? 'quotation request' : 'order'}. Here is your 
 </tr>
 ` : ''}
 
+ ${isInstallment ? `
 <tr>
-<td style="font-size:14px;color:#666;">Tax</td>
-<td align="right" style="font-size:14px;color:#333;">RM ${formatRM(tax)}</td>
+<td style="font-size:14px;color:#666;">Grand Total</td>
+<td align="right" style="font-size:14px;color:#333;">RM ${formatRM(grandTotal)}</td>
 </tr>
-
+<tr style="background:#eff6ff;">
+<td style="padding:10px;font-size:14px;font-weight:700;color:#0369a1;">Monthly Payment</td>
+<td align="right" style="padding:10px;font-size:16px;font-weight:700;color:#0369a1;">RM ${formatRM(monthlyPayment)}</td>
+</tr>
+ ` : `
 <tr>
 <td style="padding-top:10px;font-size:16px;font-weight:bold;color:#111;">
 Total
 </td>
 <td align="right" style="padding-top:10px;font-size:16px;font-weight:bold;color:#111;">
-RM ${formatRM(total)}
+RM ${formatRM(totalAmount)}
 </td>
 </tr>
+ `}
 
 </table>
 
@@ -2954,6 +3045,12 @@ const generateFullTemplateHTML = (doc) => {
     const dateStr = formatDateLong(doc.date || doc.createdAt);
     const clientAddress = doc.clientAddress || '';
     const attnTo = doc.attnTo || '';
+    
+    // Get payment plan info
+    const months = getMonthsFromPaymentType(doc.paymentType, doc.customMonths);
+    const paymentPlanDisplay = getPaymentPlanDisplay(doc.paymentType, doc.customMonths);
+    const isInstallment = doc.paymentType && doc.paymentType !== 'One-Time';
+    const currentCycle = doc.installmentCycle || 1;
     
     let validUntil = '-';
     if (isQuotation) {
@@ -3008,13 +3105,12 @@ const generateFullTemplateHTML = (doc) => {
         itemNum = 2;
     }
 
-    if (!isQuotation && doc.paymentType && doc.paymentType !== 'One-Time') {
-        const months = doc.installmentMonths || 12;
+    if (!isQuotation && isInstallment) {
         const monthlyAmt = subtotal / months;
         itemRows += `
             <tr>
                 <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">${itemNum}</td>
-                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">${doc.paymentType} Installment Plan</td>
+                <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;font-size:14px;">${paymentPlanDisplay} Installment Plan (Cycle ${currentCycle} of ${months})</td>
                 <td style="padding:10px 12px;border-bottom:1px solid #e5e5ea;text-align:right;font-size:14px;">${parseFloat(monthlyAmt).toLocaleString()} / month</td>
             </tr>
         `;
@@ -3033,7 +3129,7 @@ const generateFullTemplateHTML = (doc) => {
     }
 
     const discount = parseFloat(doc.discount || 0);
-    const total = subtotal - discount;
+    const grandTotal = subtotal - discount;
     
     const transactionRef = doc.transactionRef || doc.number || doc.id;
 
@@ -3048,6 +3144,7 @@ const generateFullTemplateHTML = (doc) => {
                 <strong style="font-size:14px;">Payment Details</strong><br><br>
                 Payment Method: Online Transfer<br>
                 Transaction Reference: ${transactionRef}
+                ${isInstallment ? `<br>Payment Plan: ${paymentPlanDisplay} Installment` : ''}
             </div>
         `;
     }
@@ -3073,6 +3170,9 @@ const generateFullTemplateHTML = (doc) => {
     
     const addressHtml = clientAddress ? clientAddress.replace(/\n/g, '<br>') : 'Malaysia';
     const attnHtml = attnTo ? `<br>Attn: ${attnTo}` : '';
+    
+    // Calculate display total
+    const displayTotal = isInstallment ? (grandTotal / months) : grandTotal;
 
     return `
 <!DOCTYPE html>
@@ -3286,10 +3386,21 @@ const generateFullTemplateHTML = (doc) => {
                         <td style="border-bottom:1px solid #e5e5ea;text-align:right;">-${parseFloat(discount).toLocaleString()}</td>
                     </tr>
                     ` : ''}
+                    ${isInstallment ? `
+                    <tr>
+                        <td colspan="2" style="padding:12px;text-align:right;font-weight:500;font-size:13px;border:none;">Grand Total</td>
+                        <td style="padding:12px;text-align:right;font-weight:600;font-size:13px;border:none;">RM ${parseFloat(grandTotal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                    <tr style="background:#eff6ff;">
+                        <td colspan="2" style="padding:12px;text-align:right;font-weight:600;font-size:14px;border:none;color:#0369a1;">Monthly Payment (${paymentPlanDisplay})</td>
+                        <td style="padding:12px;text-align:right;font-weight:700;font-size:15px;border:none;color:#0369a1;">RM ${parseFloat(displayTotal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                    ` : `
                     <tr>
                         <td colspan="2" style="padding:12px;text-align:right;font-weight:600;font-size:15px;border:none;">${isQuotation ? 'Total' : 'Total Paid'}</td>
-                        <td style="padding:12px;text-align:right;font-weight:700;font-size:15px;border:none;">RM ${parseFloat(total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding:12px;text-align:right;font-weight:700;font-size:15px;border:none;">RM ${parseFloat(totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     </tr>
+                    `}
                 </tbody>
             </table>
             ${paymentDetailsSection}
@@ -3824,6 +3935,7 @@ const generateFullTemplateHTML = (doc) => {
                     discount: 0,
                     total: 0,
                     paymentType: 'One-Time',
+                    customMonths: null,
                     domain: ''
                 });
                 hideLoading();
@@ -3848,7 +3960,9 @@ const generateFullTemplateHTML = (doc) => {
                     type: 'Quotation',
                     items: [{description: '', amount: 0}],
                     discount: 0,
-                    total: 0
+                    total: 0,
+                    paymentType: 'One-Time',
+                    customMonths: null
                 });
                 hideLoading();
                 navigateTo(`/quotation/${newId}`);
@@ -3858,7 +3972,9 @@ const generateFullTemplateHTML = (doc) => {
             }
         }
 
-        // INVOICE EDITOR
+        // =========================================
+        // INVOICE EDITOR - UPDATED WITH ALL PAYMENT OPTIONS
+        // =========================================
         async function renderInvoiceEditor(id) {
             let data = await window.dbOperations.getOrder(id);
             const canDelete = hasPermission('delete_invoice');
@@ -3876,6 +3992,7 @@ const generateFullTemplateHTML = (doc) => {
                     status: 'Draft',
                     type: 'Invoice',
                     paymentType: 'One-Time',
+                    customMonths: null,
                     installmentCycle: 1,
                     domain: ''
                 };
@@ -3892,6 +4009,17 @@ const generateFullTemplateHTML = (doc) => {
             const subtotal = data.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
             const discount = parseFloat(data.discount || 0);
             const grandTotal = subtotal - discount;
+
+            // Generate payment options HTML
+            const paymentOptionsHtml = PAYMENT_PLANS.map(plan => `
+                <button type="button" class="payment-option-btn ${data.paymentType === plan.id ? 'active' : ''}" onclick="setPaymentType('${plan.id}')">
+                    <strong>${plan.label}</strong>
+                    <span>${plan.id === 'One-Time' ? 'Full Payment' : plan.id === 'Custom' ? 'Set Duration' : 'Installment'}</span>
+                </button>
+            `).join('');
+
+            // Custom duration input
+            const showCustomInput = data.paymentType === 'Custom';
 
             document.getElementById('mainContent').innerHTML = `
                 <div class="doc-editor-container">
@@ -3951,11 +4079,11 @@ const generateFullTemplateHTML = (doc) => {
                                 <div class="doc-preview-meta" id="installmentPreviewMeta" style="display: ${data.paymentType !== 'One-Time' ? 'grid' : 'none'}; background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
                                     <div class="doc-preview-meta-item">
                                         <label>Payment Type</label>
-                                        <p id="previewPaymentType">${data.paymentType || 'One-Time'}</p>
+                                        <p id="previewPaymentType">${getPaymentPlanDisplay(data.paymentType, data.customMonths)}</p>
                                     </div>
                                     <div class="doc-preview-meta-item" style="text-align:right;">
                                         <label>Cycle</label>
-                                        <p id="previewCycle">${data.installmentCycle || 1} of ${data.installmentMonths || 12}</p>
+                                        <p id="previewCycle">${data.installmentCycle || 1} of ${getMonthsFromPaymentType(data.paymentType, data.customMonths)}</p>
                                     </div>
                                 </div>
 
@@ -4061,18 +4189,15 @@ const generateFullTemplateHTML = (doc) => {
                                     <div class="form-group-modal">
                                         <label>Payment Type</label>
                                         <div class="payment-options-grid">
-                                            <button type="button" class="payment-option-btn ${!data.paymentType || data.paymentType === 'One-Time' ? 'active' : ''}" onclick="setPaymentType('One-Time')">
-                                                <strong>One-Time</strong>
-                                                <span>Full Payment</span>
-                                            </button>
-                                            <button type="button" class="payment-option-btn ${data.paymentType === '12-Month' ? 'active' : ''}" onclick="setPaymentType('12-Month')">
-                                                <strong>12 Month</strong>
-                                                <span>Installment</span>
-                                            </button>
-                                            <button type="button" class="payment-option-btn ${data.paymentType === '24-Month' ? 'active' : ''}" onclick="setPaymentType('24-Month')">
-                                                <strong>24 Month</strong>
-                                                <span>Installment</span>
-                                            </button>
+                                            ${paymentOptionsHtml}
+                                        </div>
+                                    </div>
+
+                                    <!-- Custom Duration Input -->
+                                    <div class="custom-duration-input" id="customDurationInput" style="display: ${showCustomInput ? 'block' : 'none'};">
+                                        <div class="form-group-modal" style="margin-bottom:0;">
+                                            <label>Custom Duration (Months)</label>
+                                            <input type="number" id="editCustomMonths" value="${data.customMonths || 1}" min="1" max="60" oninput="updateInvoicePreview()">
                                         </div>
                                     </div>
 
@@ -4083,7 +4208,7 @@ const generateFullTemplateHTML = (doc) => {
                                         </div>
                                         <div class="installment-stat">
                                             <span>Monthly Payment:</span>
-                                            <strong id="instMonthly">${formatMYR(grandTotal / (data.installmentMonths || 12))}</strong>
+                                            <strong id="instMonthly">${formatMYR(grandTotal / getMonthsFromPaymentType(data.paymentType, data.customMonths))}</strong>
                                         </div>
                                         <div class="form-row" style="margin-top:12px;">
                                             <div class="form-group-modal" style="margin-bottom:0;">
@@ -4092,7 +4217,7 @@ const generateFullTemplateHTML = (doc) => {
                                             </div>
                                             <div class="form-group-modal" style="margin-bottom:0;">
                                                 <label>Remaining Balance</label>
-                                                <input type="text" id="remainingBalanceDisplay" readonly value="${formatMYR(grandTotal - (grandTotal / (data.installmentMonths || 12)) * (data.installmentCycle || 1))}" style="background:#f8fafc;">
+                                                <input type="text" id="remainingBalanceDisplay" readonly value="${formatMYR(grandTotal - (grandTotal / getMonthsFromPaymentType(data.paymentType, data.customMonths)) * (data.installmentCycle || 1))}" style="background:#f8fafc;">
                                             </div>
                                         </div>
                                     </div>
@@ -4113,6 +4238,7 @@ const generateFullTemplateHTML = (doc) => {
             window.currentPaymentType = data.paymentType || 'One-Time';
             window.currentInvoiceData = data; 
             window.currentItems = [...data.items];
+            window.currentCustomMonths = data.customMonths || null;
             updateInvoicePreview();
         }
 
@@ -4155,25 +4281,35 @@ const generateFullTemplateHTML = (doc) => {
             const clientName = document.getElementById('editClient').value;
             const amount = document.getElementById('previewTotal').textContent; 
             const cycle = document.getElementById('editCycle')?.value || '-';
-            const months = window.currentPaymentType === '12-Month' ? 12 : 24;
+            const paymentType = window.currentPaymentType || 'One-Time';
+            const customMonths = window.currentCustomMonths;
+            const months = getMonthsFromPaymentType(paymentType, customMonths);
             const date = document.getElementById('editDate').value; 
             
             const d = new Date(date);
             const formattedDate = d.toLocaleDateString('en-GB');
 
-            const text = `Hello,\n\nThis is a friendly reminder from DDNEX regarding your monthly installment payment.\n\nMonthly Payment: ${amount}\nBilling Cycle: Month ${cycle} of ${months}\nDue Date: ${formattedDate}\n\nKindly complete the payment before the due date to ensure your service continues without interruption.\n\nIf payment has already been made, please disregard this message.\n\nThank you.\n\nDDNEX\nsupport@ddnex.com`;
+            const text = `Hello,\n\nThis is a friendly reminder from DDNEX regarding your ${paymentType === 'One-Time' ? 'payment' : 'monthly installment payment'}.\n\n${paymentType !== 'One-Time' ? `Monthly Payment: ${amount}\nBilling Cycle: Month ${cycle} of ${months}\n` : `Amount: ${amount}\n`}Due Date: ${formattedDate}\n\nKindly complete the payment before the due date to ensure your service continues without interruption.\n\nIf payment has already been made, please disregard this message.\n\nThank you.\n\nDDNEX\nsupport@ddnex.com`;
 
             const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         };
 
+        // UPDATED: setPaymentType to handle Custom option
         window.setPaymentType = (type) => {
             window.currentPaymentType = type;
             document.querySelectorAll('.payment-option-btn').forEach(btn => btn.classList.remove('active'));
             event.currentTarget.classList.add('active');
+            
+            const customInput = document.getElementById('customDurationInput');
+            if(customInput) {
+                customInput.style.display = type === 'Custom' ? 'block' : 'none';
+            }
+            
             updateInvoicePreview();
         };
 
+        // UPDATED: updateInvoicePreview to handle custom months
         window.updateInvoicePreview = () => {
             const client = document.getElementById('editClient')?.value;
             const address = document.getElementById('editClientAddress')?.value;
@@ -4184,6 +4320,11 @@ const generateFullTemplateHTML = (doc) => {
 
             const subtotal = window.currentItems.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
             const grandTotal = subtotal - discount;
+            
+            // Handle custom months
+            const customMonthsInput = document.getElementById('editCustomMonths');
+            const customMonths = customMonthsInput ? parseInt(customMonthsInput.value) || 1 : 1;
+            window.currentCustomMonths = customMonths;
 
             const pClient = document.getElementById('previewClient');
             const pAddress = document.getElementById('previewAddress');
@@ -4230,10 +4371,7 @@ const generateFullTemplateHTML = (doc) => {
 
             const type = window.currentPaymentType || 'One-Time';
             let displayTotal = grandTotal;
-            let months = 1;
-
-            if(type === '12-Month') months = 12;
-            if(type === '24-Month') months = 24;
+            const months = getMonthsFromPaymentType(type, window.currentCustomMonths);
 
             if(type !== 'One-Time') {
                 if(instBox) instBox.style.display = 'block';
@@ -4249,7 +4387,7 @@ const generateFullTemplateHTML = (doc) => {
                 if(instGrandTotal) instGrandTotal.textContent = formatMYR(grandTotal);
                 if(instMonthly) instMonthly.textContent = formatMYR(monthlyAmount);
                 
-                if(pPayType) pPayType.textContent = type;
+                if(pPayType) pPayType.textContent = getPaymentPlanDisplay(type, window.currentCustomMonths);
                 if(pCycle) pCycle.textContent = `${cycle} of ${months}`;
                 
                 const remainingBal = grandTotal - (monthlyAmount * cycle);
@@ -4270,9 +4408,8 @@ const generateFullTemplateHTML = (doc) => {
                 showLoading("Saving and committing...");
                 
                 const type = window.currentPaymentType || 'One-Time';
-                let months = 1;
-                if(type === '12-Month') months = 12;
-                if(type === '24-Month') months = 24;
+                const customMonths = window.currentCustomMonths || null;
+                const months = getMonthsFromPaymentType(type, customMonths);
 
                 const subtotal = window.currentItems.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
                 const discount = parseFloat(document.getElementById('editDiscount')?.value || 0);
@@ -4296,6 +4433,7 @@ const generateFullTemplateHTML = (doc) => {
                     grandTotal: grandTotal, 
                     subtotal: subtotal,
                     paymentType: type,
+                    customMonths: customMonths,
                     installmentMonths: months,
                     installmentCycle: cycle,
                     type: 'Invoice',
@@ -4315,11 +4453,11 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
+        // UPDATED: saveInvoice to handle custom months
         window.saveInvoice = async (id) => {
             const type = window.currentPaymentType || 'One-Time';
-            let months = 1;
-            if(type === '12-Month') months = 12;
-            if(type === '24-Month') months = 24;
+            const customMonths = window.currentCustomMonths || null;
+            const months = getMonthsFromPaymentType(type, customMonths);
 
             const subtotal = window.currentItems.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
             const discount = parseFloat(document.getElementById('editDiscount')?.value || 0);
@@ -4343,6 +4481,7 @@ const generateFullTemplateHTML = (doc) => {
                 grandTotal: grandTotal, 
                 subtotal: subtotal,
                 paymentType: type,
+                customMonths: customMonths,
                 installmentMonths: months,
                 installmentCycle: cycle,
                 type: 'Invoice',
@@ -4361,7 +4500,9 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
-        // --- QUOTATION EDITOR (Updated with Address & Attn) ---
+        // =========================================
+        // QUOTATION EDITOR - UPDATED WITH PAYMENT OPTIONS
+        // =========================================
         async function renderQuotationEditor(id) {
             let data = await window.dbOperations.getQuotation(id);
             const canDelete = hasPermission('delete_quotation');
@@ -4377,7 +4518,9 @@ const generateFullTemplateHTML = (doc) => {
                     discount: 0,
                     total: 0,
                     status: 'Draft',
-                    type: 'Quotation'
+                    type: 'Quotation',
+                    paymentType: 'One-Time',
+                    customMonths: null
                 };
             }
 
@@ -4391,6 +4534,16 @@ const generateFullTemplateHTML = (doc) => {
             const subtotal = data.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
             const discount = parseFloat(data.discount || 0);
             const grandTotal = subtotal - discount;
+
+            // Generate payment options HTML for quotation
+            const paymentOptionsHtml = PAYMENT_PLANS.map(plan => `
+                <button type="button" class="payment-option-btn ${data.paymentType === plan.id ? 'active' : ''}" onclick="setQuotationPaymentType('${plan.id}')">
+                    <strong>${plan.label}</strong>
+                    <span>${plan.id === 'One-Time' ? 'Full Payment' : plan.id === 'Custom' ? 'Set Duration' : 'Installment'}</span>
+                </button>
+            `).join('');
+
+            const showCustomInput = data.paymentType === 'Custom';
 
             document.getElementById('mainContent').innerHTML = `
                 <div class="doc-editor-container">
@@ -4434,6 +4587,16 @@ const generateFullTemplateHTML = (doc) => {
                                     <p id="previewDate">${formatDate(data.date)}</p>
                                 </div>
                             </div>
+
+                            ${data.paymentType && data.paymentType !== 'One-Time' ? `
+                            <div style="margin-bottom: 20px; padding: 12px; background: #f0f9ff; border-radius: 8px; border-left: 3px solid #0369a1;">
+                                <label style="font-size:11px; color:#0369a1; text-transform:uppercase; font-weight:600;">Suggested Payment Plan</label>
+                                <p style="font-size:15px; font-weight:600; color:#0369a1; margin-top:4px;">
+                                    <i class="ri-calendar-check-line" style="vertical-align: middle; margin-right: 6px;"></i>
+                                    ${getPaymentPlanDisplay(data.paymentType, data.customMonths)} Installment
+                                </p>
+                            </div>
+                            ` : ''}
 
                             <table class="doc-preview-table">
                                 <thead>
@@ -4515,6 +4678,23 @@ const generateFullTemplateHTML = (doc) => {
                                     <input type="number" id="editQDiscount" value="${data.discount || 0}" oninput="updateQuotationPreview()">
                                 </div>
 
+                                <hr style="margin: 16px 0; border-color: var(--border-light);">
+
+                                <div class="form-group-modal">
+                                    <label>Suggested Payment Plan</label>
+                                    <div class="payment-options-grid">
+                                        ${paymentOptionsHtml}
+                                    </div>
+                                </div>
+
+                                <!-- Custom Duration Input for Quotation -->
+                                <div class="custom-duration-input" id="customDurationInputQ" style="display: ${showCustomInput ? 'block' : 'none'};">
+                                    <div class="form-group-modal" style="margin-bottom:0;">
+                                        <label>Custom Duration (Months)</label>
+                                        <input type="number" id="editQCustomMonths" value="${data.customMonths || 1}" min="1" max="60" oninput="updateQuotationPreview()">
+                                    </div>
+                                </div>
+
                                 <div style="margin-top: 16px;">
                                     <button class="btn btn-outline" style="width:100%" onclick="convertToInvoice('${id}')">
                                         <i class="ri-exchange-line"></i> Convert to Invoice
@@ -4527,6 +4707,8 @@ const generateFullTemplateHTML = (doc) => {
             `;
 
             window.currentQuotationItems = [...data.items];
+            window.currentQuotationPaymentType = data.paymentType || 'One-Time';
+            window.currentQuotationCustomMonths = data.customMonths || null;
             window.updateQuotationPreview();
         }
 
@@ -4563,6 +4745,19 @@ const generateFullTemplateHTML = (doc) => {
                 `).join('')}
                 <button class="btn-add-item" onclick="addQuotationItemRow()"><i class="ri-add-line"></i> Add Item</button>
             `;
+        };
+
+        window.setQuotationPaymentType = (type) => {
+            window.currentQuotationPaymentType = type;
+            document.querySelectorAll('.payment-option-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            const customInput = document.getElementById('customDurationInputQ');
+            if(customInput) {
+                customInput.style.display = type === 'Custom' ? 'block' : 'none';
+            }
+            
+            updateQuotationPreview();
         };
 
         window.updateQuotationPreview = () => {
@@ -4613,6 +4808,9 @@ const generateFullTemplateHTML = (doc) => {
                 const discount = parseFloat(document.getElementById('editQDiscount')?.value || 0);
                 const total = subtotal - discount;
 
+                const customMonthsInput = document.getElementById('editQCustomMonths');
+                const customMonths = customMonthsInput ? parseInt(customMonthsInput.value) || null : null;
+
                 const data = {
                     number: id,
                     clientName: document.getElementById('editQClient')?.value || '',
@@ -4624,6 +4822,8 @@ const generateFullTemplateHTML = (doc) => {
                     discount: discount,
                     subtotal: subtotal,
                     total: total,
+                    paymentType: window.currentQuotationPaymentType || 'One-Time',
+                    customMonths: customMonths,
                     type: 'Quotation',
                     updatedAt: new Date()
                 };
@@ -4641,10 +4841,14 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
+        // UPDATED: saveQuotation with payment options
         window.saveQuotation = async (id) => {
             const subtotal = window.currentQuotationItems.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
             const discount = parseFloat(document.getElementById('editQDiscount')?.value || 0);
             const total = subtotal - discount;
+
+            const customMonthsInput = document.getElementById('editQCustomMonths');
+            const customMonths = customMonthsInput ? parseInt(customMonthsInput.value) || null : null;
 
             const data = {
                 number: id,
@@ -4657,6 +4861,8 @@ const generateFullTemplateHTML = (doc) => {
                 discount: discount,
                 subtotal: subtotal,
                 total: total,
+                paymentType: window.currentQuotationPaymentType || 'One-Time',
+                customMonths: customMonths,
                 type: 'Quotation',
                 updatedAt: new Date()
             };
@@ -4685,7 +4891,8 @@ const generateFullTemplateHTML = (doc) => {
                     type: 'Invoice',
                     source: 'Portal',
                     status: 'Draft',
-                    paymentType: 'One-Time'
+                    paymentType: qData.paymentType || 'One-Time',
+                    customMonths: qData.customMonths || null
                 };
                 await window.dbOperations.setOrder(newInvId, invData);
                 
@@ -4746,6 +4953,8 @@ const generateFullTemplateHTML = (doc) => {
                         clientAddress: document.getElementById('editQClientAddress')?.value || '',
                         items: window.currentQuotationItems, 
                         discount: parseFloat(document.getElementById('editQDiscount')?.value || 0),
+                        paymentType: window.currentQuotationPaymentType || 'One-Time',
+                        customMonths: window.currentQuotationCustomMonths,
                         date: document.getElementById('editQDate')?.value 
                     };
                 } else {
@@ -4757,7 +4966,8 @@ const generateFullTemplateHTML = (doc) => {
                         domain: document.getElementById('editDomain')?.value || '',
                         items: window.currentItems, 
                         discount: parseFloat(document.getElementById('editDiscount')?.value || 0),
-                        paymentType: window.currentPaymentType,
+                        paymentType: window.currentPaymentType || 'One-Time',
+                        customMonths: window.currentCustomMonths,
                         installmentCycle: document.getElementById('editCycle')?.value,
                         date: document.getElementById('editDate')?.value
                     };
@@ -4802,6 +5012,10 @@ const generateFullTemplateHTML = (doc) => {
                     <span>${m.name} <small style="color:#64748b;">(${m.email})</small></span>
                 </label>
             `).join('');
+
+            // Payment plan display
+            const paymentPlanDisplay = getPaymentPlanDisplay(doc.paymentType, doc.customMonths);
+            const isInstallment = doc.paymentType && doc.paymentType !== 'One-Time';
 
             const content = `
                 <div class="email-tabs">
@@ -4853,6 +5067,12 @@ const generateFullTemplateHTML = (doc) => {
                                             <td style="color:#64748b;">Total:</td>
                                             <td style="text-align:right; font-weight:700; color:#2563eb; font-size:16px;">${formatMYR(doc.total)}</td>
                                         </tr>
+                                        ${isInstallment ? `
+                                        <tr>
+                                            <td style="color:#0369a1;">Payment Plan:</td>
+                                            <td style="text-align:right; font-weight:600; color:#0369a1;">${paymentPlanDisplay}</td>
+                                        </tr>
+                                        ` : ''}
                                     </table>
                                     <div class="item-list">
                                         ${itemsSummary}
@@ -4890,6 +5110,7 @@ const generateFullTemplateHTML = (doc) => {
                             <p><strong>Number:</strong> ${doc.number || id}</p>
                             <p><strong>Client:</strong> ${doc.clientName || 'N/A'}</p>
                             <p><strong>Total:</strong> ${formatMYR(doc.total)}</p>
+                            ${isInstallment ? `<p><strong>Payment Plan:</strong> ${paymentPlanDisplay}</p>` : ''}
                         </div>
                         
                         <div class="email-info-box">
@@ -4996,6 +5217,8 @@ const generateFullTemplateHTML = (doc) => {
                     attnTo: document.getElementById('editQAttn')?.value || '',
                     items: window.currentQuotationItems, 
                     discount: parseFloat(document.getElementById('editQDiscount')?.value || 0),
+                    paymentType: window.currentQuotationPaymentType || 'One-Time',
+                    customMonths: window.currentQuotationCustomMonths,
                     date: document.getElementById('editQDate')?.value 
                 };
             } else {
@@ -5009,7 +5232,8 @@ const generateFullTemplateHTML = (doc) => {
                     domain: document.getElementById('editDomain')?.value || '',
                     items: window.currentItems, 
                     discount: parseFloat(document.getElementById('editDiscount')?.value || 0),
-                    paymentType: window.currentPaymentType,
+                    paymentType: window.currentPaymentType || 'One-Time',
+                    customMonths: window.currentCustomMonths,
                     installmentCycle: document.getElementById('editCycle')?.value,
                     date: document.getElementById('editDate')?.value
                 };
