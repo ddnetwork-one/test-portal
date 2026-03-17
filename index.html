@@ -243,7 +243,6 @@
         .badge-completed { background: var(--success-bg); color: #15803d; }
         .badge-cancelled { background: var(--danger-bg); color: #b91c1c; }
         .badge-info { background: var(--info-bg); color: #1e40af; }
-        .badge-holiday { background: #fce7f3; color: #9d174d; }
 
         .btn-sm { padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border-light); background: white; color: var(--text-main); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: var(--transition); }
         .btn-sm:hover { background: #f8fafc; border-color: #cbd5e1; transform: translateY(-1px); }
@@ -343,16 +342,15 @@
         .month-label { font-weight: 700; font-size: 0.95rem; }
         .calendar-grid { padding: 10px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
         .cal-day-name { font-size: 0.65rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
-        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; }
         .cal-day:hover:not(.disabled):not(.empty) { background: var(--primary-light); color: var(--primary); }
         .cal-day.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(2, 132, 199, 0.2); }
         .cal-day.today { border: 2px solid var(--primary); color: var(--primary); font-weight: 700; }
         .cal-day.today.active { border-color: white; }
         .cal-day.disabled { color: #cbd5e1; cursor: not-allowed; background: #f1f5f9; }
         .cal-day.empty { cursor: default; }
-        /* Holiday styling for calendar */
-        .cal-day.holiday { background: var(--danger-bg); color: var(--danger); font-weight: 700; cursor: not-allowed; position: relative; }
-        .cal-day.holiday::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background: var(--danger); border-radius: 50%; }
+        /* Holiday dots */
+        .cal-day .holiday-indicator { position: absolute; bottom: 4px; width: 6px; height: 6px; background: var(--danger); border-radius: 50%; }
         
         .slots-header { padding: 15px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
         .slots-list { padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -509,6 +507,61 @@
         .view-section { display: none; }
         .view-section.active { display: block; }
 
+        /* --- HOLIDAY CALENDAR STYLES --- */
+        .holiday-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .holiday-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .holiday-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--danger);
+        }
+        .holiday-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .holiday-date-badge {
+            background: var(--danger-bg);
+            color: var(--danger);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .holiday-reason {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+        .holiday-meta {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+        
         /* --- PRINT STYLES --- */
         @media print {
             body { background: white; height: auto; overflow: visible; display: block; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -689,11 +742,18 @@
                 </svg>
                 Slot Mgmt
             </li>
-            <!-- NEW: Calendar Navigation Item -->
-            <li class="nav-item" onclick="navigateTo('calendar')">
+             <!-- NEW: Calendar Menu Item -->
+             <li class="nav-item" onclick="navigateTo('calendar')">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/>
-                    <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <line x1="8" y1="14" x2="8" y2="14"></line>
+                  <line x1="12" y1="14" x2="12" y2="14"></line>
+                  <line x1="16" y1="14" x2="16" y2="14"></line>
+                  <line x1="8" y1="18" x2="8" y2="18"></line>
+                  <line x1="12" y1="18" x2="12" y2="18"></line>
                 </svg>
                 Calendar
             </li>
@@ -1138,36 +1198,24 @@
                     </div>
                 </div>
             </section>
-
-            <!-- NEW: CALENDAR MANAGEMENT SECTION -->
+            
+            <!-- NEW: CALENDAR / HOLIDAY MANAGEMENT -->
             <section id="view-calendar" class="view-section">
-                <div class="section-card" style="position:relative;">
-                    <div class="loading-overlay"><div class="spinner"></div></div>
+                <div class="section-card">
                     <div class="table-header">
-                        <h3><i class="fa-solid fa-calendar-days" style="color:var(--primary); margin-right:8px;"></i>Clinic Holidays & Off Days</h3>
+                        <h3><i class="fa-solid fa-calendar-days" style="color:var(--danger); margin-right:8px;"></i>Holiday & Off Day Management</h3>
                         <div class="table-header-actions">
-                            <button class="btn-sm btn-bill" id="btn-add-holiday" onclick="openEditHoliday(null)"><i class="fa-solid fa-plus"></i> Add Holiday</button>
-                            <div class="search-container">
-                                <i class="fa-solid fa-search search-icon"></i>
-                                <input type="text" class="search-input" placeholder="Search holiday name..." oninput="renderCalendarHolidays()">
-                            </div>
+                             <button class="btn-sm btn-bill" id="btn-add-holiday" onclick="openHolidayModal()"><i class="fa-solid fa-plus"></i> Add Holiday</button>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table id="calendar-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Day</th>
-                                    <th>Name / Reason</th>
-                                    <th>Type</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <p style="margin-bottom:20px; color:var(--text-light); font-size:0.9rem;">
+                        Manage clinic closures for public holidays, events, or maintenance. Closed days will block all bookings.
+                    </p>
+
+                    <h4 style="margin-bottom:15px; color:var(--primary);">Upcoming Holidays</h4>
+                    <div id="holidays-grid" class="holiday-calendar-grid">
+                        <!-- Populated by JS -->
                     </div>
-                    <div id="pag-calendar" class="pagination-bar"></div>
                 </div>
             </section>
 
@@ -1380,9 +1428,9 @@
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <!-- NEW: Manage Calendar Permission -->
-                        <div class="permission-item">
-                            <label>Manage Calendar</label>
+                         <!-- NEW: Calendar Permission -->
+                         <div class="permission-item">
+                            <label>Edit Calendar</label>
                             <label class="toggle-switch">
                                 <input type="checkbox" id="perm-calendar">
                                 <span class="toggle-slider"></span>
@@ -1586,13 +1634,13 @@
             </div>
         </div>
     </div>
-
-    <!-- NEW: 10. EDIT HOLIDAY MODAL -->
-    <div class="modal-overlay" id="editHolidayModal">
+    
+    <!-- NEW: 10. HOLIDAY MODAL -->
+    <div class="modal-overlay" id="holidayModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="holiday-modal-title">Add Clinic Off Day</h3>
-                <button onclick="closeModal('editHolidayModal')"><i class="fa-solid fa-xmark"></i></button>
+                <h3 id="holiday-modal-title">Add Holiday</h3>
+                <button onclick="closeModal('holidayModal')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="edit-holiday-id">
@@ -1601,22 +1649,25 @@
                     <input type="date" id="edit-holiday-date" class="form-input">
                 </div>
                 <div style="margin-bottom:15px;">
-                    <label style="font-size:0.8rem; font-weight:700;">Name / Reason</label>
-                    <input type="text" id="edit-holiday-name" class="form-input" placeholder="e.g. Hari Raya Aidilfitri">
-                </div>
-                <div style="margin-bottom:15px;">
-                    <label style="font-size:0.8rem; font-weight:700;">Type</label>
-                    <select id="edit-holiday-type" class="form-input">
+                    <label style="font-size:0.8rem; font-weight:700;">Reason / Name</label>
+                    <select id="edit-holiday-reason" class="form-input" onchange="toggleCustomReason()">
                         <option value="Public Holiday">Public Holiday</option>
-                        <option value="Company Off Day">Company Off Day</option>
-                        <option value="Events">Events</option>
-                        <option value="Other">Other</option>
+                        <option value="Hari Raya Aidilfitri">Hari Raya Aidilfitri</option>
+                        <option value="Chinese New Year">Chinese New Year</option>
+                        <option value="Deepavali">Deepavali</option>
+                        <option value="Christmas Day">Christmas Day</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Custom">Other (Specify)</option>
                     </select>
+                </div>
+                <div id="custom-reason-input" style="margin-bottom:15px; display:none;">
+                    <label style="font-size:0.8rem; font-weight:700;">Specify Reason</label>
+                    <input type="text" id="edit-holiday-custom" class="form-input" placeholder="e.g. Company Event">
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-sm" onclick="closeModal('editHolidayModal')">Cancel</button>
-                <button class="btn-primary" style="width:auto; padding:10px 20px;" onclick="saveHolidayEdit()">Save</button>
+                <button class="btn-sm" onclick="closeModal('holidayModal')">Cancel</button>
+                <button class="btn-primary" style="width:auto; padding:10px 20px;" onclick="saveHoliday()">Save</button>
             </div>
         </div>
     </div>
@@ -1661,7 +1712,6 @@
         let staff = [];
         let appointments = [];
         let slotExceptions = []; 
-        let holidays = []; // NEW: Store holidays
 
         const todayStr = new Date().toISOString().split('T')[0];
         
@@ -1694,8 +1744,7 @@
             'cashbill': { page: 1, limit: 10 },
             'billing': { page: 1, limit: 10 },
             'staff': { page: 1, limit: 10 },
-            'patients': { page: 1, limit: 10 },
-            'calendar': { page: 1, limit: 10 }
+            'patients': { page: 1, limit: 10 }
         };
 
         // Cash Bill State
@@ -1853,10 +1902,6 @@
             const eSnap = await db.collection('klinikazam_slots').get();
             slotExceptions = eSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            // NEW: Fetch Holidays
-            const hSnap = await db.collection('klinikazam_holidays').orderBy('date', 'desc').get();
-            holidays = hSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
             const currentViewId = document.querySelector('.view-section.active')?.id.replace('view-', '');
             
             if(currentViewId === 'dashboard') renderDashboard();
@@ -1944,7 +1989,7 @@
                 'dashboard':'Dashboard', 'appointments':'Appointments', 'booking':'New Booking', 
                 'cashbill':'Cashbill', 'billing':'Reports', 'staff':'Staff', 
                 'patients':'Patients', 'services':'Services', 'slots':'Slot Management', 
-                'bill-detail':'Bill Details', 'calendar':'Calendar' 
+                'bill-detail':'Bill Details', 'calendar':'Holiday Calendar' // NEW
             };
             document.getElementById('pageTitle').innerText = titles[viewId] || 'Clinic Portal';
 
@@ -1969,6 +2014,7 @@
                 document.getElementById('slotDate').value = minBookingDate; 
                 renderSlots();
             }
+            if(viewId === 'calendar') renderCalendarHolidays(); // NEW
             if(viewId === 'booking') {
                 resetBookingForm();
                 currentCalDate = new Date(minBookingDate);
@@ -1980,7 +2026,6 @@
                 toggleCashbillCreate(false);
                 renderCashbillList();
             }
-            if(viewId === 'calendar') renderCalendarHolidays();
 
             setTimeout(() => showLoading(false), 300);
         }
@@ -2019,12 +2064,12 @@
                 btnAddService.style.display = 'none';
             }
 
-            // 3. Calendar Management Access (NEW)
+            // 3. Holiday Management Access
             const btnAddHoliday = document.getElementById('btn-add-holiday');
-            if(hasPermission('manage_calendar')) {
-                if(btnAddHoliday) btnAddHoliday.style.display = 'inline-flex';
+            if(hasPermission('edit_calendar')) {
+                btnAddHoliday.style.display = 'inline-flex';
             } else {
-                if(btnAddHoliday) btnAddHoliday.style.display = 'none';
+                btnAddHoliday.style.display = 'none';
             }
 
             // Refresh view if active
@@ -2035,7 +2080,7 @@
 
         function setupUserUI(user) {
             document.getElementById('userNameDisplay').innerText = user.name;
-            document.getElementById('RoleDisplay').innerText = user.role;
+            document.getElementById('userRoleDisplay').innerText = user.role;
             document.getElementById('userAvatar').innerText = user.name.substring(0,2).toUpperCase();
             document.getElementById('profile-name').innerText = user.name;
             document.getElementById('profile-role').innerText = user.role;
@@ -2079,9 +2124,194 @@
             return `${d}/${m}/${y}`;
         }
         
-        function getDayName(dateStr) {
-            const date = new Date(dateStr);
-            return date.toLocaleDateString('en-US', { weekday: 'long' });
+        // --- HOLIDAY CALENDAR LOGIC ---
+        function renderCalendarHolidays() {
+            const grid = document.getElementById('holidays-grid');
+            if(!grid) return;
+            
+            grid.innerHTML = '';
+            
+            // Filter for 'closed' type and sort by date
+            const holidays = slotExceptions
+                .filter(e => e.type === 'closed' && e.date >= todayStr) // Show upcoming
+                .sort((a,b) => a.date.localeCompare(b.date));
+
+            const pastHolidays = slotExceptions
+                .filter(e => e.type === 'closed' && e.date < todayStr)
+                .sort((a,b) => b.date.localeCompare(a.date)); // Sort desc
+
+            const canEdit = hasPermission('edit_calendar');
+
+            if (holidays.length === 0 && pastHolidays.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--text-light);">No holidays scheduled.</div>';
+            }
+
+            // Render Upcoming
+            holidays.forEach(h => {
+                const card = createHolidayCard(h, canEdit);
+                grid.appendChild(card);
+            });
+
+            // Render Past (optional, maybe collapse or separate section? For now just append with visual diff)
+            if(pastHolidays.length > 0 && pastHolidays.length > 0) {
+                grid.innerHTML += '<div style="grid-column: 1/-1; margin-top: 20px; border-top: 1px dashed var(--border-light); padding-top: 10px;"><small style="color:var(--text-light);">Past Holidays</small></div>';
+            }
+                
+                pastHolidays.slice(0, 6).forEach(h => { // Limit past holidays display
+                    const card = createHolidayCard(h, canEdit, true);
+                    grid.appendChild(card);
+                });
+        }
+
+        function createHolidayCard(h, canEdit, isPast = false) {
+            const card = document.createElement('div');
+            card.className = 'holiday-card';
+            if(isPast) card.style.opacity = '0.7';
+
+            const dateObj = new Date(h.date + 'T00:00:00');
+            const dateStrDisplay = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            
+            let actionsHtml = '';
+            if (canEdit) {
+                actionsHtml = `
+                    <div style="display:flex; gap:5px; margin-top:10px;">
+                        <button class="btn-sm" onclick="editHoliday('${h.id}')"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-sm btn-delete" onclick="deleteHoliday('${h.id}')"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="holiday-card-header">
+                    <div class="holiday-date-badge">
+                        <div>${dateObj.getDate()}</div>
+                        <div style="font-size:0.7rem;">${dateObj.toLocaleDateString('en-US', {month: 'short'})}</div>
+                    </div>
+                    <div style="text-align:right; font-size:0.8rem; color:var(--text-light);">${h.date}</div>
+                </div>
+                <div class="holiday-reason">${h.reason || 'Day Off'}</div>
+                <div class="holiday-meta">Clinic Closed</div>
+                ${actionsHtml}
+            `;
+            return card;
+        }
+
+        function openHolidayModal(id = null) {
+            if(!hasPermission('edit_calendar')) {
+                showToast("Unauthorized");
+                return;
+            }
+
+            if(id) {
+                const h = slotExceptions.find(e => e.id === id);
+                document.getElementById('holiday-modal-title').innerText = "Edit Holiday";
+                document.getElementById('edit-holiday-id').value = id;
+                document.getElementById('edit-holiday-date').value = h.date;
+                
+                const reasonSelect = document.getElementById('edit-holiday-reason');
+                const customInput = document.getElementById('edit-holiday-custom');
+                
+                // Check if reason matches dropdown
+                const options = Array.from(reasonSelect.options);
+                const match = options.find(opt => opt.value === h.reason);
+                
+                if(match) {
+                    reasonSelect.value = h.reason;
+                    customInput.value = '';
+                    customInput.style.display = 'none';
+                } else {
+                    reasonSelect.value = "Custom";
+                    customInput.value = h.reason;
+                    customInput.style.display = 'block';
+                }
+            } else {
+                document.getElementById('holiday-modal-title').innerText = "Add Holiday";
+                document.getElementById('edit-holiday-id').value = '';
+                document.getElementById('edit-holiday-date').value = ''; // Default to empty or today
+                document.getElementById('edit-holiday-reason').value = 'Public Holiday';
+                document.getElementById('edit-holiday-custom').value = '';
+                document.getElementById('edit-holiday-custom').style.display = 'none';
+            }
+            showModal('holidayModal');
+        }
+
+        function toggleCustomReason() {
+            const val = document.getElementById('edit-holiday-reason').value;
+            const customInput = document.getElementById('edit-holiday-custom');
+            if (val === 'Custom') {
+                customInput.style.display = 'block';
+            } else {
+                customInput.style.display = 'none';
+            }
+        }
+
+        async function saveHoliday() {
+            const id = document.getElementById('edit-holiday-id').value;
+            const date = document.getElementById('edit-holiday-date').value;
+            const reasonVal = document.getElementById('edit-holiday-reason').value;
+            const customVal = document.getElementById('edit-holiday-custom').value;
+            
+            const reason = reasonVal === 'Custom' ? customVal : reasonVal;
+
+            if(!date) {
+                showToast("Please select a date");
+                return;
+            }
+
+            // Check for duplicate
+            const exists = slotExceptions.some(e => e.date === date && e.type === 'closed' && e.id !== id);
+            if(exists) {
+                showToast("This date is already marked as a holiday.");
+                return;
+            }
+
+            const holidayData = {
+                date: date,
+                reason: reason,
+                type: 'closed'
+            };
+
+            try {
+                showLoading(true);
+                if(id) {
+                    await db.collection('klinikazam_slots').doc(id).update(holidayData);
+                } else {
+                    const newId = 'closed_' + Date.now();
+                    holidayData.id = newId;
+                    await db.collection('klinikazam_slots').doc(newId).set(holidayData);
+                }
+                
+                closeModal('holidayModal');
+                await refreshData();
+                showToast("Holiday Saved");
+            } catch (e) {
+                console.error(e);
+                showToast("Error saving holiday");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function editHoliday(id) {
+            openHolidayModal(id);
+        }
+
+        async function deleteHoliday(id) {
+            if(!hasPermission('edit_calendar')) return;
+            
+            if(confirm("Are you sure you want to remove this holiday? The clinic will be open on this day.")) {
+                showLoading(true);
+                try {
+                    await db.collection('klinikazam_slots').doc(id).delete();
+                    await refreshData();
+                    showToast("Holiday Removed");
+                } catch(e) {
+                    console.error(e);
+                    showToast("Error removing holiday");
+                } finally {
+                    showLoading(false);
+                }
+            }
         }
 
         // --- PAGINATION HELPERS ---
@@ -2140,7 +2370,6 @@
                 else if(viewKey === 'staff') renderStaff();
                 else if(viewKey === 'billing') renderBilling();
                 else if(viewKey === 'cashbill') renderCashbillList();
-                else if(viewKey === 'calendar') renderCalendarHolidays();
             }
         }
 
@@ -2152,7 +2381,6 @@
             else if(viewKey === 'staff') renderStaff();
             else if(viewKey === 'billing') renderBilling();
             else if(viewKey === 'cashbill') renderCashbillList();
-            else if(viewKey === 'calendar') renderCalendarHolidays();
         }
 
         function handleSort(type, value) {
@@ -3052,7 +3280,7 @@
             openInvoice(currentBillAppt.id);
         }
 
-        // --- CALENDAR & BOOKING LOGIC ---
+        // --- CALENDAR & BOOKING ---
         function renderCalendar(date) {
             const year = date.getFullYear();
             const month = date.getMonth();
@@ -3078,9 +3306,6 @@
                 const isSunday = dayDate.getDay() === 0;
                 const isPast = dateStr < minBookingDate;
 
-                // Check Holiday
-                const isHoliday = holidays.some(h => h.date === dateStr);
-
                 if(isPast) classes += ' disabled';
                 
                 if(dateStr === getLocalDateStr(new Date())) classes += ' today'; 
@@ -3088,18 +3313,24 @@
                 el.className = classes;
                 el.innerText = i;
                 
+                // Logic to check if closed (Holiday)
                 const isClosed = slotExceptions.some(e => e.date === dateStr && e.type === 'closed');
                 const bookedCount = appointments.filter(a => a.date === dateStr && a.status !== 'Cancelled' && a.status !== 'Completed').length;
                 const blockedCount = slotExceptions.filter(e => e.date === dateStr && e.type === 'blocked').length;
                 const totalUnavailable = bookedCount + blockedCount;
                 const isFull = totalUnavailable >= defaultSlots.length;
 
-                if(isClosed || isFull || isPast || isSunday || isHoliday) classes += ' disabled';
-                el.className = classes;
-                
-                if(isHoliday) classes += ' holiday';
+                if(isClosed || isFull || isPast || isSunday) classes += ' disabled';
                 el.className = classes;
 
+                // Add Holiday Indicator Dot
+                if(isClosed) {
+                    const dot = document.createElement('div');
+                    dot.className = 'holiday-indicator';
+                    dot.title = "Clinic Closed (Holiday)";
+                    el.appendChild(dot);
+                }
+                
                 if(!classes.includes('disabled')) {
                     el.onclick = () => selectDate(dateStr);
                 } else if (dateStr === todayStr) {
@@ -3108,9 +3339,6 @@
                 } else if (isSunday) {
                     el.onclick = () => showToast("Clinic is closed on Sundays.");
                     el.title = "Clinic Closed";
-                } else if (isHoliday) {
-                    el.onclick = () => showToast("Clinic is closed for holiday.");
-                    el.title = "Holiday";
                 }
 
                 grid.appendChild(el);
@@ -3125,6 +3353,14 @@
         }
 
         async function selectDate(dateStr) {
+            // Check if Holiday
+            const isClosed = slotExceptions.some(e => e.date === dateStr && e.type === 'closed');
+            if(isClosed) {
+                const holiday = slotExceptions.find(e => e.date === dateStr && e.type === 'closed');
+                showToast(`Clinic is closed: ${holiday.reason || 'Holiday'}`);
+                return;
+            }
+
             if(dateStr < minBookingDate) {
                 showToast("Please Booking at least one day earlier.");
                 return;
@@ -3290,6 +3526,13 @@
                 showToast("This slot is marked as 'Not Available'. Please choose another.");
                 return;
             }
+            
+            // Check Holiday
+            const isHoliday = slotExceptions.some(e => e.date === selectedBookingDate && e.type === 'closed');
+            if(isHoliday) {
+                 showToast("Clinic is closed on this day (Holiday).");
+                 return;
+            }
 
             const sId = document.getElementById('bk-service').value;
             const srv = services.find(s=>s.id == sId);
@@ -3403,6 +3646,14 @@
             timeSelect.disabled = false;
             timeSelect.innerHTML = '<option value="">Select Time</option>';
             
+            // Check Holiday
+            const isHoliday = slotExceptions.some(e => e.date === dateVal && e.type === 'closed');
+            if(isHoliday) {
+                timeSelect.innerHTML = '<option value="">Day is a Holiday</option>'; 
+                timeSelect.disabled = true; 
+                return;
+            }
+
             const bookedTimes = appointments.filter(a => a.date === dateVal && a.status !== 'Cancelled').map(a => a.time);
             const blockedTimes = slotExceptions.filter(e => e.date === dateVal && e.type === 'blocked').map(e => e.time);
             const available = defaultSlots.filter(t => !bookedTimes.includes(t) && !blockedTimes.includes(t));
@@ -3764,7 +4015,7 @@
                 document.getElementById('perm-edit-staff').checked = false;
                 document.getElementById('perm-delete').checked = false;
                 document.getElementById('perm-edit-services').checked = false;
-                document.getElementById('perm-reports').checked = true;
+                document.getElementById('perm-reports').checked = true; 
                 document.getElementById('perm-calendar').checked = false; // NEW
 
                 document.getElementById('permissions-section').style.display = isSuper ? 'block' : 'none';
@@ -3795,7 +4046,7 @@
                 document.getElementById('perm-delete').checked = perms.delete_entries || false;
                 document.getElementById('perm-edit-services').checked = perms.edit_services || false;
                 document.getElementById('perm-reports').checked = perms.access_reports || true;
-                document.getElementById('perm-calendar').checked = perms.manage_calendar || false; // NEW
+                document.getElementById('perm-calendar').checked = perms.edit_calendar || false; // NEW
 
                 document.getElementById('permissions-section').style.display = isSuper ? 'block' : 'none';
             }
@@ -3872,7 +4123,7 @@
                         delete_entries: permDelete,
                         edit_services: permEditServices,
                         access_reports: permReports,
-                        manage_calendar: permCalendar // NEW
+                        edit_calendar: permCalendar // NEW
                     };
                 }
                 
@@ -3923,7 +4174,7 @@
                             delete_entries: permDelete,
                             edit_services: permEditServices,
                             access_reports: permReports,
-                            manage_calendar: permCalendar // NEW
+                            edit_calendar: permCalendar // NEW
                         }
                     };
                     
@@ -4018,20 +4269,6 @@
             if(!dateVal) return;
 
             const isClosed = slotExceptions.some(e => e.date === dateVal && e.type === 'closed');
-            const isHoliday = holidays.some(h => h.date === dateVal);
-            
-            if(isHoliday) {
-                 statusIndicator.className = "status-indicator status-closed";
-                 statusIndicator.innerHTML = `<i class="fa-solid fa-gift"></i> Holiday`;
-                 grid.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align:center; padding: 40px; background: var(--warning-bg); border-radius: 12px; border: 1px dashed var(--warning);">
-                        <h4 style="color:var(--warning); margin-bottom: 10px;">Clinic is on Holiday</h4>
-                        <p style="color:var(--text-light); margin-bottom: 20px;">No slots are available for booking.</p>
-                        <button class="btn-sm" onclick="navigateTo('calendar')">Manage Holidays</button>
-                    </div>
-                `;
-                return;
-            }
             
             if(isClosed) {
                 statusIndicator.className = "status-indicator status-closed";
@@ -4203,98 +4440,10 @@
             }
         }
 
-        // --- NEW: CALENDAR HOLIDAY MANAGEMENT LOGIC ---
-        async function renderCalendarHolidays() {
-            const tbody = document.querySelector('#calendar-table tbody');
-            const query = document.querySelector('#view-calendar .search-input')?.value.toLowerCase() || '';
-            
-            let filtered = holidays.filter(h => 
-                h.name.toLowerCase().includes(query) || 
-                h.type.toLowerCase().includes(query)
-            );
-
-            const pagedData = getPaginatedData(filtered, 'calendar');
-            tbody.innerHTML = '';
-
-            const canManage = hasPermission('manage_calendar');
-
-            pagedData.data.forEach(h => {
-                const editBtn = canManage 
-                    ? `<button class="btn-sm" onclick="openEditHoliday('${h.id}')"><i class="fa-solid fa-pen"></i></button>` 
-                    : '';
-                const delBtn = canManage 
-                    ? `<button class="btn-sm btn-delete" onclick="requestDelete('holiday', '${h.id}')"><i class="fa-solid fa-trash"></i></button>` 
-                    : '';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${formatDateDisplay(h.date)}</td>
-                        <td>${getDayName(h.date)}</td>
-                        <td style="font-weight:600;">${h.name}</td>
-                        <td><span class="badge badge-holiday">${h.type}</span></td>
-                        <td>${editBtn} ${delBtn}</td>
-                    </tr>
-                `;
-            });
-
-            renderPaginationControls('calendar', filtered.length);
-        }
-
-        function openEditHoliday(id) {
-            if(!hasPermission('manage_calendar')) {
-                showToast("Unauthorized");
-                return;
-            }
-            if(!id) {
-                document.getElementById('holiday-modal-title').innerText = "Add Holiday";
-                document.getElementById('edit-holiday-id').value = '';
-                document.getElementById('edit-holiday-date').value = '';
-                document.getElementById('edit-holiday-name').value = '';
-                document.getElementById('edit-holiday-type').value = 'Public Holiday';
-            } else {
-                const h = holidays.find(x => x.id === id);
-                document.getElementById('holiday-modal-title').innerText = "Edit Holiday";
-                document.getElementById('edit-holiday-id').value = id;
-                document.getElementById('edit-holiday-date').value = h.date;
-                document.getElementById('edit-holiday-name').value = h.name;
-                document.getElementById('edit-holiday-type').value = h.type;
-            }
-            showModal('editHolidayModal');
-        }
-
-        async function saveHolidayEdit() {
-            const id = document.getElementById('edit-holiday-id').value;
-            const date = document.getElementById('edit-holiday-date').value;
-            const name = document.getElementById('edit-holiday-name').value;
-            const type = document.getElementById('edit-holiday-type').value;
-
-            if(!date || !name) {
-                showToast("Date and Name are required.");
-                return;
-            }
-
-            if(id) {
-                await db.collection('klinikazam_holidays').doc(id).update({ date, name, type });
-            } else {
-                const newId = Date.now().toString();
-                const newHoliday = { id: newId, date, name, type };
-                await db.collection('klinikazam_holidays').doc(newId).set(newHoliday);
-            }
-
-            await refreshData(); 
-            renderCalendarHolidays();
-            closeModal('editHolidayModal');
-            showToast(id ? "Holiday Updated" : "Holiday Added");
-        }
-
         // --- DELETE LOGIC ---
         let deleteTarget = null;
         function requestDelete(type, id) {
-            if(type === 'holiday' && !hasPermission('manage_calendar')) {
-                 showToast("Unauthorized: Permission required");
-                 return;
-            }
-            if(type !== 'holiday' && !hasPermission('delete_entries')) {
+            if(!hasPermission('delete_entries')) {
                  showToast("Unauthorized: Permission required");
                  return;
             }
@@ -4322,9 +4471,6 @@
             }
             else if (deleteTarget.type === 'patient') {
                 await db.collection('klinikazam_patients').doc(deleteTarget.id).delete();
-            }
-            else if (deleteTarget.type === 'holiday') {
-                await db.collection('klinikazam_holidays').doc(deleteTarget.id).delete();
             }
 
             await refreshData(); 
@@ -4431,7 +4577,6 @@ Terima kasih.
             if(type === 'appointments') renderAppointments();
             if(type === 'billing') renderBilling();
             if(type === 'cashbill') renderCashbillList();
-            if(type === 'calendar') renderCalendarHolidays();
         }
     </script>
 </body>
