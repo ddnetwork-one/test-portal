@@ -116,7 +116,7 @@
     }
     
     body.has-holiday-banner #mobile-menu {
-        top: 40px;
+        top: 80px; /* Adjusted for header height */
     }
     
     .marquee {
@@ -301,7 +301,7 @@
       outline: none;
     }
     
-    /* Mobile Menu - Full height slide from right */
+    /* Mobile Menu - Dropdown Style */
     .mobile-menu-overlay {
         position: fixed;
         inset: 0;
@@ -318,15 +318,24 @@
     }
     
     .mobile-menu {
-      transform: translateX(100%);
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: -10px 0 40px rgba(0,0,0,0.1);
-      height: 100vh; /* full viewport height */
-      overflow-y: auto; /* allow scroll inside */
-      display: flex;
-      flex-direction: column;
+      position: fixed;
+      top: 80px; /* Stick below header */
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #f1f5f9;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      transform: translateY(-100%);
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+      z-index: 45;
     }
-    .mobile-menu.open { transform: translateX(0); }
+    .mobile-menu.open { 
+        transform: translateY(0); 
+        opacity: 1;
+    }
     
     /* Page View Logic */
     .page-view {
@@ -385,6 +394,25 @@
     html {
       scroll-padding-top: 6rem;
     }
+
+    /* Improved Responsive Adjustments */
+    @media (max-width: 640px) {
+        .hero-section-content {
+            padding-top: 6rem;
+            padding-bottom: 6rem;
+        }
+        h1 {
+            font-size: 2rem; /* Adjusted for better fit */
+            line-height: 1.2;
+        }
+        .btn-secondary, .btn-outline {
+            width: 100%; /* Full width buttons on mobile */
+            justify-content: center;
+        }
+        .counter-box::after {
+            display: none; /* Hide dividers on mobile */
+        }
+    }
   </style>
 </head>
 <body class="antialiased">
@@ -429,7 +457,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex items-center justify-between h-20">
             <!-- Logo -->
-            <a href="#home" onclick="showMainSite()" class="flex items-center space-x-3 cursor-pointer group">
+            <a href="#home" onclick="showMainSite()" class="flex items-center space-x-3 cursor-pointer group z-10">
               <div class="w-11 h-11 rounded-full overflow-hidden bg-white shadow-lg flex items-center justify-center border-2 border-white group-hover:scale-105 transition-transform">
                  <img src="https://raw.githubusercontent.com/ddnetwork-ent/clinic-azam-dental/main/IMG_2260.JPG" alt="Azam Dental Logo" class="w-full h-full object-cover">
               </div>
@@ -479,24 +507,9 @@
           </div>
         </div>
         
-        <!-- IMPROVED: Full-height Mobile Menu with complete brand name -->
-        <div id="mobile-menu" class="mobile-menu fixed inset-y-0 right-0 w-80 max-w-full bg-white md:hidden flex flex-col">
-          <!-- Header with full brand text exactly like desktop but in mobile view -->
-          <div class="p-6 border-b border-gray-100">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-full overflow-hidden bg-surface flex items-center justify-center border border-gray-200 flex-shrink-0">
-                <img src="https://raw.githubusercontent.com/ddnetwork-ent/clinic-azam-dental/main/IMG_2260.JPG" alt="Azam Dental Logo" class="w-full h-full object-cover">
-              </div>
-              <div>
-                <span class="font-sans text-lg text-primary font-bold block leading-tight">Azam Dental</span>
-                <span class="text-xs text-text-light block">Klinik Pergigian</span>
-              </div>
-            </div>
-          </div>
-           
-          <!-- Scrollable Content -->
-          <div class="flex-grow overflow-y-auto custom-scrollbar p-6">
-            <div class="space-y-1">
+        <!-- UPDATED: Dropdown Mobile Menu -->
+        <div id="mobile-menu" class="mobile-menu md:hidden">
+          <div class="px-4 py-6 space-y-2 bg-white">
               <a href="#home" onclick="showMainSite(); closeMobileMenu();" class="mobile-nav-link flex items-center gap-3 py-3 px-4 rounded-xl text-text hover:bg-surface font-medium transition-colors">
                 <svg class="w-5 h-5 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Home
@@ -521,28 +534,15 @@
                 <svg class="w-5 h-5 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 FAQ
               </a>
-              <a href="javascript:void(0)" onclick="showBookingPage(); closeMobileMenu();" class="mobile-nav-link flex items-center gap-3 py-3 px-4 rounded-xl text-primary bg-primary/5 hover:bg-primary/10 font-semibold transition-colors mt-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Book Appointment
-              </a>
-            </div>
-          </div>
-          
-          <!-- Footer CTA in Sidebar -->
-          <div class="p-6 border-t border-gray-100 bg-surface/50">
-              <a href="tel:0174802238" class="btn-primary w-full py-3 rounded-xl text-white font-semibold flex items-center justify-center">
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                  </svg>
-                  Call 017-480 2238
-              </a>
-              <div class="flex justify-center space-x-4 mt-4">
-                 <a href="https://wa.me/60174802238" target="_blank" class="text-text-light hover:text-secondary transition-colors">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                 </a>
-                 <a href="https://www.facebook.com/azamdental" target="_blank" class="text-text-light hover:text-secondary transition-colors">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                 </a>
+              <div class="pt-4 border-t border-gray-100 mt-4">
+                  <a href="javascript:void(0)" onclick="showBookingPage(); closeMobileMenu();" class="mobile-nav-link flex items-center gap-3 py-3 px-4 rounded-xl bg-primary text-white font-semibold transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Book Appointment
+                  </a>
+                  <a href="tel:0174802238" class="mobile-nav-link flex items-center gap-3 py-3 px-4 rounded-xl text-text hover:bg-surface font-medium transition-colors mt-2">
+                    <svg class="w-5 h-5 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                    Call 017-480 2238
+                  </a>
               </div>
           </div>
         </div>
@@ -555,11 +555,10 @@
       <section id="home" class="relative min-h-screen flex items-center overflow-hidden">
         <div id="hero-parallax" class="parallax-bg" style="background-image: url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1920&q=80');"></div>
         <div class="hero-overlay absolute inset-0"></div>
-        <!-- content unchanged -->
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 w-full">
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 w-full">
           <div class="grid lg:grid-cols-12 gap-12 items-center">
-            <div class="lg:col-span-7">
-              <div data-aos="fade-down" data-aos-delay="100" class="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2 mb-8 border border-white/20">
+            <div class="lg:col-span-7 hero-section-content">
+              <div data-aos="fade-down" data-aos-delay="100" class="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2 mb-6 md:mb-8 border border-white/20">
                 <div class="flex text-secondary-light">
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -570,24 +569,24 @@
                 <span class="text-white font-bold text-sm">5.0</span>
                 <span class="text-white/70 text-sm">from 400+ reviews</span>
               </div>
-              <h1 data-aos="fade-up" data-aos-delay="200" class="font-sans text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 tracking-tight">
+              <h1 data-aos="fade-up" data-aos-delay="200" class="font-sans text-3xl sm:text-4xl lg:text-6xl font-bold text-white leading-tight mb-4 md:mb-6 tracking-tight">
                 Klinik Pergigian<br>
                 <span class="text-secondary-light">Azam SP Saujana</span>
               </h1>
-              <p data-aos="fade-up" data-aos-delay="300" class="text-xl text-white/90 font-light mb-6">
+              <p data-aos="fade-up" data-aos-delay="300" class="text-lg md:text-xl text-white/90 font-light mb-4 md:mb-6">
                 Your Trusted Dental Care in Sungai Petani
               </p>
-              <p data-aos="fade-up" data-aos-delay="400" class="text-white/60 text-lg mb-10 max-w-lg leading-relaxed">
+              <p data-aos="fade-up" data-aos-delay="400" class="text-white/60 text-base md:text-lg mb-8 md:mb-10 max-w-lg leading-relaxed">
                 Experience professional, caring, and modern dental services with our experienced team dedicated to your oral health and beautiful smile.
               </p>
               <div data-aos="fade-up" data-aos-delay="500" class="flex flex-col sm:flex-row gap-4">
-                <a href="javascript:void(0)" onclick="showBookingPage()" class="btn-secondary inline-flex items-center justify-center px-8 py-4 rounded-xl font-semibold text-lg cursor-pointer">
+                <a href="javascript:void(0)" onclick="showBookingPage()" class="btn-secondary inline-flex items-center justify-center px-8 py-3 md:py-4 rounded-xl font-semibold text-base md:text-lg cursor-pointer">
                   Book Appointment
                   <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                   </svg>
                 </a>
-                <a href="tel:0174802238" class="btn-outline inline-flex items-center justify-center px-8 py-4 rounded-xl font-semibold text-lg">
+                <a href="tel:0174802238" class="btn-outline inline-flex items-center justify-center px-8 py-3 md:py-4 rounded-xl font-semibold text-base md:text-lg">
                   <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                   </svg>
@@ -607,29 +606,29 @@
       </section>
       
       <!-- Stats -->
-      <section id="stats" class="bg-primary py-16 relative overflow-hidden">
+      <section id="stats" class="bg-primary py-12 md:py-16 relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
             <div class="counter-box" data-aos="fade-up" data-aos-delay="100">
-              <div class="text-4xl md:text-5xl font-sans mb-2 text-secondary-light">
+              <div class="text-3xl md:text-5xl font-sans mb-2 text-secondary-light">
                 <span class="counter" data-target="15">0</span>+
               </div>
               <p class="text-white/60 uppercase text-xs tracking-widest font-medium">Years Experience</p>
             </div>
             <div class="counter-box" data-aos="fade-up" data-aos-delay="200">
-              <div class="text-4xl md:text-5xl font-sans mb-2 text-secondary-light">
+              <div class="text-3xl md:text-5xl font-sans mb-2 text-secondary-light">
                 <span class="counter" data-target="409">0</span>+
               </div>
               <p class="text-white/60 uppercase text-xs tracking-widest font-medium">Happy Patients</p>
             </div>
             <div class="counter-box" data-aos="fade-up" data-aos-delay="300">
-              <div class="text-4xl md:text-5xl font-sans mb-2 text-secondary-light">
+              <div class="text-3xl md:text-5xl font-sans mb-2 text-secondary-light">
                 <span class="counter" data-target="10">0</span>
               </div>
               <p class="text-white/60 uppercase text-xs tracking-widest font-medium">Expert Dentists</p>
             </div>
             <div class="counter-box" data-aos="fade-up" data-aos-delay="400">
-              <div class="text-4xl md:text-5xl font-sans mb-2 text-secondary-light">
+              <div class="text-3xl md:text-5xl font-sans mb-2 text-secondary-light">
                 <span class="counter" data-target="15">0</span>+
               </div>
               <p class="text-white/60 uppercase text-xs tracking-widest font-medium">Dental Services</p>
@@ -639,40 +638,40 @@
       </section>
       
       <!-- About -->
-      <section id="about" class="py-24 bg-white relative">
+      <section id="about" class="py-16 md:py-24 bg-white relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="grid lg:grid-cols-2 gap-16 items-center">
+          <div class="grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
             <div data-aos="fade-right">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-4">
-                        <img src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=600&h=800&fit=crop" class="rounded-2xl shadow-lg w-full h-64 object-cover" alt="Clinic Interior">
-                        <img src="https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=600&h=400&fit=crop" class="rounded-2xl shadow-lg w-full h-48 object-cover" alt="Dental Equipment">
+                <div class="grid grid-cols-2 gap-3 md:gap-4">
+                    <div class="space-y-3 md:space-y-4">
+                        <img src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=600&h=800&fit=crop" class="rounded-2xl shadow-lg w-full h-40 md:h-64 object-cover" alt="Clinic Interior">
+                        <img src="https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=600&h=400&fit=crop" class="rounded-2xl shadow-lg w-full h-28 md:h-48 object-cover" alt="Dental Equipment">
                     </div>
-                    <div class="space-y-4 pt-8">
-                        <img src="https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=600&h=400&fit=crop" class="rounded-2xl shadow-lg w-full h-48 object-cover" alt="Happy Patient">
-                        <img src="https://images.unsplash.com/photo-1629909615184-74f495363b67?w=600&h=800&fit=crop" class="rounded-2xl shadow-lg w-full h-64 object-cover" alt="Smile">
+                    <div class="space-y-3 md:space-y-4 pt-4 md:pt-8">
+                        <img src="https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=600&h=400&fit=crop" class="rounded-2xl shadow-lg w-full h-28 md:h-48 object-cover" alt="Happy Patient">
+                        <img src="https://images.unsplash.com/photo-1629909615184-74f495363b67?w=600&h=800&fit=crop" class="rounded-2xl shadow-lg w-full h-40 md:h-64 object-cover" alt="Smile">
                     </div>
                 </div>
             </div>
             <div data-aos="fade-left">
               <span class="text-secondary font-semibold tracking-wide uppercase text-sm">About Us</span>
-              <h2 class="font-sans text-3xl sm:text-4xl font-bold text-text mt-2 mb-6 tracking-tight">
+              <h2 class="font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-text mt-2 mb-4 md:mb-6 tracking-tight">
                 Professional Care You Can Trust
               </h2>
-              <p class="text-text-light text-lg leading-relaxed mb-6">
-                Welcome to <strong class="text-text">Klinik Pergigian Azam SP Saujana</strong>. We are committed to providing exceptional dental care in a comfortable, modern environment. Our experienced team uses the latest technology and techniques to ensure the best outcomes for every patient.
+              <p class="text-text-light text-base md:text-lg leading-relaxed mb-4 md:mb-6">
+                Welcome to <strong class="text-text">Klinik Pergigian Azam SP Saujana</strong>. We are committed to providing exceptional dental care in a comfortable, modern environment.
               </p>
-              <p class="text-text-light leading-relaxed mb-8">
+              <p class="text-text-light text-sm md:text-base leading-relaxed mb-6 md:mb-8">
                 Our clinic offers a full range of dental services from routine check-ups to advanced cosmetic and restorative procedures. We believe everyone deserves a healthy, confident smile.
               </p>
-              <div class="space-y-4 mb-8">
+              <div class="space-y-3 md:space-y-4 mb-6 md:mb-8">
                 <div class="flex items-start space-x-4">
                   <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                   </div>
                   <div>
-                    <h4 class="font-semibold text-text">Modern Equipment</h4>
-                    <p class="text-text-light text-sm">Digital X-rays, intraoral cameras, and advanced sterilization.</p>
+                    <h4 class="font-semibold text-text text-sm md:text-base">Modern Equipment</h4>
+                    <p class="text-text-light text-xs md:text-sm">Digital X-rays, intraoral cameras, and advanced sterilization.</p>
                   </div>
                 </div>
                 <div class="flex items-start space-x-4">
@@ -680,12 +679,12 @@
                     <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                   </div>
                   <div>
-                    <h4 class="font-semibold text-text">Comfortable Environment</h4>
-                    <p class="text-text-light text-sm">Relaxing atmosphere designed for patient comfort.</p>
+                    <h4 class="font-semibold text-text text-sm md:text-base">Comfortable Environment</h4>
+                    <p class="text-text-light text-xs md:text-sm">Relaxing atmosphere designed for patient comfort.</p>
                   </div>
                 </div>
               </div>
-              <a href="#team" class="inline-flex items-center text-primary font-semibold hover:text-primary-dark transition-colors">
+              <a href="#team" class="inline-flex items-center text-primary font-semibold hover:text-primary-dark transition-colors text-sm md:text-base">
                 Meet Our Team
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
               </a>
@@ -695,57 +694,54 @@
       </section>
       
       <!-- Services -->
-      <section id="services" class="py-24 bg-surface relative">
+      <section id="services" class="py-16 md:py-24 bg-surface relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="text-center mb-16">
+          <div class="text-center mb-12 md:mb-16">
             <span data-aos="fade-up" class="text-secondary font-semibold tracking-wide uppercase text-sm">What We Offer</span>
-            <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-3xl sm:text-4xl font-bold text-text mt-2 mb-4 tracking-tight">
+            <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-text mt-2 mb-4 tracking-tight">
               Comprehensive Dental Care
             </h2>
-            <p data-aos="fade-up" data-aos-delay="200" class="text-text-light max-w-2xl mx-auto">
-                From routine cleanings to complex restorations, we offer a wide range of services to meet your dental needs.
+            <p data-aos="fade-up" data-aos-delay="200" class="text-text-light text-sm md:text-base max-w-2xl mx-auto">
+                From routine cleanings to complex restorations, we offer a wide range of services.
             </p>
           </div>
-          <div id="services-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div id="services-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           </div>
         </div>
       </section>
     
       <!-- Gallery -->
-      <section id="gallery" class="py-24 bg-white">
+      <section id="gallery" class="py-16 md:py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
+            <div class="text-center mb-12 md:mb-16">
                 <span data-aos="fade-up" class="text-secondary font-semibold tracking-wide uppercase text-sm">Our Clinic</span>
-                <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-3xl sm:text-4xl font-bold text-text mt-2 mb-4 tracking-tight">
+                <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-text mt-2 mb-4 tracking-tight">
                   Modern Facilities
                 </h2>
-                <p data-aos="fade-up" data-aos-delay="200" class="text-text-light max-w-2xl mx-auto">
-                    Take a look at our modern clinic environment designed for your comfort and safety.
-                </p>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4" data-aos="fade-up" data-aos-delay="300">
                 <div class="col-span-2 row-span-2">
-                    <div class="gallery-item w-full h-full rounded-2xl overflow-hidden shadow-lg cursor-pointer">
+                    <div class="gallery-item w-full h-full min-h-[250px] md:min-h-[400px] rounded-2xl overflow-hidden shadow-lg cursor-pointer">
                         <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&h=800&fit=crop" class="w-full h-full object-cover" alt="Reception Area">
                     </div>
                 </div>
                 <div>
-                    <div class="gallery-item w-full h-48 rounded-2xl overflow-hidden shadow-md cursor-pointer">
+                    <div class="gallery-item w-full h-36 md:h-48 rounded-xl md:rounded-2xl overflow-hidden shadow-md cursor-pointer">
                         <img src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=400&h=300&fit=crop" class="w-full h-full object-cover" alt="Treatment Room 1">
                     </div>
                 </div>
                 <div>
-                    <div class="gallery-item w-full h-48 rounded-2xl overflow-hidden shadow-md cursor-pointer">
+                    <div class="gallery-item w-full h-36 md:h-48 rounded-xl md:rounded-2xl overflow-hidden shadow-md cursor-pointer">
                         <img src="https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=400&h=300&fit=crop" class="w-full h-full object-cover" alt="Equipment">
                     </div>
                 </div>
                 <div>
-                    <div class="gallery-item w-full h-48 rounded-2xl overflow-hidden shadow-md cursor-pointer">
+                    <div class="gallery-item w-full h-36 md:h-48 rounded-xl md:rounded-2xl overflow-hidden shadow-md cursor-pointer">
                         <img src="https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=400&h=300&fit=crop" class="w-full h-full object-cover" alt="Waiting Area">
                     </div>
                 </div>
                 <div>
-                    <div class="gallery-item w-full h-48 rounded-2xl overflow-hidden shadow-md cursor-pointer">
+                    <div class="gallery-item w-full h-36 md:h-48 rounded-xl md:rounded-2xl overflow-hidden shadow-md cursor-pointer">
                         <img src="https://images.unsplash.com/photo-1629909615184-74f495363b67?w=400&h=300&fit=crop" class="w-full h-full object-cover" alt="Consultation">
                     </div>
                 </div>
@@ -754,81 +750,78 @@
       </section>
     
       <!-- Team -->
-      <section id="team" class="py-24 bg-surface">
+      <section id="team" class="py-16 md:py-24 bg-surface">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
+            <div class="text-center mb-12 md:mb-16">
                 <span data-aos="fade-up" class="text-secondary font-semibold tracking-wide uppercase text-sm">Our Team</span>
-                <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-3xl sm:text-4xl font-bold text-text mt-2 mb-4 tracking-tight">
+                <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-text mt-2 mb-4 tracking-tight">
                   Expert Dental Specialists
                 </h2>
-                <p data-aos="fade-up" data-aos-delay="200" class="text-text-light max-w-2xl mx-auto">
-                    Our team of experienced dentists is dedicated to providing you with the highest quality care.
-                </p>
             </div>
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-3 gap-6 md:gap-8">
                 <div data-aos="fade-up" data-aos-delay="100" class="team-card bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
-                    <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-4 border-4 border-surface">
+                    <div class="w-24 h-24 md:w-32 md:h-32 mx-auto rounded-full overflow-hidden mb-4 border-4 border-surface">
                         <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&facepad=2" class="w-full h-full object-cover" alt="Dr. Ahmad Azam">
                     </div>
-                    <h3 class="font-sans text-xl text-text font-bold">Dr. Ahmad Azam</h3>
+                    <h3 class="font-sans text-lg md:text-xl text-text font-bold">Dr. Ahmad Azam</h3>
                     <p class="text-secondary text-sm font-medium mb-3">Lead Dentist</p>
-                    <p class="text-text-light text-sm">Specialist in Cosmetic Dentistry & Implants with over 15 years of experience.</p>
+                    <p class="text-text-light text-xs md:text-sm">Specialist in Cosmetic Dentistry & Implants with over 15 years of experience.</p>
                 </div>
                 <div data-aos="fade-up" data-aos-delay="200" class="team-card bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
-                    <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-4 border-4 border-surface">
+                    <div class="w-24 h-24 md:w-32 md:h-32 mx-auto rounded-full overflow-hidden mb-4 border-4 border-surface">
                         <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=200&h=200&fit=crop&facepad=2" class="w-full h-full object-cover" alt="Dr. Siti Nurhaliza">
                     </div>
-                    <h3 class="font-sans text-xl text-text font-bold">Dr. Siti Nurhaliza</h3>
+                    <h3 class="font-sans text-lg md:text-xl text-text font-bold">Dr. Siti Nurhaliza</h3>
                     <p class="text-secondary text-sm font-medium mb-3">Orthodontist</p>
-                    <p class="text-text-light text-sm">Expert in Braces, Aligners, and Corrective Dentistry for all ages.</p>
+                    <p class="text-text-light text-xs md:text-sm">Expert in Braces, Aligners, and Corrective Dentistry for all ages.</p>
                 </div>
                 <div data-aos="fade-up" data-aos-delay="300" class="team-card bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
-                    <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-4 border-4 border-surface">
+                    <div class="w-24 h-24 md:w-32 md:h-32 mx-auto rounded-full overflow-hidden mb-4 border-4 border-surface">
                         <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=200&h=200&fit=crop&facepad=2" class="w-full h-full object-cover" alt="Dr. Lee Wei Ming">
                     </div>
-                    <h3 class="font-sans text-xl text-text font-bold">Dr. Lee Wei Ming</h3>
+                    <h3 class="font-sans text-lg md:text-xl text-text font-bold">Dr. Lee Wei Ming</h3>
                     <p class="text-secondary text-sm font-medium mb-3">Oral Surgeon</p>
-                    <p class="text-text-light text-sm">Specializing in Wisdom Tooth Extraction and Complex Oral Surgeries.</p>
+                    <p class="text-text-light text-xs md:text-sm">Specializing in Wisdom Tooth Extraction and Complex Oral Surgeries.</p>
                 </div>
             </div>
         </div>
       </section>
 
       <!-- FAQ -->
-      <section id="faq" class="py-24 bg-surface">
+      <section id="faq" class="py-16 md:py-24 bg-surface">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
+            <div class="text-center mb-12 md:mb-16">
                 <span data-aos="fade-up" class="text-secondary font-semibold tracking-wide uppercase text-sm">Questions</span>
-                <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-3xl sm:text-4xl font-bold text-text mt-2 mb-4 tracking-tight">
+                <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-text mt-2 mb-4 tracking-tight">
                   Frequently Asked Questions
                 </h2>
             </div>
-            <div class="space-y-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="space-y-3 md:space-y-4" data-aos="fade-up" data-aos-delay="200">
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <button class="faq-btn w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
-                        <span class="font-medium text-text">What are your operating hours?</span>
-                        <svg class="w-5 h-5 text-text-light transform transition-transform faq-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <button class="faq-btn w-full px-4 md:px-6 py-3 md:py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
+                        <span class="font-medium text-text text-sm md:text-base">What are your operating hours?</span>
+                        <svg class="w-5 h-5 text-text-light transform transition-transform faq-icon flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div class="faq-content hidden px-6 pb-4">
-                        <p class="text-text-light text-sm">We are open <strong>Monday to Saturday from 9:00 AM to 6:00 PM</strong>. We are closed on Sundays and Public Holidays.</p>
+                    <div class="faq-content hidden px-4 md:px-6 pb-3 md:pb-4">
+                        <p class="text-text-light text-xs md:text-sm">We are open <strong>Monday to Saturday from 9:00 AM to 6:00 PM</strong>. We are closed on Sundays and Public Holidays.</p>
                     </div>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <button class="faq-btn w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
-                        <span class="font-medium text-text">Do I need to book an appointment?</span>
-                        <svg class="w-5 h-5 text-text-light transform transition-transform faq-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <button class="faq-btn w-full px-4 md:px-6 py-3 md:py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
+                        <span class="font-medium text-text text-sm md:text-base">Do I need to book an appointment?</span>
+                        <svg class="w-5 h-5 text-text-light transform transition-transform faq-icon flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div class="faq-content hidden px-6 pb-4">
-                        <p class="text-text-light text-sm">While walk-ins are welcome, we highly recommend booking an appointment to minimize waiting time. You can book easily via the form above or call us.</p>
+                    <div class="faq-content hidden px-4 md:px-6 pb-3 md:pb-4">
+                        <p class="text-text-light text-xs md:text-sm">While walk-ins are welcome, we highly recommend booking an appointment to minimize waiting time. You can book easily via the form above or call us.</p>
                     </div>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <button class="faq-btn w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
-                        <span class="font-medium text-text">What payment methods do you accept?</span>
-                        <svg class="w-5 h-5 text-text-light transform transition-transform faq-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <button class="faq-btn w-full px-4 md:px-6 py-3 md:py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
+                        <span class="font-medium text-text text-sm md:text-base">What payment methods do you accept?</span>
+                        <svg class="w-5 h-5 text-text-light transform transition-transform faq-icon flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div class="faq-content hidden px-6 pb-4">
-                        <p class="text-text-light text-sm">We accept Cash, Online Banking, and major QR/E-wallets (Touch 'n Go, GrabPay, etc.).</p>
+                    <div class="faq-content hidden px-4 md:px-6 pb-3 md:pb-4">
+                        <p class="text-text-light text-xs md:text-sm">We accept Cash, Online Banking, and major QR/E-wallets (Touch 'n Go, GrabPay, etc.).</p>
                     </div>
                 </div>
             </div>
@@ -836,34 +829,34 @@
       </section>
 
       <!-- Contact -->
-      <section id="contact" class="bg-primary-dark text-white pt-20 pb-8">
+      <section id="contact" class="bg-primary-dark text-white pt-16 md:pt-20 pb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
-            <div class="lg:col-span-2">
-              <div class="flex items-center space-x-3 mb-6">
-                <div class="w-12 h-12 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-lg">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-12">
+            <div class="col-span-2 md:col-span-2 lg:col-span-2">
+              <div class="flex items-center space-x-3 mb-4 md:mb-6">
+                <div class="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-white flex items-center justify-center shadow-lg flex-shrink-0">
                   <img src="https://raw.githubusercontent.com/ddnetwork-ent/clinic-azam-dental/main/IMG_2260.JPG" alt="Azam Dental Logo" class="w-full h-full object-cover">
                 </div>
                 <div>
-                  <h3 class="font-sans text-xl font-bold">Klinik Pergigian</h3>
-                  <p class="text-white/50 text-sm font-light">Azam SP Saujana</p>
+                  <h3 class="font-sans text-lg md:text-xl font-bold">Klinik Pergigian</h3>
+                  <p class="text-white/50 text-xs md:text-sm font-light">Azam SP Saujana</p>
                 </div>
               </div>
-              <p class="text-white/50 mb-8 max-w-md text-sm leading-relaxed">
+              <p class="text-white/50 text-xs md:text-sm mb-6 md:mb-8 max-w-sm leading-relaxed hidden md:block">
                 Your trusted dental care provider in Sungai Petani, Kedah. Professional, caring, and modern dental services for the whole family.
               </p>
               <div class="flex space-x-4">
-                 <a href="https://wa.me/60174802238" target="_blank" class="w-10 h-10 rounded-full bg-white/10 hover:bg-secondary transition-colors flex items-center justify-center">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                 <a href="https://wa.me/60174802238" target="_blank" class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-secondary transition-colors flex items-center justify-center">
+                    <svg class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                  </a>
-                 <a href="https://www.facebook.com/azamdental" target="_blank" class="w-10 h-10 rounded-full bg-white/10 hover:bg-secondary transition-colors flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                 <a href="https://www.facebook.com/azamdental" target="_blank" class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-secondary transition-colors flex items-center justify-center">
+                    <svg class="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                  </a>
               </div>
             </div>
             <div>
-              <h4 class="font-sans text-lg mb-5 text-secondary-light font-bold">Quick Links</h4>
-              <ul class="space-y-3 text-sm">
+              <h4 class="font-sans text-base md:text-lg mb-4 md:mb-5 text-secondary-light font-bold">Quick Links</h4>
+              <ul class="space-y-2 md:space-y-3 text-xs md:text-sm">
                 <li><a href="#about" onclick="showMainSite()" class="text-white/50 hover:text-white transition-colors cursor-pointer">About Us</a></li>
                 <li><a href="#services" onclick="showMainSite()" class="text-white/50 hover:text-white transition-colors cursor-pointer">Services</a></li>
                 <li><a href="javascript:void(0)" onclick="showBookingPage()" class="text-white/50 hover:text-white transition-colors cursor-pointer">Book Appointment</a></li>
@@ -871,25 +864,25 @@
               </ul>
             </div>
             <div>
-              <h4 class="font-sans text-lg mb-5 text-secondary-light font-bold">Contact Info</h4>
-              <ul class="space-y-4 text-sm">
+              <h4 class="font-sans text-base md:text-lg mb-4 md:mb-5 text-secondary-light font-bold">Contact Info</h4>
+              <ul class="space-y-3 md:space-y-4 text-xs md:text-sm">
                 <li>
-                  <a href="tel:0174802238" class="flex items-start space-x-3 text-white/50 hover:text-white transition-colors group">
-                    <svg class="w-5 h-5 mt-0.5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                  <a href="tel:0174802238" class="flex items-start space-x-2 md:space-x-3 text-white/50 hover:text-white transition-colors group">
+                    <svg class="w-4 h-4 md:w-5 md:h-5 mt-0.5 text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                     <span>017-480 2238</span>
                   </a>
                 </li>
-                <li class="flex items-start space-x-3 text-white/50">
-                  <svg class="w-5 h-5 mt-0.5 text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                <li class="flex items-start space-x-2 md:space-x-3 text-white/50">
+                  <svg class="w-4 h-4 md:w-5 md:h-5 mt-0.5 text-secondary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
                   <span>21, Jalan PKS (A), Pusat Komersial Saujana,<br>08000 Sungai Petani, Kedah</span>
                 </li>
               </ul>
             </div>
           </div>
-          <div class="mb-12 rounded-2xl overflow-hidden shadow-lg h-64 w-full">
+          <div class="mb-8 md:mb-12 rounded-2xl overflow-hidden shadow-lg h-48 md:h-64 w-full">
             <iframe class="embed-map-frame" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?width=600&height=400&hl=en&q=Klinik%20Pergigian%20Azam%20SP%20Saujana&t=p&z=16&ie=UTF8&iwloc=B&output=embed" style="width:100%; height:100%;"></iframe>
           </div>
-          <div class="pt-8 border-t border-white/10 text-center text-white/40 text-xs">
+          <div class="pt-6 md:pt-8 border-t border-white/10 text-center text-white/40 text-xs">
             &copy; 2025 Klinik Pergigian Azam SP Saujana. All rights reserved.
           </div>
         </div>
@@ -898,103 +891,103 @@
 
   <!-- BOOKING PAGE VIEW -->
   <div id="booking-page-view" class="page-view">
-    <section class="relative min-h-screen flex items-center justify-center py-24 px-4">
+    <section class="relative min-h-screen flex items-center justify-center py-20 md:py-24 px-4">
         <div class="max-w-2xl mx-auto w-full">
-            <button onclick="showMainSite()" class="absolute top-24 left-4 md:left-10 text-text-light hover:text-text flex items-center gap-2 font-medium transition-colors">
+            <button onclick="showMainSite()" class="absolute top-20 md:top-24 left-4 md:left-10 text-text-light hover:text-text flex items-center gap-2 font-medium transition-colors z-10">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Back to Site
+                <span class="hidden sm:inline">Back to Site</span>
             </button>
-            <div class="text-center mb-10">
+            <div class="text-center mb-8 md:mb-10">
                 <span data-aos="fade-up" class="text-secondary font-semibold tracking-wide uppercase text-sm">Appointment</span>
-                <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-3xl sm:text-4xl font-bold text-text mt-2 mb-4 tracking-tight">
+                <h2 data-aos="fade-up" data-aos-delay="100" class="font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-text mt-2 mb-3 md:mb-4 tracking-tight">
                 Schedule Your Visit
                 </h2>
-                <p data-aos="fade-up" data-aos-delay="200" class="text-text-light text-lg max-w-xl mx-auto">
+                <p data-aos="fade-up" data-aos-delay="200" class="text-text-light text-sm md:text-lg max-w-xl mx-auto px-4">
                 Select your preferred date and time. We'll confirm your appointment shortly.
                 </p>
             </div>
-            <div data-aos="fade-up" data-aos-delay="300" class="bg-white rounded-3xl p-6 sm:p-10 border border-gray-100 shadow-sm">
+            <div data-aos="fade-up" data-aos-delay="300" class="bg-white rounded-2xl md:rounded-3xl p-5 sm:p-6 md:p-10 border border-gray-100 shadow-sm">
                 
                 <div id="form-loading" class="flex flex-col items-center justify-center py-12">
                 <div class="spinner mb-4"></div>
                 <p class="text-text-light">Checking availability...</p>
                 </div>
                 
-                <form id="booking-form" class="hidden space-y-6">
-                <div id="welcome-message" class="hidden bg-secondary/10 border border-secondary/20 rounded-xl p-4 mb-4">
-                    <p class="text-primary font-medium flex items-center text-sm">
-                    <svg class="w-5 h-5 mr-2 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <form id="booking-form" class="hidden space-y-5 md:space-y-6">
+                <div id="welcome-message" class="hidden bg-secondary/10 border border-secondary/20 rounded-xl p-3 md:p-4 mb-4">
+                    <p class="text-primary font-medium flex items-center text-xs md:text-sm">
+                    <svg class="w-4 h-4 md:w-5 md:h-5 mr-2 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <span id="welcome-text" class="text-text">Welcome back!</span>
                     </p>
                 </div>
                 
-                <div class="grid sm:grid-cols-2 gap-6">
+                <div class="grid sm:grid-cols-2 gap-4 md:gap-6">
                     <div>
-                    <label for="phone" class="block text-sm font-medium text-text mb-2">Phone Number <span class="text-red-400">*</span></label>
-                    <input type="tel" id="phone" name="phone" placeholder="01X-XXX XXXX" class="form-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-text placeholder-text-light" required>
+                    <label for="phone" class="block text-xs md:text-sm font-medium text-text mb-1 md:mb-2">Phone Number <span class="text-red-400">*</span></label>
+                    <input type="tel" id="phone" name="phone" placeholder="01X-XXX XXXX" class="form-input w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl border border-gray-200 bg-white text-text text-sm md:text-base placeholder-text-light" required>
                     <p id="phone-error" class="text-red-500 text-xs mt-1 hidden">Please enter a valid phone number</p>
                     </div>
                     <div>
-                    <label for="name" class="block text-sm font-medium text-text mb-2">Full Name <span class="text-red-400">*</span></label>
-                    <input type="text" id="name" name="name" placeholder="Your name" class="form-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-text placeholder-text-light" required>
+                    <label for="name" class="block text-xs md:text-sm font-medium text-text mb-1 md:mb-2">Full Name <span class="text-red-400">*</span></label>
+                    <input type="text" id="name" name="name" placeholder="Your name" class="form-input w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl border border-gray-200 bg-white text-text text-sm md:text-base placeholder-text-light" required>
                     </div>
                 </div>
                 
                 <div>
-                    <label for="service" class="block text-sm font-medium text-text mb-2">Select Service <span class="text-red-400">*</span></label>
-                    <select id="service" name="service" class="form-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-text" required>
+                    <label for="service" class="block text-xs md:text-sm font-medium text-text mb-1 md:mb-2">Select Service <span class="text-red-400">*</span></label>
+                    <select id="service" name="service" class="form-input w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl border border-gray-200 bg-white text-text text-sm md:text-base" required>
                     <option value="">Choose a service...</option>
                     </select>
                 </div>
                 
-                <div class="grid sm:grid-cols-2 gap-6">
+                <div class="grid sm:grid-cols-2 gap-4 md:gap-6">
                     <div>
-                    <label for="date" class="block text-sm font-medium text-text mb-2">Preferred Date <span class="text-red-400">*</span></label>
-                    <input type="date" id="date" name="date" class="form-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-text" required>
+                    <label for="date" class="block text-xs md:text-sm font-medium text-text mb-1 md:mb-2">Preferred Date <span class="text-red-400">*</span></label>
+                    <input type="date" id="date" name="date" class="form-input w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl border border-gray-200 bg-white text-text text-sm md:text-base" required>
                     <p id="date-error" class="text-amber-600 text-xs mt-1 hidden">Bookings require at least 1 day advance notice.</p>
                     </div>
                     <div>
-                    <label for="notes" class="block text-sm font-medium text-text mb-2">Notes (Optional)</label>
-                    <input type="text" id="notes" name="notes" placeholder="Any special requests?" class="form-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-text placeholder-text-light">
+                    <label for="notes" class="block text-xs md:text-sm font-medium text-text mb-1 md:mb-2">Notes (Optional)</label>
+                    <input type="text" id="notes" name="notes" placeholder="Any special requests?" class="form-input w-full px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl border border-gray-200 bg-white text-text text-sm md:text-base placeholder-text-light">
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-text mb-3">Select Time <span class="text-red-400">*</span></label>
+                    <label class="block text-xs md:text-sm font-medium text-text mb-2 md:mb-3">Select Time <span class="text-red-400">*</span></label>
                     <div id="time-slots" class="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
-                    <p class="col-span-full text-text-light text-center py-4 text-sm">Please select a date first</p>
+                    <p class="col-span-full text-text-light text-center py-4 text-xs md:text-sm">Please select a date first</p>
                     </div>
                     <input type="hidden" id="time" name="time" required>
                 </div>
                 
-                <button type="submit" id="submit-btn" class="btn-primary w-full py-4 rounded-xl text-white font-semibold text-lg flex items-center justify-center">
+                <button type="submit" id="submit-btn" class="btn-primary w-full py-3 md:py-4 rounded-lg md:rounded-xl text-white font-semibold text-base md:text-lg flex items-center justify-center">
                     <span id="submit-text">Confirm Booking</span>
                     <div id="submit-spinner" class="spinner ml-2 hidden"></div>
                 </button>
                 </form>
                 
-                <div id="success-message" class="hidden text-center py-8">
-                <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div id="success-message" class="hidden text-center py-6 md:py-8">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                    <svg class="w-6 h-6 md:w-8 md:h-8 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                 </div>
-                <h3 class="font-sans text-xl font-bold text-text mb-2">Appointment Request Sent!</h3>
-                <p class="text-text-light mb-6 text-sm">We will call you shortly to confirm your appointment.</p>
-                <button id="book-another-btn" class="text-primary font-semibold hover:text-primary-dark transition-colors text-sm underline underline-offset-4">Book another appointment</button>
+                <h3 class="font-sans text-lg md:text-xl font-bold text-text mb-2">Appointment Request Sent!</h3>
+                <p class="text-text-light mb-4 md:mb-6 text-xs md:text-sm">We will call you shortly to confirm your appointment.</p>
+                <button id="book-another-btn" class="text-primary font-semibold hover:text-primary-dark transition-colors text-xs md:text-sm underline underline-offset-4">Book another appointment</button>
                 </div>
                 
-                <div id="error-message" class="hidden text-center py-8">
-                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div id="error-message" class="hidden text-center py-6 md:py-8">
+                <div class="w-14 h-14 md:w-16 md:h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                    <svg class="w-6 h-6 md:w-8 md:h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </div>
-                <h3 class="font-sans text-xl font-bold text-text mb-2">Booking Failed</h3>
-                <p id="error-text" class="text-text-light mb-6 text-sm">Something went wrong. Please try again or call us.</p>
-                <button id="try-again-btn" class="text-primary font-semibold hover:text-primary-dark transition-colors text-sm underline underline-offset-4">Try again</button>
+                <h3 class="font-sans text-lg md:text-xl font-bold text-text mb-2">Booking Failed</h3>
+                <p id="error-text" class="text-text-light mb-4 md:mb-6 text-xs md:text-sm">Something went wrong. Please try again or call us.</p>
+                <button id="try-again-btn" class="text-primary font-semibold hover:text-primary-dark transition-colors text-xs md:text-sm underline underline-offset-4">Try again</button>
                 </div>
             </div>
         </div>
@@ -1042,7 +1035,7 @@
       patients: collection(db, 'klinikazam_patients'),
       appointments: collection(db, 'klinikazam_appointments'),
       slots: collection(db, 'klinikazam_slots'),
-      holidays: collection(db, 'klinikazam_holidays') // ADDED HOLIDAYS COLLECTION
+      holidays: collection(db, 'klinikazam_holidays') 
     };
     
     window.firebaseModules = {
@@ -1076,7 +1069,7 @@
     let successMessage, errorMessage, errorText, bookAnotherBtn, tryAgainBtn, phoneError, dateError;
     let mobileMenuOverlay;
     
-    let globalHolidays = []; // Store holidays globally
+    let globalHolidays = []; 
 
     // Page View Control
     function showMainSite() {
@@ -1105,10 +1098,8 @@
             if (!window.firebaseReady) await new Promise(resolve => window.addEventListener('firebaseReady', resolve, { once: true }));
             const { getDocs, query, where } = window.firebaseModules;
             
-            // Get today's date string YYYY-MM-DD
             const today = new Date().toISOString().split('T')[0];
             
-            // Fetch all holidays (we filter locally for banner logic, or query for specific date for popup)
             const snapshot = await getDocs(window.dbCollections.holidays);
             globalHolidays = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
             
@@ -1121,14 +1112,10 @@
 
     function checkHolidayStatus() {
         const today = new Date().toISOString().split('T')[0];
-        // Find if today falls into any holiday range
         const activeHoliday = globalHolidays.find(h => today >= h.start && today <= h.end);
 
         if (activeHoliday) {
-            // 1. Show Popup
             showHolidayPopup(activeHoliday);
-            
-            // 2. Show Banner
             showHolidayBanner(activeHoliday);
         }
     }
@@ -1140,14 +1127,12 @@
         
         titleEl.textContent = holiday.title;
         
-        // Format Date
         const startStr = formatDateDisplay(holiday.start);
         const endStr = formatDateDisplay(holiday.end);
         dateEl.textContent = startStr === endStr ? startStr : `${startStr} - ${endStr}`;
         
         popup.classList.add('show');
         
-        // Store in session so it doesn't popup every refresh
         sessionStorage.setItem('holidayPopupShown', 'true');
     }
 
@@ -1170,8 +1155,6 @@
         const [y, m, d] = dateStr.split('-');
         return `${d}/${m}/${y}`;
     }
-
-    // --- END HOLIDAY LOGIC ---
     
     function formatPhoneNumber(value) {
       const numbers = value.replace(/\D/g, '');
@@ -1252,6 +1235,9 @@
         } else {
             mobileMenu.classList.add('open');
             mobileMenuOverlay.classList.add('open');
+            // Animate icons
+            mobileMenuBtn.querySelector('.menu-icon').classList.add('hidden');
+            mobileMenuBtn.querySelector('.close-icon').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         }
     }
@@ -1259,6 +1245,9 @@
     function closeMobileMenu() { 
         mobileMenu.classList.remove('open'); 
         mobileMenuOverlay.classList.remove('open'); 
+        // Reset icons
+        mobileMenuBtn.querySelector('.menu-icon').classList.remove('hidden');
+        mobileMenuBtn.querySelector('.close-icon').classList.add('hidden');
         document.body.style.overflow = ''; 
     }
     window.closeMobileMenu = closeMobileMenu;
@@ -1266,7 +1255,6 @@
     function handleNavbarScroll() {
       if(document.getElementById('booking-page-view').style.display === 'block') return;
       
-      // Adjust scroll logic if banner is present
       const triggerPoint = document.body.classList.contains('has-holiday-banner') ? 90 : 50;
       
       if (window.scrollY > triggerPoint) {
@@ -1332,15 +1320,15 @@
     function renderServices() {
       if(!servicesGrid) return;
       servicesGrid.innerHTML = services.map((service, index) => `
-        <div data-aos="fade-up" data-aos-delay="${index * 50}" class="service-card bg-white rounded-2xl p-6 group">
-          <div class="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center mb-5 group-hover:bg-primary transition-colors duration-300">
-             <svg class="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div data-aos="fade-up" data-aos-delay="${index * 50}" class="service-card bg-white rounded-xl md:rounded-2xl p-5 md:p-6 group">
+          <div class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-primary/5 flex items-center justify-center mb-4 md:mb-5 group-hover:bg-primary transition-colors duration-300">
+             <svg class="w-5 h-5 md:w-6 md:h-6 text-primary group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
           </div>
-          <h3 class="font-sans text-lg text-text mb-2 font-bold">${service.name}</h3>
-          <p class="text-text-light text-sm leading-relaxed mb-3">${service.description || 'Professional care.'}</p>
-          ${service.price ? `<p class="text-secondary font-bold text-sm">From RM ${service.price}</p>` : '<p class="text-primary text-xs font-medium">Consult for price</p>'}
+          <h3 class="font-sans text-base md:text-lg text-text mb-2 font-bold">${service.name}</h3>
+          <p class="text-text-light text-xs md:text-sm leading-relaxed mb-3">${service.description || 'Professional care.'}</p>
+          ${service.price ? `<p class="text-secondary font-bold text-xs md:text-sm">From RM ${service.price}</p>` : '<p class="text-primary text-xs font-medium">Consult for price</p>'}
         </div>
       `).join('');
       AOS.refresh();
@@ -1404,18 +1392,17 @@
       const selected = new Date(selectedDate);
       
       if (selected <= today) {
-         timeSlotsContainer.innerHTML = '<p class="col-span-full text-red-500 text-center py-4 text-sm font-medium">Bookings must be made at least 1 day in advance.</p>';
+         timeSlotsContainer.innerHTML = '<p class="col-span-full text-red-500 text-center py-4 text-xs md:text-sm font-medium">Bookings must be made at least 1 day in advance.</p>';
          return;
       }
 
       if (getDayOfWeek(selectedDate) === 0) {
-        timeSlotsContainer.innerHTML = '<p class="col-span-full text-red-500 text-center py-4 text-sm font-medium">Closed on Sundays</p>'; return;
+        timeSlotsContainer.innerHTML = '<p class="col-span-full text-red-500 text-center py-4 text-xs md:text-sm font-medium">Closed on Sundays</p>'; return;
       }
       
-      // CHECK HOLIDAYS
       const isHoliday = globalHolidays.some(h => selectedDate >= h.start && selectedDate <= h.end);
       if (isHoliday) {
-          timeSlotsContainer.innerHTML = '<p class="col-span-full text-red-500 text-center py-4 text-sm font-medium">Clinic is closed on this public holiday.</p>';
+          timeSlotsContainer.innerHTML = '<p class="col-span-full text-red-500 text-center py-4 text-xs md:text-sm font-medium">Clinic is closed on this public holiday.</p>';
           return;
       }
 
@@ -1450,7 +1437,7 @@
     }
     
     function renderTimeSlots(slots, date) {
-      if (!slots.length) { timeSlotsContainer.innerHTML = '<p class="col-span-full text-text-light text-center py-4 text-sm">No slots available</p>'; return; }
+      if (!slots.length) { timeSlotsContainer.innerHTML = '<p class="col-span-full text-text-light text-center py-4 text-xs md:text-sm">No slots available</p>'; return; }
       
       timeSlotsContainer.innerHTML = slots.map(slot => {
         const slotAmPm = convertToAmPm(slot);
@@ -1474,7 +1461,7 @@
 
         return `
           <button type="button" 
-            class="time-slot px-3 py-2 text-xs font-medium rounded-lg ${isSelected ? 'selected' : ''} ${statusClass}" 
+            class="time-slot px-2 py-1.5 md:px-3 md:py-2 text-xs font-medium rounded-md md:rounded-lg ${isSelected ? 'selected' : ''} ${statusClass}" 
             data-time="${slotAmPm}" 
             ${disabled ? 'disabled' : ''}>
             ${formatTime(slot)} ${label ? `<span class="block text-[0.6rem] opacity-80">${label}</span>` : ''}
@@ -1617,7 +1604,7 @@
       initParallax();
       initCounters();
       loadServices();
-      loadHolidays(); // Load holidays on init
+      loadHolidays(); 
       initBookingForm();
       
       setTimeout(() => { if(formLoading) formLoading.classList.add('hidden'); if(bookingForm) bookingForm.classList.remove('hidden'); }, 500);
