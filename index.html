@@ -278,12 +278,12 @@
             color: var(--text-muted);
             font-size: 13px;
             transition: color 0.2s;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
         }
-        .btn-reset-pw:hover { color: var(--primary); text-decoration: underline; }
+        .btn-reset-pw:hover { color: #25D366; }
         .btn-reset-pw i { font-size: 16px; }
 
         /* =========================================
@@ -1505,31 +1505,61 @@
             border-radius: 6px;
         }
         .permission-item label { font-size: 13px; font-weight: 500; }
-        
-        /* Generated Password Box */
-        .generated-password-box {
+
+        /* Password Display Box */
+        .password-display-box {
             background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            margin-top: 16px;
+            border: 2px solid #22c55e;
+            border-radius: var(--radius-md);
+            padding: 20px;
             text-align: center;
+            margin: 16px 0;
         }
-        .generated-password-box p {
-            font-size: 13px;
-            color: #166534;
-            margin-bottom: 8px;
-        }
-        .generated-password-box code {
-            display: block;
-            font-size: 20px;
-            font-weight: 700;
+        .password-display-box .password-value {
             font-family: monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: #166534;
+            letter-spacing: 2px;
+            padding: 12px;
             background: white;
-            padding: 8px;
-            border-radius: 6px;
+            border-radius: 8px;
             margin-bottom: 12px;
-            user-select: all;
+            word-break: break-all;
+        }
+        .password-display-box .copy-btn {
+            background: #22c55e;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .password-display-box .copy-btn:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+        }
+        .password-display-box .copy-btn.copied {
+            background: #166534;
+        }
+        .password-warning {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            color: #92400e;
+            margin-top: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .password-warning i {
+            font-size: 18px;
+            flex-shrink: 0;
         }
 
         /* Responsive */
@@ -1677,10 +1707,9 @@
             </form>
             
             <div class="login-footer-actions">
-                <!-- WhatsApp Reset Link -->
-                <a href="https://wa.me/60122600969?text=Hello%2C%20I%20would%20like%20to%20request%20a%20password%20reset.%20My%20User%20ID%20is%20%5BInsert%20ID%20here%5D." class="btn-reset-pw" target="_blank" rel="noopener noreferrer">
-                    <i class="ri-whatsapp-line"></i> Forgot Password? Request Reset
-                </a>
+                <button class="btn-reset-pw" onclick="openWhatsAppReset()">
+                    <i class="ri-whatsapp-line"></i> Forgot Password? Request Reset via WhatsApp
+                </button>
                 <div style="font-size: 11px; color: var(--text-muted);">
                     <p>DDNEX Internal Management System v2.5</p>
                     <p style="margin-top: 4px;">Authorized Personnel Only</p>
@@ -1844,7 +1873,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, setDoc, orderBy, limit, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -1862,7 +1891,6 @@
 
         window.firebaseAuth = auth;
         window.firebaseDB = db;
-        window.updateUserPassword = updatePassword; // Expose for profile page
 
         const getCol = (name) => collection(db, `${name}_ddnex`);
 
@@ -1916,80 +1944,126 @@
             return `${prefix}-${paddedNum}`;
         };
 
-        // --- AUTH LOGIN HANDLER ---
-        // Uses Firebase Authentication.
-        // Maps User ID (e.g. "001") to an email format "001@ddnex.internal" for Auth.
         window.handleHardcodedLogin = async (userId, password) => {
-            // Construct the internal email for Firebase Auth
-            const email = `${userId}@ddnex.internal`;
+            const qSuper = query(getCol('users'), where('userId', '==', '001'), where('role', '==', 'SuperAdmin'));
+            const superSnap = await getDocs(qSuper);
             
-            try {
-                // Sign in with Firebase Auth
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
+            // Auto-create SuperAdmin if not exists
+            if (superSnap.empty && userId === '001' && password === '1234') {
+                 await setDoc(doc(db, 'users_ddnex', 'superadmin_001'), {
+                    userId: '001',
+                    name: 'Super Administrator',
+                    email: 'admin@ddnex.com',
+                    role: 'SuperAdmin',
+                    status: 'active',
+                    password: '1234', 
+                    permissions: { all: true }, // Full access
+                    createdAt: new Date()
+                });
+                
+                const userMock = { 
+                    uid: 'superadmin_001', 
+                    displayName: 'Super Administrator', 
+                    email: 'admin@ddnex.com',
+                    role: 'SuperAdmin',
+                    permissions: { all: true }
+                };
+                window.onUserLoggedIn(userMock);
+                return { success: true };
+            }
 
-                // Fetch additional profile data from Firestore
+            try {
                 const q = query(getCol('users'), where('userId', '==', userId));
                 const querySnapshot = await getDocs(q);
                 
-                let userData = { role: 'User', name: user.email }; // Defaults
-                
                 if (!querySnapshot.empty) {
-                    const docData = querySnapshot.docs[0].data();
-                    userData = { 
-                        ...docData, 
-                        uid: user.uid 
-                    };
+                    const userDoc = querySnapshot.docs[0];
+                    const userData = userDoc.data();
                     
-                    if (userData.status === 'suspended') {
-                        await signOut(auth);
-                        return { success: false, error: 'Account suspended' };
+                    if (userData.password === password) {
+                        if (userData.status === 'suspended') {
+                            return { success: false, error: 'Account suspended' };
+                        }
+                        window.onUserLoggedIn({ 
+                            uid: userDoc.id, 
+                            displayName: userData.name, 
+                            email: userData.email,
+                            role: userData.role,
+                            userId: userData.userId,
+                            permissions: userData.permissions || {}
+                        });
+                        return { success: true };
+                    } else {
+                        return { success: false, error: 'Wrong password' };
                     }
+                } else {
+                    return { success: false, error: 'User not found' };
                 }
-
-                window.onUserLoggedIn(userData);
-                return { success: true };
-
             } catch (error) {
-                console.error("Login Error:", error);
-                let message = "Login failed.";
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                    message = "Invalid User ID or Password.";
-                } else if (error.code === 'auth/too-many-requests') {
-                    message = "Access temporarily disabled due to many failed attempts.";
-                }
-                return { success: false, error: message };
+                console.error(error);
+                return { success: false, error: 'Connection error' };
             }
         };
 
-        window.handleHardcodedLogout = async () => {
-            await signOut(auth);
+        // Password Reset (SuperAdmin Only)
+        window.sendPasswordReset = async (email) => {
+            try {
+                await sendPasswordResetMessage(auth, email);
+                return { success: true };
+            } catch (error) {
+                console.error("Reset Error:", error);
+                return { success: false, error: error.message };
+            }
+        };
+
+        // Helper to manually set new password in Firestore (since we can't access Firebase Auth users directly easily without Admin SDK)
+        // This 'reset' essentially sets a known temp password for the user in Firestore
+        window.adminResetUserPassword = async (userId, newPassword) => {
+            const q = query(getCol('users'), where('userId', '==', userId));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                const userDoc = snap.docs[0];
+                await updateDoc(doc(db, 'users_ddnex', userDoc.id), { password: newPassword });
+                return true;
+            }
+            return false;
+        };
+
+        // Get user document ID by userId
+        window.getUserDocIdByUserId = async (userId) => {
+            const q = query(getCol('users'), where('userId', '==', userId));
+            const snap = await getDocs(q);
+            if(!snap.empty) {
+                return snap.docs[0].id;
+            }
+            return null;
+        };
+
+        // Change password for current user
+        window.changeCurrentUserPassword = async (currentPassword, newPassword) => {
+            if (!currentUser) return { success: false, error: 'Not logged in' };
+            
+            // Verify current password
+            const q = query(getCol('users'), where('userId', '==', currentUser.userId));
+            const snap = await getDocs(q);
+            
+            if(snap.empty) return { success: false, error: 'User not found' };
+            
+            const userDoc = snap.docs[0];
+            const userData = userDoc.data();
+            
+            if (userData.password !== currentPassword) {
+                return { success: false, error: 'Current password is incorrect' };
+            }
+            
+            // Update password
+            await updateDoc(doc(db, 'users_ddnex', userDoc.id), { password: newPassword });
+            return { success: true };
+        };
+
+        window.handleHardcodedLogout = () => {
             window.onUserLoggedOut();
         };
-
-        // Listener for auth state changes (handles browser refresh)
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // User is signed in, check if we already have session data
-                if(!currentUser) {
-                    const q = query(getCol('users'), where('userId', '==', user.email.split('@')[0]));
-                    const snap = await getDocs(q);
-                    if(!snap.empty) {
-                        const data = snap.docs[0].data();
-                        window.onUserLoggedIn({ uid: user.uid, ...data });
-                    } else {
-                        // Logged in but no firestore record? Logout
-                        await signOut(auth);
-                        window.onUserLoggedOut();
-                    }
-                }
-            } else {
-                // User is signed out
-                if(currentUser) {
-                   window.onUserLoggedOut();
-                }
-            }
-        });
 
         window.dbOperations = {
             getUsers: async () => {
@@ -2107,6 +2181,45 @@
             if (currentUser.permissions && currentUser.permissions.all) return true;
             if (currentUser.permissions && currentUser.permissions[permName]) return true;
             return false;
+        };
+
+        // =========================================
+        // WHATSAPP PASSWORD RESET
+        // =========================================
+        window.openWhatsAppReset = () => {
+            const userId = document.getElementById('userId').value || '';
+            const message = userId 
+                ? `(${userId}) request reset password` 
+                : `request reset password`;
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/60122600969?text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
+        };
+
+        // =========================================
+        // RANDOM PASSWORD GENERATOR
+        // =========================================
+        window.generateRandomPassword = (length = 12) => {
+            const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+            numbers = '0123456789';
+            const special = '!@#$%^&*';
+            const allChars = uppercase + lowercase + numbers + special;
+            
+            let password = '';
+            // Ensure at least one of each type
+            password += uppercase[Math.floor(Math.random() * uppercase.length)];
+            password += lowercase[Math.floor(Math.random() * lowercase.length)];
+            password += numbers[Math.floor(Math.random() * numbers.length)];
+            password += special[Math.floor(Math.random() * special.length)];
+            
+            // Fill the rest
+            for (let i = password.length; i < length; i++) {
+                password += allChars[Math.floor(Math.random() * allChars.length)];
+            }
+            
+            // Shuffle the password
+            return password.split('').sort(() => Math.random() - 0.5).join('');
         };
 
         // =========================================
@@ -2309,7 +2422,7 @@
                     if(result.error === 'Account suspended') {
                         errorMsg.querySelector('span').textContent = "Your account has been suspended. Please contact IT Support.";
                     } else {
-                         errorMsg.querySelector('span').textContent = result.error || "Incorrect password. If you are experiencing difficulties, please contact IT Support.";
+                         errorMsg.querySelector('span').textContent = "Incorrect password. If you are experiencing difficulties, please contact IT Support.";
                     }
                 }
             });
@@ -2362,6 +2475,27 @@
             document.getElementById('loginErrorMsg').classList.remove('visible');
             
             window.history.pushState({ path: '/auth/login' }, '', '/auth/login');
+        };
+
+        // Reset Password Modal
+        window.openResetPasswordModal = () => {
+            const content = `
+                <p style="margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">
+                    If you have forgotten your password, please contact the Super Administrator to reset it for you.
+                </p>
+                <div class="form-group-modal">
+                    <label>Your User ID</label>
+                    <input type="text" id="resetUserId" placeholder="e.g. 001">
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                    Note: This feature is currently manual. Please contact IT Support directly.
+                </p>
+            `;
+            
+            openModal("Password Reset", content, () => {
+                showPopup("Info", "Please contact your Super Administrator or IT Support to reset your password.", true);
+                closeModal();
+            });
         };
 
         // Utility Functions
@@ -3307,7 +3441,7 @@ const generateFullTemplateHTML = (doc) => {
                         <div class="pricing-features">
                             <ul>
                                 <li><i class="ri-time-line"></i> Delivery: 4-7 Days</li>
-                                <li><i class="ri-pages-line"></i> Up to 5 Pages</li>
+                            <li><i class="ri-pages-line"></i> Up to 5 Pages</li>
                                 <li><i class="ri-cellphone-line"></i> Mobile Responsive</li>
                             </ul>
                         </div>
@@ -3410,6 +3544,8 @@ const generateFullTemplateHTML = (doc) => {
             let cleaned = phone.replace(/\D/g, '');
             if(cleaned.startsWith('0')) cleaned = '6' + cleaned;
             if(!cleaned.startsWith('6')) cleaned = '6' + cleaned;
+
+            
             const text = encodeURIComponent(`Hello ${name}, this is a reminder from DDNEX.`);
             return `https://wa.me/${cleaned}?text=${text}`;
         };
@@ -5078,7 +5214,7 @@ const generateFullTemplateHTML = (doc) => {
                                                 ${u.role !== 'SuperAdmin' ? `
                                                 <button class="action-btn" onclick="editUser('${u.id}', '${encodeURIComponent(JSON.stringify(u))}')"><i class="ri-edit-line"></i></button>
                                                 <button class="action-btn danger" onclick="deleteUser('${u.id}')"><i class="ri-delete-bin-line"></i></button>
-                                                <button class="action-btn" onclick="adminResetPassword('${u.userId}')" title="Reset Password"><i class="ri-key-line"></i></button>
+                                                <button class="action-btn" onclick="openResetUserPasswordModal('${u.userId}', '${u.name}')" title="Reset Password"><i class="ri-key-line"></i></button>
                                                 ` : '<span style="color:#ccc; font-size:12px;">Protected</span>'}
                                             </td>
                                         </tr>
@@ -5144,36 +5280,98 @@ const generateFullTemplateHTML = (doc) => {
             }
         }
 
-        // Admin Password Reset (Generate Random Password)
-        window.adminResetPassword = (userId) => {
-            // Generate random 8 char password
-            const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
-            let newPassword = "";
-            for (let i = 0; i < 10; i++) {
-                newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-
-            openModal(`Reset Password for ${userId}`, `
-                <p style="margin-bottom:16px; font-size:14px; color:var(--text-secondary);">
-                    A new random password has been generated. Please copy it and send it to the user securely. 
-                    This password will be stored in the database for the custom login system.
+        // =========================================
+        // SUPERADMIN: RESET USER PASSWORD WITH RANDOM GENERATOR
+        // =========================================
+        window.openResetUserPasswordModal = (userId, userName) => {
+            const randomPassword = window.generateRandomPassword(12);
+            
+            const content = `
+                <p style="margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">
+                    Generate a new random password for user: <strong>${userName}</strong> (ID: ${userId})
                 </p>
-                <div class="generated-password-box">
-                    <p>New Password:</p>
-                    <code id="generatedPasswordCode">${newPassword}</code>
-                    <button class="btn btn-primary" onclick="copyGeneratedPassword()"><i class="ri-clipboard-line"></i> Copy Password</button>
+                
+                <div class="password-display-box">
+                    <p style="font-size: 13px; color: #166534; margin-bottom: 8px;">Generated Password:</p>
+                    <div class="password-value" id="generatedPasswordValue">${randomPassword}</div>
+                    <button class="copy-btn" id="copyPasswordBtn" onclick="copyGeneratedPassword()">
+                        <i class="ri-file-copy-line"></i> Copy Password
+                    </button>
                 </div>
-                <p style="margin-top:16px; font-size:12px; color:var(--accent-red);">
-                    <i class="ri-error-warning-line"></i> Note: This updates the password in the database. If using Firebase Auth exclusively, the user should use the "Forgot Password" feature or an Admin SDK function.
+                
+                <div class="password-warning">
+                    <i class="ri-alert-line"></i>
+                    <div>
+                        <strong>Important:</strong> This password can only be viewed once. Please copy and share it securely with the user. They should change it after first login.
+                    </div>
+                </div>
+                
+                <input type="hidden" id="resetTargetUserId" value="${userId}">
+            `;
+            
+            window.currentGeneratedPassword = randomPassword;
+            
+            openModal("Reset User Password", content, async () => {
+                const targetUserId = document.getElementById('resetTargetUserId').value;
+                const newPassword = document.getElementById('generatedPasswordValue').textContent;
+                
+                showLoading("Resetting password...");
+                const success = await window.adminResetUserPassword(targetUserId, newPassword);
+                hideLoading();
+                
+                if(success) {
+                    showPopup("Success", `Password has been reset for user ID: ${targetUserId}`);
+                    closeModal();
+                } else {
+                    showPopup("Error", "Failed to reset password. Please try again.", false);
+                }
+            });
+        };
+
+        window.copyGeneratedPassword = () => {
+            const password = document.getElementById('generatedPasswordValue').textContent;
+            const copyBtn = document.getElementById('copyPasswordBtn');
+            
+            navigator.clipboard.writeText(password).then(() => {
+                copyBtn.innerHTML = '<i class="ri-check-line"></i> Copied!';
+                copyBtn.classList.add('copied');
+                showPopup("Copied!", "Password copied to clipboard.");
+            }).catch(err => {
+                // Fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = password;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                copyBtn.innerHTML = '<i class="ri-check-line"></i> Copied!';
+                copyBtn.classList.add('copied');
+                showPopup("Copied!", "Password copied to clipboard.");
+            });
+        };
+
+        // Admin Password Reset (Old method - keep for reference)
+        window.adminResetPassword = (userId) => {
+            openModal('Reset User Password', `
+                <p style="margin-bottom:16px; font-size:14px; color:var(--text-secondary);">
+                    Set a new password for user ID: <strong>${userId}</strong>.
                 </p>
+                <div class="form-group-modal">
+                    <label>New Password</label>
+                    <input type="text" id="newAdminPassword" placeholder="Enter new password">
+                </div>
             `, async () => {
-                showLoading("Updating Password...");
-                // In a real secure app, this should use Firebase Admin SDK to update the password.
-                // Here we update the Firestore 'password' field for the custom login handler.
-                const success = await window.adminResetUserPassword(userId, newPassword);
+                const newPass = document.getElementById('newAdminPassword').value;
+                if(!newPass) {
+                    showPopup("Error", "Password cannot be empty.", false);
+                    return;
+                }
+                showLoading("Resetting...");
+                const success = await window.adminResetUserPassword(userId, newPass);
                 hideLoading();
                 if(success) {
-                    showPopup("Success", "Password has been reset successfully.");
+                    showPopup("Success", "Password reset successfully.");
                     closeModal();
                 } else {
                     showPopup("Error", "Failed to reset password.", false);
@@ -5181,11 +5379,95 @@ const generateFullTemplateHTML = (doc) => {
             });
         };
 
-        window.copyGeneratedPassword = () => {
-            const code = document.getElementById('generatedPasswordCode').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                showPopup("Copied!", "Password copied to clipboard.");
-            });
+        // =========================================
+        // PROFILE SECTION WITH CHANGE PASSWORD
+        // =========================================
+        async function renderProfileSection() {
+            let userData = currentUser;
+            
+            document.getElementById('mainContent').innerHTML = `
+                <div class="card" style="max-width:600px; margin:0 auto;">
+                    <div class="card-body">
+                        <div style="text-align:center; margin-bottom:24px;">
+                            <div class="user-avatar" style="width:80px; height:80px; font-size:28px; margin:0 auto 16px;">${getInitials(userData.displayName)}</div>
+                            <h2>${userData.displayName}</h2>
+                            <p style="color:var(--text-muted)">${userData.email}</p>
+                            <span class="status active" style="margin-top:8px;">${userData.role || 'User'}</span>
+                        </div>
+                        <div class="form-group-modal">
+                            <label>Full Name</label>
+                            <input type="text" value="${userData.displayName}" disabled>
+                        </div>
+                        <div class="form-group-modal">
+                            <label>Email</label>
+                            <input type="email" value="${userData.email}" disabled>
+                        </div>
+                        <div class="form-group-modal">
+                            <label>User ID</label>
+                            <input type="text" value="${userData.userId || currentUser.uid}" disabled>
+                        </div>
+                        
+                        <hr style="margin: 24px 0; border-color: var(--border-light);">
+                        
+                        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; font-family: var(--font-heading);">
+                            <i class="ri-lock-password-line" style="vertical-align: middle; margin-right: 8px;"></i> Change Password
+                        </h3>
+                        
+                        <div class="form-group-modal">
+                            <label>Current Password</label>
+                            <input type="password" id="currentPasswordInput" placeholder="Enter current password">
+                        </div>
+                        <div class="form-group-modal">
+                            <label>New Password</label>
+                            <input type="password" id="newPasswordInput" placeholder="Enter new password">
+                        </div>
+                        <div class="form-group-modal">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="confirmPasswordInput" placeholder="Confirm new password">
+                        </div>
+                        
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" onclick="handleChangePassword()">
+                            <i class="ri-save-line"></i> Update Password
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Handle Change Password
+        window.handleChangePassword = async () => {
+            const currentPassword = document.getElementById('currentPasswordInput').value;
+            const newPassword = document.getElementById('newPasswordInput').value;
+            const confirmPassword = document.getElementById('confirmPasswordInput').value;
+            
+            if(!currentPassword || !newPassword || !confirmPassword) {
+                showPopup("Error", "Please fill in all password fields.", false);
+                return;
+            }
+            
+            if(newPassword !== confirmPassword) {
+                showPopup("Error", "New passwords do not match.", false);
+                return;
+            }
+            
+            if(newPassword.length < 6) {
+                showPopup("Error", "New password must be at least 6 characters.", false);
+                return;
+            }
+            
+            showLoading("Updating password...");
+            const result = await window.changeCurrentUserPassword(currentPassword, newPassword);
+            hideLoading();
+            
+            if(result.success) {
+                showPopup("Success", "Password updated successfully.");
+                // Clear the form
+                document.getElementById('currentPasswordInput').value = '';
+                document.getElementById('newPasswordInput').value = '';
+                document.getElementById('confirmPasswordInput').value = '';
+            } else {
+                showPopup("Error", result.error || "Failed to update password.", false);
+            }
         };
 
         // --- USER MODAL & ACTIONS ---
@@ -5593,134 +5875,6 @@ const generateFullTemplateHTML = (doc) => {
             });
         };
 
-        // --- Profile Section ---
-        async function renderProfileSection() {
-            let userData = currentUser;
-            
-            document.getElementById('mainContent').innerHTML = `
-                <div class="card" style="max-width:600px; margin:0 auto;">
-                    <div class="card-body">
-                        <div style="text-align:center; margin-bottom:24px;">
-                            <div class="user-avatar" style="width:80px; height:80px; font-size:28px; margin:0 auto 16px;">${getInitials(userData.displayName)}</div>
-                            <h2>${userData.displayName}</h2>
-                            <p style="color:var(--text-muted)">${userData.email}</p>
-                            <span class="status active" style="margin-top:8px;">${userData.role || 'User'}</span>
-                        </div>
-                        
-                        <div class="form-group-modal">
-                            <label>Full Name</label>
-                            <input type="text" id="profileName" value="${userData.displayName}">
-                        </div>
-                        <div class="form-group-modal">
-                            <label>Email</label>
-                            <input type="email" value="${userData.email}" disabled>
-                        </div>
-                        <div class="form-group-modal">
-                            <label>User ID</label>
-                            <input type="text" value="${userData.userId || currentUser.uid}" disabled>
-                        </div>
-
-                        <hr style="margin: 24px 0; border-color: var(--border-light);">
-
-                        <h4 style="margin-bottom:16px; font-family: var(--font-heading);">Change Password</h4>
-                        <div class="form-group-modal">
-                            <label>Current Password</label>
-                            <input type="password" id="profileCurrentPass" placeholder="Enter current password">
-                        </div>
-                        <div class="form-group-modal">
-                            <label>New Password</label>
-                            <input type="password" id="profileNewPass" placeholder="Enter new password">
-                        </div>
-                        <div class="form-group-modal">
-                            <label>Confirm New Password</label>
-                            <input type="password" id="profileConfirmPass" placeholder="Confirm new password">
-                        </div>
-
-                        <button class="btn btn-primary" style="width:100%; margin-top:16px;" onclick="updateProfilePassword()">
-                            <i class="ri-save-line"></i> Update Profile
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        window.updateProfilePassword = async () => {
-            const name = document.getElementById('profileName').value;
-            const currentPass = document.getElementById('profileCurrentPass').value;
-            const newPass = document.getElementById('profileNewPass').value;
-            const confirmPass = document.getElementById('profileConfirmPass').value;
-
-            if(!name) {
-                showPopup("Error", "Name cannot be empty.", false);
-                return;
-            }
-
-            if(newPass || currentPass) {
-                if(!currentPass) {
-                    showPopup("Error", "Please enter your current password to change it.", false);
-                    return;
-                }
-                if(newPass !== confirmPass) {
-                    showPopup("Error", "New passwords do not match.", false);
-                    return;
-                }
-                if(newPass.length < 6) {
-                    showPopup("Error", "Password must be at least 6 characters.", false);
-                    return;
-                }
-
-                showLoading("Updating Password...");
-                try {
-                    // 1. Re-authenticate (optional but recommended for security)
-                    // Note: We need the email for signInWithEmailAndPassword
-                    const email = `${currentUser.userId}@ddnex.internal`;
-                    await signInWithEmailAndPassword(window.firebaseAuth, email, currentPass);
-                    
-                    // 2. Update Password in Firebase Auth
-                    const user = window.firebaseAuth.currentUser;
-                    await window.updateUserPassword(user, newPass);
-                    
-                    // 3. Update Firestore profile
-                    await window.dbOperations.updateUser(currentUser.uid, { name: name });
-                    
-                    // Update local state
-                    currentUser.displayName = name;
-                    localStorage.setItem('ddnex_user', JSON.stringify(currentUser));
-                    
-                    hideLoading();
-                    showPopup("Success", "Password and profile updated successfully.");
-                    
-                    // Clear password fields
-                    document.getElementById('profileCurrentPass').value = '';
-                    document.getElementById('profileNewPass').value = '';
-                    document.getElementById('profileConfirmPass').value = '';
-                    
-                    // Update header names
-                    document.getElementById('headerName').textContent = name;
-                    document.getElementById('sidebarName').textContent = name;
-                    
-                } catch (error) {
-                    hideLoading();
-                    console.error(error);
-                    if(error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                        showPopup("Error", "Incorrect current password.", false);
-                    } else {
-                        showPopup("Error", error.message || "Failed to update password.", false);
-                    }
-                }
-            } else {
-                // Just update name
-                showLoading("Updating...");
-                await window.dbOperations.updateUser(currentUser.uid, { name: name });
-                currentUser.displayName = name;
-                localStorage.setItem('ddnex_user', JSON.stringify(currentUser));
-                hideLoading();
-                showPopup("Success", "Profile updated successfully.");
-                document.getElementById('headerName').textContent = name;
-                document.getElementById('sidebarName').textContent = name;
-            }
-        };
-
         // --- Kanban Drag & Drop ---
         function initKanban() {
             const cards = document.querySelectorAll('.kanban-card');
@@ -5767,8 +5921,6 @@ const generateFullTemplateHTML = (doc) => {
                 try {
                     const userObj = JSON.parse(savedUser);
                     initialLoader.classList.add('hidden');
-                    // The onAuthStateChanged listener in the module script will handle the session restore
-                    // But we hydrate immediately for UI responsiveness
                     window.onUserLoggedIn(userObj);
                 } catch (e) {
                     localStorage.removeItem('ddnex_user');
