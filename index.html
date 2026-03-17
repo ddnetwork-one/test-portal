@@ -64,6 +64,64 @@
         button { cursor: pointer; border: none; font-family: inherit; transition: var(--transition); }
         input, select, textarea { font-family: inherit; }
 
+        /* --- PRINT STYLES --- */
+        @media print {
+            body { 
+                background: white; 
+                height: auto; 
+                overflow: visible !important; 
+                display: block;
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+            }
+            
+            /* Hide everything non-essential */
+            .sidebar, header, .no-print, .mobile-menu-btn, #toast, .sidebar-backdrop, #login-screen, #global-loader {
+                display: none !important;
+            }
+            
+            /* Ensure main content takes full width */
+            .main-wrapper {
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            
+            .content-area {
+                padding: 0 !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+
+            /* Ensure the bill detail section is visible and formatted */
+            #view-bill-detail {
+                display: block !important;
+            }
+            #view-bill-detail.active {
+                display: block !important;
+            }
+
+            .invoice-box {
+                box-shadow: none !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                border: 1px solid #e2e8f0;
+            }
+
+            /* Specific Invoice Styling for Print */
+            .invoice-top-bar { 
+                background: #000 !important; 
+                -webkit-print-color-adjust: exact;
+            }
+            .invoice-content { padding: 20px; }
+            
+            /* Ensure colors print correctly */
+            .full-cal-header, .stat-icon, .btn-primary, .badge {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
         /* --- LOADING OVERLAY --- */
         .loading-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -2074,7 +2132,7 @@
 
         function formatDateDisplay(dateStr) {
             if(!dateStr) return '-';
-            const [y, m, d] = dateStr.split('-');
+            const [y, m, d] =             dateStr.split('-');
             return `${d}/${m}/${y}`;
         }
 
@@ -2395,7 +2453,7 @@
                     <td>${sName}</td>
                     <td><span class="badge badge-${a.status.toLowerCase()}">${a.status}</span></td>
                     <td>
-                        ${a.status !== 'Completed' ? `<a href="#" class="btn-sm btn-wa" onclick="sendWhatsapp('${pName}', '${a.date}', '${a.time}', '${p ? p.phone : ''}')"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+                        ${a.status !== 'Completed' ? `<a href="#" class="btn-sm btn-wa" onclick="sendWhatsapp('${pName}', '${a.date}', '${a.time}', '${p ? p.phone : ''}', '${a.status}')"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
                         <button class="btn-sm" onclick="openEditAppt('${a.id}')"><i class="fa-solid fa-pen"></i></button> 
                         ${a.status === 'Completed' ? `<button class="btn-sm btn-bill" onclick="viewBillDetail('${a.id}')"><i class="fa-solid fa-file-invoice"></i></button>` : `<button class="btn-sm btn-bill" onclick="createCashbill('${a.id}')"><i class="fa-solid fa-file-invoice-dollar"></i> Bill</button>`}
                         
@@ -2475,7 +2533,7 @@
                     <td>${sName}</td>
                     <td>${statusDropdown}</td>
                     <td>
-                        <a href="#" class="btn-sm btn-wa" onclick="sendWhatsapp('${pName}', '${a.date}', '${a.time}', '${pPhone}')"><i class="fa-brands fa-whatsapp"></i></a>
+                        <a href="#" class="btn-sm btn-wa" onclick="sendWhatsapp('${pName}', '${a.date}', '${a.time}', '${pPhone}', '${a.status}')"><i class="fa-brands fa-whatsapp"></i></a>
                         <button class="btn-sm" onclick="openEditAppt('${a.id}')"><i class="fa-solid fa-pen"></i></button> 
                         <button class="btn-sm btn-bill" onclick="createCashbill('${a.id}')"><i class="fa-solid fa-file-invoice-dollar"></i> Bill</button>
                         ${hasPermission('delete_entries') ? `<button class="btn-sm btn-delete" onclick="openCancelConfirm('${a.id}')"><i class="fa-solid fa-ban"></i> Cancel</button>` : ''}
@@ -2583,6 +2641,7 @@
                 // Update local state to avoid full refresh jitter
                 const idx = appointments.findIndex(a => a.id === id);
                 if(idx > -1) appointments[idx].status = status;
+                renderAppointments(); // Re-render to reflect changes
             } catch(e) {
                 showToast("Error updating status");
                 console.error(e);
@@ -2648,7 +2707,7 @@
                         <td style="font-weight:700;">RM ${total.toFixed(2)}</td>
                         <td>
                             <button class="btn-sm btn-bill" onclick="viewBillDetail('${a.id}')"><i class="fa-solid fa-eye"></i> View</button>
-                            <button class="btn-sm btn-wa" onclick="sendWhatsapp('${p?p.name:''}', '${a.date}', '${a.time}', '${p?p.phone:''}')"><i class="fa-brands fa-whatsapp"></i></button>
+                            <button class="btn-sm btn-wa" onclick="sendWhatsapp('${p?p.name:''}', '${a.date}', '${a.time}', '${p?p.phone:''}', 'Completed')"><i class="fa-brands fa-whatsapp"></i></button>
                             ${uncommitBtn}
                         </td>
                     </tr>`;
@@ -4431,17 +4490,46 @@
         }
 
         // --- WHATSAPP MESSAGING ---
-        function sendWhatsapp(name, date, time, phone) {
+        function sendWhatsapp(name, date, time, phone, status) {
             let cleanPhone = phone.replace(/[^0-9]/g, '');
             if(cleanPhone.startsWith('0')) cleanPhone = '60' + cleanPhone.substring(1);
             const displayDate = formatDateDisplay(date);
             
             let message = "";
-            const appt = appointments.find(a => a.date === date && a.time === time);
-            const status = appt ? appt.status : 'Pending'; 
+            
+            // Logic based on status
+            if (status === 'Pending') {
+                message = `Assalamualaikum & Salam Sejahtera,
 
-            if (status === 'Completed') {
-                message = `Terima kasih kerana berkunjung ke Azam Dental SP Saujana hari ini.
+Kami ingin mengesahkan temujanji anda bersama Azam Dental SP Saujana:
+
+Tarikh: ${displayDate}
+Masa: ${time}
+
+Mohon sahkan kehadiran dengan membalas “YA” atau maklumkan jika ingin ubah masa 😊
+
+Terima kasih.
+
+> Azam Dental SP Saujana`;
+            } else if (status === 'Confirmed') {
+                message = `Assalamualaikum & Salam Sejahtera,
+
+Ini adalah peringatan temujanji anda bersama Azam Dental SP Saujana:
+
+Tarikh: ${displayDate}
+Masa: ${time}
+
+Sila hadir 5–10 minit lebih awal bagi memastikan rawatan berjalan lancar dan tidak mengganggu pesakit seterusnya.
+
+Jika perlu ubah atau batalkan temujanji, mohon maklumkan sekurang-kurangnya 30 minit lebih awal.
+
+Sila sahkan kehadiran dengan membalas mesej ini.
+
+Terima kasih.
+
+> Azam Dental SP Saujana`;
+            } else if (status === 'Completed') {
+                 message = `Terima kasih kerana berkunjung ke Azam Dental SP Saujana hari ini.
 
 Kami berharap rawatan yang diberikan memuaskan.
 Sekiranya terdapat sebarang ketidakselesaan atau pertanyaan selepas rawatan, sila hubungi kami.
@@ -4449,6 +4537,7 @@ Sekiranya terdapat sebarang ketidakselesaan atau pertanyaan selepas rawatan, sil
 Kami menghargai kepercayaan anda dan berharap dapat berkhidmat kepada anda lagi.
 — Azam Dental SP Saujana`;
             } else {
+                // Default fallback
                 message = `Assalamualaikum & Salam Sejahtera,
 
 Ini adalah peringatan temujanji anda bersama Azam Dental SP Saujana:
