@@ -2311,7 +2311,7 @@
                         <div class="email-cooldown-box">
                             <p><i class="ri-time-line"></i> Please wait <strong>${remaining}</strong> seconds before sending another email.</p>
                             <p style="font-size:12px; margin-bottom:10px;">To prevent spam, emails are rate-limited.</p>
-                            <button class="force-send-btn" onclick="triggerSendEmail('${docNumber}', 'Invoice', true)">
+                            <button class="force-send-btn" onclick="window.triggerSendEmail('${docNumber}', 'Invoice', true)">
                                 <i class="ri-send-plane-fill"></i> Force Send Now
                             </button>
                         </div>
@@ -3398,7 +3398,7 @@ const generateFullTemplateHTML = (doc) => {
                     ` : `
                     <tr>
                         <td colspan="2" style="padding:12px;text-align:right;font-weight:600;font-size:15px;border:none;">${isQuotation ? 'Total' : 'Total Paid'}</td>
-                        <td style="padding:12px;text-align:right;font-weight:700;font-size:15px;border:none;">RM ${parseFloat(totalAmount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding:12px;text-align:right;font-weight:700;font-size:15px;border:none;">RM ${parseFloat(grandTotal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     </tr>
                     `}
                 </tbody>
@@ -4935,7 +4935,7 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
-        // ================== EMAIL TEMPLATE MODAL ==================
+        // ================== EMAIL TEMPLATE MODAL - FIXED ==================
         window.openEmailTemplateModal = async (id, type) => {
             let doc;
             if (type === 'Quotation') {
@@ -5019,8 +5019,8 @@ const generateFullTemplateHTML = (doc) => {
 
             const content = `
                 <div class="email-tabs">
-                    <button class="email-tab active" onclick="switchEmailTab('send')">Send Email</button>
-                    <button class="email-tab" onclick="switchEmailTab('download')">Download / Copy</button>
+                    <button class="email-tab active" onclick="window.switchEmailTab('send')">Send Email</button>
+                    <button class="email-tab" onclick="window.switchEmailTab('download')">Download / Copy</button>
                 </div>
                 
                 <div class="email-modal-grid">
@@ -5080,7 +5080,7 @@ const generateFullTemplateHTML = (doc) => {
                                 </div>
                             </div>
                             
-                            <button class="btn btn-primary" style="width:100%; margin-top:16px;" onclick="triggerSendEmail('${id}', '${type}', false)">
+                            <button class="btn btn-primary" style="width:100%; margin-top:16px;" onclick="window.triggerSendEmail('${id}', '${type}', false)">
                                 <i class="ri-send-plane-fill"></i> Send Summarized Email
                             </button>
                             
@@ -5094,8 +5094,8 @@ const generateFullTemplateHTML = (doc) => {
                             </div>
                             
                             <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
-                                <button class="btn btn-outline" onclick="copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Full HTML</button>
-                                <button class="btn btn-outline" onclick="downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
+                                <button class="btn btn-outline" onclick="window.copyEmailCode()"><i class="ri-clipboard-line"></i> Copy Full HTML</button>
+                                <button class="btn btn-outline" onclick="window.downloadEmailHTML('${doc.number || id}', '${type}')"><i class="ri-download-line"></i> Download HTML</button>
                                 <button class="btn btn-primary" onclick="printDocument('${id}', '${type}')"><i class="ri-printer-line"></i> Print PDF</button>
                             </div>
                             
@@ -5127,9 +5127,10 @@ const generateFullTemplateHTML = (doc) => {
             openModal(`Email: ${doc.number || id}`, content, closeModal, true);
         };
 
-        window.switchEmailTab = (tab) => {
+        // FIXED: switchEmailTab - using btn parameter instead of event.currentTarget
+        window.switchEmailTab = (tab, btn) => {
             document.querySelectorAll('.email-tab').forEach(t => t.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            if(btn) btn.classList.add('active');
             
             if(tab === 'send') {
                 document.getElementById('emailTabSend').style.display = 'block';
@@ -5140,6 +5141,7 @@ const generateFullTemplateHTML = (doc) => {
             }
         };
 
+        // FIXED: triggerSendEmail - exposed to window for onclick handlers
         window.triggerSendEmail = async (id, type, forceSend = false) => {
             const toEmail = document.getElementById('emailRecipient').value;
             const subject = document.getElementById('emailSubject').value;
