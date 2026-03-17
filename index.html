@@ -122,6 +122,23 @@
             }
         }
 
+                /* --- CALENDAR RANGE SELECTION STYLES --- */
+        .full-cal-cell.in-range {
+            background-color: var(--primary-light);
+            border-left: 1px dashed var(--primary);
+            border-right: 1px dashed var(--primary);
+        }
+        .full-cal-cell.range-edge {
+            background-color: var(--primary);
+            color: white;
+        }
+        .full-cal-cell.range-edge .date-num {
+            color: white;
+        }
+        .full-cal-cell.in-range:hover {
+            background-color: #bae6fd;
+        }
+
         /* --- LOADING OVERLAY --- */
         .loading-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -841,9 +858,30 @@
                             <button class="btn-sm" onclick="changeCalendarView(-1)"><i class="fa-solid fa-chevron-left"></i></button>
                             <span id="calendar-view-title" style="font-weight: 700; min-width: 150px; text-align: center;">January 2024</span>
                             <button class="btn-sm" onclick="changeCalendarView(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                            
+                            <!-- NEW: Range Selection Toggle -->
+                            <button class="btn-sm" id="btn-range-mode" onclick="toggleRangeMode()" style="margin-left: 10px;">
+                                <i class="fa-solid fa-object-group"></i> Choose Range
+                            </button>
+                            
                             <button class="btn-sm btn-bill" onclick="openHolidayModal()"><i class="fa-solid fa-plus"></i> Add Holiday</button>
                         </div>
                     </div>
+                    
+                    <!-- NEW: Range Selection Info Bar -->
+                    <div id="range-info-bar" style="display:none; background: var(--primary-light); border:1px solid var(--primary); padding:10px 15px; border-radius:8px; margin-bottom:15px; justify-content:space-between; align-items:center;">
+                        <div style="font-size:0.9rem; color:var(--primary-dark);">
+                            <strong>Selection Mode:</strong> 
+                            <span id="range-selection-text">Click a start date...</span>
+                        </div>
+                        <div>
+                            <button class="btn-sm btn-bill" id="btn-add-range-holiday" onclick="openHolidayModalForRange()" style="display:none; margin-right:5px;">
+                                <i class="fa-solid fa-calendar-plus"></i> Set as Holiday
+                            </button>
+                            <button class="btn-sm" onclick="resetRangeSelection()"><i class="fa-solid fa-times"></i> Cancel</button>
+                        </div>
+                    </div>
+
                     <div class="calendar-view-container">
                         <div class="full-calendar-grid" id="full-calendar-grid">
                             <!-- Days of Week -->
@@ -1744,6 +1782,85 @@
         let historyPatientId = null;
         let currentExportType = null; 
         let calendarViewDate = new Date(); // NEW: For main calendar view
+
+                // --- CALENDAR RANGE SELECTION STATE ---
+        let isRangeMode = false;
+        let rangeStartDate = null;
+        let rangeEndDate = null;
+
+        // --- TOGGLE RANGE MODE ---
+        function toggleRangeMode() {
+            isRangeMode = !isRangeMode;
+            const btn = document.getElementById('btn-range-mode');
+            const infoBar = document.getElementById('range-info-bar');
+            
+            if (isRangeMode) {
+                btn.classList.add('btn-bill'); // Highlight button
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Selecting...';
+                infoBar.style.display = 'flex';
+                resetRangeSelection(false); // Reset selection but keep mode on
+            } else {
+                btn.classList.remove('btn-bill');
+                btn.innerHTML = '<i class="fa-solid fa-object-group"></i> Choose Range';
+                infoBar.style.display = 'none';
+                resetRangeSelection(false);
+            }
+            renderCalendarView(); // Re-render to clear/add listeners
+        }
+
+        function resetRangeSelection(resetMode = true) {
+            rangeStartDate = null;
+            rangeEndDate = null;
+            document.getElementById('range-selection-text').innerText = "Click a start date...";
+            document.getElementById('btn-add-range-holiday').style.display = 'none';
+            
+            if (resetMode && isRangeMode) {
+                toggleRangeMode(); // Turn off mode completely
+            } else {
+                renderCalendarView(); // Just update visuals
+            }
+        }
+
+        // --- HANDLE DATE CLICK IN CALENDAR ---
+        function handleCalendarDateClick(dateStr) {
+            if (!isRangeMode) return;
+
+            if (!rangeStartDate) {
+                // First click (Start Date)
+                rangeStartDate = dateStr;
+                document.getElementById('range-selection-text').innerText = `Start: ${formatDateDisplay(dateStr)}. Click end date...`;
+                renderCalendarView();
+            } else {
+                // Second click (End Date)
+                if (dateStr < rangeStartDate) {
+                    // If user clicks a date before start, swap them
+                    rangeEndDate = rangeStartDate;
+                    rangeStartDate = dateStr;
+                } else {
+                    rangeEndDate = dateStr;
+                }
+                
+                const startDisp = formatDateDisplay(rangeStartDate);
+                const endDisp = formatDateDisplay(rangeEndDate);
+                document.getElementById('range-selection-text').innerText = `Selected: ${startDisp} - ${endDisp}`;
+                document.getElementById('btn-add-range-holiday').style.display = 'inline-flex';
+                renderCalendarView();
+            }
+        }
+
+        // --- PRE-FILL HOLIDAY MODAL WITH RANGE ---
+        function openHolidayModalForRange() {
+            if (!rangeStartDate || !rangeEndDate) return;
+            
+            document.getElementById('holiday-modal-title').innerText = "Add Holiday for Range";
+            document.getElementById('edit-holiday-id').value = '';
+            document.getElementById('holiday-title').value = '';
+            document.getElementById('holiday-type').value = 'Public Holiday';
+            document.getElementById('holiday-start').value = rangeStartDate;
+            document.getElementById('holiday-end').value = rangeEndDate;
+            
+            showModal('holidayModal');
+        }
 
         // Sort State
         let sortState = {
@@ -4304,8 +4421,26 @@
                 const isHoliday = holidays.find(h => dateStr >= h.start && dateStr <= h.end);
                 const isToday = dateStr === todayStr;
 
+                // Range Highlighting Logic
+                let isInRange = false;
+                let isRangeStart = false;
+                let isRangeEnd = false;
+
+                if (rangeStartDate && rangeEndDate) {
+                    if (dateStr >= rangeStartDate && dateStr <= rangeEndDate) {
+                        isInRange = true;
+                        if (dateStr === rangeStartDate) isRangeStart = true;
+                        if (dateStr === rangeEndDate) isRangeEnd = true;
+                    }
+                } else if (rangeStartDate && dateStr === rangeStartDate) {
+                    // Single day selection visual
+                    isRangeStart = true; 
+                }
+
                 if(isToday) classes += ' today';
                 if(isHoliday) classes += ' holiday';
+                if(isInRange) classes += ' in-range'; // CSS class for range
+                if(isRangeStart || isRangeEnd) classes += ' range-edge'; // CSS class for edges
 
                 cell.className = classes;
 
@@ -4313,8 +4448,8 @@
                 
                 if(isHoliday) {
                     content += `<span class="cal-badge holiday-badge" title="${isHoliday.title}">${isHoliday.title}</span>`;
-                } else {
-                    // Show appointments count (simplified)
+                } else if (!isInRange) {
+                    // Show appointments count only if not highlighting range
                     const dayAppts = appointments.filter(a => a.date === dateStr && a.status !== 'Cancelled').length;
                     if(dayAppts > 0) {
                         content += `<span class="cal-badge" style="background:var(--primary-light); color:var(--primary-dark)">${dayAppts} Appt(s)</span>`;
@@ -4322,6 +4457,13 @@
                 }
 
                 cell.innerHTML = content;
+
+                // Add click handler for Range Mode
+                if (isRangeMode && !isHoliday) {
+                    cell.style.cursor = 'pointer';
+                    cell.onclick = () => handleCalendarDateClick(dateStr);
+                }
+
                 grid.appendChild(cell);
             }
 
