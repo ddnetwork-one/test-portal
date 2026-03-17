@@ -243,6 +243,8 @@
         .badge-completed { background: var(--success-bg); color: #15803d; }
         .badge-cancelled { background: var(--danger-bg); color: #b91c1c; }
         .badge-info { background: var(--info-bg); color: #1e40af; }
+        .badge-holiday { background: var(--danger-bg); color: #b91c1c; }
+        .badge-offday { background: var(--warning-bg); color: #b45309; }
 
         .btn-sm { padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border-light); background: white; color: var(--text-main); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: var(--transition); }
         .btn-sm:hover { background: #f8fafc; border-color: #cbd5e1; transform: translateY(-1px); }
@@ -342,26 +344,17 @@
         .month-label { font-weight: 700; font-size: 0.95rem; }
         .calendar-grid { padding: 10px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
         .cal-day-name { font-size: 0.65rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
-        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; }
+        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; border-radius: 8px; cursor: pointer; transition: 0.2s; }
         .cal-day:hover:not(.disabled):not(.empty) { background: var(--primary-light); color: var(--primary); }
         .cal-day.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(2, 132, 199, 0.2); }
         .cal-day.today { border: 2px solid var(--primary); color: var(--primary); font-weight: 700; }
         .cal-day.today.active { border-color: white; }
         .cal-day.disabled { color: #cbd5e1; cursor: not-allowed; background: #f1f5f9; }
         .cal-day.empty { cursor: default; }
-        /* NEW: Calendar Event Dot */
-        .cal-day .event-dot {
-            position: absolute;
-            bottom: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: var(--danger);
-        }
-        .cal-day .event-dot.holiday { background-color: var(--danger); }
-        .cal-day .event-dot.offday { background-color: var(--warning); }
+        
+        /* NEW: Calendar Holiday Styles */
+        .cal-day.holiday { background: var(--danger-bg); color: var(--danger); font-weight: 700; border: 1px dashed var(--danger); cursor: default; }
+        .cal-day.holiday:hover { background: var(--danger-bg); color: var(--danger); } /* Override hover */
 
         .slots-header { padding: 15px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
         .slots-list { padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -518,19 +511,23 @@
         .view-section { display: none; }
         .view-section.active { display: block; }
 
-        /* --- PRINT STYLES --- */
-        @media print {
-            body { background: white; height: auto; overflow: visible; display: block; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .sidebar, header, .mobile-menu-btn, .no-print, .view-section:not(#view-bill-detail) { display: none !important; }
-            .main-wrapper, .content-area { overflow: visible; height: auto; display: block; padding: 0; margin: 0; }
-            #view-bill-detail { display: block !important; padding: 0; background: white; width: 100%; position: static; }
-            .invoice-box { border: none; margin: 0; padding: 0; max-width: 100%; width: 100%; page-break-inside: avoid; box-shadow: none; }
-            .invoice-top-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            @page { size: A4 portrait; margin: 10mm; }
-        }
-
-        /* --- RESPONSIVE --- */
+        /* --- CALENDAR VIEW STYLES --- */
+        .calendar-view-container { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+        .full-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: #f1f5f9; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .full-cal-header { background: var(--primary); color: white; padding: 10px; font-size: 0.8rem; font-weight: 700; text-align: center; }
+        .full-cal-cell { background: white; min-height: 90px; padding: 5px; cursor: pointer; transition: 0.2s; position: relative; }
+        .full-cal-cell:hover { background: #f8fafc; }
+        .full-cal-cell.other-month { background: #f8fafc; color: #cbd5e1; pointer-events: none; }
+        .full-cal-cell.today { border: 2px solid var(--primary); background: var(--primary-light); }
+        .full-cal-cell.holiday { background: var(--danger-bg); }
+        .full-cal-cell .date-num { font-size: 0.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
+        .full-cal-cell.today .date-num { color: var(--primary); }
+        .full-cal-cell .cal-badge { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; margin-bottom: 1px; display: block; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cal-badge.holiday-badge { background: var(--danger); color: white; }
+        .cal-badge.offday-badge { background: var(--warning); color: white; }
+        
         @media (max-width: 1024px) {
+            .calendar-view-container { grid-template-columns: 1fr; }
             .booking-container { grid-template-columns: 1fr 1fr; }
             .booking-panel:last-child { grid-column: span 2; }
             .bill-container { grid-template-columns: 1fr; }
@@ -563,6 +560,7 @@
             .invoice-summary { justify-content: flex-start; }
             .invoice-summary-box { width: 100%; border: none; background: transparent; padding: 0; }
             .permissions-grid { grid-template-columns: 1fr; }
+            .full-cal-cell { min-height: 60px; }
         }
 
         @media (max-width: 480px) {
@@ -626,6 +624,21 @@
                   <rect x="14" y="14" width="6" height="6" rx="1.2"/>
                 </svg>
                 Dashboard
+            </li>
+            <!-- NEW: Calendar Tab -->
+            <li class="nav-item" onclick="navigateTo('calendar')">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                    <path d="M8 14h.01"/>
+                    <path d="M12 14h.01"/>
+                    <path d="M16 14h.01"/>
+                    <path d="M8 18h.01"/>
+                    <path d="M12 18h.01"/>
+                </svg>
+                Calendar
             </li>
             <li class="nav-item" onclick="navigateTo('appointments')">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -698,22 +711,6 @@
                 </svg>
                 Slot Mgmt
             </li>
-            <!-- NEW: Calendar Navigation Item -->
-            <li class="nav-item" onclick="navigateTo('calendar')">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z"/>
-                  <path d="M2 10h20"/>
-                  <path d="M8 2v4"/>
-                  <path d="M16 2v4"/>
-                  <path d="M8 14h.01"/>
-                  <path d="M12 14h.01"/>
-                  <path d="M16 14h.01"/>
-                  <path d="M8 18h.01"/>
-                  <path d="M12 18h.01"/>
-                  <path d="M16 18h.01"/>
-                </svg>
-                Calendar
-            </li>
         </ul>
         <div class="sidebar-footer">
             <div class="user-pill" onclick="openProfile()">
@@ -774,6 +771,35 @@
                     <div class="loading-overlay" id="dash-loader"><div class="spinner"></div></div>
                     <div class="table-header"><h3><i class="fa-solid fa-clock" style="color:var(--primary); margin-right:8px;"></i>Today's Schedule</h3></div>
                     <div class="table-responsive"><table id="dashboard-table"><thead><tr><th>Time</th><th>Patient</th><th>Service</th><th>Status</th><th>Actions</th></tr></thead><tbody></tbody></table></div>
+                </div>
+            </section>
+
+            <!-- NEW: CALENDAR VIEW -->
+            <section id="view-calendar" class="view-section">
+                <div class="section-card">
+                    <div class="table-header" style="flex-direction: row; justify-content: space-between;">
+                        <h3><i class="fa-solid fa-calendar-alt" style="color:var(--primary); margin-right:8px;"></i>Clinic Calendar</h3>
+                        <div class="table-header-actions">
+                            <button class="btn-sm" onclick="changeCalendarView(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span id="calendar-view-title" style="font-weight: 700; min-width: 150px; text-align: center;">January 2024</span>
+                            <button class="btn-sm" onclick="changeCalendarView(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="btn-sm btn-bill" onclick="openHolidayModal()"><i class="fa-solid fa-plus"></i> Add Holiday</button>
+                        </div>
+                    </div>
+                    <div class="calendar-view-container">
+                        <div class="full-calendar-grid" id="full-calendar-grid">
+                            <!-- Days of Week -->
+                            <div class="full-cal-header">Sun</div><div class="full-cal-header">Mon</div><div class="full-cal-header">Tue</div><div class="full-cal-header">Wed</div><div class="full-cal-header">Thu</div><div class="full-cal-header">Fri</div><div class="full-cal-header">Sat</div>
+                            <!-- Cells generated by JS -->
+                        </div>
+                        
+                        <div class="section-card" style="margin-bottom: 0; border: 1px solid #e2e8f0;">
+                            <div class="table-header"><h3>Upcoming Holidays / Off Days</h3></div>
+                            <div style="display: flex; flex-direction: column; gap: 10px;" id="holidays-list">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -1156,38 +1182,6 @@
                 </div>
             </section>
 
-            <!-- NEW: CALENDAR SECTION -->
-            <section id="view-calendar" class="view-section">
-                <div class="section-card">
-                    <div class="table-header">
-                        <h3><i class="fa-solid fa-calendar-days" style="color:var(--primary); margin-right:8px;"></i>Clinic Calendar & Holidays</h3>
-                        <div class="table-header-actions">
-                            <div class="search-container" style="max-width: 250px;">
-                                <i class="fa-solid fa-search search-icon"></i>
-                                <input type="text" class="search-input" placeholder="Search reason..." oninput="handleSearch('calendar', this.value)">
-                            </div>
-                            <button class="btn-sm btn-bill" id="btn-add-calendar" onclick="openEditCalendarEvent(null)"><i class="fa-solid fa-plus"></i> Add Off Day</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="calendar-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Type</th>
-                                    <th>Reason</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Data populated by JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="pag-calendar" class="pagination-bar"></div>
-                </div>
-            </section>
-
              <!-- BOOKING -->
              <section id="view-booking" class="view-section">
                 <div class="section-card">
@@ -1397,14 +1391,6 @@
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <!-- NEW: Calendar Permission -->
-                        <div class="permission-item">
-                            <label>Manage Calendar</label>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="perm-calendar">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
                     </div>
                 </div>
 
@@ -1604,35 +1590,41 @@
         </div>
     </div>
 
-    <!-- NEW: 10. EDIT CALENDAR EVENT MODAL -->
-    <div class="modal-overlay" id="editCalendarModal">
+    <!-- 10. HOLIDAY MODAL -->
+    <div class="modal-overlay" id="holidayModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="calendar-modal-title">Add Off Day / Holiday</h3>
-                <button onclick="closeModal('editCalendarModal')"><i class="fa-solid fa-xmark"></i></button>
+                <h3 id="holiday-modal-title">Add Holiday / Off Day</h3>
+                <button onclick="closeModal('holidayModal')"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="edit-calendar-id">
+                <input type="hidden" id="edit-holiday-id">
                 <div style="margin-bottom:15px;">
-                    <label style="font-size:0.8rem; font-weight:700;">Date</label>
-                    <input type="date" id="edit-calendar-date" class="form-input">
+                    <label style="font-size:0.8rem; font-weight:700;">Title</label>
+                    <input type="text" id="holiday-title" class="form-input" placeholder="e.g. Hari Raya Aidilfitri">
                 </div>
                 <div style="margin-bottom:15px;">
                     <label style="font-size:0.8rem; font-weight:700;">Type</label>
-                    <select id="edit-calendar-type" class="form-input">
+                    <select id="holiday-type" class="form-input">
                         <option value="Public Holiday">Public Holiday</option>
-                        <option value="Off Day">Off Day (Replacement)</option>
-                        <option value="Event">Special Event</option>
+                        <option value="Company Off Day">Company Off Day</option>
                     </select>
                 </div>
-                <div style="margin-bottom:15px;">
-                    <label style="font-size:0.8rem; font-weight:700;">Reason / Description</label>
-                    <input type="text" id="edit-calendar-reason" class="form-input" placeholder="e.g. Hari Raya, CNY, Company Trip">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom:15px;">
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700;">Start Date</label>
+                        <input type="date" id="holiday-start" class="form-input">
+                    </div>
+                    <div>
+                        <label style="font-size:0.8rem; font-weight:700;">End Date</label>
+                        <input type="date" id="holiday-end" class="form-input">
+                    </div>
                 </div>
+                <p style="font-size:0.75rem; color:var(--text-light);">* If End Date is different from Start Date, the entire range will be marked as closed.</p>
             </div>
             <div class="modal-footer">
-                <button class="btn-sm" onclick="closeModal('editCalendarModal')">Cancel</button>
-                <button class="btn-primary" style="width:auto; padding:10px 20px;" onclick="saveCalendarEvent()">Save</button>
+                <button class="btn-sm" onclick="closeModal('holidayModal')">Cancel</button>
+                <button class="btn-primary" style="width:auto; padding:10px 20px;" onclick="saveHoliday()">Save</button>
             </div>
         </div>
     </div>
@@ -1677,7 +1669,7 @@
         let staff = [];
         let appointments = [];
         let slotExceptions = []; 
-        let calendarEvents = []; // NEW: State for calendar events
+        let holidays = []; // NEW: Store holidays
 
         const todayStr = new Date().toISOString().split('T')[0];
         
@@ -1693,6 +1685,7 @@
         let currentBillAppt = null;
         let historyPatientId = null;
         let currentExportType = null; 
+        let calendarViewDate = new Date(); // NEW: For main calendar view
 
         // Sort State
         let sortState = {
@@ -1710,8 +1703,7 @@
             'cashbill': { page: 1, limit: 10 },
             'billing': { page: 1, limit: 10 },
             'staff': { page: 1, limit: 10 },
-            'patients': { page: 1, limit: 10 },
-            'calendar': { page: 1, limit: 15 } // NEW: Pagination for calendar
+            'patients': { page: 1, limit: 10 }
         };
 
         // Cash Bill State
@@ -1869,9 +1861,9 @@
             const eSnap = await db.collection('klinikazam_slots').get();
             slotExceptions = eSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            // NEW: Fetch Calendar Events
-            const calSnap = await db.collection('klinikazam_calendar').orderBy('date', 'desc').get();
-            calendarEvents = calSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            // NEW: Fetch Holidays
+            const hSnap = await db.collection('klinikazam_holidays').orderBy('start', 'desc').get();
+            holidays = hSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
             const currentViewId = document.querySelector('.view-section.active')?.id.replace('view-', '');
             
@@ -1882,7 +1874,6 @@
             if(currentViewId === 'slots') renderSlots();
             if(currentViewId === 'billing') renderBilling();
             if(currentViewId === 'appointments') renderAppointments();
-            if(currentViewId === 'calendar') renderCalendarSection(); // NEW
             if(currentViewId === 'booking') {
                 resetBookingForm(); 
                 renderCalendar(currentCalDate);
@@ -1895,6 +1886,7 @@
                     populateCashBillServices();
                 }
             }
+            if(currentViewId === 'calendar') renderCalendarView(); // NEW
 
             populateServiceDropdowns();
             applyRoleBasedUI();
@@ -1960,7 +1952,7 @@
                 'dashboard':'Dashboard', 'appointments':'Appointments', 'booking':'New Booking', 
                 'cashbill':'Cashbill', 'billing':'Reports', 'staff':'Staff', 
                 'patients':'Patients', 'services':'Services', 'slots':'Slot Management', 
-                'bill-detail':'Bill Details', 'calendar':'Calendar' 
+                'bill-detail':'Bill Details', 'calendar':'Calendar' // NEW
             };
             document.getElementById('pageTitle').innerText = titles[viewId] || 'Clinic Portal';
 
@@ -1981,7 +1973,6 @@
             if(viewId === 'staff') renderStaff();
             if(viewId === 'patients') renderPatients();
             if(viewId === 'services') renderServices();
-            if(viewId === 'calendar') renderCalendarSection(); // NEW
             if(viewId === 'slots') {
                 document.getElementById('slotDate').value = minBookingDate; 
                 renderSlots();
@@ -1997,6 +1988,7 @@
                 toggleCashbillCreate(false);
                 renderCashbillList();
             }
+            if(viewId === 'calendar') renderCalendarView(); // NEW
 
             setTimeout(() => showLoading(false), 300);
         }
@@ -2035,18 +2027,9 @@
                 btnAddService.style.display = 'none';
             }
 
-            // NEW: Calendar Management Access
-            const btnAddCalendar = document.getElementById('btn-add-calendar');
-            if(hasPermission('manage_calendar')) {
-                btnAddCalendar.style.display = 'inline-flex';
-            } else {
-                btnAddCalendar.style.display = 'none';
-            }
-
             // Refresh view if active
             if(document.getElementById('view-staff').classList.contains('active')) renderStaff(); 
             if(document.getElementById('view-services').classList.contains('active')) renderServices(); 
-            if(document.getElementById('view-calendar').classList.contains('active')) renderCalendarSection(); 
         }
 
         function setupUserUI(user) {
@@ -2151,7 +2134,6 @@
                 else if(viewKey === 'staff') renderStaff();
                 else if(viewKey === 'billing') renderBilling();
                 else if(viewKey === 'cashbill') renderCashbillList();
-                else if(viewKey === 'calendar') renderCalendarSection();
             }
         }
 
@@ -2163,7 +2145,6 @@
             else if(viewKey === 'staff') renderStaff();
             else if(viewKey === 'billing') renderBilling();
             else if(viewKey === 'cashbill') renderCashbillList();
-            else if(viewKey === 'calendar') renderCalendarSection();
         }
 
         function handleSort(type, value) {
@@ -3091,30 +3072,29 @@
 
                 if(isPast) classes += ' disabled';
                 
+                // NEW: Check Holidays
+                const isHoliday = checkIfHoliday(dateStr);
+
                 if(dateStr === getLocalDateStr(new Date())) classes += ' today'; 
                 if(selectedBookingDate === dateStr) classes += ' active';
                 el.className = classes;
                 el.innerText = i;
                 
-                // NEW: Check for Calendar Events (Holidays/Offdays)
-                const ev = calendarEvents.find(e => e.date === dateStr);
-                if(ev) {
-                    const dot = document.createElement('div');
-                    dot.className = `event-dot ${ev.type === 'Public Holiday' ? 'holiday' : 'offday'}`;
-                    dot.style.title = ev.reason;
-                    el.appendChild(dot);
-                }
-
                 const isClosed = slotExceptions.some(e => e.date === dateStr && e.type === 'closed');
                 const bookedCount = appointments.filter(a => a.date === dateStr && a.status !== 'Cancelled' && a.status !== 'Completed').length;
                 const blockedCount = slotExceptions.filter(e => e.date === dateStr && e.type === 'blocked').length;
                 const totalUnavailable = bookedCount + blockedCount;
                 const isFull = totalUnavailable >= defaultSlots.length;
 
-                // Logic to disable if holiday or full
-                if(isClosed || isFull || isPast || isSunday || ev) classes += ' disabled';
+                if(isClosed || isFull || isPast || isSunday || isHoliday) classes += ' disabled';
                 el.className = classes;
                 
+                if(isHoliday) {
+                    classes += ' holiday';
+                    el.className = classes;
+                    el.title = "Clinic Holiday";
+                }
+
                 if(!classes.includes('disabled')) {
                     el.onclick = () => selectDate(dateStr);
                 } else if (dateStr === todayStr) {
@@ -3123,9 +3103,8 @@
                 } else if (isSunday) {
                     el.onclick = () => showToast("Clinic is closed on Sundays.");
                     el.title = "Clinic Closed";
-                } else if (ev) {
-                     el.onclick = () => showToast(`Clinic Closed: ${ev.reason}`);
-                     el.title = `Closed: ${ev.reason}`;
+                } else if (isHoliday) {
+                     el.onclick = () => showToast("Clinic is closed for Holiday.");
                 }
 
                 grid.appendChild(el);
@@ -3305,11 +3284,10 @@
                 showToast("This slot is marked as 'Not Available'. Please choose another.");
                 return;
             }
-
-            // NEW: Check if date is a Holiday
-            const isHoliday = calendarEvents.find(e => e.date === selectedBookingDate);
-            if(isHoliday) {
-                showToast(`Clinic is closed on this date (${isHoliday.reason}).`);
+            
+            // NEW: Check if holiday
+            if(checkIfHoliday(selectedBookingDate)) {
+                showToast("This date is marked as a Holiday. Please choose another.");
                 return;
             }
 
@@ -3447,6 +3425,8 @@
 
             const isBlocked = slotExceptions.some(e => e.date === dateVal && e.time === timeVal && e.type === 'blocked');
             if(isBlocked) { showToast("This slot is blocked/unavailable."); return; }
+            
+            if(checkIfHoliday(dateVal)) { showToast("This date is a holiday."); return; }
 
             const conflict = appointments.find(a => a.date === dateVal && a.time === timeVal && a.status !== 'Cancelled' && a.status !== 'Completed' && a.id !== id);
             if(conflict) { showToast("Time slot conflict."); return; }
@@ -3786,8 +3766,7 @@
                 document.getElementById('perm-edit-staff').checked = false;
                 document.getElementById('perm-delete').checked = false;
                 document.getElementById('perm-edit-services').checked = false;
-                document.getElementById('perm-reports').checked = true;
-                document.getElementById('perm-calendar').checked = false; // NEW
+                document.getElementById('perm-reports').checked = true; 
 
                 document.getElementById('permissions-section').style.display = isSuper ? 'block' : 'none';
             } else {
@@ -3817,7 +3796,6 @@
                 document.getElementById('perm-delete').checked = perms.delete_entries || false;
                 document.getElementById('perm-edit-services').checked = perms.edit_services || false;
                 document.getElementById('perm-reports').checked = perms.access_reports || true;
-                document.getElementById('perm-calendar').checked = perms.manage_calendar || false; // NEW
 
                 document.getElementById('permissions-section').style.display = isSuper ? 'block' : 'none';
             }
@@ -3854,7 +3832,6 @@
             const permDelete = document.getElementById('perm-delete').checked;
             const permEditServices = document.getElementById('perm-edit-services').checked;
             const permReports = document.getElementById('perm-reports').checked;
-            const permCalendar = document.getElementById('perm-calendar').checked; // NEW
 
             if(!u) { showToast("Username is required"); return; }
 
@@ -3893,8 +3870,7 @@
                         edit_staff: permEditStaff,
                         delete_entries: permDelete,
                         edit_services: permEditServices,
-                        access_reports: permReports,
-                        manage_calendar: permCalendar // NEW
+                        access_reports: permReports
                     };
                 }
                 
@@ -3944,8 +3920,7 @@
                             edit_staff: permEditStaff,
                             delete_entries: permDelete,
                             edit_services: permEditServices,
-                            access_reports: permReports,
-                            manage_calendar: permCalendar // NEW
+                            access_reports: permReports
                         }
                     };
                     
@@ -4039,23 +4014,22 @@
 
             if(!dateVal) return;
 
-            const isClosed = slotExceptions.some(e => e.date === dateVal && e.type === 'closed');
-            
-            // NEW: Check if date is a Holiday
-            const isHoliday = calendarEvents.some(e => e.date === dateVal);
-            
-            if(isHoliday) {
-                 statusIndicator.className = "status-indicator status-closed";
-                 statusIndicator.innerHTML = `<i class="fa-solid fa-star"></i> Holiday`;
-                 grid.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align:center; padding: 40px; background: var(--warning-bg); border-radius: 12px; border: 1px dashed var(--warning);">
-                        <h4 style="color:var(--warning); margin-bottom: 10px;">Official Holiday / Off Day</h4>
-                        <p style="color:var(--text-light);">Clinic is closed for this date.</p>
+            // Check if holiday first
+            if(checkIfHoliday(dateVal)) {
+                const h = holidays.find(h => dateVal >= h.start && dateVal <= h.end);
+                statusIndicator.className = "status-indicator status-closed";
+                statusIndicator.innerHTML = `<i class="fa-solid fa-gift"></i> ${h.title}`;
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align:center; padding: 40px; background: var(--danger-bg); border-radius: 12px; border: 1px dashed var(--danger);">
+                        <h4 style="color:var(--danger); margin-bottom: 10px;">${h.title}</h4>
+                        <p style="color:var(--text-light); margin-bottom: 20px;">Clinic is closed for this holiday.</p>
                     </div>
                 `;
-                return;
+                return; 
             }
 
+            const isClosed = slotExceptions.some(e => e.date === dateVal && e.type === 'closed');
+            
             if(isClosed) {
                 statusIndicator.className = "status-indicator status-closed";
                 statusIndicator.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Closed`;
@@ -4180,6 +4154,11 @@
             const date = document.getElementById('slotDate').value;
             if(!date) return;
 
+            if(checkIfHoliday(date)) {
+                showToast("Cannot modify slots on a Holiday.");
+                return;
+            }
+
             const isClosed = slotExceptions.some(e => e.date === date && e.type === 'closed');
             if(isClosed) {
                 showToast("Clinic is currently closed. Open it first.");
@@ -4226,108 +4205,195 @@
             }
         }
 
-        // --- NEW: CALENDAR SECTION LOGIC ---
-        function renderCalendarSection() {
-            const query = document.querySelector('#view-calendar .search-input')?.value.toLowerCase() || '';
-            
-            let filtered = calendarEvents;
-            if(query) {
-                filtered = calendarEvents.filter(e => 
-                    e.reason.toLowerCase().includes(query) || 
-                    e.type.toLowerCase().includes(query)
-                );
-            }
-
-            const pagedData = getPaginatedData(filtered, 'calendar');
-            const tbody = document.querySelector('#calendar-table tbody');
-            tbody.innerHTML = '';
-
-            if(pagedData.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">No holidays or off days found.</td></tr>';
-            } else {
-                pagedData.data.forEach(e => {
-                    const badgeClass = e.type === 'Public Holiday' ? 'badge-danger' : 'badge-warning';
-                    
-                    let actions = '';
-                    if(hasPermission('manage_calendar')) {
-                        actions = `
-                            <button class="btn-sm" onclick="openEditCalendarEvent('${e.id}')"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-sm btn-delete" onclick="requestDelete('calendar', '${e.id}')"><i class="fa-solid fa-trash"></i></button>
-                        `;
-                    }
-
-                    tbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight:700;">${formatDateDisplay(e.date)}</td>
-                        <td><span class="badge ${badgeClass}" style="background:${e.type === 'Public Holiday' ? 'var(--danger-bg)' : 'var(--warning-bg)'}; color:${e.type === 'Public Holiday' ? 'var(--danger)' : 'var(--warning)'}">${e.type}</span></td>
-                        <td>${e.reason}</td>
-                        <td>${actions}</td>
-                    </tr>`;
-                });
-            }
-            renderPaginationControls('calendar', filtered.length);
+        // --- HOLIDAY MANAGEMENT ---
+        function checkIfHoliday(dateStr) {
+            return holidays.some(h => dateStr >= h.start && dateStr <= h.end);
         }
 
-        function openEditCalendarEvent(id) {
-            if(!hasPermission('manage_calendar')) {
-                showToast("Unauthorized");
+        function renderCalendarView() {
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startingDay = firstDay.getDay();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            
+            document.getElementById('calendar-view-title').innerText = `${monthNames[month]} ${year}`;
+
+            const grid = document.getElementById('full-calendar-grid');
+            // Keep headers
+            grid.innerHTML = `
+                <div class="full-cal-header">Sun</div><div class="full-cal-header">Mon</div><div class="full-cal-header">Tue</div>
+                <div class="full-cal-header">Wed</div><div class="full-cal-header">Thu</div><div class="full-cal-header">Fri</div><div class="full-cal-header">Sat</div>
+            `;
+
+            // Previous month days
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            for(let i = startingDay - 1; i >= 0; i--) {
+                const cell = document.createElement('div');
+                cell.className = 'full-cal-cell other-month';
+                cell.innerHTML = `<span class="date-num" style="opacity:0.3">${prevMonthLastDay - i}</span>`;
+                grid.appendChild(cell);
+            }
+
+            // Current month days
+            for(let i = 1; i <= lastDay.getDate(); i++) {
+                const dateStr = getLocalDateStr(new Date(year, month, i));
+                const cell = document.createElement('div');
+                let classes = 'full-cal-cell';
+                
+                const isHoliday = holidays.find(h => dateStr >= h.start && dateStr <= h.end);
+                const isToday = dateStr === todayStr;
+
+                if(isToday) classes += ' today';
+                if(isHoliday) classes += ' holiday';
+
+                cell.className = classes;
+
+                let content = `<span class="date-num">${i}</span>`;
+                
+                if(isHoliday) {
+                    content += `<span class="cal-badge holiday-badge" title="${isHoliday.title}">${isHoliday.title}</span>`;
+                } else {
+                    // Show appointments count (simplified)
+                    const dayAppts = appointments.filter(a => a.date === dateStr && a.status !== 'Cancelled').length;
+                    if(dayAppts > 0) {
+                        content += `<span class="cal-badge" style="background:var(--primary-light); color:var(--primary-dark)">${dayAppts} Appt(s)</span>`;
+                    }
+                }
+
+                cell.innerHTML = content;
+                grid.appendChild(cell);
+            }
+
+            // Next month days
+            const totalCells = startingDay + lastDay.getDate();
+            const remainingCells = (Math.ceil(totalCells / 7) * 7) - totalCells;
+            for(let i = 1; i <= remainingCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'full-cal-cell other-month';
+                cell.innerHTML = `<span class="date-num" style="opacity:0.3">${i}</span>`;
+                grid.appendChild(cell);
+            }
+
+            renderHolidaysList();
+        }
+
+        function changeCalendarView(delta) {
+            const year = calendarViewDate.getFullYear();
+            const month = calendarViewDate.getMonth();
+            calendarViewDate = new Date(year, month + delta, 1);
+            renderCalendarView();
+        }
+
+        function renderHolidaysList() {
+            const list = document.getElementById('holidays-list');
+            list.innerHTML = '';
+
+            // Filter future holidays and sort
+            const futureHolidays = holidays.filter(h => h.end >= todayStr).sort((a,b) => a.start.localeCompare(b.start));
+
+            if(futureHolidays.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-light);">No upcoming holidays.</div>';
+                return;
+            }
+
+            futureHolidays.forEach(h => {
+                const isPast = h.end < todayStr;
+                const item = document.createElement('div');
+                item.style.cssText = `display:flex; justify-content:space-between; align-items:center; padding:10px; background:${isPast ? '#f1f5f9' : 'white'}; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:5px; ${isPast ? 'opacity:0.6;' : ''}`;
+                
+                let dateRangeStr = formatDateDisplay(h.start);
+                if(h.start !== h.end) {
+                    dateRangeStr += ` - ${formatDateDisplay(h.end)}`;
+                }
+
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight:700; font-size:0.9rem;">${h.title}</div>
+                        <div style="font-size:0.75rem; color:var(--text-light);">${dateRangeStr}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:5px;">
+                         <span class="badge ${h.type === 'Public Holiday' ? 'badge-holiday' : 'badge-offday'}">${h.type}</span>
+                         ${hasPermission('edit_staff') ? `<button class="btn-sm" style="padding:4px 8px;" onclick="editHoliday('${h.id}')"><i class="fa-solid fa-pen"></i></button>` : ''}
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function openHolidayModal(id = null) {
+            if(!hasPermission('edit_staff')) {
+                showToast("Only authorized staff can manage holidays.");
                 return;
             }
 
             if(!id) {
-                document.getElementById('calendar-modal-title').innerText = "Add Off Day / Holiday";
-                document.getElementById('edit-calendar-id').value = '';
-                document.getElementById('edit-calendar-date').value = '';
-                document.getElementById('edit-calendar-type').value = 'Public Holiday';
-                document.getElementById('edit-calendar-reason').value = '';
+                document.getElementById('holiday-modal-title').innerText = "Add Holiday";
+                document.getElementById('edit-holiday-id').value = '';
+                document.getElementById('holiday-title').value = '';
+                document.getElementById('holiday-type').value = 'Public Holiday';
+                document.getElementById('holiday-start').value = todayStr;
+                document.getElementById('holiday-end').value = todayStr;
             } else {
-                const e = calendarEvents.find(x => x.id === id);
-                document.getElementById('calendar-modal-title').innerText = "Edit Event";
-                document.getElementById('edit-calendar-id').value = id;
-                document.getElementById('edit-calendar-date').value = e.date;
-                document.getElementById('edit-calendar-type').value = e.type;
-                document.getElementById('edit-calendar-reason').value = e.reason;
+                const h = holidays.find(x => x.id === id);
+                document.getElementById('holiday-modal-title').innerText = "Edit Holiday";
+                document.getElementById('edit-holiday-id').value = id;
+                document.getElementById('holiday-title').value = h.title;
+                document.getElementById('holiday-type').value = h.type;
+                document.getElementById('holiday-start').value = h.start;
+                document.getElementById('holiday-end').value = h.end;
             }
-            showModal('editCalendarModal');
+            showModal('holidayModal');
         }
 
-        async function saveCalendarEvent() {
-            const idInput = document.getElementById('edit-calendar-id').value;
-            let id = idInput ? idInput : null;
-            const date = document.getElementById('edit-calendar-date').value;
-            const type = document.getElementById('edit-calendar-type').value;
-            const reason = document.getElementById('edit-calendar-reason').value;
+        function editHoliday(id) {
+            openHolidayModal(id);
+        }
 
-            if(!date || !reason) {
-                showToast("Date and Reason are required");
+        async function saveHoliday() {
+            const idInput = document.getElementById('edit-holiday-id').value;
+            const title = document.getElementById('holiday-title').value;
+            const type = document.getElementById('holiday-type').value;
+            const start = document.getElementById('holiday-start').value;
+            const end = document.getElementById('holiday-end').value;
+
+            if(!title || !start || !end) {
+                showToast("Please fill in all details");
                 return;
             }
 
-            if(id) {
-                await db.collection('klinikazam_calendar').doc(id).update({ date, type, reason });
-            } else {
-                const newId = Date.now().toString();
-                const newEvent = { id: newId, date, type, reason };
-                await db.collection('klinikazam_calendar').doc(newId).set(newEvent);
+            if(end < start) {
+                showToast("End date cannot be before start date");
+                return;
             }
 
-            await refreshData(); 
-            renderCalendarSection();
-            closeModal('editCalendarModal');
-            showToast(id ? "Event Updated" : "Event Added");
+            showLoading(true);
+            try {
+                if(idInput) {
+                    await db.collection('klinikazam_holidays').doc(idInput).update({ title, type, start, end });
+                } else {
+                    const newHoliday = {
+                        id: Date.now().toString(),
+                        title, type, start, end
+                    };
+                    await db.collection('klinikazam_holidays').doc(newHoliday.id).set(newHoliday);
+                }
+                await refreshData();
+                showToast("Holiday Saved");
+                closeModal('holidayModal');
+            } catch(e) {
+                console.error(e);
+                showToast("Error saving holiday");
+            } finally {
+                showLoading(false);
+            }
         }
 
         // --- DELETE LOGIC ---
         let deleteTarget = null;
         function requestDelete(type, id) {
-            let permCheck = true;
-            if(type === 'appointment' || type === 'patient' || type === 'staff' || type === 'service') {
-                permCheck = hasPermission('delete_entries');
-            } else if (type === 'calendar') {
-                permCheck = hasPermission('manage_calendar');
-            }
-
-            if(!permCheck) {
+            if(!hasPermission('delete_entries')) {
                  showToast("Unauthorized: Permission required");
                  return;
             }
@@ -4356,8 +4422,8 @@
             else if (deleteTarget.type === 'patient') {
                 await db.collection('klinikazam_patients').doc(deleteTarget.id).delete();
             }
-            else if (deleteTarget.type === 'calendar') {
-                await db.collection('klinikazam_calendar').doc(deleteTarget.id).delete();
+            else if (deleteTarget.type === 'holiday') {
+                await db.collection('klinikazam_holidays').doc(deleteTarget.id).delete();
             }
 
             await refreshData(); 
@@ -4464,7 +4530,6 @@ Terima kasih.
             if(type === 'appointments') renderAppointments();
             if(type === 'billing') renderBilling();
             if(type === 'cashbill') renderCashbillList();
-            if(type === 'calendar') renderCalendarSection();
         }
     </script>
 </body>
