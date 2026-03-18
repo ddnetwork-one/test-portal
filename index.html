@@ -48,10 +48,11 @@
       --fg: #1e293b;
       --muted: #64748b;
       --primary: #1e3a5f;
-      --primary-dark: #112d4d;
+      --primary-dark: '#112d4d',
       --secondary: #d4a373;
       --card: #ffffff;
       --border: #e2e8f0;
+      --holiday-banner-height: 40px; /* Defined height for the banner */
     }
     
     * { box-sizing: border-box; }
@@ -99,6 +100,7 @@
         overflow: hidden;
         display: none; /* Hidden by default */
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        height: var(--holiday-banner-height); /* Set explicit height */
     }
     
     .nav-wrapper {
@@ -110,17 +112,13 @@
         transition: top 0.3s ease, background 0.3s ease;
     }
     
-    /* Move nav down when banner is active */
+    /* Move nav down when banner is active using CSS variable */
     body.has-holiday-banner .nav-wrapper {
-        top: 40px; 
+        top: var(--holiday-banner-height); 
     }
     
     body.has-holiday-banner #mobile-menu {
-        top: 120px !important; /* Adjusted for header height (80px) + banner (40px) */
-    }
-    
-    body.has-holiday-banner #mobile-menu-overlay {
-        top: 120px !important; /* Adjust overlay to match */
+        top: 80px; /* Adjusted for header height */
     }
 
     /* Marquee Animation - Duplicated content for seamless loop */
@@ -313,10 +311,7 @@
     /* Mobile Menu - Dropdown Style */
     .mobile-menu-overlay {
         position: fixed;
-        top: 80px; /* Default below header */
-        left: 0;
-        right: 0;
-        bottom: 0;
+        inset: 0;
         background: rgba(15, 23, 42, 0.5);
         backdrop-filter: blur(4px);
         z-index: 40;
@@ -1214,22 +1209,8 @@
             banner.style.display = 'block';
             document.body.classList.add('has-holiday-banner');
             
-            // --- ADDED: Dynamic offset calculation ---
-            // Use a small timeout to ensure the browser has rendered the banner and calculated its height
-            setTimeout(() => {
-                const bannerHeight = banner.offsetHeight;
-                // Update CSS variable or directly manipulate styles for precise control
-                document.documentElement.style.setProperty('--banner-height', `${bannerHeight}px`);
-                
-                // Adjust the top offset for the nav-wrapper (banner height)
-                document.querySelector('.nav-wrapper').style.top = `${bannerHeight}px`;
-                
-                // Adjust the top offset for the mobile menu (banner height + header height)
-                // Header height is 80px (h-20)
-                const mobileMenuTop = bannerHeight + 80;
-                document.getElementById('mobile-menu').style.top = `${mobileMenuTop}px`;
-                document.getElementById('mobile-menu-overlay').style.top = `${mobileMenuTop}px`;
-            }, 50);
+            // Force navbar state update immediately after banner appears
+            handleNavbarScroll();
         }
     }
 
