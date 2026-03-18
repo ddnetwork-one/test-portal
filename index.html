@@ -48,7 +48,7 @@
       --fg: #1e293b;
       --muted: #64748b;
       --primary: #1e3a5f;
-      --primary-dark: '#112d4d',
+      --primary-dark: #112d4d;
       --secondary: #d4a373;
       --card: #ffffff;
       --border: #e2e8f0;
@@ -85,7 +85,7 @@
     .nav-solid .nav-subtitle { color: var(--muted); }
     .nav-transparent .nav-subtitle { color: rgba(255, 255, 255, 0.6); }
 
-    /* Holiday Banner Styles */
+    /* Holiday Banner Styles - Updated for smooth looping */
     .holiday-banner-container {
         background: linear-gradient(90deg, #b91c1c, #dc2626, #b91c1c);
         color: white;
@@ -116,18 +116,27 @@
     }
     
     body.has-holiday-banner #mobile-menu {
-        top: 80px; /* Adjusted for header height */
+        top: 120px !important; /* Adjusted for header height (80px) + banner (40px) */
     }
     
-    .marquee {
-        display: inline-block;
+    body.has-holiday-banner #mobile-menu-overlay {
+        top: 120px !important; /* Adjust overlay to match */
+    }
+
+    /* Marquee Animation - Duplicated content for seamless loop */
+    .marquee-content {
+        display: inline-flex;
+        animation: marquee 30s linear infinite;
+    }
+    
+    .marquee-text {
         white-space: nowrap;
-        animation: marquee 20s linear infinite;
+        padding-right: 50px; /* Space between repetitions */
     }
-    
+
     @keyframes marquee {
-        0% { transform: translateX(100vw); }
-        100% { transform: translateX(-100%); }
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(-50%); }
     }
 
     /* Holiday Popup Styles */
@@ -264,7 +273,7 @@
       border: 1px solid #e2e8f0;
       font-family: 'Inter', sans-serif;
       background: #fff;
-      color: #1e293b;
+      color: #1e293b';
     }
     .time-slot:hover:not(:disabled) {
       border-color: #1e3a5f;
@@ -304,7 +313,10 @@
     /* Mobile Menu - Dropdown Style */
     .mobile-menu-overlay {
         position: fixed;
-        inset: 0;
+        top: 80px; /* Default below header */
+        left: 0;
+        right: 0;
+        bottom: 0;
         background: rgba(15, 23, 42, 0.5);
         backdrop-filter: blur(4px);
         z-index: 40;
@@ -442,8 +454,8 @@
 
   <!-- HOLIDAY BANNER (MARQUEE) -->
   <div id="holiday-banner" class="holiday-banner-container">
-      <div class="marquee font-semibold text-sm tracking-wide">
-          <span id="marquee-text">📢 NOTICE: The clinic is closed today for a public holiday. We will resume operations tomorrow. Thank you!</span>
+      <div class="marquee-content font-semibold text-sm tracking-wide">
+          <!-- Content will be injected here via JS to ensure smooth duplication -->
       </div>
   </div>
 
@@ -1098,8 +1110,6 @@
             if (!window.firebaseReady) await new Promise(resolve => window.addEventListener('firebaseReady', resolve, { once: true }));
             const { getDocs, query, where } = window.firebaseModules;
             
-            const today = new Date().toISOString().split('T')[0];
-            
             const snapshot = await getDocs(window.dbCollections.holidays);
             globalHolidays = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
             
@@ -1110,17 +1120,46 @@
         }
     }
 
+    // Updated Logic: Check for holidays within the upcoming week
     function checkHolidayStatus() {
-        const today = new Date().toISOString().split('T')[0];
-        const activeHoliday = globalHolidays.find(h => today >= h.start && today <= h.end);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const nextWeek = new Date(today);
+        nextWeek.setDate(today.getDate() + 7);
 
-        if (activeHoliday) {
-            showHolidayPopup(activeHoliday);
-            showHolidayBanner(activeHoliday);
+        // Find holidays happening today
+        const todayHoliday = globalHolidays.find(h => {
+            const start = new Date(h.start);
+            const end = new Date(h.end);
+            start.setHours(0,0,0,0);
+            end.setHours(23,59,59,999);
+            return today >= start && today <= end;
+        });
+
+        // Find holidays happening in the next 7 days
+        const upcomingHolidays = globalHolidays.filter(h => {
+            const start = new Date(h.start);
+            start.setHours(0,0,0,0);
+            // Include if start date is between today and next week
+            return start >= today && start <= nextWeek;
+        });
+
+        if (todayHoliday) {
+            showHolidayPopup(todayHoliday);
+        } else if (upcomingHolidays.length > 0) {
+            // Show popup for the nearest upcoming holiday
+            showHolidayPopup(upcomingHolidays[0]);
         }
+
+        // Show banner for all active holidays
+        showHolidayBanner(globalHolidays);
     }
 
     function showHolidayPopup(holiday) {
+        // Check if popup was shown recently (e.g., in session)
+        if (sessionStorage.getItem('holidayPopupShown')) return;
+
         const popup = document.getElementById('holiday-popup');
         const titleEl = document.getElementById('popup-holiday-name');
         const dateEl = document.getElementById('popup-holiday-date');
@@ -1136,14 +1175,62 @@
         sessionStorage.setItem('holidayPopupShown', 'true');
     }
 
-    function showHolidayBanner(holiday) {
-        const banner = document.getElementById('holiday-banner');
-        const text = document.getElementById('marquee-text');
-        
-        text.textContent = `📢 NOTICE: The clinic is closed for ${holiday.title}. We will resume operations shortly. Thank you for your understanding!`;
-        
-        banner.style.display = 'block';
-        document.body.classList.add('has-holiday-banner');
+    // Updated Banner: Duplicates content for smooth CSS loop
+    function showHolidayBanner(holidays) {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        // Filter holidays active today
+        const activeHolidays = holidays.filter(h => {
+             const start = new Date(h.start);
+             const end = new Date(h.end);
+             start.setHours(0,0,0,0);
+             end.setHours(23,59,59,999);
+             return today >= start && today <= end;
+        });
+
+        if (activeHolidays.length > 0) {
+            const banner = document.getElementById('holiday-banner');
+            const contentContainer = banner.querySelector('.marquee-content');
+            
+            // Generate text for all active holidays
+            const messages = activeHolidays.map(h => 
+                `📢 NOTICE: The clinic is closed for ${h.title}. We will resume operations shortly. Thank you for your understanding!`
+            );
+            
+            // If specific holiday text is needed, otherwise generic
+            // Adding a fallback demo text if DB is empty
+            if(messages.length === 0) {
+                messages.push("📢 NOTICE: The clinic is closed today for a public holiday. We will resume operations tomorrow. Thank you!");
+            }
+
+            // Create the set of spans duplicated twice for seamless loop
+            // We wrap each message in a span with padding
+            const singleSetHTML = messages.map(msg => `<span class="marquee-text">${msg}</span>`).join('');
+            
+            // Duplicate for seamless looping
+            contentContainer.innerHTML = singleSetHTML + singleSetHTML;
+            
+            banner.style.display = 'block';
+            document.body.classList.add('has-holiday-banner');
+            
+            // --- ADDED: Dynamic offset calculation ---
+            // Use a small timeout to ensure the browser has rendered the banner and calculated its height
+            setTimeout(() => {
+                const bannerHeight = banner.offsetHeight;
+                // Update CSS variable or directly manipulate styles for precise control
+                document.documentElement.style.setProperty('--banner-height', `${bannerHeight}px`);
+                
+                // Adjust the top offset for the nav-wrapper (banner height)
+                document.querySelector('.nav-wrapper').style.top = `${bannerHeight}px`;
+                
+                // Adjust the top offset for the mobile menu (banner height + header height)
+                // Header height is 80px (h-20)
+                const mobileMenuTop = bannerHeight + 80;
+                document.getElementById('mobile-menu').style.top = `${mobileMenuTop}px`;
+                document.getElementById('mobile-menu-overlay').style.top = `${mobileMenuTop}px`;
+            }, 50);
+        }
     }
 
     window.closeHolidayPopup = function() {
@@ -1255,6 +1342,14 @@
     function handleNavbarScroll() {
       if(document.getElementById('booking-page-view').style.display === 'block') return;
       
+      // Mobile Logic: Always solid white
+      if(window.innerWidth < 768) {
+         navbar.classList.add('nav-solid', 'bg-white', 'shadow-md');
+         navbar.classList.remove('nav-transparent');
+         return;
+      }
+
+      // Desktop Logic: Scroll based
       const triggerPoint = document.body.classList.contains('has-holiday-banner') ? 90 : 50;
       
       if (window.scrollY > triggerPoint) {
