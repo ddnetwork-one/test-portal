@@ -1183,7 +1183,7 @@
         .team-socials a:hover { color: var(--primary); transform: translateY(-2px); }
 
         /* =========================================
-           PRICING SECTION - STRIPE INTEGRATION (UPDATED)
+           PRICING SECTION - STRIPE INTEGRATION
            ========================================= */
         .pricing-section {
             padding: 60px 0;
@@ -1200,26 +1200,50 @@
             padding: 20px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01), 0 2px 4px -1px rgba(0, 0, 0, 0.01); /* Very subtle shadow */
         }
-
-        /* UPDATE: Force Stripe Table into Landscape Line */
-        .stripe-pricing-wrapper stripe-pricing-table {
-            display: block;
-            width: 100%;
+        
+        /* UPDATE 1: Force Stripe Table to Landscape/Horizontal Row Layout */
+        stripe-pricing-table {
+            --pricing-table-max-width: 100%;
+            --pricing-table-font-family: var(--font-main);
+            --pricing-table-header-font-weight: 700;
+            --pricing-table-color: var(--text-main);
+            --pricing-table-price-font-weight: 800;
+            --pricing-table-cta-font-weight: 600;
+            --pricing-table-layout: row; /* Attempt to use row layout if supported */
         }
         
-        /* Target the shadow DOM wrapper if accessible, or apply container styles */
-        .stripe-pricing-wrapper ::part(Table) {
-            /* These parts might not be accessible directly via CSS if shadow DOM is strict,
-               but usually Stripe table adapts to container width. 
-               We use Flex/Grid on the wrapper to ensure horizontal layout if Stripe provides multiple columns. */
-        }
-
+        /* CSS Override to make the default grid layout look more landscape/inline */
         @media (min-width: 768px) {
-            .stripe-pricing-wrapper {
-                overflow-x: auto; /* Allow horizontal scroll if cards overflow */
-                display: flex;
-                justify-content: center; /* Center the cards if they don't fill width */
+            stripe-pricing-table {
+                display: block;
             }
+            /* Deep dive into Shadow DOM is limited, but often pricing tables use flex/grid containers */
+            /* We attempt to force the wrapper to allow horizontal scroll or fitting */
+            .stripe-pricing-wrapper {
+                overflow-x: auto; 
+                padding-bottom: 20px; /* Space for scrollbar */
+                -webkit-overflow-scrolling: touch;
+                display: flex;
+            }
+            .stripe-pricing-wrapper stripe-pricing-table {
+                min-width: max-content; /* Prevent squashing */
+                flex: 1;
+            }
+        }
+        
+        /* Visual adjustment for the cards to look aligned */
+        .stripe-pricing-wrapper::after {
+            content: "Swipe for more plans";
+            display: block;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        @media (max-width: 1100px) {
+             .stripe-pricing-wrapper::after { opacity: 1; }
         }
 
 
@@ -2246,29 +2270,42 @@
         }
         .status-active { background: rgba(16, 185, 129, 0.2); color: #10b981; }
         .status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-
-        /* NEW: Billing Management Button */
-        .billing-action-box {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+        
+        /* UPDATE 2: Stripe Portal Container */
+        .stripe-portal-container {
+            margin-top: 24px;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            min-height: 400px;
         }
         
-        .billing-action-box .btn-manage-billing {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: white;
-            background: rgba(255,255,255,0.1);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s;
+        .stripe-portal-container iframe {
+            width: 100%;
+            height: 600px; /* Adjust height as needed */
+            border: none;
         }
-        .billing-action-box .btn-manage-billing:hover {
-            background: rgba(255,255,255,0.2);
+        
+        .stripe-portal-header {
+            padding: 16px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .stripe-portal-header i {
+            color: var(--primary);
+            font-size: 20px;
+        }
+        
+        .stripe-portal-header h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
         }
 
         /* =========================================
@@ -2840,51 +2877,38 @@
             font-weight: 600;
             vertical-align: middle;
         }
-
+        
         /* =========================================
-           THANK YOU PAGE STYLES (NEW)
+           UPDATE 3: THANK YOU PAGE STYLES
            ========================================= */
         .thankyou-container {
             text-align: center;
-            padding: 60px 20px;
-            max-width: 700px;
+            max-width: 600px;
             margin: 0 auto;
+            padding: 40px 20px;
         }
-
-        .thankyou-icon-wrapper {
+        
+        .thankyou-icon {
             width: 100px;
             height: 100px;
-            background: #dcfce7;
+            background: var(--primary-light);
+            color: var(--primary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 32px;
-            position: relative;
-            animation: scaleIn 0.5s ease-out;
-        }
-
-        .thankyou-icon-wrapper i {
             font-size: 48px;
-            color: #16a34a;
+            margin: 0 auto 32px;
+            box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.1);
+            animation: bounceIn 0.6s var(--ease-elastic);
         }
-
-        @keyframes scaleIn {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
-
-        .thankyou-icon-wrapper::after {
-            content: '';
-            position: absolute;
-            inset: -10px;
-            border: 2px dashed #16a34a;
-            border-radius: 50%;
-            animation: spin 10s linear infinite;
-        }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
+        
         .thankyou-title {
             font-family: var(--font-heading);
             font-size: 32px;
@@ -2892,69 +2916,41 @@
             margin-bottom: 16px;
             color: var(--text-main);
         }
-
-        .thankyou-message {
+        
+        .thankyou-text {
             font-size: 16px;
             color: var(--text-secondary);
-            line-height: 1.7;
-            margin-bottom: 40px;
-        }
-
-        .thankyou-card {
-            background: white;
-            border-radius: 20px;
-            padding: 32px;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border-light);
-            text-align: left;
             margin-bottom: 32px;
+            line-height: 1.7;
         }
-
-        .thankyou-card h3 {
-            font-family: var(--font-heading);
-            font-size: 18px;
-            margin-bottom: 20px;
+        
+        .social-share-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 32px;
+        }
+        
+        .social-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--text-muted);
+            transition: all 0.2s;
         }
-
-        .thankyou-card h3 i { color: var(--primary); }
-
-        .order-info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 14px;
-            border-bottom: 1px solid #f1f5f9;
-            padding-bottom: 8px;
+        
+        .social-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-3px);
         }
-        .order-info-row:last-child { border-bottom: none; }
-
-        .info-label { color: var(--text-muted); font-weight: 500; }
-        .info-value { color: var(--text-main); font-weight: 600; }
-
-        .next-steps-box {
-            background: #f0f9ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 16px;
-            padding: 24px;
-            margin-top: 20px;
-        }
-        .next-steps-box h4 {
-            font-size: 16px;
-            color: var(--primary);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .next-steps-box ol {
-            margin-left: 20px;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-        .next-steps-box li { margin-bottom: 8px; }
 
     </style>
 <base target="_blank">
@@ -3401,7 +3397,7 @@
                 <!-- STRIPE PRICING TABLE -->
                 <div class="stripe-pricing-wrapper reveal">
                     <stripe-pricing-table pricing-table-id="prctbl_1TCHh27TzVI5KBwlZ71FNJPz"
-                    publishable-key="pk_live_51TCE7c7TzVI5KBwlo5A9OWBN5Ub4Ccr5L0iwzPIjCozeSGLiBmV6jzbmh9mvLmg6xveJN9zK4nHZMBUhqsQ5z6Lj0012fJkd42">
+                    publishable-key="pk_live_51TCE7c7TzVI5KBwlo5A90WBN5Ub4Ccr5L0iwzPIjCozeSGLiBmV6jzbmh9mvLmg6xveJN9zK4nHZMBUhqsQ5z6Lj0012fJkd42">
                     </stripe-pricing-table>
                 </div>
 
@@ -3954,743 +3950,760 @@
     </div>
 </section>
 
+<!-- PAGE: PAYMENT POLICY -->
+<section id="payment-policy" class="page-section">
+    <div class="section-padding">
+        <div class="container">
+            <h1 class="page-title text-center reveal" style="font-size: 28px;">DDNEX® Payment & Installment Policy</h1>
+            <div class="legal-content reveal">
+                <p style="font-size: 12px; color: var(--text-muted);">Last updated: March 2026</p>
 
-        <!-- PAGE: PAYMENT POLICY -->
-        <section id="payment-policy" class="page-section">
-            <div class="section-padding">
-                <div class="container">
-                    <h1 class="page-title text-center reveal" style="font-size: 28px;">DDNEX® Payment & Installment Policy</h1>
-                    <div class="legal-content reveal">
-                        <p style="font-size: 12px; color: var(--text-muted);">Last updated: March 2026</p>
+                <p>At <strong>DDNEX®</strong>, we offer flexible payment options to help businesses launch their websites and digital systems with ease. Clients may choose between <strong>full payment</strong>, <strong>installment plans</strong>, or <strong>monthly service plans</strong> depending on their budget and needs.</p>
 
-                        <p>At <strong>DDNEX®</strong>, we offer flexible payment options to help businesses launch their websites and digital systems with ease. Clients may choose between <strong>full payment</strong>, <strong>installment plans</strong>, or <strong>monthly service plans</strong> depending on their budget and needs.</p>
+                <h2>1. Payment Options</h2>
 
-                        <h2>1. Payment Options</h2>
+                <h3>Full Payment</h3>
+                <p>Clients who choose <strong>full payment</strong> receive the <strong>lowest available price</strong> for the service.</p>
 
-                        <h3>Full Payment</h3>
-                        <p>Clients who choose <strong>full payment</strong> receive the <strong>lowest available price</strong> for the service.</p>
+                <h3>Installment Plan (Flexible Payment)</h3>
+                <p>DDNEX® offers installment plans that allow clients to <strong>split the total cost into smaller monthly payments</strong>.</p>
 
-                        <h3>Installment Plan (Flexible Payment)</h3>
-                        <p>DDNEX® offers installment plans that allow clients to <strong>split the total cost into smaller monthly payments</strong>.</p>
+                <h2>2. Why Installment Plans Cost More</h2>
+                <p>Installment plans may have a <strong>slightly higher total cost</strong> compared to full payment.</p>
+                <p>This is because installment plans include:</p>
+                <ul>
+                    <li>Administrative processing</li>
+                    <li>Payment management</li>
+                    <li>Financial risk coverage</li>
+                    <li>Payment flexibility for clients</li>
+                </ul>
+                <p>By spreading payments over time, DDNEX® assumes additional management and risk responsibilities.</p>
+                <p><strong>Installment plans are not interest-based financing.</strong> They are simply a <strong>flexible payment arrangement</strong>.</p>
 
-                        <h2>2. Why Installment Plans Cost More</h2>
-                        <p>Installment plans may have a <strong>slightly higher total cost</strong> compared to full payment.</p>
-                        <p>This is because installment plans include:</p>
-                        <ul>
-                            <li>Administrative processing</li>
-                            <li>Payment management</li>
-                            <li>Financial risk coverage</li>
-                            <li>Payment flexibility for clients</li>
-                        </ul>
-                        <p>By spreading payments over time, DDNEX® assumes additional management and risk responsibilities.</p>
-                        <p><strong>Installment plans are not interest-based financing.</strong> They are simply a <strong>flexible payment arrangement</strong>.</p>
+                <h2>3. Monthly Promotional Plans</h2>
+                <p>Some packages offer <strong>monthly promotional plans</strong> which include ongoing services.</p>
 
-                        <h2>3. Monthly Promotional Plans</h2>
-                        <p>Some packages offer <strong>monthly promotional plans</strong> which include ongoing services.</p>
+                <h2>4. Payment Schedule</h2>
+                <p>Installment payments must be made <strong>monthly according to the agreed schedule</strong>.</p>
+                <p>Failure to complete scheduled payments may result in:</p>
+                <ul>
+                    <li>Service suspension</li>
+                    <li>Limited system access</li>
+                    <li>Delayed project delivery</li>
+                </ul>
+                <p>Services will resume once outstanding balances are settled.</p>
 
-                        <h2>4. Payment Schedule</h2>
-                        <p>Installment payments must be made <strong>monthly according to the agreed schedule</strong>.</p>
-                        <p>Failure to complete scheduled payments may result in:</p>
-                        <ul>
-                            <li>Service suspension</li>
-                            <li>Limited system access</li>
-                            <li>Delayed project delivery</li>
-                        </ul>
-                        <p>Services will resume once outstanding balances are settled.</p>
+                <h2>5. Ownership & Payment Completion</h2>
+                <p>All systems, websites, and digital assets developed by <strong>DDNEX®</strong> remain the property of DDNEX® until <strong>full payment has been completed</strong>.</p>
 
-                        <h2>5. Ownership & Payment Completion</h2>
-                        <p>All systems, websites, and digital assets developed by <strong>DDNEX®</strong> remain the property of DDNEX® until <strong>full payment has been completed</strong>.</p>
+                <h2>6. Early Settlement</h2>
+                <p>Clients using installment plans may choose to <strong>pay the remaining balance early at any time</strong>.</p>
 
-                        <h2>6. Early Settlement</h2>
-                        <p>Clients using installment plans may choose to <strong>pay the remaining balance early at any time</strong>.</p>
+                <h2>7. Cancellation Policy</h2>
+                <p>If a client chooses to cancel an installment plan:</p>
+                <ul>
+                    <li>The remaining balance may become immediately payable</li>
+                    <li>Services may be suspended until the balance is cleared</li>
+                </ul>
 
-                        <h2>7. Cancellation Policy</h2>
-                        <p>If a client chooses to cancel an installment plan:</p>
-                        <ul>
-                            <li>The remaining balance may become immediately payable</li>
-                            <li>Services may be suspended until the balance is cleared</li>
-                        </ul>
+                <h2>8. Pricing Transparency</h2>
+                <p>DDNEX® is committed to transparent pricing. All prices displayed are <strong>clearly stated before purchase</strong>.</p>
 
-                        <h2>8. Pricing Transparency</h2>
-                        <p>DDNEX® is committed to transparent pricing. All prices displayed are <strong>clearly stated before purchase</strong>.</p>
+                <h2>9. Contact</h2>
+                <p>For payment or billing inquiries, please contact:</p>
+                <p><strong>DDNEX®</strong><br>
+                DDNetwork One<br>
+                Website: <a href="https://ddnex.com">https://ddnex.com</a><br>
+                Email: <a href="mailto:support@ddnex.com">support@ddnex.com</a></p>
 
-                        <h2>9. Contact</h2>
-                        <p>For payment or billing inquiries, please contact:</p>
-                        <p><strong>DDNEX®</strong><br>
-                        DDNetwork One<br>
-                        Website: <a href="https://ddnex.com">https://ddnex.com</a><br>
-                        Email: <a href="mailto:support@ddnex.com">support@ddnex.com</a></p>
+                <div style="margin-top: 32px;"><button class="btn btn-outline" onclick="handleNavigation('home', event)">Back to Home</button></div>
+            </div>
+        </div>
+    </div>
+</section>
 
-                        <div style="margin-top: 32px;"><button class="btn btn-outline" onclick="handleNavigation('home', event)">Back to Home</button></div>
+<!-- PAGE: COOKIE POLICY -->
+<section id="cookies" class="page-section">
+    <div class="section-padding">
+        <div class="container">
+            <h1 class="page-title text-center reveal" style="font-size: 24px;">Cookie Policy</h1>
+            <div class="legal-content reveal">
+                <p style="font-size: 12px; color: var(--text-muted);">Last updated: March 12, 2026</p>
+                <h2>1. What Are Cookies</h2>
+                <p>Cookies are small files stored on your device that help websites function properly.</p>
+                
+                <h2>2. Types of Cookies We Use</h2>
+                <p><strong>Essential Cookies:</strong> Required for website functionality.<br><strong>Analytics Cookies:</strong> Used to understand how visitors interact with the website.<br><strong>Preference Cookies:</strong> Store user preferences.</p>
+                
+                <h2>3. Third-Party Cookies</h2>
+                <p>Third-party services such as analytics providers may set cookies.</p>
+                
+                <h2>4. Managing Cookies</h2>
+                <p>Users can manage cookies through browser settings. Disabling cookies may affect website functionality.</p>
+                
+                <div style="margin-top: 32px;"><button class="btn btn-outline" onclick="handleNavigation('home', event)">Back to Home</button></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PAGE: ACCEPTABLE USE POLICY -->
+<section id="acceptable-use" class="page-section">
+    <div class="section-padding">
+        <div class="container">
+            <h1 class="page-title text-center reveal" style="font-size: 24px;">Acceptable Use Policy</h1>
+            <div class="legal-content reveal">
+                <p style="font-size: 12px; color: var(--text-muted);">Last updated: March 12, 2026</p>
+                <h2>1. Prohibited Content</h2>
+                <p>Users may not create or host websites that include Illegal activities, Fraud or scams, Malware distribution, Copyright infringement, Spam or phishing campaigns, or Hate speech.</p>
+                
+                <h2>2. Abuse of Services</h2>
+                <p>Users must not Attempt unauthorized system access, Disrupt services, or Use services for harmful purposes.</p>
+                
+                <h2>3. Enforcement</h2>
+                <p>DDNEX® may take action including Content removal, Account suspension, or Service termination.</p>
+                
+                <h2>4. Legal Compliance</h2>
+                <p>Users must comply with all applicable laws when using our services.</p>
+                
+                <div style="margin-top: 32px;"><button class="btn btn-outline" onclick="handleNavigation('home', event)">Back to Home</button></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PAGE: SUBSCRIBE SUCCESS -->
+<section id="subscribe-success" class="page-section">
+    <div class="section-padding" style="display: flex; align-items: center; justify-content: center; min-height: 50vh;">
+        <div class="container text-center reveal">
+            <div style="width: 64px; height: 64px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px;">
+                <i class="ri-check-line"></i>
+            </div>
+            <h1 class="page-title">Subscription Successful!</h1>
+            <p style="font-size: 15px; color: var(--text-secondary); max-width: 600px; margin: 0 auto 24px; line-height: 1.6;">
+                Thank you for subscribing to the DDNEX® newsletter. You will now receive the latest updates on our digital transformation services and tech insights directly to your inbox.
+            </p>
+            <button class="btn btn-primary" onclick="handleNavigation('home', event)">Back to Home</button>
+        </div>
+    </div>
+</section>
+
+<!-- UPDATE 3: THANK YOU PAGE (Successful Payment) -->
+<section id="successful-payment" class="page-section">
+    <div class="section-padding">
+        <div class="container">
+            <div class="thankyou-container reveal">
+                <div class="thankyou-icon">
+                    <i class="ri-checkbox-circle-fill"></i>
+                </div>
+                <h1 class="thankyou-title">Payment Successful!</h1>
+                <p class="thankyou-text">
+                    Thank you for your purchase. Your order has been confirmed and a receipt has been sent to your email address. 
+                    We are excited to start working on your project. Our team will contact you shortly to begin the onboarding process.
+                </p>
+                
+                <div style="background: #f8fafc; border-radius: 16px; padding: 24px; margin-bottom: 32px; border: 1px solid var(--border-light);">
+                    <h4 style="font-family: var(--font-heading); margin-bottom: 12px; font-size: 16px;">What's Next?</h4>
+                    <ul style="text-align: left; list-style: none; padding: 0;">
+                        <li style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+                            <i class="ri-mail-line" style="color: var(--primary); margin-top: 2px;"></i>
+                            <span style="font-size: 14px; color: var(--text-secondary);">Check your email for the payment receipt and project questionnaire.</span>
+                        </li>
+                        <li style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+                            <i class="ri-phone-line" style="color: var(--primary); margin-top: 2px;"></i>
+                            <span style="font-size: 14px; color: var(--text-secondary);">Our team will contact you within 24 hours via WhatsApp or Call.</span>
+                        </li>
+                        <li style="display: flex; align-items: flex-start; gap: 12px;">
+                            <i class="ri-rocket-line" style="color: var(--primary); margin-top: 2px;"></i>
+                            <span style="font-size: 14px; color: var(--text-secondary);">We begin the discovery phase and start building your solution.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div style="margin-bottom: 32px;">
+                    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Need help?</p>
+                    <a href="mailto:support@ddnex.com" style="font-weight: 600; color: var(--primary);">Contact support@ddnex.com</a>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-light); padding-top: 32px;">
+                    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">Share your excitement:</p>
+                    <div class="social-share-row">
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=https://ddnex.com" target="_blank" class="social-btn" aria-label="Share on Facebook">
+                            <i class="ri-facebook-fill"></i>
+                        </a>
+                        <a href="https://twitter.com/intent/tweet?text=Just%20started%20my%20digital%20transformation%20journey%20with%20DDNEX!&url=https://ddnex.com" target="_blank" class="social-btn" aria-label="Share on Twitter">
+                            <i class="ri-twitter-x-fill"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://ddnex.com&title=DDNEX%20Digital%20Transformation&summary=" target="_blank" class="social-btn" aria-label="Share on LinkedIn">
+                            <i class="ri-linkedin-fill"></i>
+                        </a>
+                        <a href="https://wa.me/?text=I%20just%20partnered%20with%20DDNEX%20for%20my%20new%20website!%20https://ddnex.com" target="_blank" class="social-btn" aria-label="Share on WhatsApp">
+                            <i class="ri-whatsapp-fill"></i>
+                        </a>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- PAGE: COOKIE POLICY -->
-        <section id="cookies" class="page-section">
-            <div class="section-padding">
-                <div class="container">
-                    <h1 class="page-title text-center reveal" style="font-size: 24px;">Cookie Policy</h1>
-                    <div class="legal-content reveal">
-                        <p style="font-size: 12px; color: var(--text-muted);">Last updated: March 12, 2026</p>
-                        <h2>1. What Are Cookies</h2>
-                        <p>Cookies are small files stored on your device that help websites function properly.</p>
-                        
-                        <h2>2. Types of Cookies We Use</h2>
-                        <p><strong>Essential Cookies:</strong> Required for website functionality.<br><strong>Analytics Cookies:</strong> Used to understand how visitors interact with the website.<br><strong>Preference Cookies:</strong> Store user preferences.</p>
-                        
-                        <h2>3. Third-Party Cookies</h2>
-                        <p>Third-party services such as analytics providers may set cookies.</p>
-                        
-                        <h2>4. Managing Cookies</h2>
-                        <p>Users can manage cookies through browser settings. Disabling cookies may affect website functionality.</p>
-                        
-                        <div style="margin-top: 32px;"><button class="btn btn-outline" onclick="handleNavigation('home', event)">Back to Home</button></div>
-                    </div>
+                <button class="btn btn-primary" style="margin-top: 32px;" onclick="handleNavigation('home', event)">Back to Home</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AUTH / LOGIN PAGE -->
+<section id="auth" class="page-section">
+    <div class="auth-wrapper reveal">
+        <div class="auth-card">
+            <div style="margin-bottom: 24px;">
+                <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="height: 36px; margin: 0 auto;">
+            </div>
+            <h2 style="font-family: var(--font-heading); margin-bottom: 8px;">Welcome Back</h2>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 24px;">Login to access your professional profile and track your projects.</p>
+            
+            <button id="googleLoginBtn" class="google-btn">
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-3.059,1.154-5.85,3.038-7.975l-5.848-5.848C5.058,13.033,3.411,16.319,3.411,20c0,11.428,9.162,20.589,20.589,20.589c11.428,0,20.589-9.162,20.589-20.589C44.589,22.586,44.268,21.278,43.611,20.083z"/>
+                    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.975,3.038l5.848-5.848C34.046,6.053,29.268,3.411,24,3.411c-8.918,0-16.553,5.686-19.028,13.463L6.306,14.691z"/>
+                    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                </svg>
+                Continue with Google
+            </button>
+
+            <div class="divider"><span>OR</span></div>
+
+            <form id="emailLoginForm" style="text-align: left;">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="name@company.com" required>
                 </div>
-            </div>
-        </section>
-
-        <!-- PAGE: ACCEPTABLE USE POLICY -->
-        <section id="acceptable-use" class="page-section">
-            <div class="section-padding">
-                <div class="container">
-                    <h1 class="page-title text-center reveal" style="font-size: 24px;">Acceptable Use Policy</h1>
-                    <div class="legal-content reveal">
-                        <p style="font-size: 12px; color: var(--text-muted);">Last updated: March 12, 2026</p>
-                        <h2>1. Prohibited Content</h2>
-                        <p>Users may not create or host websites that include Illegal activities, Fraud or scams, Malware distribution, Copyright infringement, Spam or phishing campaigns, or Hate speech.</p>
-                        
-                        <h2>2. Abuse of Services</h2>
-                        <p>Users must not Attempt unauthorized system access, Disrupt services, or Use services for harmful purposes.</p>
-                        
-                        <h2>3. Enforcement</h2>
-                        <p>DDNEX® may take action including Content removal, Account suspension, or Service termination.</p>
-                        
-                        <h2>4. Legal Compliance</h2>
-                        <p>Users must comply with all applicable laws when using our services.</p>
-                        
-                        <div style="margin-top: 32px;"><button class="btn btn-outline" onclick="handleNavigation('home', event)">Back to Home</button></div>
-                    </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
                 </div>
-            </div>
-        </section>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+            </form>
+            
+            <p style="margin-top: 20px; font-size: 13px; color: var(--text-muted);">
+                Don't have an account? <span class="auth-link" onclick="showPopup('Registration Coming Soon', 'Please contact sales to create an account.')">Sign up</span>
+            </p>
+        </div>
+    </div>
+</section>
 
-        <!-- PAGE: SUBSCRIBE SUCCESS -->
-        <section id="subscribe-success" class="page-section">
-            <div class="section-padding" style="display: flex; align-items: center; justify-content: center; min-height: 50vh;">
-                <div class="container text-center reveal">
-                    <div style="width: 64px; height: 64px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px;">
-                        <i class="ri-check-line"></i>
+<!-- UPDATE 2: USER PROFILE / DASHBOARD PAGE (REDESIGNED WITH STRIPE PORTAL) -->
+<section id="profile" class="page-section">
+    <div class="section-padding">
+        <div class="container">
+            <div class="profile-container reveal">
+                <!-- Sidebar -->
+                <aside class="profile-sidebar">
+                    <div class="profile-avatar-section">
+                        <div class="profile-avatar" id="profileAvatarInitials">U</div>
+                        <h3 id="profileNameDisplay" style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">User</h3>
+                        <p id="profileEmailDisplay" style="font-size: 12px; color: var(--text-muted);">user@example.com</p>
                     </div>
-                    <h1 class="page-title">Subscription Successful!</h1>
-                    <p style="font-size: 15px; color: var(--text-secondary); max-width: 600px; margin: 0 auto 24px; line-height: 1.6;">
-                        Thank you for subscribing to the DDNEX® newsletter. You will now receive the latest updates on our digital transformation services and tech insights directly to your inbox.
-                    </p>
-                    <button class="btn btn-primary" onclick="handleNavigation('home', event)">Back to Home</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- AUTH / LOGIN PAGE -->
-        <section id="auth" class="page-section">
-            <div class="auth-wrapper reveal">
-                <div class="auth-card">
-                    <div style="margin-bottom: 24px;">
-                        <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX" style="height: 36px; margin: 0 auto;">
-                    </div>
-                    <h2 style="font-family: var(--font-heading); margin-bottom: 8px;">Welcome Back</h2>
-                    <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 24px;">Login to access your professional profile and track your projects.</p>
                     
-                    <button id="googleLoginBtn" class="google-btn">
-                        <svg width="20" height="20" viewBox="0 0 48 48">
-                            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-6.627,5.373-12,12-12c0-3.059,1.154-5.85,3.038-7.975l-5.848-5.848C5.058,13.033,3.411,16.319,3.411,20c0,11.428,9.162,20.589,20.589,20.589c11.428,0,20.589-9.162,20.589-20.589C44.589,22.586,44.268,21.278,43.611,20.083z"/>
-                            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.975,3.038l5.848-5.848C34.046,6.053,29.268,3.411,24,3.411c-8.918,0-16.553,5.686-19.028,13.463L6.306,14.691z"/>
-                            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
-                            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
-                        </svg>
-                        Continue with Google
-                    </button>
-
-                    <div class="divider"><span>OR</span></div>
-
-                    <form id="emailLoginForm" style="text-align: left;">
-                        <div class="form-group" style="margin-bottom: 16px;">
-                            <label for="loginEmail">Email Address</label>
-                            <input type="email" id="loginEmail" class="form-input" placeholder="name@company.com" required>
+                    <nav>
+                        <div class="profile-nav-item active" onclick="switchProfileTab('overview')">
+                            <i class="ri-dashboard-line"></i> Overview
                         </div>
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label for="loginPassword">Password</label>
-                            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+                        <div class="profile-nav-item" onclick="switchProfileTab('billing')">
+                            <i class="ri-bank-card-line"></i> Billing
                         </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+                        <div class="profile-nav-item" onclick="switchProfileTab('settings')">
+                            <i class="ri-settings-3-line"></i> Settings
+                        </div>
+                        <div class="profile-nav-item" onclick="handleLogout()" style="color: var(--accent-orange);">
+                            <i class="ri-logout-box-line"></i> Sign Out
+                        </div>
+                    </nav>
+                </aside>
+
+                <!-- Main Content Area -->
+                <div class="profile-content">
+                    <!-- Tab: Overview -->
+                    <div id="p-overview" class="profile-tab-content">
+                        <div class="profile-header-row">
+                            <div>
+                                <h2 style="font-family: var(--font-heading);">Overview</h2>
+                                <p style="color: var(--text-secondary);">Welcome back! Here is your account summary.</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="handleNavigation('pricing', event)">New Order</button>
+                        </div>
+
+                        <!-- Database Driven Active Plan Card -->
+                        <div class="plan-card" id="dbActivePlanCard">
+                            <div>
+                                <div style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">Current Active Plan</div>
+                                <h3 style="font-size: 20px; font-weight: 700;" id="dbPlanName">Loading...</h3>
+                                <div class="status-badge status-active" style="margin-top: 12px;" id="dbPlanStatusBadge">
+                                    <i class="ri-checkbox-circle-fill"></i> Active
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 28px; font-weight: 800;" id="dbPlanPrice">RM0</div>
+                                <div style="font-size: 12px; opacity: 0.7;" id="dbPlanPaymentType">One-time Payment</div>
+                            </div>
+                        </div>
+
+                        <div class="grid-2" style="margin-top: 24px;">
+                            <!-- Database Driven Domain Status -->
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border-light);">
+                                <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Domain Status</div>
+                                <h4 style="font-size: 16px; font-weight: 700;" id="dbDomainName">Fetching...</h4>
+                                <div class="status-badge status-active" id="dbDomainStatus" style="margin-top: 8px; background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                                    <i class="ri-check-line"></i> Live
+                                </div>
+                            </div>
+                            <!-- Database Driven Renewal Date -->
+                            <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border-light);">
+                                <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Next Renewal</div>
+                                <h4 style="font-size: 16px; font-weight: 700;" id="dbRenewalDate">N/A</h4>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;" id="dbRenewalNote">
+                                    (Fixed package)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UPDATE 2: Tab: Billing (Stripe Portal Embed) -->
+                    <div id="p-billing" class="profile-tab-content" style="display: none;">
+                        <div class="profile-header-row">
+                            <div>
+                                <h2 style="font-family: var(--font-heading);">Billing & Invoices</h2>
+                                <p style="color: var(--text-secondary);">Manage your payment methods and view past invoices.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stripe-portal-container">
+                            <div class="stripe-portal-header">
+                                <i class="ri-shield-check-line"></i>
+                                <div style="flex-grow: 1;">
+                                    <h4>Secure Customer Portal</h4>
+                                    <p style="font-size: 11px; color: var(--text-muted); margin: 0;">Powered by Stripe. Manage payment methods, download invoices, and update billing details.</p>
+                                </div>
+                            </div>
+                            <!-- iFrame pointing to the specified Stripe Billing Portal -->
+                            <iframe src="https://billing.stripe.com/p/login/fZubIV3kQgXl3D072M97G00" title="Billing Portal" loading="lazy"></iframe>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Orders -->
+                    <div id="p-orders" class="profile-tab-content" style="display: none;">
+                        <div class="profile-header-row">
+                            <div>
+                                <h2 style="font-family: var(--font-heading);">My Orders</h2>
+                                <p style="color: var(--text-secondary);">Track your subscriptions and project history.</p>
+                            </div>
+                        </div>
+                        
+                        <div id="ordersLoading" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i> Loading data from database...
+                        </div>
+                        
+                        <div id="ordersList" style="display: flex; flex-direction: column; gap: 16px;">
+                            <!-- Dynamic Orders will be injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Tab: Settings -->
+                    <div id="p-settings" class="profile-tab-content" style="display: none;">
+                        <div class="profile-header-row">
+                            <div>
+                                <h2 style="font-family: var(--font-heading);">Settings</h2>
+                                <p style="color: var(--text-secondary);">Manage your account preferences.</p>
+                            </div>
+                        </div>
+                        <div style="max-width: 600px;">
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label>Display Name</label>
+                                <input type="text" id="settingsName" class="form-input" value="User Name">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label>Email Address (Read Only)</label>
+                                <input type="email" id="settingsEmail" class="form-input" value="user@example.com" disabled style="background: #f1f5f9; cursor: not-allowed;">
+                            </div>
+                            <button class="btn btn-primary" onclick="showPopup('Saved', 'Your profile settings have been updated.')">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3-STEP CHECKOUT PAGE -->
+<section id="checkout" class="page-section">
+    <div class="section-padding">
+        <div class="container">
+            <div class="checkout-header">
+                <h1 class="page-title">Checkout</h1>
+                <!-- Quick Change Plan Button -->
+                <button class="change-plan-btn" onclick="openPlanModal()">
+                    <i class="ri-swap-box-line"></i> Change Plan
+                </button>
+            </div>
+            
+            <div class="checkout-wrapper reveal">
+                <!-- Steps Indicator -->
+                <div class="checkout-steps">
+                    <div class="step-indicator active" id="stepIndicator1">
+                        <div class="step-circle">1</div>
+                        <span class="step-label">Review Plan</span>
+                    </div>
+                    <div class="step-indicator" id="stepIndicator2">
+                        <div class="step-circle">2</div>
+                        <span class="step-label">Your Details</span>
+                    </div>
+                    <div class="step-indicator" id="stepIndicator3">
+                        <div class="step-circle">3</div>
+                        <span class="step-label">Confirmation</span>
+                    </div>
+                </div>
+
+                <!-- Step 1: Review & Domain -->
+                <div id="checkoutStep1" class="checkout-section active">
+                    <h2 style="font-family: var(--font-heading); margin-bottom: 24px; font-size: 18px;">Review & Domain Selection</h2>
+                    
+                    <div class="checkout-summary">
+                        <div class="summary-row">
+                            <span>Selected Plan</span>
+                            <strong id="coPlanName">...</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Base Price</span>
+                            <span id="coPlanPrice">RM0</span>
+                        </div>
+                    </div>
+
+                    <!-- NEW: Payment Options Selection -->
+                    <div class="payment-options-container">
+                        <label class="domain-label" style="margin-bottom: 12px;">Select Payment Option</label>
+                        
+                        <!-- One Time Payment -->
+                        <div class="payment-option-card active" onclick="selectPaymentOption('onetime', this)">
+                            <div class="payment-info-left">
+                                <h4>One-Time Payment</h4>
+                                <p>Pay full amount now. No monthly commitments.</p>
+                            </div>
+                            <div class="payment-price" id="priceOnetime">RM0</div>
+                        </div>
+
+                        <!-- 12 Month Installment -->
+                        <div class="payment-option-card" onclick="selectPaymentOption('12month', this)">
+                            <div class="payment-info-left">
+                                <h4>12-Month Installment</h4>
+                                <p>Pay over 1 year. Includes hosting & support.</p>
+                            </div>
+                            <div class="payment-price">
+                                <span id="price12Month">RM0</span><span style="font-size: 12px; color: var(--text-muted);">/mo</span>
+                            <span class="payment-badge" id="badge12Month"></span>
+                                <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="total12Month"></div>
+                            </div>
+                        </div>
+
+                        <!-- 24 Month Promo -->
+                        <div class="payment-option-card" onclick="selectPaymentOption('24month', this)">
+                            <div class="payment-info-left">
+                                <h4>24-Month Promo <span class="payment-badge">BEST VALUE</span></h4>
+                                <p>Long-term commitment. Lowest monthly rate.</p>
+                            </div>
+                            <div class="payment-price">
+                                <span id="price24Month">RM0</span><span style="font-size: 12px; color: var(--text-muted);">/mo</span>
+                                <span class="payment-badge">PROMO</span>
+                                <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="total24Month"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UPDATED DOMAIN CHECKER WRAPPER -->
+                    <div class="domain-checker-wrapper">
+                        <label class="domain-label">Choose your Domain Type</label>
+                        
+                        <div class="domain-control-panel">
+                            <!-- Domain Type Toggle Tabs -->
+                            <div class="domain-type-tabs">
+                                <div id="tabDdnex" class="domain-type-tab active" onclick="setDomainType('ddnex')">
+                                    Free Subdomain
+                                </div>
+                                <div id="tabCustom" class="domain-type-tab" onclick="setDomainType('custom')">
+                                    Custom Domain
+                                </div>
+                            </div>
+
+                            <div class="domain-input-group">
+                                <input 
+                                    type="text" 
+                                    id="coDomainInput" 
+                                    name="domain_input_new" 
+                                    placeholder="e.g. mycompany" 
+                                    autocomplete="off" 
+                                    oninput="formatDomainInput(this)"
+                                >
+                                <!-- Live Preview Text -->
+                                <div id="domainPreviewText">
+                                    <span id="previewBase">mycompany</span><span class="preview-highlight" id="previewSuffix">.ddnex.com</span>
+                                    <span id="freeDomainNote" class="free-domain-note">
+                                        <i class="ri-information-line"></i> Free for 1st year, then RM39.9/year
+                                    </span>
+                                </div>
+                            </div>
+                            <button type="button" id="checkDomainBtn" onclick="checkDomainAvailability()">Check</button>
+                        
+                            <div class="helper-text" id="domainHelperText">
+                                Enter your preferred name.
+                            </div>
+                            
+                            <!-- Status Boxes -->
+                            <div id="domainStatusAvailable" class="domain-status-box available">
+                                <i class="ri-checkbox-circle-fill"></i> 
+                                <div>
+                                    <strong>Available!</strong>
+                                    <span style="display:block; font-size: 12px; font-weight:400;">You can use this domain.</span>
+                                </div>
+                            </div>
+                            <div id="domainStatusTaken" class="domain-status-box taken">
+                                <i class="ri-close-circle-fill"></i>
+                                <div>
+                                    <strong>Taken</strong>
+                                    <span style="display:block; font-size: 12px; font-weight:400;">This domain is taken, please choose another.</span>
+                                </div>
+                            </div>
+                            <div id="domainStatusInfo" class="domain-status-box info">
+                                <i class="ri-information-fill"></i>
+                                <div>
+                                    <strong>Custom Domain</strong>
+                                    <span style="display:block; font-size: 12px; font-weight:400;">Custom domains require verification. Our support team will contact you.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 24px;">
+                        <button class="btn btn-primary" onclick="validateStep1()">Continue to Details <i class="ri-arrow-right-line"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Details (Auto-prefilled) -->
+                <div id="checkoutStep2" class="checkout-section">
+                    <h2 style="font-family: var(--font-heading); margin-bottom: 24px; font-size: 18px;">Customer Information</h2>
+                    <form id="checkoutForm">
+                        <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="coFullName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="coEmail" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number <span style="color:red">*</span></label>
+                                <input type="tel" id="coPhone" class="form-input" required placeholder="+60123456789">
+                                <div class="helper-text">Required for our team to contact you regarding your project.</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Company Name (Optional)</label>
+                                <input type="text" id="coCompany" class="form-input">
+                            </div>
+                        </div>
+
+                        <!-- Style Description -->
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label>Website Style & Description <span style="color:red">*</span></label>
+                            <textarea id="coStyleDesc" class="form-input" rows="4" placeholder="Describe colors, layout, vibe..."></textarea>
+                            <div class="helper-text">Minimum 50 characters. Example: Modern, black and white theme, large hero section, contact form, and service cards.</div>
+                            <div id="styleDescError" style="color: #ef4444; font-size: 12px; margin-top: 4px; display: none;">
+                                Please provide at least 50 characters describing how you would like your page to look.
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-top: 24px;">
+                            <button type="button" class="btn btn-outline" onclick="nextCheckoutStep(1)">Back</button>
+                            <button type="button" class="btn btn-primary" onclick="validateStep2()">Review Order</button>
+                        </div>
                     </form>
-                    
-                    <p style="margin-top: 20px; font-size: 13px; color: var(--text-muted);">
-                        Don't have an account? <span class="auth-link" onclick="showPopup('Registration Coming Soon', 'Please contact sales to create an account.')">Sign up</span>
-                    </p>
                 </div>
-            </div>
-        </section>
 
-        <!-- USER PROFILE / DASHBOARD PAGE (UPDATED WITH BILLING BUTTON) -->
-        <section id="profile" class="page-section">
-            <div class="section-padding">
-                <div class="container">
-                    <div class="profile-container reveal">
-                        <!-- Sidebar -->
-                        <aside class="profile-sidebar">
-                            <div class="profile-avatar-section">
-                                <div class="profile-avatar" id="profileAvatarInitials">U</div>
-                                <h3 id="profileNameDisplay" style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">User</h3>
-                                <p id="profileEmailDisplay" style="font-size: 12px; color: var(--text-muted);">user@example.com</p>
-                            </div>
-                            
-                            <nav>
-                                <div class="profile-nav-item active" onclick="switchProfileTab('overview')">
-                                    <i class="ri-dashboard-line"></i> Overview
-                                </div>
-                                <div class="profile-nav-item" onclick="switchProfileTab('orders')">
-                                    <i class="ri-shopping-bag-3-line"></i> My Orders
-                                </div>
-                                <div class="profile-nav-item" onclick="switchProfileTab('settings')">
-                                    <i class="ri-settings-3-line"></i> Settings
-                                </div>
-                                <div class="profile-nav-item" onclick="handleLogout()" style="color: var(--accent-orange);">
-                                    <i class="ri-logout-box-line"></i> Sign Out
-                                </div>
-                            </nav>
-                        </aside>
-
-                        <!-- Main Content Area -->
-                        <div class="profile-content">
-                            <!-- Tab: Overview -->
-                            <div id="p-overview" class="profile-tab-content">
-                                <div class="profile-header-row">
-                                    <div>
-                                        <h2 style="font-family: var(--font-heading);">Overview</h2>
-                                        <p style="color: var(--text-secondary);">Welcome back! Here is your account summary.</p>
-                                    </div>
-                                    <button class="btn btn-primary" onclick="handleNavigation('pricing', event)">New Order</button>
-                                </div>
-
-                                <!-- Database Driven Active Plan Card -->
-                                <div class="plan-card" id="dbActivePlanCard">
-                                    <div>
-                                        <div style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">Current Active Plan</div>
-                                        <h3 style="font-size: 20px; font-weight: 700;" id="dbPlanName">Loading...</h3>
-                                        <div class="status-badge status-active" style="margin-top: 12px;" id="dbPlanStatusBadge">
-                                            <i class="ri-checkbox-circle-fill"></i> Active
-                                        </div>
-                                        
-                                        <!-- NEW: Billing Management Button -->
-                                        <div class="billing-action-box">
-                                            <a href="https://billing.stripe.com/p/login/fZubIV3kQgXl3D072M97G00" target="_blank" class="btn-manage-billing">
-                                                <i class="ri-bank-card-line"></i> Manage Billing & Invoices
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 28px; font-weight: 800;" id="dbPlanPrice">RM0</div>
-                                        <div style="font-size: 12px; opacity: 0.7;" id="dbPlanPaymentType">One-time Payment</div>
-                                    </div>
-                                </div>
-
-                                <div class="grid-2" style="margin-top: 24px;">
-                                    <!-- Database Driven Domain Status -->
-                                    <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border-light);">
-                                        <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Domain Status</div>
-                                        <h4 style="font-size: 16px; font-weight: 700;" id="dbDomainName">Fetching...</h4>
-                                        <div class="status-badge status-active" id="dbDomainStatus" style="margin-top: 8px; background: rgba(16, 185, 129, 0.1); color: #10b981;">
-                                            <i class="ri-check-line"></i> Live
-                                        </div>
-                                    </div>
-                                    <!-- Database Driven Renewal Date -->
-                                    <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border-light);">
-                                        <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Next Renewal</div>
-                                        <h4 style="font-size: 16px; font-weight: 700;" id="dbRenewalDate">N/A</h4>
-                                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;" id="dbRenewalNote">
-                                            (Fixed package)
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tab: Orders (Database Items) -->
-                            <div id="p-orders" class="profile-tab-content" style="display: none;">
-                                <div class="profile-header-row">
-                                    <div>
-                                        <h2 style="font-family: var(--font-heading);">My Orders</h2>
-                                        <p style="color: var(--text-secondary);">Track your subscriptions and project history.</p>
-                                    </div>
-                                </div>
-                                
-                                <div id="ordersLoading" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                    <i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i> Loading data from database...
-                                </div>
-                                
-                                <div id="ordersList" style="display: flex; flex-direction: column; gap: 16px;">
-                                    <!-- Dynamic Orders will be injected here -->
-                                </div>
-                            </div>
-
-                            <!-- Tab: Settings -->
-                            <div id="p-settings" class="profile-tab-content" style="display: none;">
-                                <div class="profile-header-row">
-                                    <div>
-                                        <h2 style="font-family: var(--font-heading);">Settings</h2>
-                                        <p style="color: var(--text-secondary);">Manage your account preferences.</p>
-                                    </div>
-                                </div>
-                                <div style="max-width: 600px;">
-                                    <div class="form-group" style="margin-bottom: 20px;">
-                                        <label>Display Name</label>
-                                        <input type="text" id="settingsName" class="form-input" value="User Name">
-                                    </div>
-                                    <div class="form-group" style="margin-bottom: 20px;">
-                                        <label>Email Address (Read Only)</label>
-                                        <input type="email" id="settingsEmail" class="form-input" value="user@example.com" disabled style="background: #f1f5f9; cursor: not-allowed;">
-                                    </div>
-                                    <button class="btn btn-primary" onclick="showPopup('Saved', 'Your profile settings have been updated.')">Save Changes</button>
-                                </div>
-                            </div>
+                <!-- Step 3: Confirmation -->
+                <div id="checkoutStep3" class="checkout-section">
+                    <div style="text-align: center; padding: 32px 0;">
+                        <div style="width: 64px; height: 64px; background: #eff6ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px;">
+                            <i class="ri-secure-payment-line"></i>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- NEW PAGE: THANK YOU / SUCCESSFUL PAYMENT -->
-        <section id="successful-payment" class="page-section">
-            <div class="section-padding">
-                <div class="container">
-                    <div class="thankyou-container reveal">
-                        <div class="thankyou-icon-wrapper">
-                            <i class="ri-checkbox-circle-fill"></i>
-                        </div>
+                        <h2 style="font-family: var(--font-heading); margin-bottom: 16px; font-size: 20px;">Confirm Your Order</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 32px; font-size: 14px;">Please review your information below. You will be redirected to Stripe for secure payment.</p>
                         
-                        <h1 class="thankyou-title">Payment Successful!</h1>
-                        <p class="thankyou-message">
-                            Thank you for your purchase. Your transaction has been completed successfully. 
-                            We have sent a confirmation email with your order details.
-                        </p>
-
-                        <div class="thankyou-card">
-                            <h3><i class="ri-file-list-3-line"></i> Order Summary</h3>
-                            
-                            <div class="order-info-row">
-                                <span class="info-label">Status</span>
-                                <span class="info-value" style="color: #16a34a;">Paid & Confirmed</span>
-                            </div>
-                            
-                            <div class="order-info-row">
-                                <span class="info-label">Estimated Delivery</span>
-                                <span class="info-value">5-7 Business Days</span>
-                            </div>
-
-                            <div class="order-info-row">
-                                <span class="info-label">Support Contact</span>
-                                <span class="info-value">support@ddnex.com</span>
-                            </div>
+                        <div style="background: #f8fafc; padding: 24px; border-radius: 16px; text-align: left; margin-bottom: 32px;">
+                            <h4 style="margin-bottom: 12px; font-size: 16px;">Order Summary</h4>
+                            <p style="font-size: 14px;"><strong>Plan:</strong> <span id="confirmPlan">...</span></p>
+                            <p style="font-size: 14px;"><strong>Payment Method:</strong> <span id="confirmPaymentType">...</span></p>
+                            <p style="font-size: 14px;"><strong>Total Price:</strong> <span id="confirmPrice">...</span></p>
+                            <p style="font-size: 14px;"><strong>Domain:</strong> <span id="confirmDomain">...</span></p>
+                            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 16px 0;">
+                            <h4 style="margin-bottom: 12px; font-size: 16px;">Billing Details</h4>
+                            <p id="confirmName" style="font-size: 14px;">Name</p>
+                            <p id="confirmEmail" style="font-size: 14px;">Email</p>
+                            <p id="confirmPhone" style="font-size: 14px;">Phone</p>
+                            <p id="confirmStyle" style="margin-top: 8px; font-style: italic; color: var(--text-secondary); font-size: 13px;"></p>
                         </div>
 
-                        <div class="thankyou-card" style="background: #f8fafc;">
-                            <div class="next-steps-box">
-                                <h4><i class="ri-arrow-right-circle-line"></i> Next Steps</h4>
-                                <ol>
-                                    <li>Our team will review your project requirements submitted during checkout.</li>
-                                    <li>You will receive a project roadmap via email within 24 hours.</li>
-                                    <li>Join our support channel or reply to the email if you have urgent files to share.</li>
-                                </ol>
-                            </div>
+                        <!-- Terms Agreement with Popups -->
+                        <div class="terms-checkbox-group">
+                            <input type="checkbox" id="agreeTerms" onchange="togglePlaceOrderBtn()">
+                            <label for="agreeTerms">I agree to the 
+                                <a href="javascript:void(0)" onclick="openLegalPopup('terms')">Terms & Conditions</a> 
+                                and 
+                                <a href="javascript:void(0)" onclick="openLegalPopup('privacy')">Privacy Policy</a> 
+                                set forth by DDNEX®.
+                            </label>
                         </div>
 
-                        <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 16px; align-items: center;">
-                            <button class="btn btn-primary" onclick="handleNavigation('profile', event)">
-                                <i class="ri-dashboard-line"></i> Go to Dashboard
-                            </button>
-                            <button class="btn btn-ghost" onclick="handleNavigation('home', event)">
-                                Return to Homepage
-                            </button>
+                        <div style="display: flex; justify-content: center; gap: 16px;">
+                            <button class="btn btn-outline" onclick="nextCheckoutStep(2)">Edit</button>
+                            <!-- Button now indicates payment redirect -->
+                            <button class="btn btn-primary" id="btnPlaceOrder" onclick="submitOrder()" disabled>Proceed to Payment</button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- 3-STEP CHECKOUT PAGE -->
-        <section id="checkout" class="page-section">
-            <div class="section-padding">
-                <div class="container">
-                    <div class="checkout-header">
-                        <h1 class="page-title">Checkout</h1>
-                        <!-- Quick Change Plan Button -->
-                        <button class="change-plan-btn" onclick="openPlanModal()">
-                            <i class="ri-swap-box-line"></i> Change Plan
+            </div>
+            
+            <!-- SUPPORT EMAIL IN CHECKOUT -->
+            <div style="margin-top: 40px; text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
+                <p style="font-size: 14px; color: var(--text-secondary);">
+                    Experiencing issues during checkout? Our support team is here to help. 
+                    <br>
+                    <strong>Contact us at <a href="mailto:support@ddnex.com" style="color: var(--primary);">support@ddnex.com</a></strong>
+                </p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- PAGE: FAQ -->
+<section id="faq" class="page-section">
+    <div class="section-padding">
+        <div class="container">
+            
+            <!-- Page Header -->
+            <div class="section-title text-center reveal" style="max-width: 800px; margin: 0 auto 40px;">
+                <span class="badge">Support Center</span>
+                <h1 class="page-title" style="margin-bottom: 16px;">Frequently Asked Questions</h1>
+                <p>Find answers to common questions about our services, pricing, and policies. Can't find what you're looking for? <a href="/contact" onclick="handleNavigation('contact', event)" style="color: var(--primary); text-decoration: underline;">Contact our support team</a>.</p>
+            </div>
+
+            <div class="faq-grid-wrapper reveal">
+                
+                <!-- Category 1: General -->
+                <div class="faq-category">
+                    <h3 class="category-title">General & Company</h3>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" aria-expanded="false">
+                            <span>What services does DDNEX® provide?</span>
+                            <i class="ri-add-line"></i>
                         </button>
-                    </div>
-                    
-                    <div class="checkout-wrapper reveal">
-                        <!-- Steps Indicator -->
-                        <div class="checkout-steps">
-                            <div class="step-indicator active" id="stepIndicator1">
-                                <div class="step-circle">1</div>
-                                <span class="step-label">Review Plan</span>
-                            </div>
-                            <div class="step-indicator" id="stepIndicator2">
-                                <div class="step-circle">2</div>
-                                <span class="step-label">Your Details</span>
-                            </div>
-                            <div class="step-indicator" id="stepIndicator3">
-                                <div class="step-circle">3</div>
-                                <span class="step-label">Confirmation</span>
-                            </div>
+                        <div class="faq-answer">
+                            <p>DDNEX® specializes in enterprise digital transformation. Our core services include custom software development, cloud solutions (Google Firebase/AWS), cybersecurity consulting, and high-performance web application development for SMEs and Corporations.</p>
                         </div>
-
-                        <!-- Step 1: Review & Domain -->
-                        <div id="checkoutStep1" class="checkout-section active">
-                            <h2 style="font-family: var(--font-heading); margin-bottom: 24px; font-size: 18px;">Review & Domain Selection</h2>
-                            
-                            <div class="checkout-summary">
-                                <div class="summary-row">
-                                    <span>Selected Plan</span>
-                                    <strong id="coPlanName">...</strong>
-                                </div>
-                                <div class="summary-row">
-                                    <span>Base Price</span>
-                                    <span id="coPlanPrice">RM0</span>
-                                </div>
-                            </div>
-
-                            <!-- NEW: Payment Options Selection -->
-                            <div class="payment-options-container">
-                                <label class="domain-label" style="margin-bottom: 12px;">Select Payment Option</label>
-                                
-                                <!-- One Time Payment -->
-                                <div class="payment-option-card active" onclick="selectPaymentOption('onetime', this)">
-                                    <div class="payment-info-left">
-                                        <h4>One-Time Payment</h4>
-                                        <p>Pay full amount now. No monthly commitments.</p>
-                                    </div>
-                                    <div class="payment-price" id="priceOnetime">RM0</div>
-                                </div>
-
-                                <!-- 12 Month Installment -->
-                                <div class="payment-option-card" onclick="selectPaymentOption('12month', this)">
-                                    <div class="payment-info-left">
-                                        <h4>12-Month Installment</h4>
-                                        <p>Pay over 1 year. Includes hosting & support.</p>
-                                    </div>
-                                    <div class="payment-price">
-                                        <span id="price12Month">RM0</span><span style="font-size: 12px; color: var(--text-muted);">/mo</span>
-                                    <span class="payment-badge" id="badge12Month"></span>
-                                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="total12Month"></div>
-                                    </div>
-                                </div>
-
-                                <!-- 24 Month Promo -->
-                                <div class="payment-option-card" onclick="selectPaymentOption('24month', this)">
-                                    <div class="payment-info-left">
-                                        <h4>24-Month Promo <span class="payment-badge">BEST VALUE</span></h4>
-                                        <p>Long-term commitment. Lowest monthly rate.</p>
-                                    </div>
-                                    <div class="payment-price">
-                                        <span id="price24Month">RM0</span><span style="font-size: 12px; color: var(--text-muted);">/mo</span>
-                                        <span class="payment-badge">PROMO</span>
-                                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;" id="total24Month"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- UPDATED DOMAIN CHECKER WRAPPER -->
-                            <div class="domain-checker-wrapper">
-                                <label class="domain-label">Choose your Domain Type</label>
-                                
-                                <div class="domain-control-panel">
-                                    <!-- Domain Type Toggle Tabs -->
-                                    <div class="domain-type-tabs">
-                                        <div id="tabDdnex" class="domain-type-tab active" onclick="setDomainType('ddnex')">
-                                            Free Subdomain
-                                        </div>
-                                        <div id="tabCustom" class="domain-type-tab" onclick="setDomainType('custom')">
-                                            Custom Domain
-                                        </div>
-                                    </div>
-
-                                    <div class="domain-input-group">
-                                        <input 
-                                            type="text" 
-                                            id="coDomainInput" 
-                                            name="domain_input_new" 
-                                            placeholder="e.g. mycompany" 
-                                            autocomplete="off" 
-                                            oninput="formatDomainInput(this)"
-                                        >
-                                        <!-- Live Preview Text -->
-                                        <div id="domainPreviewText">
-                                            <span id="previewBase">mycompany</span><span class="preview-highlight" id="previewSuffix">.ddnex.com</span>
-                                            <span id="freeDomainNote" class="free-domain-note">
-                                                <i class="ri-information-line"></i> Free for 1st year, then RM39.9/year
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <button type="button" id="checkDomainBtn" onclick="checkDomainAvailability()">Check</button>
-                                
-                                    <div class="helper-text" id="domainHelperText">
-                                        Enter your preferred name.
-                                    </div>
-                                    
-                                    <!-- Status Boxes -->
-                                    <div id="domainStatusAvailable" class="domain-status-box available">
-                                        <i class="ri-checkbox-circle-fill"></i> 
-                                        <div>
-                                            <strong>Available!</strong>
-                                            <span style="display:block; font-size: 12px; font-weight:400;">You can use this domain.</span>
-                                        </div>
-                                    </div>
-                                    <div id="domainStatusTaken" class="domain-status-box taken">
-                                        <i class="ri-close-circle-fill"></i>
-                                        <div>
-                                            <strong>Taken</strong>
-                                            <span style="display:block; font-size: 12px; font-weight:400;">This domain is taken, please choose another.</span>
-                                        </div>
-                                    </div>
-                                    <div id="domainStatusInfo" class="domain-status-box info">
-                                        <i class="ri-information-fill"></i>
-                                        <div>
-                                            <strong>Custom Domain</strong>
-                                            <span style="display:block; font-size: 12px; font-weight:400;">Custom domains require verification. Our support team will contact you.</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="text-align: right; margin-top: 24px;">
-                                <button class="btn btn-primary" onclick="validateStep1()">Continue to Details <i class="ri-arrow-right-line"></i></button>
-                            </div>
-                        </div>
-
-                        <!-- Step 2: Details (Auto-prefilled) -->
-                        <div id="checkoutStep2" class="checkout-section">
-                            <h2 style="font-family: var(--font-heading); margin-bottom: 24px; font-size: 18px;">Customer Information</h2>
-                            <form id="checkoutForm">
-                                <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
-                                    <div class="form-group">
-                                        <label>Full Name</label>
-                                        <input type="text" id="coFullName" class="form-input" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Email Address</label>
-                                        <input type="email" id="coEmail" class="form-input" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Phone Number <span style="color:red">*</span></label>
-                                        <input type="tel" id="coPhone" class="form-input" required placeholder="+60123456789">
-                                        <div class="helper-text">Required for our team to contact you regarding your project.</div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Company Name (Optional)</label>
-                                        <input type="text" id="coCompany" class="form-input">
-                                    </div>
-                                </div>
-
-                                <!-- Style Description -->
-                                <div class="form-group" style="margin-top: 20px;">
-                                    <label>Website Style & Description <span style="color:red">*</span></label>
-                                    <textarea id="coStyleDesc" class="form-input" rows="4" placeholder="Describe colors, layout, vibe..."></textarea>
-                                    <div class="helper-text">Minimum 50 characters. Example: Modern, black and white theme, large hero section, contact form, and service cards.</div>
-                                    <div id="styleDescError" style="color: #ef4444; font-size: 12px; margin-top: 4px; display: none;">
-                                        Please provide at least 50 characters describing how you would like your page to look.
-                                    </div>
-                                </div>
-
-                                <div style="display: flex; justify-content: space-between; margin-top: 24px;">
-                                    <button type="button" class="btn btn-outline" onclick="nextCheckoutStep(1)">Back</button>
-                                    <button type="button" class="btn btn-primary" onclick="validateStep2()">Review Order</button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Step 3: Confirmation -->
-                        <div id="checkoutStep3" class="checkout-section">
-                            <div style="text-align: center; padding: 32px 0;">
-                                <div style="width: 64px; height: 64px; background: #eff6ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px;">
-                                    <i class="ri-secure-payment-line"></i>
-                                </div>
-                                <h2 style="font-family: var(--font-heading); margin-bottom: 16px; font-size: 20px;">Confirm Your Order</h2>
-                                <p style="color: var(--text-secondary); margin-bottom: 32px; font-size: 14px;">Please review your information below. You will be redirected to Stripe for secure payment.</p>
-                                
-                                <div style="background: #f8fafc; padding: 24px; border-radius: 16px; text-align: left; margin-bottom: 32px;">
-                                    <h4 style="margin-bottom: 12px; font-size: 16px;">Order Summary</h4>
-                                    <p style="font-size: 14px;"><strong>Plan:</strong> <span id="confirmPlan">...</span></p>
-                                    <p style="font-size: 14px;"><strong>Payment Method:</strong> <span id="confirmPaymentType">...</span></p>
-                                    <p style="font-size: 14px;"><strong>Total Price:</strong> <span id="confirmPrice">...</span></p>
-                                    <p style="font-size: 14px;"><strong>Domain:</strong> <span id="confirmDomain">...</span></p>
-                                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 16px 0;">
-                                    <h4 style="margin-bottom: 12px; font-size: 16px;">Billing Details</h4>
-                                    <p id="confirmName" style="font-size: 14px;">Name</p>
-                                    <p id="confirmEmail" style="font-size: 14px;">Email</p>
-                                    <p id="confirmPhone" style="font-size: 14px;">Phone</p>
-                                    <p id="confirmStyle" style="margin-top: 8px; font-style: italic; color: var(--text-secondary); font-size: 13px;"></p>
-                                </div>
-
-                                <!-- Terms Agreement with Popups -->
-                                <div class="terms-checkbox-group">
-                                    <input type="checkbox" id="agreeTerms" onchange="togglePlaceOrderBtn()">
-                                    <label for="agreeTerms">I agree to the 
-                                        <a href="javascript:void(0)" onclick="openLegalPopup('terms')">Terms & Conditions</a> 
-                                        and 
-                                        <a href="javascript:void(0)" onclick="openLegalPopup('privacy')">Privacy Policy</a> 
-                                        set forth by DDNEX®.
-                                    </label>
-                                </div>
-
-                                <div style="display: flex; justify-content: center; gap: 16px;">
-                                    <button class="btn btn-outline" onclick="nextCheckoutStep(2)">Edit</button>
-                                    <!-- Button now indicates payment redirect -->
-                                    <button class="btn btn-primary" id="btnPlaceOrder" onclick="submitOrder()" disabled>Proceed to Payment</button>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                    
-                    <!-- SUPPORT EMAIL IN CHECKOUT -->
-                    <div style="margin-top: 40px; text-align: center; padding: 20px; background: #f8fafc; border-radius: 12px;">
-                        <p style="font-size: 14px; color: var(--text-secondary);">
-                            Experiencing issues during checkout? Our support team is here to help. 
-                            <br>
-                            <strong>Contact us at <a href="mailto:support@ddnex.com" style="color: var(--primary);">support@ddnex.com</a></strong>
-                        </p>
                     </div>
 
+                    <div class="faq-item">
+                        <button class="faq-question" aria-expanded="false">
+                            <span>Where is DDNEX® located?</span>
+                            <i class="ri-add-line"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Our headquarters is based in <strong>Kedah, Malaysia</strong>. However, we serve clients globally, with a strong focus on Malaysia and Southeast Asia.</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- PAGE: FAQ -->
-        <section id="faq" class="page-section">
-            <div class="section-padding">
-                <div class="container">
+                <!-- Category 2: Services & Development -->
+                <div class="faq-category">
+                    <h3 class="category-title">Services & Development</h3>
                     
-                    <!-- Page Header -->
-                    <div class="section-title text-center reveal" style="max-width: 800px; margin: 0 auto 40px;">
-                        <span class="badge">Support Center</span>
-                        <h1 class="page-title" style="margin-bottom: 16px;">Frequently Asked Questions</h1>
-                        <p>Find answers to common questions about our services, pricing, and policies. Can't find what you're looking for? <a href="/contact" onclick="handleNavigation('contact', event)" style="color: var(--primary); text-decoration: underline;">Contact our support team</a>.</p>
+                    <div class="faq-item">
+                        <button class="faq-question" aria-expanded="false">
+                            <span>How long does it take to build a website?</span>
+                            <i class="ri-add-line"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Timeline varies by complexity:</p>
+                            <ul style="margin-left: 20px; margin-top: 8px; list-style: disc; color: var(--text-secondary);">
+                                <li><strong>Starter Landing Page:</strong> 2–3 Days</li>
+                                <li><strong>Business Website:</strong> 4–7 Days</li>
+                                <li><strong>Business Portal System:</strong> 10–14 Days</li>
+                                <li><strong>Custom System:</strong> 3–6 Weeks (depends on scope)</li>
+                            </ul>
+                        </div>
                     </div>
 
-                    <div class="faq-grid-wrapper reveal">
-                        
-                        <!-- Category 1: General -->
-                        <div class="faq-category">
-                            <h3 class="category-title">General & Company</h3>
-                            
-                            <div class="faq-item">
-                                <button class="faq-question" aria-expanded="false">
-                                    <span>What services does DDNEX® provide?</span>
-                                    <i class="ri-add-line"></i>
-                                </button>
-                                <div class="faq-answer">
-                                    <p>DDNEX® specializes in enterprise digital transformation. Our core services include custom software development, cloud solutions (Google Firebase/AWS), cybersecurity consulting, and high-performance web application development for SMEs and Corporations.</p>
-                                </div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-question" aria-expanded="false">
-                                    <span>Where is DDNEX® located?</span>
-                                    <i class="ri-add-line"></i>
-                                </button>
-                                <div class="faq-answer">
-                                    <p>Our headquarters is based in <strong>Kedah, Malaysia</strong>. However, we serve clients globally, with a strong focus on Malaysia and Southeast Asia.</p>
-                                </div>
-                            </div>
+                    <div class="faq-item">
+                        <button class="faq-question" aria-expanded="false">
+                            <span>Do you use CMS (WordPress) or Custom Code?</span>
+                            <i class="ri-add-line"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>We primarily build <strong>custom-coded solutions</strong> using modern frameworks (HTML, JS, Firebase) to ensure maximum speed, security, and scalability. We do not use generic templates unless specifically requested for a basic blog.</p>
                         </div>
-
-                        <!-- Category 2: Services & Development -->
-                        <div class="faq-category">
-                            <h3 class="category-title">Services & Development</h3>
-                            
-                            <div class="faq-item">
-                                <button class="faq-question" aria-expanded="false">
-                                    <span>How long does it take to build a website?</span>
-                                    <i class="ri-add-line"></i>
-                                </button>
-                                <div class="faq-answer">
-                                    <p>Timeline varies by complexity:</p>
-                                    <ul style="margin-left: 20px; margin-top: 8px; list-style: disc; color: var(--text-secondary);">
-                                        <li><strong>Starter Landing Page:</strong> 2–3 Days</li>
-                                        <li><strong>Business Website:</strong> 4–7 Days</li>
-                                        <li><strong>Business Portal System:</strong> 10–14 Days</li>
-                                        <li><strong>Custom System:</strong> 3–6 Weeks (depends on scope)</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-question" aria-expanded="false">
-                                    <span>Do you use CMS (WordPress) or Custom Code?</span>
-                                    <i class="ri-add-line"></i>
-                                </button>
-                                <div class="faq-answer">
-                                    <p>We primarily build <strong>custom-coded solutions</strong> using modern frameworks (HTML, JS, Firebase) to ensure maximum speed, security, and scalability. We do not use generic templates unless specifically requested for a basic blog.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Category 3: Pricing & Payments -->
-                        <div class="faq-category">
-                            <h3 class="category-title">Pricing & Payments</h3>
-                            
-                            <div class="faq-item">
-                                <button class="faq-question" aria-expanded="false">
-                                    <span>Are there any hidden fees?</span>
-                                    <i class="ri-add-line"></i>
-                                </button>
-                                <div class="faq-answer">
-                                    <p>No. Our pricing is transparent. The quoted price covers development, deployment, and the specified support period. Optional add-ons (like custom domains or extra pages) are clearly listed and charged separately only if you choose them.</p>
-                                </div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-question" aria-expanded="false">
-                                    <span>What payment methods do you accept?</span>
-                                    <i class="ri-add-line"></i>
-                                </button>
-                                <div class="faq-answer">
-                                    <p>We accept online bank transfers (FPX), local bank transfers, and credit/debit cards via Stripe. Payment milestones (e.g., 50% upfront, 50% on completion) may apply for larger custom projects.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Category 4: Support & Maintenance -->
-                        <div class="faq-category">
-                            <h3 class="category-title">Support & Maintenance</h3>
-                            
-                            <div class="faq-item">
-                                <button class="faq-question" aria-expanded="false">
-                                    <span>What happens after the project is launched?</span>
-                                    <i class="ri-add-line"></i>
-                                </button>
-                                <div class="faq-answer">
-                                    <p>After launch, we provide a warranty period (7–60 days depending on the package) for bug fixes. Post-warranty, we offer affordable monthly maintenance packages to ensure your site remains secure, updated, and backed up.</p>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
-
-                    <!-- CTA Box -->
-                    <div class="faq-cta-box reveal" style="margin-top: 40px;">
-                        <h3>Still have questions?</h3>
-                        <p>Our team is ready to help you choose the right solution for your business.</p>
-                        <button class="btn btn-primary" onclick="handleNavigation('contact', event)">Contact Support</button>
-                    </div>
-
                 </div>
+
+                <!-- Category 3: Pricing & Payments -->
+                <div class="faq-category">
+                    <h3 class="category-title">Pricing & Payments</h3>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" aria-expanded="false">
+                            <span>Are there any hidden fees?</span>
+                            <i class="ri-add-line"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>No. Our pricing is transparent. The quoted price covers development, deployment, and the specified support period. Optional add-ons (like custom domains or extra pages) are clearly listed and charged separately only if you choose them.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" aria-expanded="false">
+                            <span>What payment methods do you accept?</span>
+                            <i class="ri-add-line"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>We accept online bank transfers (FPX), local bank transfers, and credit/debit cards via Stripe. Payment milestones (e.g., 50% upfront, 50% on completion) may apply for larger custom projects.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 4: Support & Maintenance -->
+                <div class="faq-category">
+                    <h3 class="category-title">Support & Maintenance</h3>
+                    
+                    <div class="faq-item">
+                        <button class="faq-question" aria-expanded="false">
+                            <span>What happens after the project is launched?</span>
+                            <i class="ri-add-line"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>After launch, we provide a warranty period (7–60 days depending on the package) for bug fixes. Post-warranty, we offer affordable monthly maintenance packages to ensure your site remains secure, updated, and backed up.</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-        </section>
+
+            <!-- CTA Box -->
+            <div class="faq-cta-box reveal" style="margin-top: 40px;">
+                <h3>Still have questions?</h3>
+                <p>Our team is ready to help you choose the right solution for your business.</p>
+                <button class="btn btn-primary" onclick="handleNavigation('contact', event)">Contact Support</button>
+            </div>
+
+        </div>
+    </div>
+</section>
 
     </main>
 
@@ -4781,3 +4794,780 @@
         </div>
       </div>
     </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <img src="https://i.ibb.co/dsfCkWFT/DDNEX-05.png" alt="DDNEX®" style="height: 28px; margin-bottom: 16px; filter: brightness(0) invert(1);">
+                    <p>DDNEX® is a premier enterprise digital transformation agency. We build the future for businesses in Malaysia and Southeast Asia.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="/home" onclick="handleNavigation('home', event); return false;">Home</a></li>
+                        <li><a href="/about" onclick="handleNavigation('about', event); return false;">About Us</a></li>
+                        <li><a href="/pricing" onclick="handleNavigation('pricing', event); return false;">Pricing</a></li>
+                        <li><a href="/industries" onclick="handleNavigation('industries', event); return false;">Industries</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="/services" onclick="handleNavigation('services', event); return false;">Software Engineering</a></li>
+                        <li><a href="/services" onclick="handleNavigation('services', event); return false;">Cloud Solutions</a></li>
+                        <li><a href="/services" onclick="handleNavigation('services', event); return false;">Data Analytics</a></li>
+                        <li><a href="/services" onclick="handleNavigation('services', event); return false;">Cybersecurity</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a onclick="handleNavigation('privacy', event); return false;">Privacy Policy</a></li>
+                        <li><a onclick="handleNavigation('terms', event); return false;">Terms & Conditions</a></li>
+                        <li><a onclick="handleNavigation('payment-policy', event); return false;">Payment Policy</a></li>
+                        <li><a onclick="handleNavigation('refund', event); return false;">Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div><p>&copy; 2026 DDNEX. All rights reserved.</p></div>
+                <div style="display: flex; gap: 24px;">
+                    <a href="#" aria-label="LinkedIn"><i class="ri-linkedin-fill"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="ri-twitter-x-fill"></i></a>
+                    <a href="#" aria-label="Facebook"><i class="ri-facebook-fill"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back To Top Button -->
+    <button id="back-to-top" onclick="scrollToTop()" aria-label="Back to Top">
+        <i class="ri-arrow-up-line"></i>
+    </button>
+
+    <!-- Custom Popup Overlay -->
+    <div class="popup-overlay" id="customPopup">
+        <div class="popup-card">
+            <div class="popup-icon" id="popupIcon"><i class="ri-checkbox-circle-fill"></i></div>
+            <h3 class="popup-title" id="popupTitle">Success</h3>
+            <p class="popup-message" id="popupMessage">Your request has been processed successfully.</p>
+            <button class="popup-btn" id="popupBtn" onclick="handlePopupAction()">Got it</button>
+        </div>
+    </div>
+
+    <!-- Modal Container for Case Studies -->
+    <div class="modal-overlay" id="caseStudyModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-close" onclick="closeModalDirect()"><i class="ri-close-line"></i></div>
+            <div class="modal-scroll-area" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Quick Change Plan Modal -->
+    <div class="modal-overlay" id="planModal" onclick="closePlanModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
+            <div class="modal-close" onclick="closePlanModalDirect()"><i class="ri-close-line"></i></div>
+            <div class="modal-scroll-area">
+                <h2 style="font-family: var(--font-heading); margin-bottom: 24px;">Select a Plan</h2>
+                <div class="plan-select-grid">
+                    <div class="plan-select-item" onclick="changePlan('Starter Landing Page', 399, '')">
+                        <div><strong>Starter Landing Page</strong><div style="font-size: 12px; color: var(--text-muted);">Perfect for campaigns</div></div>
+                        <div style="font-weight: 700; color: var(--primary);">RM399</div>
+                    </div>
+                    <div class="plan-select-item" onclick="changePlan('Business Website', 899, '')">
+                        <div><strong>Business Website</strong><div style="font-size: 12px; color: var(--text-muted);">For company profiles</div></div>
+                        <div style="font-weight: 700; color: var(--primary);">RM899</div>
+                    </div>
+                    <div class="plan-select-item" onclick="changePlan('Business Portal System', 3800, '')">
+                        <div><strong>Business Portal System</strong><div style="font-size: 12px; color: var(--text-muted);">Internal management</div></div>
+                        <div style="font-weight: 700; color: var(--primary);">RM3,800</div>
+                    </div>
+                    <div class="plan-select-item" onclick="changePlan('Custom System', 6800, 'Custom')">
+                        <div><strong>Custom System</strong><div style="font-size: 12px; color: var(--text-muted);">Complex requirements</div></div>
+                        <div style="font-weight: 700; color: var(--primary);">RM6,800+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyAwf31b-wpYQwPbd-3DxnqGVRw8g3xq938",
+          authDomain: "ddnetwork-database.firebaseapp.com",
+          projectId: "ddnetwork-database",
+          storageBucket: "ddnetwork-database.firebasestorage.app",
+          messagingSenderId: "699127560990",
+          appId: "1:699127560990:web:50cfd61ff620bc85fb670f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        window.firebaseAuth = {
+            googleLogin: async () => {
+                try { await signInWithPopup(auth, provider); } 
+                catch (error) { console.error(error); window.showPopup("Login Failed", error.message); }
+            },
+            emailLogin: async (email, password) => {
+                try { await signInWithEmailAndPassword(auth, email, password); } 
+                catch (error) { console.error(error); window.showPopup("Login Failed", "Invalid email or password."); }
+            },
+            logout: async () => {
+                try { await signOut(auth); window.handleNavigation('home', null); window.showPopup("Logged Out", "You have been signed out successfully."); } 
+                catch (error) { console.error(error); }
+            },
+            getUser: () => auth.currentUser
+        };
+
+        window.firebaseDB = {
+            saveOrder: async (orderData) => {
+                try {
+                    await addDoc(collection(db, "orders_ddnex"), { ...orderData, createdAt: new Date(), userId: auth.currentUser ? auth.currentUser.uid : 'guest' });
+                    return true;
+                } catch (error) { console.error("Error saving order:", error); return false; }
+            },
+            getOrders: async () => {
+                if (!auth.currentUser) return [];
+                try {
+                    const q = query(collection(db, "orders_ddnex"), where("userId", "==", auth.currentUser.uid), orderBy("createdAt", "desc"));
+                    const querySnapshot = await getDocs(q);
+                    const orders = [];
+                    querySnapshot.forEach((doc) => { orders.push({ id: doc.id, ...doc.data() }); });
+                    return orders;
+                } catch (error) { console.error("Error fetching orders:", error); return []; }
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            window.updateAuthUI(!!user, user);
+            const currentSection = document.querySelector('.page-section.active');
+            if (user) {
+                if(currentSection && currentSection.id === 'auth') window.handleNavigation('profile', null);
+                else if(currentSection && currentSection.id === 'profile') window.loadProfileData();
+            } else {
+                if(currentSection && currentSection.id === 'profile') window.handleNavigation('auth', null);
+            }
+        });
+    </script>
+
+    <!-- Main Application Logic -->
+    <script>
+        const pageData = {
+            'home': { title: 'DDNEX®', desc: 'DDNEX® builds fast, responsive, and custom websites for Small Business, Startups & Enterprise transformation.' },
+            'services': { title: 'Services | DDNEX®', desc: 'Explore our comprehensive digital services including Software Engineering, Cloud Solutions, and Cybersecurity.' },
+            'pricing': { title: 'Pricing | DDNEX®', desc: 'Fixed website pricing for Landing Pages, Business Websites, Portal Systems, and Custom Development.' },
+            'industries': { title: 'Industries | DDNEX®', desc: 'Tailored digital solutions for Healthcare, Retail, Public Sector, Logistics, and Energy.' },
+            'about': { title: 'About Us | DDNEX®', desc: 'Meet the leadership team and learn about DDNEX® methodology in Web Development and Digital Transformation.' },
+            'contact': { title: 'Contact Us | DDNEX®', desc: 'Get in touch with DDNEX® to discuss your project. Located in Kedah, serving Malaysia and SE Asia.' },
+            'privacy': { title: 'Privacy Policy | DDNEX®', desc: 'Read our Privacy Policy to understand how we protect your data.' },
+            'terms': { title: 'Terms of Service | DDNEX®', desc: 'Terms and conditions for using DDNEX services.' },
+            'refund': { title: 'Refund Policy | DDNEX®', desc: 'Refund and cancellation policy for digital services.' },
+            'payment-policy': { title: 'Payment Policy | DDNEX®', desc: 'Payment options, installment plans, and pricing transparency for DDNEX services.' },
+            'cookies': { title: 'Cookie Policy | DDNEX®', desc: 'How DDNEX uses cookies and tracking technologies.' },
+            'acceptable-use': { title: 'Acceptable Use | DDNEX®', desc: 'Policy defining acceptable use of DDNEX services.' },
+            'subscribe-success': { title: 'Subscribed | DDNEX®', desc: 'Thank you for subscribing to the DDNEX newsletter.' },
+            'auth': { title: 'Login | DDNEX®', desc: 'Access your professional dashboard.' },
+            'profile': { title: 'My Profile | DDNEX®', desc: 'Manage your orders and account settings.' },
+            'checkout': { title: 'Checkout | DDNEX®', desc: 'Complete your order.' },
+            'faq': { title: 'FAQ | DDNEX®', desc: 'Frequently asked questions about DDNEX services, pricing, and support.' },
+            'successful-payment': { title: 'Payment Successful | DDNEX®', desc: 'Your payment was processed successfully.' }
+        };
+
+        function handleNavigation(pageId, event) {
+            if(event) event.preventDefault();
+            const menu = document.getElementById('mobileMenu');
+            if(menu && menu.classList.contains('open')) toggleMenu();
+            playPageTransition(pageId);
+        }
+
+        function playPageTransition(pageId) {
+            const overlay = document.getElementById('pageTransitionOverlay');
+            const logo = overlay.querySelector('.pt-logo');
+            overlay.classList.remove('swipe-down');
+            overlay.classList.add('active'); 
+            setTimeout(() => { logo.style.opacity = '1'; logo.style.transform = 'scale(1)'; }, 100);
+            setTimeout(() => {
+                updateNavigationState(pageId);
+                if(pageId === 'profile') loadProfileData();
+                if(pageId === 'faq') setTimeout(() => initFAQ(), 100);
+            }, 500);
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                setTimeout(() => { logo.style.opacity = '0'; logo.style.transform = 'scale(0.8)'; }, 100);
+            }, 600);
+        }
+
+        function updateNavigationState(pageId) {
+            const urlPath = pageId === 'home' ? '/' : '/' + pageId;
+            window.history.pushState({page: pageId}, "", urlPath);
+            const data = pageData[pageId];
+            if (data) { document.title = data.title; document.getElementById('dynamic-desc').setAttribute('content', data.desc); }
+            document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+            const targetSection = document.getElementById(pageId);
+            if(targetSection) targetSection.classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if(link.getAttribute('onclick') && link.getAttribute('onclick').includes(`'${pageId}'`)) link.classList.add('active');
+            });
+            window.scrollTo({ top: 0, behavior: 'auto' }); 
+            setTimeout(() => { runScrollAnimations(); }, 100);
+        }
+
+        window.onpopstate = function(event) { if(event.state && event.state.page) updateNavigationState(event.state.page); };
+
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const toggle = document.querySelector('.mobile-toggle');
+            menu.classList.toggle('open'); toggle.classList.toggle('active');
+            if(menu.classList.contains('open')) document.body.style.overflow = 'hidden';
+            else { document.body.style.overflow = 'auto'; document.querySelectorAll('.mobile-nav-dropdown').forEach(el => el.classList.remove('open')); document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active')); }
+        }
+
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('mobileMenu');
+            const toggle = document.getElementById('mobileToggle');
+            if (menu.classList.contains('open') && !menu.contains(event.target) && !toggle.contains(event.target)) toggleMenu();
+        });
+
+        function toggleMobileDropdown(btn) {
+            const item = btn.closest('.mobile-nav-item');
+            const dropdown = item.querySelector('.mobile-nav-dropdown');
+            const isOpen = item.classList.contains('active');
+            document.querySelectorAll('.mobile-nav-item').forEach(el => { if(el !== item) { el.classList.remove('active'); el.querySelector('.mobile-nav-dropdown')?.classList.remove('open'); } });
+            item.classList.toggle('active'); dropdown.classList.toggle('open');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            const content = document.getElementById(tabId); if(content) content.classList.add('active');
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => { if(btn.getAttribute('onclick').includes(tabId)) btn.classList.add('active'); });
+        }
+        
+        function switchProfileTab(tabId) {
+            document.querySelectorAll('.profile-tab-content').forEach(el => el.style.display = 'none');
+            const target = document.getElementById('p-' + tabId); if(target) target.style.display = 'block';
+            document.querySelectorAll('.profile-nav-item').forEach(el => el.classList.remove('active'));
+            const activeItem = [...document.querySelectorAll('.profile-nav-item')].find(el => el.getAttribute('onclick').includes(tabId));
+            if(activeItem) activeItem.classList.add('active');
+        }
+
+        function initFAQ() {
+            const questions = document.querySelectorAll('.faq-question');
+            questions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const item = question.parentElement;
+                    const answer = item.querySelector('.faq-answer');
+                    const isActive = item.classList.contains('active');
+                    const category = item.parentElement;
+                    category.querySelectorAll('.faq-item').forEach(otherItem => { if(otherItem !== item) { otherItem.classList.remove('active'); otherItem.querySelector('.faq-answer').style.maxHeight = null; otherItem.querySelector('.faq-question').setAttribute('aria-expanded', 'false'); } });
+                    if (isActive) { item.classList.remove('active'); answer.style.maxHeight = null; question.setAttribute('aria-expanded', 'false'); } 
+                    else { item.classList.add('active'); answer.style.maxHeight = answer.scrollHeight + "px"; question.setAttribute('aria-expanded', 'true'); }
+                });
+            });
+        }
+
+        // --- Checkout Logic ---
+        let currentCheckoutStep = 1;
+        let tempOrderData = {}; 
+        let isDomainAvailable = false; 
+        let currentDomainType = 'ddnex'; 
+        let selectedPaymentOption = 'onetime';
+
+        function openPlanModal() { document.getElementById('planModal').classList.add('active'); }
+        function closePlanModal(e) { if(e.target.id === 'planModal') closePlanModalDirect(); }
+        function closePlanModalDirect() { document.getElementById('planModal').classList.remove('active'); }
+        
+        function changePlan(name, price, domain) {
+            tempOrderData = { planName: name, price: price, domain: domain, userId: window.firebaseAuth ? window.firebaseAuth.getUser().uid : null };
+            document.getElementById('coPlanName').textContent = name;
+            calculatePaymentOptions(price, name);
+            if(domain.includes('.ddnex.com')) { setDomainType('ddnex'); document.getElementById('coDomainInput').value = domain.replace('.ddnex.com', ''); }
+            else { setDomainType('custom'); document.getElementById('coDomainInput').value = ''; }
+            isDomainAvailable = false;
+            document.getElementById('domainStatusAvailable').style.display = 'none';
+            document.getElementById('domainStatusTaken').style.display = 'none';
+            document.getElementById('domainStatusInfo').style.display = 'none';
+            closePlanModalDirect();
+        }
+
+        function calculatePaymentOptions(basePrice, planName) {
+            let price12 = 0; let price24 = 0; let total12 = 0; let total24 = 0;
+            if (planName === 'Starter Landing Page') { price12 = 39; total12 = 468; price24 = 29; total24 = 696; } 
+            else if (planName === 'Business Website') { price12 = 89; total12 = 1068; price24 = 69; total24 = 1656; } 
+            else if (planName === 'Business Portal System') { price12 = 349; total12 = 4188; price24 = 249; total24 = 5976; } 
+            else { price12 = Math.ceil(basePrice * 1.1 / 12); price24 = Math.ceil(basePrice * 1.2 / 24); total12 = price12 * 12; total24 = price24 * 24; }
+            document.getElementById('priceOnetime').textContent = 'RM' + basePrice.toLocaleString();
+            document.getElementById('price12Month').textContent = 'RM' + price12;
+            document.getElementById('total12Month').textContent = `Total: RM${total12.toLocaleString()}`;
+            document.getElementById('price24Month').textContent = 'RM' + price24;
+            document.getElementById('total24Month').textContent = `Total: RM${total24.toLocaleString()}`;
+            selectPaymentOption('onetime', document.querySelector('.payment-option-card'));
+        }
+
+        function selectPaymentOption(type, element) {
+            selectedPaymentOption = type;
+            document.querySelectorAll('.payment-option-card').forEach(el => el.classList.remove('active'));
+            if(element) element.classList.add('active');
+            if (type === 'onetime') { tempOrderData.finalPrice = tempOrderData.price; tempOrderData.paymentMethod = 'One-Time Payment'; } 
+            else if (type === '12month') { const priceText = document.getElementById('price12Month').textContent.replace('RM', '').replace(',', ''); tempOrderData.finalPrice = parseInt(priceText); tempOrderData.paymentMethod = '12-Month Installment'; } 
+            else if (type === '24month') { const priceText = document.getElementById('price24Month').textContent.replace('RM', '').replace(',', ''); tempOrderData.finalPrice = parseInt(priceText); tempOrderData.paymentMethod = '24-Month Promo'; }
+        }
+
+        function initiateCheckout(planName, price, domain) {
+            const user = window.firebaseAuth ? window.firebaseAuth.getUser() : null;
+            if (!user) { showPopup("Login Required", "Please login or create an account to proceed with your order."); handleNavigation('auth', null); return; }
+            tempOrderData = { planName: planName, price: price, domain: domain, userId: user.uid };
+            const basePriceEl = document.getElementById('coPlanPrice'); if(basePriceEl) basePriceEl.textContent = 'RM' + price.toLocaleString();
+            document.getElementById('coPlanName').textContent = planName;
+            calculatePaymentOptions(price, planName);
+            if(domain.includes('.ddnex.com')) { setDomainType('ddnex'); document.getElementById('coDomainInput').value = domain.replace('.ddnex.com', ''); updateDomainPreview(domain.replace('.ddnex.com', '')); }
+            else { setDomainType('custom'); document.getElementById('coDomainInput').value = ''; updateDomainPreview(''); }
+            document.getElementById('coFullName').value = user.displayName || "";
+            document.getElementById('coEmail').value = user.email || "";
+            document.getElementById('coPhone').value = ""; 
+            nextCheckoutStep(1);
+            handleNavigation('checkout', null);
+        }
+
+        function updateDomainPreview(baseValue) {
+            const baseEl = document.getElementById('previewBase');
+            const suffixEl = document.getElementById('previewSuffix');
+            const noteEl = document.getElementById('freeDomainNote');
+            if (!baseValue) baseEl.textContent = "..."; else baseEl.textContent = baseValue;
+            if (currentDomainType === 'ddnex') { suffixEl.textContent = ".ddnex.com"; noteEl.classList.add('visible'); } 
+            else { suffixEl.textContent = ".com (or your choice)"; noteEl.classList.remove('visible'); }
+        }
+
+        function setDomainType(type) {
+            currentDomainType = type;
+            const input = document.getElementById('coDomainInput');
+            const helper = document.getElementById('domainHelperText');
+            const btnDdnex = document.getElementById('tabDdnex');
+            const btnCustom = document.getElementById('tabCustom');
+            const checkBtn = document.getElementById('checkDomainBtn');
+            isDomainAvailable = false;
+            document.getElementById('domainStatusAvailable').style.display = 'none';
+            document.getElementById('domainStatusTaken').style.display = 'none';
+            document.getElementById('domainStatusInfo').style.display = 'none';
+            input.style.borderColor = "#e2e8f0";
+            if(type === 'ddnex') { input.placeholder = "e.g. mycompany"; helper.textContent = "Enter your preferred name for the free subdomain."; btnDdnex.classList.add('active'); btnCustom.classList.remove('active'); checkBtn.textContent = "Check"; updateDomainPreview(input.value); } 
+            else { input.placeholder = "e.g. mycompany.com"; helper.textContent = "Enter your full custom domain (e.g. .com, .my)."; btnCustom.classList.add('active'); btnDdnex.classList.remove('active'); checkBtn.textContent = "Verify"; updateDomainPreview(input.value); }
+            input.value = ""; updateDomainPreview("");
+        }
+
+        function formatDomainInput(input) {
+            let value = input.value;
+            value = value.replace(/\s+/g, '');
+            value = value.toLowerCase();
+            if (currentDomainType === 'ddnex') value = value.replace(/[^a-z0-9-]/g, '');
+            input.value = value;
+            updateDomainPreview(value);
+            const statusAvail = document.getElementById('domainStatusAvailable');
+            const statusTaken = document.getElementById('domainStatusTaken');
+            if (statusAvail.style.display === 'flex' || statusTaken.style.display === 'flex') {
+                statusAvail.style.display = 'none'; statusTaken.style.display = 'none'; document.getElementById('domainStatusInfo').style.display = 'none';
+                isDomainAvailable = false; input.style.borderColor = "#e2e8f0";
+            }
+        }
+
+        async function checkDomainAvailability() {
+            const input = document.getElementById('coDomainInput');
+            let domainInput = input.value.trim(); 
+            const btn = document.getElementById('checkDomainBtn');
+            const statusAvail = document.getElementById('domainStatusAvailable');
+            const statusTaken = document.getElementById('domainStatusTaken');
+            const statusInfo = document.getElementById('domainStatusInfo');
+            statusAvail.style.display = 'none'; statusTaken.style.display = 'none'; statusInfo.style.display = 'none';
+            isDomainAvailable = false; input.style.borderColor = "#e2e8f0";
+            if (!domainInput) { showPopup("Input Required", "Please enter a domain name."); return; }
+            domainInput = domainInput.toLowerCase().replace(/\s+/g, '');
+            let fullDomain = domainInput;
+            if (currentDomainType === 'ddnex') fullDomain = domainInput + ".ddnex.com";
+            else {
+                fullDomain = domainInput;
+                const domainRegex = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/;
+                if (!domainRegex.test(fullDomain)) { showPopup("Invalid Format", "Please enter a valid domain (e.g. example.com)."); return; }
+            }
+            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Checking...';
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.innerHTML = currentDomainType === 'ddnex' ? 'Check' : 'Verify';
+                btn.disabled = false;
+                if (currentDomainType === 'ddnex') {
+                    const takenDomains = ["google", "facebook", "taken", "test", "admin", "support", "company"]; 
+                    if (takenDomains.includes(domainInput)) { statusTaken.style.display = 'flex'; input.style.borderColor = "#ef4444"; isDomainAvailable = false; } 
+                    else { statusAvail.style.display = 'flex'; isDomainAvailable = true; input.style.borderColor = "#10b981"; tempOrderData.domain = fullDomain; }
+                } else { statusInfo.style.display = 'flex'; isDomainAvailable = true; input.style.borderColor = "var(--accent-orange)"; tempOrderData.domain = fullDomain; }
+            }, 1000);
+        }
+
+        function nextCheckoutStep(step) {
+            document.querySelectorAll('.checkout-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('checkoutStep' + step).classList.add('active');
+            for (let i = 1; i <= 3; i++) {
+                const indicator = document.getElementById('stepIndicator' + i);
+                indicator.classList.remove('active', 'completed');
+                if (i < step) indicator.classList.add('completed');
+                else if (i === step) indicator.classList.add('active');
+            }
+            if (step === 3) {
+                document.getElementById('confirmPlan').textContent = tempOrderData.planName;
+                document.getElementById('confirmPaymentType').textContent = tempOrderData.paymentMethod;
+                document.getElementById('confirmPrice').textContent = selectedPaymentOption === 'onetime' ? 'RM' + tempOrderData.price : 'RM' + tempOrderData.finalPrice + '/mo';
+                document.getElementById('confirmDomain').textContent = tempOrderData.domain; 
+                document.getElementById('confirmName').textContent = document.getElementById('coFullName').value;
+                document.getElementById('confirmEmail').textContent = document.getElementById('coEmail').value;
+                document.getElementById('confirmPhone').textContent = document.getElementById('coPhone').value;
+                document.getElementById('confirmStyle').textContent = document.getElementById('coStyleDesc').value;
+            }
+            currentCheckoutStep = step;
+        }
+
+        function validateStep1() {
+            const domainInput = document.getElementById('coDomainInput').value.trim();
+            if (!domainInput) { showPopup("Domain Required", "Please enter your desired domain name."); return; }
+            if (!isDomainAvailable) { if (currentDomainType === 'ddnex' && document.getElementById('domainStatusAvailable').style.display === 'none') { showPopup("Check Domain", "Please check domain availability before proceeding."); return; } }
+            tempOrderData.domain = domainInput + (currentDomainType === 'ddnex' ? '.ddnex.com' : '');
+            nextCheckoutStep(2);
+        }
+
+        function validateStep2() {
+            const styleDesc = document.getElementById('coStyleDesc').value.trim();
+            const errorEl = document.getElementById('styleDescError');
+            if (styleDesc.length < 50) { errorEl.style.display = 'block'; document.getElementById('coStyleDesc').focus(); return; } 
+            else errorEl.style.display = 'none';
+            const phone = document.getElementById('coPhone').value.trim();
+            if (phone.length < 5) { showPopup("Invalid Phone", "Please enter a valid phone number."); return; }
+            nextCheckoutStep(3);
+        }
+
+        function togglePlaceOrderBtn() { const checkbox = document.getElementById('agreeTerms'); const btn = document.getElementById('btnPlaceOrder'); btn.disabled = !checkbox.checked; }
+
+        async function submitOrder() {
+            const btn = document.getElementById('btnPlaceOrder');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
+            btn.disabled = true;
+
+            const finalOrder = {
+                ...tempOrderData,
+                customerName: document.getElementById('coFullName').value,
+                customerEmail: document.getElementById('coEmail').value,
+                customerPhone: document.getElementById('coPhone').value,
+                customerCompany: document.getElementById('coCompany').value,
+                styleDescription: document.getElementById('coStyleDesc').value,
+                status: 'Pending Payment',
+                renewalDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString()
+            };
+
+            if (window.firebaseDB) {
+                const success = await window.firebaseDB.saveOrder(finalOrder);
+                if (success) {
+                    // Save order ID to localStorage to track after Stripe redirect
+                    // Note: Real Stripe integration would pass metadata in the checkout session
+                    localStorage.setItem('lastOrderId', 'pending_payment');
+                    
+                    showPopup("Order Saved!", "Redirecting to Stripe Payment Portal...", () => {
+                        // REDIRECT TO STRIPE BILLING PORTAL as requested
+                        window.location.href = "https://billing.stripe.com/p/login/fZubIV3kQgXl3D072M97G00";
+                    });
+                    
+                    document.getElementById('checkoutForm').reset();
+                    document.getElementById('agreeTerms').checked = false;
+                    togglePlaceOrderBtn();
+                } else {
+                    showPopup("Error", "Could not place order. Please try again.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            } else {
+                alert("System not ready. Please refresh.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function openLegalPopup(type) {
+            const targetSection = document.getElementById(type);
+            const title = targetSection.querySelector('.page-title').innerText;
+            const contentHTML = targetSection.querySelector('.legal-content').innerHTML;
+            const modal = document.getElementById('caseStudyModal');
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `<h2 style="font-family: var(--font-heading); margin-bottom: 24px;">${title}</h2><div style="color: var(--text-secondary); line-height: 1.8;">${contentHTML}</div><button class="btn btn-primary" style="width: 100%; margin-top: 32px;" onclick="closeModalDirect()">Close</button>`;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // --- Contact Form Handler ---
+        const contactForm = document.getElementById('contactForm');
+        if(contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault(); 
+                const btn = contactForm.querySelector('button[type="submit"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Sending...';
+                btn.disabled = true;
+                btn.style.opacity = '0.7';
+                const formData = new FormData(contactForm);
+                fetch(contactForm.action, { method: 'POST', body: formData })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    showPopup("Message Sent!", "Thank you for contacting us. We have received your inquiry.");
+                    contactForm.reset();
+                    return true;
+                })
+                .catch(error => { console.error('Error:', error); showPopup("Something went wrong", "Please try again or email us directly at support@ddnex.com."); })
+                .finally(() => { btn.innerHTML = originalText; btn.disabled = false; btn.style.opacity = '1'; });
+            });
+        }
+
+        // --- Custom Popup Logic ---
+        let popupCallback = null;
+        function showPopup(title, message, callback = null) {
+            const popup = document.getElementById('customPopup');
+            const titleEl = document.getElementById('popupTitle');
+            const msgEl = document.getElementById('popupMessage');
+            const btn = document.getElementById('popupBtn');
+            const icon = document.getElementById('popupIcon');
+            
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+            popupCallback = callback;
+
+            // Change icon based on context
+            if(title.includes("Error") || title.includes("Failed")) {
+                icon.innerHTML = '<i class="ri-close-circle-fill"></i>';
+                icon.style.background = '#fee2e2'; icon.style.color = '#ef4444';
+            } else {
+                icon.innerHTML = '<i class="ri-checkbox-circle-fill"></i>';
+                icon.style.background = '#dcfce7'; icon.style.color = '#16a34a';
+            }
+
+            if(callback) { btn.innerText = "Proceed"; btn.onclick = handlePopupAction; } 
+            else { btn.innerText = "Got it"; btn.onclick = closePopup; }
+            popup.classList.add('active');
+        }
+        function closePopup() { document.getElementById('customPopup').classList.remove('active'); popupCallback = null; }
+        function handlePopupAction() { if(popupCallback) popupCallback(); closePopup(); }
+
+        // --- Modal Logic for Case Studies ---
+        const caseStudies = {
+            'klinik': { title: 'Secure Patient Management System', tag: 'Healthcare', img: 'https://raw.githubusercontent.com/ddnetwork-ent/clinic-azam-dental/main/IMG_2260.JPG', desc: 'Developed a cloud-based EMR system with encryption for KLINIK PERGIGIAN AZAM. The project faced challenges with data migration from legacy paper records.', stats: [ { val: '60%', label: 'Admin Time Reduced' }, { val: '100%', label: 'PDPA Compliant' } ] },
+            'pne': { title: 'Event Management Platform', tag: 'Events', img: 'https://scontent.fkul2-4.fna.fbcdn.net/v/t39.30808-6/302295237_496402925823276_6644452016584370240_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=1d70fc&_nc_ohc=nFHMHqDNU7wQ7kNvwFhWzLG&_nc_oc=AdnLeR0pnYzNfX3s8S0-McNEsEPZnkwHquVPQ5jhgwkJZcq8x8tNTYraZbcsw7dy8KgNcR3ANi_Qlr9P2H19_bFW&_nc_zt=23&_nc_ht=scontent.fkul2-4.fna&_nc_gid=Pvx_NdENxJ4KMJ96Nw0Flw&_nc_ss=8&oh=00_Afxt5ldZgcSeSw5YcMdrP6lXjDwzuwM5SQtJHyB5xeyYZw&oe=69AECA9C', desc: 'Built a scalable app for ticketing and analytics for PNE ARENA ENTERPRISE.', stats: [ { val: '10k+', label: 'Concurrent Users' }, { val: '40%', label: 'Revenue Increase' } ] },
+            'tiara': { title: 'HR Optimization Tool', tag: 'HR Tech', img: 'https://scontent.fkul4-4.fna.fbcdn.net/v/t39.30808-6/472683464_1240338413708762_4352459610042146467_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=2a1932&_nc_ohc=tB2mXrFfAs8Q7kNvwEOVz07&_nc_oc=AdntVqWMhk_RK4wbj6LzK5WjjEep--gkogZOgTXMk2U-Qw2MNmwet9MqcIy_E-PTUpCc1R-skOxmQzzJBQvSLMae&_nc_zt=23&_nc_ht=scontent.fkul4-4.fna&_nc_gid=YSSpmEsbb4qgz8ab8KxnnQ&_nc_ss=8&oh=00_AfwVkZNdF9Ie7WWZMOkPCa3HSSpZwjhYMhoJ8dXAjKG08w&oe=69AEF0ED', desc: 'Implemented RPA for resource allocation at TIARA ADVANCE RECOURSES.', stats: [ { val: '35%', label: 'Cost Reduction' }, { val: '24/7', label: 'Processing' } ] },
+            'mory': { title: 'Loyalty Web & E-Store', tag: 'E-Commerce', img: 'https://raw.githubusercontent.com/ddnetwork-ent/mory-matcha/refs/heads/main/MORY%20ICON-green.png', desc: 'Integrated a digital loyalty system for MORY.', stats: [ { val: '50%', label: 'Sales Uplift' }, { val: '2x', label: 'Retention Rate' } ] }
+        };
+
+        function openModal(id) {
+            const data = caseStudies[id];
+            if(!data) return;
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `<div class="modal-tag">${data.tag}</div><h2>${data.title}</h2><div class="modal-stats">${data.stats.map(s => `<div class="m-stat"><h4>${s.val}</h4><span>${s.label}</span></div>`).join('')}</div><img src="${data.img}" class="modal-img" alt="${data.title}" loading="lazy"><div class="modal-body"><p><strong>The Challenge:</strong> ${data.desc}</p><p><strong>Our Solution:</strong> DDNEX deployed a dedicated team to build a customized architecture that scales with demand.</p><p><strong>The Result:</strong> A robust, secure, and user-friendly platform that has transformed operational efficiency.</p></div><button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="closeModalDirect()">Close Case Study</button>`;
+            document.getElementById('caseStudyModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(e) { if(e.target.id === 'caseStudyModal') closeModalDirect(); }
+        function closeModalDirect() { document.getElementById('caseStudyModal').classList.remove('active'); document.body.style.overflow = 'auto'; }
+
+        // --- SCROLL LOGIC ---
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const header = document.getElementById('header');
+            const progress = document.getElementById('scroll-progress');
+            const backToTop = document.getElementById('back-to-top');
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (scrollY / height) * 100;
+            progress.style.width = scrolled + "%";
+            if (scrollY > 50) header.classList.add('scrolled'); else header.classList.remove('scrolled');
+            if (scrollY > 300) backToTop.classList.add('visible'); else backToTop.classList.remove('visible');
+        });
+
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+        function runScrollAnimations() {
+            const observerOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        const counter = entry.target.querySelector('.counter');
+                        if(counter && !counter.classList.contains('counted')) { startCounter(counter); counter.classList.add('counted'); }
+                    }
+                });
+            }, observerOptions);
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        function startCounter(el) {
+            const target = +el.getAttribute('data-target');
+            const duration = 2000; 
+            const increment = target / (duration / 16); 
+            let current = 0;
+            const updateCount = () => {
+                current += increment;
+                if(current < target) { el.innerText = Math.ceil(current); requestAnimationFrame(updateCount); } 
+                else { el.innerText = target; }
+            };
+            updateCount();
+        }
+
+        // --- AUTH & PROFILE LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const googleBtn = document.getElementById('googleLoginBtn');
+            const emailForm = document.getElementById('emailLoginForm');
+            if(googleBtn) googleBtn.addEventListener('click', () => { if(window.firebaseAuth) window.firebaseAuth.googleLogin(); });
+            if(emailForm) emailForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                if(window.firebaseAuth) window.firebaseAuth.emailLogin(email, password);
+            });
+        });
+
+        function updateAuthUI(isLoggedIn, user) {
+            const desktopBtn = document.getElementById('headerAuthBtn');
+            const mobileBtn = document.getElementById('mobileAuthBtn');
+            if (isLoggedIn && user) {
+                desktopBtn.innerHTML = `<i class="ri-user-smile-line"></i> Profile`;
+                desktopBtn.onclick = () => handleNavigation('profile', event);
+                if(mobileBtn) { mobileBtn.innerHTML = `Profile <i class="ri-arrow-right-s-line arrow"></i>`; mobileBtn.onclick = () => handleNavigation('profile', event); }
+            } else {
+                desktopBtn.innerHTML = `Login`;
+                desktopBtn.onclick = () => handleAuthClick();
+                if(mobileBtn) { mobileBtn.innerHTML = `Login <i class="ri-arrow-right-s-line arrow"></i>`; mobileBtn.onclick = () => handleAuthClick(); }
+            }
+        }
+
+        function handleAuthClick() { handleNavigation('auth', null); }
+        function handleLogout() { if(window.firebaseAuth) window.firebaseAuth.logout(); }
+
+        async function loadProfileData() {
+            const user = window.firebaseAuth ? window.firebaseAuth.getUser() : null;
+            if (!user) return;
+            document.getElementById('profileNameDisplay').textContent = user.displayName || "User";
+            document.getElementById('profileEmailDisplay').textContent = user.email;
+            document.getElementById('profileAvatarInitials').textContent = (user.displayName || "U").charAt(0).toUpperCase();
+            document.getElementById('settingsName').value = user.displayName || "";
+            document.getElementById('settingsEmail').value = user.email || "";
+            const ordersList = document.getElementById('ordersList');
+            const loading = document.getElementById('ordersLoading');
+            if(window.firebaseDB) {
+                loading.style.display = 'block';
+                ordersList.innerHTML = '';
+                const orders = await window.firebaseDB.getOrders();
+                loading.style.display = 'none';
+                if(orders.length === 0) {
+                    ordersList.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);">No orders found.</div>`;
+                    document.getElementById('dbPlanName').textContent = "No Active Plan";
+                    document.getElementById('dbPlanPrice').textContent = "-";
+                    document.getElementById('dbDomainName').textContent = "-";
+                    document.getElementById('dbPlanStatusBadge').innerHTML = '<i class="ri-time-line"></i> Inactive';
+                    document.getElementById('dbPlanStatusBadge').className = "status-badge status-pending";
+                } else {
+                    const latestOrder = orders[0]; 
+                    document.getElementById('dbPlanName').textContent = latestOrder.description || latestOrder.planName || 'Custom Plan';
+                    document.getElementById('dbPlanPrice').textContent = 'RM' + (latestOrder.finalPrice || latestOrder.price || '0');
+                    document.getElementById('dbDomainName').textContent = latestOrder.domain || 'N/A';
+                    document.getElementById('dbPlanPaymentType').textContent = latestOrder.paymentMethod || 'One-time';
+                    document.getElementById('dbRenewalDate').textContent = latestOrder.renewalDate || 'N/A';
+                    const renewNote = document.getElementById('dbRenewalNote');
+                    if(latestOrder.paymentMethod === 'One-Time Payment') renewNote.textContent = "(Fixed package)"; else renewNote.textContent = "(Subscription active)";
+                    const dbStatus = latestOrder.status;
+                    const statusBadge = document.getElementById('dbPlanStatusBadge');
+                    const domainStatus = document.getElementById('dbDomainStatus');
+                    if(dbStatus === 'Activated') {
+                        statusBadge.innerHTML = '<i class="ri-checkbox-circle-fill"></i> Active'; statusBadge.className = "status-badge status-active";
+                        domainStatus.innerHTML = '<i class="ri-check-line"></i> Live'; domainStatus.className = "status-badge status-active";
+                    } else {
+                        statusBadge.innerHTML = '<i class="ri-time-line"></i> ' + (dbStatus || 'Pending'); statusBadge.className = "status-badge status-pending";
+                        domainStatus.innerHTML = '<i class="ri-loader-4-line"></i> Pending Setup'; domainStatus.className = "status-badge status-pending";
+                        domainStatus.style.background = "rgba(245, 158, 11, 0.1)"; domainStatus.style.color = "#f59e0b";
+                    }
+                    orders.forEach(order => {
+                        const date = order.createdAt ? new Date(order.createdAt.seconds * 1000).toLocaleDateString() : (order.date || 'Pending');
+                        const status = order.status || 'Pending';
+                        const orderEl = document.createElement('div');
+                        orderEl.style.cssText = "background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center;";
+                        orderEl.innerHTML = `<div><div style="font-weight: 700; font-size: 15px;">${order.description || order.planName || 'Custom Order'}</div><div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Ordered on: ${date}</div></div><div class="status-badge ${status === 'Activated' ? 'status-active' : 'status-pending'}">${status}</div>`;
+                        ordersList.appendChild(orderEl);
+                    });
+                }
+            }
+        }
+
+        // --- DOMContentLoaded ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const path = window.location.pathname.replace('/', '') || 'home';
+            // Check for success query param for Thank You Page
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                updateNavigationState('successful-payment');
+            } else if(pageData[path]) {
+                updateNavigationState(path);
+            } else {
+                updateNavigationState('home');
+            }
+            runScrollAnimations();
+            window.addEventListener('resize', () => {
+                const tables = document.querySelectorAll('.compare-table');
+                tables.forEach(table => { if(window.innerWidth >= 768 && table.closest('.compare-table-wrapper').classList.contains('active')) table.style.display = 'table'; else if(window.innerWidth < 768) table.style.display = 'none'; });
+            });
+        });
+
+    // --- BREVO NEWSLETTER LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const sibForm = document.getElementById('sib-form');
+        const sibError = document.getElementById('error-message');
+        const sibSuccess = document.getElementById('success-message');
+        if(sibForm) {
+            sibForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = sibForm.querySelector('button[type="submit"]');
+                const originalText = btn.innerHTML;
+                const emailInput = sibForm.querySelector('input[name="EMAIL"]');
+                const emailValue = emailInput ? emailInput.value.trim() : '';
+                sibError.style.display = 'none'; sibSuccess.style.display = 'none';
+                if(!emailValue) { sibError.style.display = 'block'; return; }
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if(!emailPattern.test(emailValue)) { sibError.style.display = 'block'; return; }
+                btn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Processing...';
+                btn.disabled = true;
+                const formData = new FormData(sibForm);
+                fetch(sibForm.action, { method: 'POST', body: formData })
+                .then(response => {
+                    if (response.ok) { sibSuccess.style.display = 'block'; emailInput.value = ''; } 
+                    else { sibError.style.display = 'block'; }
+                })
+                .catch(error => { console.error('Brevo Error:', error); sibError.style.display = 'block'; })
+                .finally(() => { btn.innerHTML = originalText; btn.disabled = false; });
+            });
+        }
+    });
+    </script>
+    
+    <script>
+      window.REQUIRED_CODE_ERROR_MESSAGE = 'Please choose a country code';
+      window.LOCALE = 'en';
+      window.EMAIL_INVALID_MESSAGE = window.SMS_INVALID_MESSAGE = "The information provided is invalid. Please review the field format and try again.";
+      window.REQUIRED_ERROR_MESSAGE = "This field cannot be left blank. ";
+      window.GENERIC_INVALID_MESSAGE = "The information provided is invalid. Please review the field format and try again.";
+      window.translation = { common: { selectedList: '{quantity} list selected', selectedLists: '{quantity} lists selected', selectedOption: '{quantity} selected', selectedOptions: '{quantity} selected', } };
+      var AUTOHIDE = Boolean(0);
+    </script>
+    <script defer src="https://sibforms.com/forms/end-form/build/main.js"></script>
+
+</body>
+</html>
