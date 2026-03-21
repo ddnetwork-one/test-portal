@@ -1844,6 +1844,168 @@
             color: var(--text-muted);
         }
 
+        /* =========================================
+           MARKETING SECTION TABS
+           ========================================= */
+        .marketing-section-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: white;
+            padding: 6px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+        .marketing-section-tab {
+            padding: 12px 24px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            background: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .marketing-section-tab:hover { 
+            color: var(--text-main); 
+            background: var(--bg-body);
+        }
+        .marketing-section-tab.active {
+            color: white;
+            background: var(--primary);
+        }
+        .marketing-section-tab i {
+            font-size: 18px;
+        }
+
+        /* Email Editor Styles */
+        .email-editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        @media(max-width: 900px) {
+            .email-editor-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .email-editor-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: #f8fafc;
+            padding: 4px;
+            border-radius: var(--radius-sm);
+        }
+        .email-editor-tab {
+            flex: 1;
+            padding: 10px 16px;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: none;
+            font-size: 13px;
+            text-align: center;
+        }
+        .email-editor-tab:hover { 
+            color: var(--text-main); 
+        }
+        .email-editor-tab.active {
+            color: var(--primary);
+            background: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .email-content-editor {
+            width: 100%;
+            min-height: 400px;
+            padding: 16px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+            background: #fafafa;
+        }
+        .email-content-editor:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: white;
+        }
+
+        .email-preview-frame {
+            width: 100%;
+            height: 500px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            background: white;
+        }
+
+        .quick-fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .variable-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #f1f5f9;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: monospace;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .variable-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Campaign Stats Cards */
+        .campaign-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media(max-width: 768px) {
+            .campaign-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .campaign-stat-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+        }
+        .campaign-stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-main);
+            font-family: var(--font-heading);
+        }
+        .campaign-stat-card .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
         /* Responsive */
         @media(max-width: 768px) {
             .sidebar { transform: translateX(-100%); width: var(--sidebar-width); }
@@ -1863,6 +2025,7 @@
             .item-row input { margin-bottom: 4px; }
             .btn-remove-item { justify-self: end; }
             .crm-pipeline { grid-template-columns: 1fr; }
+            .campaign-stats-grid { grid-template-columns: 1fr; }
         }
         .mobile-menu-btn {
             display: none;
@@ -2228,6 +2391,9 @@
             } else if (type === 'lead') {
                 colName = 'crm_leads';
                 prefix = 'LD';
+            } else if (type === 'campaign') {
+                colName = 'email_campaigns';
+                prefix = 'CAMP';
             } else {
                 return null;
             }
@@ -2495,6 +2661,7 @@
                 return snap.docs.map(d => ({id: d.id, ...d.data()}));
             },
             addCampaign: async (data) => await addDoc(getCol('email_campaigns'), data),
+            updateCampaign: async (id, data) => await updateDoc(doc(db, 'email_campaigns_ddnex', id), data),
         };
 
     </script>
@@ -2523,6 +2690,77 @@
         // Pagination State
         let invoicePageState = { page: 1, perPage: 20, filteredData: [] };
         let quotationPageState = { page: 1, perPage: 20, filteredData: [] };
+
+        // Default Marketing Email Template
+        const DEFAULT_MARKETING_TEMPLATE = `<!DOCTYPE html>
+<html>
+<body style="margin:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td align="center" style="padding:50px 20px;">
+
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+
+<!-- HEADER -->
+<tr>
+<td style="padding:28px 40px;border-bottom:1px solid #eeeeee;" align="center">
+<img src="https://i.ibb.co/SD7QzyYw/favicon-white-ddnex.png" width="38">
+</td>
+</tr>
+
+<!-- HERO -->
+<tr>
+<td style="padding:50px 40px;text-align:center;">
+
+<div style="font-size:13px;font-weight:600;color:#ffffff;background:#000000;display:inline-block;padding:6px 14px;border-radius:20px;margin-bottom:18px;">
+MARKETING EMAIL
+</div>
+
+<div style="font-size:32px;font-weight:700;color:#111111;margin-bottom:12px;">
+Your Email Title Here
+</div>
+
+<div style="font-size:16px;color:#4b5563;line-height:1.7;margin-bottom:30px;">
+Your marketing message goes here. Create compelling content that engages your audience.
+</div>
+
+<table align="center">
+<tr>
+<td bgcolor="#000000" style="border-radius:30px;">
+<a href="https://ddnex.com" style="color:#ffffff;text-decoration:none;padding:15px 36px;font-weight:600;display:inline-block;font-size:15px;">
+Call to Action
+</a>
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+<td style="padding:40px;text-align:center;font-size:13px;color:#9ca3af;line-height:1.7;border-top:1px solid #eeeeee;">
+
+<b>DDNEX®</b><br>
+Digital Network & Web Solutions<br>
+Malaysia
+
+<br><br>
+
+© 2026 DDNEX®. All rights reserved.
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>`;
         
         // Constants
         const PACKAGE_PRICES = {
@@ -3368,7 +3606,7 @@ If you have any questions, please reply to this email.
 </body>
 </html>
             `;
-        };
+};
 
 // =========================================
 // FULL TEMPLATE HTML - For PDF/Download (A4 Full Page - Single Sheet)
@@ -3485,7 +3723,7 @@ const generateFullTemplateHTML = (doc) => {
         `;
     } 
 
-        let termsList = '';
+    let termsList = '';
     if (isQuotation) {
         termsList = `
             <li style="margin-bottom:6px;line-height:1.5;font-size:12px;">This quotation is valid for 16 days from the date issued.</li>
@@ -3877,10 +4115,8 @@ const generateFullTemplateHTML = (doc) => {
                 </div>
             `;
 
-            // Initialize drag and drop
             initCRMDragDrop();
             
-            // Search functionality
             const searchInput = document.getElementById('crmSearchInput');
             searchInput.addEventListener('keyup', (e) => {
                 const term = e.target.value.toLowerCase();
@@ -3921,7 +4157,6 @@ const generateFullTemplateHTML = (doc) => {
             </div>
         `;
 
-        // CRM Drag and Drop
         function initCRMDragDrop() {
             const cards = document.querySelectorAll('.crm-card');
             const columns = document.querySelectorAll('.crm-cards');
@@ -4112,266 +4347,686 @@ const generateFullTemplateHTML = (doc) => {
         };
 
         // =========================================
-        // MARKETING EMAIL SECTION
+        // MARKETING EMAIL SECTION - UPDATED WITH TABS & EDITOR
         // =========================================
         async function renderMarketingSection() {
             const templates = await window.dbOperations.getMarketingTemplates();
             const campaigns = await window.dbOperations.getCampaigns();
-            const canDelete = hasPermission('delete_crew');
+            const senderEmails = await window.dbOperations.getSenderEmails();
+            const subscribers = await window.dbOperations.getSubscribers();
+            const activeSubscribers = subscribers.filter(s => s.status === 'active');
+            
+            const activeTemplates = templates.filter(t => t.status === 'active');
+            const sentCampaigns = campaigns.filter(c => c.status === 'sent' || c.status === 'completed');
+            const totalRecipients = sentCampaigns.reduce((sum, c) => sum + (c.recipientCount || 0), 0);
 
             document.getElementById('mainContent').innerHTML = `
-                <div class="filter-bar">
-                    <div class="search-box" style="flex: 1;">
-                        <input type="text" placeholder="Search templates..." id="templateSearchInput">
-                        <i class="ri-search-line"></i>
-                    </div>
-                    <button class="btn btn-primary" onclick="openMarketingTemplateModal()">
-                        <i class="ri-add-line"></i> New Template
+                <!-- Section Tabs -->
+                <div class="marketing-section-tabs">
+                    <button class="marketing-section-tab active" onclick="switchMarketingSection('compose', this)">
+                        <i class="ri-edit-line"></i> Compose Email
+                    </button>
+                    <button class="marketing-section-tab" onclick="switchMarketingSection('templates', this)">
+                        <i class="ri-file-text-line"></i> Templates
+                    </button>
+                    <button class="marketing-section-tab" onclick="switchMarketingSection('senders', this)">
+                        <i class="ri-user-voice-line"></i> Senders
+                    </button>
+                    <button class="marketing-section-tab" onclick="switchMarketingSection('campaigns', this)">
+                        <i class="ri-send-plane-line"></i> Campaigns
                     </button>
                 </div>
-                
-                <div class="card" style="margin-bottom: 24px;">
-                    <div class="card-header">
-                        <h3>Email Templates</h3>
-                        <span style="font-size: 13px; color: var(--text-muted);">${templates.length} templates</span>
+
+                <!-- Stats Cards -->
+                <div class="campaign-stats-grid">
+                    <div class="campaign-stat-card">
+                        <div class="stat-value">${activeSubscribers.length}</div>
+                        <div class="stat-label">Active Subscribers</div>
                     </div>
-                    <div class="card-body">
-                        ${templates.length === 0 ? `
-                            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                <i class="ri-mail-line" style="font-size: 48px; margin-bottom: 16px;"></i>
-                                <p>No templates yet. Create your first marketing email template.</p>
-                            </div>
-                        ` : templates.map(t => `
-                            <div class="marketing-template-card ${t.status === 'inactive' ? 'inactive' : ''}">
-                                <div class="marketing-template-header">
-                                    <div>
-                                        <div class="marketing-template-title">${t.name}</div>
-                                        <div class="marketing-template-meta">
-                                            <span class="marketing-template-badge ${t.type}">${t.type?.toUpperCase() || 'HTML'}</span>
-                                            <span class="marketing-template-badge ${t.status === 'active' ? 'active' : 'inactive'}">${t.status?.toUpperCase() || 'ACTIVE'}</span>
-                                            <span>Created: ${formatDate(t.createdAt)}</span>
+                    <div class="campaign-stat-card">
+                        <div class="stat-value">${activeTemplates.length}</div>
+                        <div class="stat-label">Email Templates</div>
+                    </div>
+                    <div class="campaign-stat-card">
+                        <div class="stat-value">${sentCampaigns.length}</div>
+                        <div class="stat-label">Campaigns Sent</div>
+                    </div>
+                    <div class="campaign-stat-card">
+                        <div class="stat-value">${totalRecipients}</div>
+                        <div class="stat-label">Total Emails Sent</div>
+                    </div>
+                </div>
+
+                <!-- Compose Section -->
+                <div id="marketingSectionCompose" class="section-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="ri-mail-edit-line"></i> Compose New Email</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="email-editor-container">
+                                <div>
+                                    <!-- Email Mode Tabs -->
+                                    <div class="email-editor-tabs">
+                                        <button class="email-editor-tab active" onclick="switchEmailEditorMode('template', this)">
+                                            <i class="ri-layout-line"></i> Template
+                                        </button>
+                                        <button class="email-editor-tab" onclick="switchEmailEditorMode('html', this)">
+                                            <i class="ri-code-line"></i> Custom HTML
+                                        </button>
+                                        <button class="email-editor-tab" onclick="switchEmailEditorMode('text', this)">
+                                            <i class="ri-text"></i> Plain Text
+                                        </button>
+                                    </div>
+
+                                    <!-- Quick Fields -->
+                                    <div class="form-group-modal">
+                                        <label>Subject Line *</label>
+                                        <input type="text" id="composeSubject" placeholder="Enter email subject..." oninput="updateEmailPreview()">
+                                    </div>
+
+                                    <!-- Template Selection (shown for template mode) -->
+                                    <div id="templateModeFields">
+                                        <div class="form-row">
+                                            <div class="form-group-modal">
+                                                <label>Use Template</label>
+                                                <select id="composeTemplateSelect" onchange="loadSelectedTemplate()">
+                                                    <option value="">-- Select Template --</option>
+                                                    <option value="_default_">-- Default Marketing Template --</option>
+                                                    ${activeTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+                                                </select>
+                                            </div>
+                                            <div class="form-group-modal">
+                                                <label>Sender Identity</label>
+                                                <select id="composeSenderSelect">
+                                                    <option value="default">DDNEX System (support@ddnex.com)</option>
+                                                    ${senderEmails.map(s => `<option value="${s.id}">${s.name} (${s.email})</option>`).join('')}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Editable Fields for Template -->
+                                        <div class="form-group-modal">
+                                            <label>Email Title</label>
+                                            <input type="text" id="composeTitle" value="Your Email Title Here" oninput="updateEmailPreview()">
+                                        </div>
+                                        <div class="form-group-modal">
+                                            <label>Badge Text</label>
+                                            <input type="text" id="composeBadge" value="MARKETING EMAIL" oninput="updateEmailPreview()">
+                                        </div>
+                                        <div class="form-group-modal">
+                                            <label>Main Message</label>
+                                            <textarea id="composeMessage" rows="4" oninput="updateEmailPreview()">Your marketing message goes here. Create compelling content that engages your audience.</textarea>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group-modal">
+                                                <label>Button Text</label>
+                                                <input type="text" id="composeButtonText" value="Call to Action" oninput="updateEmailPreview()">
+                                            </div>
+                                            <div class="form-group-modal">
+                                                <label>Button Link</label>
+                                                <input type="text" id="composeButtonLink" value="https://ddnex.com" oninput="updateEmailPreview()">
+                                            </div>
                                         </div>
                                     </div>
-                                    <div style="display:flex; gap:8px;">
-                                        <button class="btn-sm btn-outline-sm" onclick="previewMarketingTemplate('${t.id}')">
-                                            <i class="ri-eye-line"></i> Preview
+
+                                    <!-- Custom HTML Editor (hidden by default) -->
+                                    <div id="htmlModeFields" style="display:none;">
+                                        <div class="form-group-modal">
+                                            <label>HTML Code</label>
+                                            <textarea id="composeCustomHTML" class="email-content-editor" placeholder="Paste your HTML code here..." oninput="updateEmailPreview()">${DEFAULT_MARKETING_TEMPLATE}</textarea>
+                                        </div>
+                                        <div style="margin-bottom:16px;">
+                                            <button class="btn-sm btn-outline-sm" onclick="resetCustomHTML()"><i class="ri-refresh-line"></i> Load Default Template</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Plain Text Editor (hidden by default) -->
+                                    <div id="textModeFields" style="display:none;">
+                                        <div class="form-group-modal">
+                                            <label>Plain Text Content</label>
+                                            <textarea id="composePlainText" class="email-content-editor" style="font-family:inherit;" placeholder="Enter your plain text message here..." oninput="updateEmailPreview()">Hello,
+
+Your marketing message goes here.
+
+Visit us at: https://ddnex.com
+
+Best regards,
+DDNEX Team</textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- Recipients Selection -->
+                                    <div class="form-group-modal">
+                                        <label>Select Recipients (${activeSubscribers.length} available)</label>
+                                        <div style="margin-bottom:8px; display:flex; gap:8px;">
+                                            <button class="btn-sm btn-outline-sm" onclick="selectAllRecipients()"><i class="ri-checkbox-line"></i> Select All</button>
+                                            <button class="btn-sm btn-outline-sm" onclick="deselectAllRecipients()"><i class="ri-checkbox-blank-line"></i> Deselect All</button>
+                                            <span id="selectedRecipientsCount" style="margin-left:auto; font-size:13px; color:var(--text-muted);">0 selected</span>
+                                        </div>
+                                        <div class="subscriber-checkbox-grid" id="composeRecipientsGrid" style="max-height:200px;">
+                                            ${activeSubscribers.map(s => `
+                                                <label class="subscriber-checkbox-item" onclick="updateRecipientCount()">
+                                                    <input type="checkbox" value="${s.id}" data-email="${s.email}" data-name="${s.name || 'Subscriber'}">
+                                                    <div class="subscriber-checkbox-info">
+                                                        <div class="subscriber-checkbox-name">${s.name || 'N/A'}</div>
+                                                        <div class="subscriber-checkbox-email">${s.email}</div>
+                                                    </div>
+                                                </label>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+
+                                    <!-- Send Buttons -->
+                                    <div style="display:flex; gap:12px; margin-top:16px;">
+                                        <button class="btn btn-primary" style="flex:1;" onclick="sendComposedEmail()">
+                                            <i class="ri-send-plane-fill"></i> Send Now
                                         </button>
-                                        <button class="btn-sm btn-outline-sm" onclick="editMarketingTemplate('${t.id}')">
-                                            <i class="ri-edit-line"></i> Edit
+                                        <button class="btn btn-outline" onclick="saveComposedAsTemplate()">
+                                            <i class="ri-save-line"></i> Save as Template
                                         </button>
-                                        ${canDelete ? `
+                                    </div>
+                                    <div id="composeSendStatus"></div>
+                                </div>
+
+                                <!-- Preview -->
+                                <div>
+                                    <div class="email-info-box">
+                                        <h4><i class="ri-eye-line"></i> Live Preview</h4>
+                                    </div>
+                                    <iframe id="composePreviewIframe" class="email-preview-frame"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Templates Section -->
+                <div id="marketingSectionTemplates" class="section-content">
+                    <div class="filter-bar">
+                        <div class="search-box" style="flex:1;">
+                            <input type="text" placeholder="Search templates..." id="templateSearchInput">
+                            <i class="ri-search-line"></i>
+                        </div>
+                        <button class="btn btn-primary" onclick="openMarketingTemplateModal()">
+                            <i class="ri-add-line"></i> New Template
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            ${templates.length === 0 ? `
+                                <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    <i class="ri-mail-line" style="font-size: 48px; margin-bottom: 16px;"></i>
+                                    <p>No templates yet. Create your first marketing email template.</p>
+                                </div>
+                            ` : templates.map(t => `
+                                <div class="marketing-template-card ${t.status === 'inactive' ? 'inactive' : ''}">
+                                    <div class="marketing-template-header">
+                                        <div>
+                                            <div class="marketing-template-title">${t.name}</div>
+                                            <div class="marketing-template-meta">
+                                                <span class="marketing-template-badge ${t.type}">${t.type?.toUpperCase() || 'HTML'}</span>
+                                                <span class="marketing-template-badge ${t.status === 'active' ? 'active' : 'inactive'}">${t.status?.toUpperCase() || 'ACTIVE'}</span>
+                                                <span>Created: ${formatDate(t.createdAt)}</span>
+                                            </div>
+                                        </div>
+                                        <div style="display:flex; gap:8px;">
+                                            <button class="btn-sm btn-outline-sm" onclick="useTemplateForCompose('${t.id}')">
+                                                <i class="ri-send-plane-line"></i> Use
+                                            </button>
+                                            <button class="btn-sm btn-outline-sm" onclick="previewMarketingTemplate('${t.id}')">
+                                                <i class="ri-eye-line"></i> Preview
+                                            </button>
+                                            <button class="btn-sm btn-outline-sm" onclick="editMarketingTemplate('${t.id}')">
+                                                <i class="ri-edit-line"></i> Edit
+                                            </button>
                                             <button class="btn-sm btn-outline-sm" style="border-color:#fecaca; color:#dc2626;" onclick="deleteMarketingTemplate('${t.id}')">
                                                 <i class="ri-delete-bin-line"></i>
                                             </button>
-                                        ` : ''}
+                                        </div>
                                     </div>
+                                    ${t.subject ? `<p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;"><strong>Subject:</strong> ${t.subject}</p>` : ''}
                                 </div>
-                                ${t.subject ? `<p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;"><strong>Subject:</strong> ${t.subject}</p>` : ''}
-                            </div>
-                        `).join('')}
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Recent Campaigns</h3>
+                <!-- Senders Section -->
+                <div id="marketingSectionSenders" class="section-content">
+                    <div class="filter-bar">
+                        <h3 style="font-size:16px;">Sender Email Accounts</h3>
+                        <button class="btn btn-primary" onclick="openSenderEmailModal()">
+                            <i class="ri-add-line"></i> Add Sender
+                        </button>
                     </div>
-                    <div class="card-body no-padding">
-                        ${campaigns.length === 0 ? `
-                            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                <p>No campaigns sent yet.</p>
-                            </div>
-                        ` : `
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Subject</th>
-                                        <th>Recipients</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${campaigns.slice(0, 10).map(c => `
+                    <div class="card">
+                        <div class="card-body">
+                            <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
+                                Configure custom sender email accounts for your marketing campaigns.
+                            </p>
+                            ${senderEmails.length === 0 ? `
+                                <div style="text-align:center; padding:20px; color:var(--text-muted);">
+                                    <i class="ri-mail-line" style="font-size:32px; margin-bottom:8px;"></i>
+                                    <p>No sender emails configured. Using default DDNEX System email.</p>
+                                </div>
+                            ` : senderEmails.map(s => `
+                                <div class="sender-email-card">
+                                    <div class="sender-email-info">
+                                        <div class="sender-email-icon"><i class="ri-mail-line"></i></div>
+                                        <div>
+                                            <div class="sender-email-name">${s.name}</div>
+                                            <div class="sender-email-address">${s.email}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; gap:8px;">
+                                        <button class="action-btn" onclick="editSenderEmail('${s.id}')"><i class="ri-edit-line"></i></button>
+                                        <button class="action-btn danger" onclick="deleteSenderEmail('${s.id}')"><i class="ri-delete-bin-line"></i></button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaigns Section -->
+                <div id="marketingSectionCampaigns" class="section-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Campaign History</h3>
+                        </div>
+                        <div class="card-body no-padding">
+                            ${campaigns.length === 0 ? `
+                                <div style="text-align:center; padding:40px; color:var(--text-muted);">
+                                    <i class="ri-send-plane-line" style="font-size:48px; margin-bottom:16px;"></i>
+                                    <p>No campaigns sent yet. Compose your first email!</p>
+                                </div>
+                            ` : `
+                                <table class="data-table">
+                                    <thead>
                                         <tr>
-                                            <td>${formatDate(c.sentAt)}</td>
-                                            <td>${c.subject}</td>
-                                            <td>${c.recipientCount || 0}</td>
-                                            <td><span class="status completed">Sent</span></td>
+                                            <th>Date</th>
+                                            <th>Subject</th>
+                                            <th>Recipients</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        `}
+                                    </thead>
+                                    <tbody>
+                                        ${campaigns.slice(0, 20).map(c => `
+                                            <tr>
+                                                <td>${formatDate(c.sentAt)}</td>
+                                                <td>${c.subject || 'No Subject'}</td>
+                                                <td>${c.recipientCount || 0}</td>
+                                                <td><span class="status completed">${c.status || 'Sent'}</span></td>
+                                                <td>
+                                                    <button class="action-btn" onclick="viewCampaignDetails('${c.id}')" title="View Details"><i class="ri-eye-line"></i></button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            `}
+                        </div>
                     </div>
                 </div>
             `;
-            
-            // Search functionality
-            const searchInput = document.getElementById('templateSearchInput');
-            searchInput.addEventListener('keyup', (e) => {
-                const term = e.target.value.toLowerCase();
-                const cards = document.querySelectorAll('.marketing-template-card');
-                cards.forEach(card => {
-                    const text = card.textContent.toLowerCase();
-                    card.style.display = text.includes(term) ? '' : 'none';
-                });
-            });
+
+            // Initialize preview
+            updateEmailPreview();
         }
 
-        // Marketing Template Modal
-        window.openMarketingTemplateModal = () => {
-            const defaultTemplate = `<!DOCTYPE html>
-<html>
-<body style="margin:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+        // =========================================
+        // MARKETING SECTION TAB SWITCHER
+        // =========================================
+        window.switchMarketingSection = (section, btn) => {
+            document.querySelectorAll('.marketing-section-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active'));
+            document.getElementById('marketingSection' + section.charAt(0).toUpperCase() + section.slice(1)).classList.add('active');
+        };
 
-<table width="100%" cellpadding="0" cellspacing="0">
-<tr>
-<td align="center" style="padding:50px 20px;">
+        // =========================================
+        // EMAIL EDITOR MODE SWITCHER
+        // =========================================
+        window.switchEmailEditorMode = (mode, btn) => {
+            document.querySelectorAll('.email-editor-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.getElementById('templateModeFields').style.display = mode === 'template' ? 'block' : 'none';
+            document.getElementById('htmlModeFields').style.display = mode === 'html' ? 'block' : 'none';
+            document.getElementById('textModeFields').style.display = mode === 'text' ? 'block' : 'none';
+            
+            window.currentEditorMode = mode;
+            updateEmailPreview();
+        };
 
-<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+        // =========================================
+        // LIVE EMAIL PREVIEW
+        // =========================================
+        window.updateEmailPreview = () => {
+            const iframe = document.getElementById('composePreviewIframe');
+            if (!iframe) return;
+            
+            const mode = window.currentEditorMode || 'template';
+            let htmlContent = '';
+            
+            if (mode === 'template') {
+                const title = document.getElementById('composeTitle')?.value || 'Your Email Title Here';
+                const badge = document.getElementById('composeBadge')?.value || 'MARKETING EMAIL';
+                const message = document.getElementById('composeMessage')?.value || 'Your marketing message goes here.';
+                const buttonText = document.getElementById('composeButtonText')?.value || 'Call to Action';
+                const buttonLink = document.getElementById('composeButtonLink')?.value || 'https://ddnex.com';
+                
+                htmlContent = DEFAULT_MARKETING_TEMPLATE
+                    .replace('Your Email Title Here', title)
+                    .replace('MARKETING EMAIL', badge)
+                    .replace('Your marketing message goes here. Create compelling content that engages your audience.', message)
+                    .replace('Call to Action', buttonText)
+                    .replace('https://ddnex.com', buttonLink);
+            } else if (mode === 'html') {
+                htmlContent = document.getElementById('composeCustomHTML')?.value || '';
+            } else if (mode === 'text') {
+                const textContent = document.getElementById('composePlainText')?.value || '';
+                htmlContent = `
+                    <div style="padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; white-space: pre-wrap; line-height: 1.7; color: #333;">
+                        ${textContent.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+            }
+            
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(htmlContent);
+            doc.close();
+        };
 
-<!-- HEADER -->
-<tr>
-<td style="padding:28px 40px;border-bottom:1px solid #eeeeee;" align="center">
-<img src="https://i.ibb.co/SD7QzyYw/favicon-white-ddnex.png" width="38">
-</td>
-</tr>
+        window.loadSelectedTemplate = async () => {
+            const select = document.getElementById('composeTemplateSelect');
+            const value = select.value;
+            
+            if (value === '_default_') {
+                document.getElementById('composeTitle').value = 'Your Email Title Here';
+                document.getElementById('composeBadge').value = 'MARKETING EMAIL';
+                document.getElementById('composeMessage').value = 'Your marketing message goes here. Create compelling content that engages your audience.';
+                document.getElementById('composeButtonText').value = 'Call to Action';
+                document.getElementById('composeButtonLink').value = 'https://ddnex.com';
+            } else if (value) {
+                const template = await window.dbOperations.getMarketingTemplate(value);
+                if (template) {
+                    // Extract values from template content if possible
+                    document.getElementById('composeTitle').value = template.title || template.name;
+                    document.getElementById('composeSubject').value = template.subject || '';
+                    // For custom templates, switch to HTML mode
+                    document.getElementById('composeCustomHTML').value = template.content || '';
+                    switchEmailEditorMode('html', document.querySelector('.email-editor-tab:nth-child(2)'));
+                }
+            }
+            updateEmailPreview();
+        };
 
-<!-- HERO -->
-<tr>
-<td style="padding:50px 40px;text-align:center;">
+        window.resetCustomHTML = () => {
+            document.getElementById('composeCustomHTML').value = DEFAULT_MARKETING_TEMPLATE;
+            updateEmailPreview();
+        };
 
-<div style="font-size:13px;font-weight:600;color:#ffffff;background:#000000;display:inline-block;padding:6px 14px;border-radius:20px;margin-bottom:18px;">
-MARKETING EMAIL
-</div>
+        // =========================================
+        // RECIPIENT SELECTION
+        // =========================================
+        window.selectAllRecipients = () => {
+            document.querySelectorAll('#composeRecipientsGrid input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+                cb.closest('.subscriber-checkbox-item').classList.add('selected');
+            });
+            updateRecipientCount();
+        };
 
-<div style="font-size:32px;font-weight:700;color:#111111;margin-bottom:12px;">
-Your Email Title Here
-</div>
+        window.deselectAllRecipients = () => {
+            document.querySelectorAll('#composeRecipientsGrid input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+                cb.closest('.subscriber-checkbox-item').classList.remove('selected');
+            });
+            updateRecipientCount();
+        };
 
-<div style="font-size:16px;color:#4b5563;line-height:1.7;margin-bottom:30px;">
-Your marketing message goes here. Create compelling content that engages your audience.
-</div>
+        window.updateRecipientCount = () => {
+            const selected = document.querySelectorAll('#composeRecipientsGrid input[type="checkbox"]:checked');
+            const countEl = document.getElementById('selectedRecipientsCount');
+            if (countEl) {
+                countEl.textContent = `${selected.length} selected`;
+            }
+        };
 
-<table align="center">
-<tr>
-<td bgcolor="#000000" style="border-radius:30px;">
-<a href="https://ddnex.com" style="color:#ffffff;text-decoration:none;padding:15px 36px;font-weight:600;display:inline-block;font-size:15px;">
-Call to Action
-</a>
-</td>
-</tr>
-</table>
+        // =========================================
+        // SEND COMPOSED EMAIL
+        // =========================================
+        window.sendComposedEmail = async () => {
+            const subject = document.getElementById('composeSubject').value;
+            const selectedCheckboxes = document.querySelectorAll('#composeRecipientsGrid input[type="checkbox"]:checked');
+            const mode = window.currentEditorMode || 'template';
+            
+            if (!subject) {
+                showPopup("Error", "Please enter a subject line.", false);
+                return;
+            }
+            
+            if (selectedCheckboxes.length === 0) {
+                showPopup("Error", "Please select at least one recipient.", false);
+                return;
+            }
 
-</td>
-</tr>
+            let htmlContent = '';
+            if (mode === 'template') {
+                const title = document.getElementById('composeTitle')?.value || 'Your Email Title Here';
+                const badge = document.getElementById('composeBadge')?.value || 'MARKETING EMAIL';
+                const message = document.getElementById('composeMessage')?.value || '';
+                const buttonText = document.getElementById('composeButtonText')?.value || 'Call to Action';
+                const buttonLink = document.getElementById('composeButtonLink')?.value || 'https://ddnex.com';
+                
+                htmlContent = DEFAULT_MARKETING_TEMPLATE
+                    .replace('Your Email Title Here', title)
+                    .replace('MARKETING EMAIL', badge)
+                    .replace('Your marketing message goes here. Create compelling content that engages your audience.', message)
+                    .replace('Call to Action', buttonText)
+                    .replace('https://ddnex.com', buttonLink);
+            } else if (mode === 'html') {
+                htmlContent = document.getElementById('composeCustomHTML')?.value || '';
+            } else if (mode === 'text') {
+                const textContent = document.getElementById('composePlainText')?.value || '';
+                htmlContent = `<div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif; white-space:pre-wrap; padding:20px;">${textContent.replace(/\n/g, '<br>')}</div>`;
+            }
 
-<!-- FOOTER -->
-<tr>
-<td style="padding:40px;text-align:center;font-size:13px;color:#9ca3af;line-height:1.7;border-top:1px solid #eeeeee;">
+            const senderSelect = document.getElementById('composeSenderSelect');
+            const senderEmails = await window.dbOperations.getSenderEmails();
+            let sender = { name: 'DDNEX System', email: 'support@ddnex.com' };
+            if (senderSelect.value !== 'default') {
+                const found = senderEmails.find(s => s.id === senderSelect.value);
+                if (found) sender = found;
+            }
 
-<b>DDNEX®</b><br>
-Digital Network & Web Solutions<br>
-Malaysia
+            const statusEl = document.getElementById('composeSendStatus');
+            statusEl.innerHTML = `<div class="email-status-indicator sending"><i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Sending emails...</div>`;
 
-<br><br>
+            let sent = 0;
+            let failed = 0;
+            const recipients = [];
 
-© 2026 DDNEX®. All rights reserved.
+            for (const cb of selectedCheckboxes) {
+                const email = cb.dataset.email;
+                const name = cb.dataset.name;
+                
+                const result = await sendEmailViaEmailJS(
+                    email,
+                    name,
+                    subject,
+                    htmlContent,
+                    '',
+                    '',
+                    sender.name,
+                    sender.email
+                );
+                
+                if (result.success) {
+                    sent++;
+                    recipients.push(email);
+                } else {
+                    failed++;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
 
-</td>
-</tr>
+            // Save campaign record
+            await window.dbOperations.addCampaign({
+                subject: subject,
+                recipientCount: sent,
+                recipients: recipients,
+                sender: sender,
+                sentAt: new Date(),
+                status: 'completed',
+                mode: mode
+            });
 
-</table>
+            if (failed === 0) {
+                statusEl.innerHTML = `<div class="email-status-indicator success"><i class="ri-checkbox-circle-fill"></i> Successfully sent to ${sent} recipients!</div>`;
+                showPopup("Campaign Complete", `Marketing email sent to ${sent} recipients.`);
+            } else {
+                statusEl.innerHTML = `<div class="email-status-indicator error"><i class="ri-error-warning-fill"></i> Sent: ${sent}, Failed: ${failed}</div>`;
+                showPopup("Partial Success", `Sent to ${sent} recipients. ${failed} failed.`, false);
+            }
+        };
 
-</td>
-</tr>
-</table>
+        // =========================================
+        // SAVE COMPOSED AS TEMPLATE
+        // =========================================
+        window.saveComposedAsTemplate = async () => {
+            const subject = document.getElementById('composeSubject').value;
+            const mode = window.currentEditorMode || 'template';
+            
+            if (!subject) {
+                showPopup("Error", "Please enter a subject line.", false);
+                return;
+            }
 
-</body>
-</html>`;
+            let htmlContent = '';
+            if (mode === 'template') {
+                const title = document.getElementById('composeTitle')?.value || 'Your Email Title Here';
+                const badge = document.getElementById('composeBadge')?.value || 'MARKETING EMAIL';
+                const message = document.getElementById('composeMessage')?.value || '';
+                const buttonText = document.getElementById('composeButtonText')?.value || 'Call to Action';
+                const buttonLink = document.getElementById('composeButtonLink')?.value || 'https://ddnex.com';
+                
+                htmlContent = DEFAULT_MARKETING_TEMPLATE
+                    .replace('Your Email Title Here', title)
+                    .replace('MARKETING EMAIL', badge)
+                    .replace('Your marketing message goes here. Create compelling content that engages your audience.', message)
+                    .replace('Call to Action', buttonText)
+                    .replace('https://ddnex.com', buttonLink);
+            } else if (mode === 'html') {
+                htmlContent = document.getElementById('composeCustomHTML')?.value || '';
+            } else if (mode === 'text') {
+                htmlContent = document.getElementById('composePlainText')?.value || '';
+            }
 
             const content = `
                 <div class="form-group-modal">
                     <label>Template Name</label>
-                    <input type="text" id="templateName" placeholder="e.g., Domain Promotion">
+                    <input type="text" id="saveTemplateName" placeholder="e.g., Monthly Newsletter">
                 </div>
                 <div class="form-group-modal">
-                    <label>Email Subject</label>
-                    <input type="text" id="templateSubject" placeholder="Email subject line">
-                </div>
-                <div class="form-row">
-                    <div class="form-group-modal">
-                        <label>Type</label>
-                        <select id="templateType">
-                            <option value="html">HTML Email</option>
-                            <option value="text">Plain Text</option>
-                        </select>
-                    </div>
-                    <div class="form-group-modal">
-                        <label>Status</label>
-                        <select id="templateStatus">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group-modal">
-                    <label>Email Content (HTML)</label>
-                    <textarea id="templateContent" rows="15" style="font-family: monospace; font-size: 12px;" placeholder="Enter HTML or plain text...">${defaultTemplate}</textarea>
+                    <label>Type</label>
+                    <select id="saveTemplateType">
+                        <option value="html">HTML Email</option>
+                        <option value="text">Plain Text</option>
+                    </select>
                 </div>
             `;
-            
-            openModal('Create Email Template', content, async () => {
-                const data = {
-                    name: document.getElementById('templateName').value,
-                    subject: document.getElementById('templateSubject').value,
-                    type: document.getElementById('templateType').value,
-                    status: document.getElementById('templateStatus').value,
-                    content: document.getElementById('templateContent').value,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                };
+
+            openModal('Save as Template', content, async () => {
+                const name = document.getElementById('saveTemplateName').value;
+                const type = document.getElementById('saveTemplateType').value;
                 
-                if(!data.name || !data.content) {
-                    showPopup("Error", "Name and content are required.", false);
+                if (!name) {
+                    showPopup("Error", "Please enter a template name.", false);
                     return;
                 }
-                
+
                 showLoading("Saving...");
-                await window.dbOperations.addMarketingTemplate(data);
+                await window.dbOperations.addMarketingTemplate({
+                    name: name,
+                    subject: subject,
+                    type: type,
+                    status: 'active',
+                    content: htmlContent,
+                    createdAt: new Date()
+                });
                 closeModal();
                 renderMarketingSection();
                 hideLoading();
-                showPopup("Success", "Template created successfully.");
+                showPopup("Success", "Template saved successfully.");
             });
         };
 
+        // Use template for compose
+        window.useTemplateForCompose = (id) => {
+            document.getElementById('composeTemplateSelect').value = id;
+            loadSelectedTemplate();
+            switchMarketingSection('compose', document.querySelector('.marketing-section-tab'));
+        };
+
+        // Preview template
+        window.previewMarketingTemplate = async (id) => {
+            const template = await window.dbOperations.getMarketingTemplate(id);
+            if (!template) return;
+
+            const content = `
+                <div style="margin-bottom: 16px;">
+                    <strong>Subject:</strong> ${template.subject || 'No subject'}
+                </div>
+                <div style="border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow: hidden;">
+                    <iframe id="templatePreviewIframe" style="width: 100%; height: 500px; border: none;"></iframe>
+                </div>
+            `;
+            
+            openModal('Preview: ' + template.name, content, closeModal, true);
+            
+            setTimeout(() => {
+                const iframe = document.getElementById('templatePreviewIframe');
+                if (iframe) {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    doc.open();
+                    doc.write(template.content || '');
+                    doc.close();
+                }
+            }, 100);
+        };
+
+        // Edit template
         window.editMarketingTemplate = async (id) => {
-            const templates = await window.dbOperations.getMarketingTemplates();
-            const template = templates.find(t => t.id === id);
-            if(!template) return;
+            const template = await window.dbOperations.getMarketingTemplate(id);
+            if (!template) return;
 
             const content = `
                 <div class="form-group-modal">
                     <label>Template Name</label>
-                    <input type="text" id="templateName" value="${template.name || ''}">
+                    <input type="text" id="editTemplateName" value="${template.name || ''}">
                 </div>
                 <div class="form-group-modal">
                     <label>Email Subject</label>
-                    <input type="text" id="templateSubject" value="${template.subject || ''}">
+                    <input type="text" id="editTemplateSubject" value="${template.subject || ''}">
                 </div>
                 <div class="form-row">
                     <div class="form-group-modal">
                         <label>Type</label>
-                        <select id="templateType">
+                        <select id="editTemplateType">
                             <option value="html" ${template.type === 'html' ? 'selected' : ''}>HTML Email</option>
                             <option value="text" ${template.type === 'text' ? 'selected' : ''}>Plain Text</option>
                         </select>
                     </div>
                     <div class="form-group-modal">
                         <label>Status</label>
-                        <select id="templateStatus">
+                        <select id="editTemplateStatus">
                             <option value="active" ${template.status === 'active' ? 'selected' : ''}>Active</option>
                             <option value="inactive" ${template.status === 'inactive' ? 'selected' : ''}>Inactive</option>
                         </select>
@@ -4379,17 +5034,17 @@ Malaysia
                 </div>
                 <div class="form-group-modal">
                     <label>Email Content</label>
-                    <textarea id="templateContent" rows="15" style="font-family: monospace; font-size: 12px;">${template.content || ''}</textarea>
+                    <textarea id="editTemplateContent" rows="15" style="font-family: monospace; font-size: 12px;">${template.content || ''}</textarea>
                 </div>
             `;
             
             openModal('Edit Template', content, async () => {
                 const data = {
-                    name: document.getElementById('templateName').value,
-                    subject: document.getElementById('templateSubject').value,
-                    type: document.getElementById('templateType').value,
-                    status: document.getElementById('templateStatus').value,
-                    content: document.getElementById('templateContent').value,
+                    name: document.getElementById('editTemplateName').value,
+                    subject: document.getElementById('editTemplateSubject').value,
+                    type: document.getElementById('editTemplateType').value,
+                    status: document.getElementById('editTemplateStatus').value,
+                    content: document.getElementById('editTemplateContent').value,
                     updatedAt: new Date()
                 };
                 
@@ -4403,7 +5058,7 @@ Malaysia
         };
 
         window.deleteMarketingTemplate = async (id) => {
-            if(confirm("Delete this template?")) {
+            if (confirm("Delete this template?")) {
                 showLoading("Deleting...");
                 await window.dbOperations.deleteMarketingTemplate(id);
                 renderMarketingSection();
@@ -4411,32 +5066,62 @@ Malaysia
             }
         };
 
-        window.previewMarketingTemplate = async (id) => {
-            const templates = await window.dbOperations.getMarketingTemplates();
-            const template = templates.find(t => t.id === id);
-            if(!template) return;
-
+        // Open Marketing Template Modal
+        window.openMarketingTemplateModal = () => {
             const content = `
-                <div style="margin-bottom: 16px;">
-                    <strong>Subject:</strong> ${template.subject || 'No subject'}
+                <div class="form-group-modal">
+                    <label>Template Name</label>
+                    <input type="text" id="newTemplateName" placeholder="e.g., Monthly Newsletter">
                 </div>
-                <div style="border: 1px solid var(--border-light); border-radius: var(--radius-sm); overflow: hidden;">
-                    <iframe id="templatePreviewIframe" style="width: 100%; height: 500px; border: none;"></iframe>
+                <div class="form-group-modal">
+                    <label>Email Subject</label>
+                    <input type="text" id="newTemplateSubject" placeholder="Email subject line">
+                </div>
+                <div class="form-row">
+                    <div class="form-group-modal">
+                        <label>Type</label>
+                        <select id="newTemplateType">
+                            <option value="html">HTML Email</option>
+                            <option value="text">Plain Text</option>
+                        </select>
+                    </div>
+                    <div class="form-group-modal">
+                        <label>Status</label>
+                        <select id="newTemplateStatus">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group-modal">
+                    <label>Email Content (HTML)</label>
+                    <textarea id="newTemplateContent" rows="15" style="font-family: monospace; font-size: 12px;" placeholder="Enter HTML or plain text...">${DEFAULT_MARKETING_TEMPLATE}</textarea>
                 </div>
             `;
             
-            openModal('Preview: ' + template.name, content, closeModal, true);
-            
-            // Set iframe content after modal opens
-            setTimeout(() => {
-                const iframe = document.getElementById('templatePreviewIframe');
-                if(iframe) {
-                    const doc = iframe.contentDocument || iframe.contentWindow.document;
-                    doc.open();
-                    doc.write(template.content || '');
-                    doc.close();
+            openModal('Create Email Template', content, async () => {
+                const data = {
+                    name: document.getElementById('newTemplateName').value,
+                    subject: document.getElementById('newTemplateSubject').value,
+                    type: document.getElementById('newTemplateType').value,
+                    status: document.getElementById('newTemplateStatus').value,
+                    content: document.getElementById('newTemplateContent').value,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                
+                if (!data.name || !data.content) {
+                    showPopup("Error", "Name and content are required.", false);
+                    return;
                 }
-            }, 100);
+                
+                showLoading("Saving...");
+                await window.dbOperations.addMarketingTemplate(data);
+                closeModal();
+                renderMarketingSection();
+                hideLoading();
+                showPopup("Success", "Template created successfully.");
+            });
         };
 
         // =========================================
@@ -4519,7 +5204,6 @@ Malaysia
                 </div>
             `;
             
-            // Search functionality
             const searchInput = document.getElementById('subscriberSearchInput');
             searchInput.addEventListener('keyup', (e) => {
                 const term = e.target.value.toLowerCase();
@@ -4576,7 +5260,7 @@ Malaysia
                     createdAt: new Date()
                 };
                 
-                if(!data.email) {
+                if (!data.email) {
                     showPopup("Error", "Email is required.", false);
                     return;
                 }
@@ -4593,7 +5277,7 @@ Malaysia
         window.editSubscriber = async (id) => {
             const subscribers = await window.dbOperations.getSubscribers();
             const sub = subscribers.find(s => s.id === id);
-            if(!sub) return;
+            if (!sub) return;
 
             const content = `
                 <div class="form-group-modal">
@@ -4647,7 +5331,7 @@ Malaysia
         };
 
         window.deleteSubscriber = async (id) => {
-            if(confirm("Delete this subscriber?")) {
+            if (confirm("Delete this subscriber?")) {
                 showLoading("Deleting...");
                 await window.dbOperations.deleteSubscriber(id);
                 renderSubscribersSection();
@@ -4678,9 +5362,9 @@ Malaysia
                 showLoading("Importing...");
                 let imported = 0;
                 
-                for(const line of lines) {
+                for (const line of lines) {
                     const parts = line.split(',').map(p => p.trim());
-                    if(parts.length >= 2 && parts[1].includes('@')) {
+                    if (parts.length >= 2 && parts[1].includes('@')) {
                         await window.dbOperations.addSubscriber({
                             name: parts[0],
                             email: parts[1],
@@ -4701,227 +5385,19 @@ Malaysia
         };
 
         // =========================================
-        // SEND MARKETING EMAIL MODAL
+        // SEND MARKETING EMAIL MODAL (Quick Send from Dashboard)
         // =========================================
         window.openSendMarketingModal = async () => {
-            const templates = await window.dbOperations.getMarketingTemplates();
-            const subscribers = await window.dbOperations.getSubscribers();
-            const senderEmails = await window.dbOperations.getSenderEmails();
-            const activeTemplates = templates.filter(t => t.status === 'active');
-            const activeSubscribers = subscribers.filter(s => s.status === 'active');
-
-            if(activeTemplates.length === 0) {
-                showPopup("No Templates", "Please create an active email template first.", false);
-                return;
-            }
-
-            if(activeSubscribers.length === 0) {
-                showPopup("No Subscribers", "Please add subscribers first.", false);
-                return;
-            }
-
-            const content = `
-                <div class="email-modal-grid">
-                    <div>
-                        <div class="form-group-modal">
-                            <label>Select Template</label>
-                            <select id="marketingTemplate" onchange="updateMarketingPreview()">
-                                <option value="">Choose a template...</option>
-                                ${activeTemplates.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
-                            </select>
-                        </div>
-                        
-                        <div class="form-group-modal">
-                            <label>Sender Email</label>
-                            <select id="marketingSender">
-                                <option value="default">DDNEX System (support@ddnex.com)</option>
-                                ${senderEmails.map(s => `<option value="${s.id}">${s.name} (${s.email})</option>`).join('')}
-                            </select>
-                        </div>
-                        
-                        <div class="form-group-modal">
-                            <label>Recipients (${activeSubscribers.length} active subscribers)</label>
-                            <div style="margin-bottom: 8px;">
-                                <button class="btn-sm btn-outline-sm" onclick="selectAllSubscribers()">Select All</button>
-                                <button class="btn-sm btn-outline-sm" onclick="deselectAllSubscribers()">Deselect All</button>
-                            </div>
-                            <div class="subscriber-checkbox-grid" id="subscriberCheckboxGrid">
-                                ${activeSubscribers.map(s => `
-                                    <label class="subscriber-checkbox-item">
-                                        <input type="checkbox" value="${s.id}" data-email="${s.email}" data-name="${s.name || 'Subscriber'}">
-                                        <div class="subscriber-checkbox-info">
-                                            <div class="subscriber-checkbox-name">${s.name || 'N/A'}</div>
-                                            <div class="subscriber-checkbox-email">${s.email}</div>
-                                        </div>
-                                    </label>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <div class="email-info-box">
-                            <h4><i class="ri-information-line"></i> Campaign Info</h4>
-                            <p>Selected: <strong id="selectedCount">0</strong> recipients</p>
-                            <p>Templates: <strong>${activeTemplates.length}</strong> available</p>
-                        </div>
-                        
-                        <div id="marketingPreviewContainer" style="display:none;">
-                            <div class="email-info-box" style="background: white; border: 2px solid var(--border-light);">
-                                <h4 style="margin-bottom: 12px;"><i class="ri-eye-line"></i> Preview</h4>
-                                <iframe id="marketingPreviewIframe" style="width: 100%; height: 300px; border: 1px solid var(--border-light); border-radius: 6px;"></iframe>
-                            </div>
-                        </div>
-                        
-                        <button class="btn btn-primary" style="width: 100%; margin-top: 16px;" onclick="sendMarketingCampaign()">
-                            <i class="ri-send-plane-fill"></i> Send Marketing Email
-                        </button>
-                        
-                        <div id="marketingSendStatus"></div>
-                    </div>
-                </div>
-            `;
-            
-            openModal('Send Marketing Email', content, closeModal, false, true);
-            
-            // Add event listeners for checkboxes
-            document.querySelectorAll('#subscriberCheckboxGrid input[type="checkbox"]').forEach(cb => {
-                cb.addEventListener('change', updateSelectedCount);
-            });
+            navigateTo('/marketing');
+            setTimeout(() => {
+                switchMarketingSection('compose', document.querySelector('.marketing-section-tab'));
+            }, 100);
         };
 
-        window.selectAllSubscribers = () => {
-            document.querySelectorAll('#subscriberCheckboxGrid input[type="checkbox"]').forEach(cb => {
-                cb.checked = true;
-                cb.closest('.subscriber-checkbox-item').classList.add('selected');
-            });
-            updateSelectedCount();
-        };
-
-        window.deselectAllSubscribers = () => {
-            document.querySelectorAll('#subscriberCheckboxGrid input[type="checkbox"]').forEach(cb => {
-                cb.checked = false;
-                cb.closest('.subscriber-checkbox-item').classList.remove('selected');
-            });
-            updateSelectedCount();
-        };
-
-        window.updateSelectedCount = () => {
-            const selected = document.querySelectorAll('#subscriberCheckboxGrid input[type="checkbox"]:checked');
-            document.getElementById('selectedCount').textContent = selected.length;
-            
-            // Update visual state
-            document.querySelectorAll('#subscriberCheckboxGrid input[type="checkbox"]').forEach(cb => {
-                cb.closest('.subscriber-checkbox-item').classList.toggle('selected', cb.checked);
-            });
-        };
-
-        window.updateMarketingPreview = async () => {
-            const templateId = document.getElementById('marketingTemplate').value;
-            const previewContainer = document.getElementById('marketingPreviewContainer');
-            
-            if(!templateId) {
-                previewContainer.style.display = 'none';
-                return;
-            }
-            
-            const templates = await window.dbOperations.getMarketingTemplates();
-            const template = templates.find(t => t.id === templateId);
-            
-            if(template) {
-                previewContainer.style.display = 'block';
-                setTimeout(() => {
-                    const iframe = document.getElementById('marketingPreviewIframe');
-                    const doc = iframe.contentDocument || iframe.contentWindow.document;
-                    doc.open();
-                    doc.write(template.content || '');
-                    doc.close();
-                }, 100);
-            }
-        };
-
-        window.sendMarketingCampaign = async () => {
-            const templateId = document.getElementById('marketingTemplate').value;
-            const senderSelect = document.getElementById('marketingSender');
-            const selectedCheckboxes = document.querySelectorAll('#subscriberCheckboxGrid input[type="checkbox"]:checked');
-            
-            if(!templateId) {
-                showPopup("Error", "Please select a template.", false);
-                return;
-            }
-            
-            if(selectedCheckboxes.length === 0) {
-                showPopup("Error", "Please select at least one recipient.", false);
-                return;
-            }
-            
-            const templates = await window.dbOperations.getMarketingTemplates();
-            const template = templates.find(t => t.id === templateId);
-            
-            const senderEmails = await window.dbOperations.getSenderEmails();
-            let sender = { name: 'DDNEX System', email: 'support@ddnex.com' };
-            if(senderSelect.value !== 'default') {
-                const found = senderEmails.find(s => s.id === senderSelect.value);
-                if(found) sender = found;
-            }
-
-            const statusEl = document.getElementById('marketingSendStatus');
-            statusEl.className = 'email-status-indicator sending';
-            statusEl.innerHTML = '<i class="ri-loader-4-line" style="animation: spin 1s linear infinite;"></i> Sending emails...';
-
-            let sent = 0;
-            let failed = 0;
-            const recipients = [];
-
-            for(const cb of selectedCheckboxes) {
-                const email = cb.dataset.email;
-                const name = cb.dataset.name;
-                
-                const result = await sendEmailViaEmailJS(
-                    email,
-                    name,
-                    template.subject || 'Marketing Email from DDNEX',
-                    template.content,
-                    '',
-                    '',
-                    sender.name,
-                    sender.email
-                );
-                
-                if(result.success) {
-                    sent++;
-                    recipients.push(email);
-                } else {
-                    failed++;
-                }
-                
-                // Small delay between sends
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
-
-            // Save campaign record
-            await window.dbOperations.addCampaign({
-                templateId: templateId,
-                templateName: template.name,
-                subject: template.subject,
-                recipientCount: sent,
-                recipients: recipients,
-                sender: sender,
-                sentAt: new Date(),
-                status: 'completed'
-            });
-
-            if(failed === 0) {
-                statusEl.className = 'email-status-indicator success';
-                statusEl.innerHTML = `<i class="ri-checkbox-circle-fill"></i> Successfully sent to ${sent} recipients!`;
-            } else {
-                statusEl.className = 'email-status-indicator error';
-                statusEl.innerHTML = `<i class="ri-error-warning-fill"></i> Sent: ${sent}, Failed: ${failed}`;
-            }
-
-            showPopup("Campaign Complete", `Marketing email sent to ${sent} recipients.`);
-        };
-
+        // =========================================
+        // REMAINING SECTIONS (Services, Clients, etc.)
+        // =========================================
+        
         // --- Services & Pricing ---
         function renderServicesSection() {
             document.getElementById('mainContent').innerHTML = `
@@ -4971,7 +5447,7 @@ Malaysia
                         <div class="pricing-features">
                             <ul>
                                 <li><i class="ri-time-line"></i> Delivery: 4-7 Days</li>
-                            <li><i class="ri-pages-line"></i> Up to 5 Pages</li>
+                                <li><i class="ri-pages-line"></i> Up to 5 Pages</li>
                                 <li><i class="ri-cellphone-line"></i> Mobile Responsive</li>
                             </ul>
                         </div>
@@ -7623,8 +8099,10 @@ Malaysia
                 showPopup("Copied!", "Password copied to clipboard.");
             });
         };
-
-        // Init
+        
+        // =========================================
+        // INITIALIZATION
+        // =========================================
         window.addEventListener('load', () => {
             setupNavigation();
             
