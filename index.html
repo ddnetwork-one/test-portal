@@ -305,12 +305,12 @@
             text-align: left;
         }
         .subscribe-field-wrap input::placeholder {
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.6);
         }
         .subscribe-field-wrap select {
             appearance: none;
             cursor: pointer;
-            color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.6);
         }
         .subscribe-field-wrap select:focus,
         .subscribe-field-wrap select:valid {
@@ -325,7 +325,7 @@
             font-size: 10px;
             font-weight: 600;
             letter-spacing: 0.05em;
-            color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.65);
             text-transform: uppercase;
             text-align: left;
         }
@@ -333,7 +333,7 @@
             content: ' (optional)';
             text-transform: none;
             font-weight: 400;
-            color: rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.38);
         }
         .subscribe-btn {
             padding: 14px 32px;
@@ -416,10 +416,14 @@
             }
         }
         .select-arrow-dark {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 14px center;
             padding-right: 36px !important;
+        }
+        .subscribe-field-wrap input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(0.6);
+            cursor: pointer;
         }
     </style>
 </head>
@@ -1176,7 +1180,7 @@
                         </div>
                         <div class="subscribe-field-wrap optional">
                             <label>Birthday</label>
-                            <input type="date" id="subBirthday" name="birthday" class="select-arrow-dark" style="color:rgba(255,255,255,0.3);">
+                            <input type="date" id="subBirthday" name="birthday" class="select-arrow-dark">
                         </div>
                         <div class="subscribe-field-wrap optional">
                             <label>Phone No</label>
@@ -1777,7 +1781,7 @@
                     <li>Process inquiries, requests, and orders</li>
                     <li>Improve website performance and user experience</li>
                     <li>Respond to support requests</li>
-                    <li>Prevent fraud, unauthorized access, or misuse</li>
+                                        <li>Prevent fraud, unauthorized access, or misuse</li>
                     <li>Send service updates, newsletters, or marketing communications (with your consent)</li>
                 </ul>
 
@@ -2251,7 +2255,7 @@
             }
         });
 
-        // ===== Scroll Reveal with Unreveal (follow scroll) =====
+        // ===== Scroll Reveal with Unreveal =====
         let revealObserver;
 
         function initScrollReveals() {
@@ -2265,13 +2269,9 @@
                         entry.target.classList.add('visible');
                         entry.target.querySelectorAll('.line-reveal').forEach(el => el.classList.add('active'));
                     } else {
-                        // Unreveal: reset when element scrolls far enough out of view
-                        const rect = entry.boundingClientRect;
-                        const outDistance = 200;
-                        if (rect.top > window.innerHeight + outDistance || rect.bottom < -outDistance) {
-                            entry.target.classList.remove('visible');
-                            entry.target.querySelectorAll('.line-reveal').forEach(el => el.classList.remove('active'));
-                        }
+                        // Immediately unreveal when element leaves the viewport
+                        entry.target.classList.remove('visible');
+                        entry.target.querySelectorAll('.line-reveal').forEach(el => el.classList.remove('active'));
                     }
                 });
             }, { 
@@ -2305,6 +2305,13 @@
                             if (progress < 1) requestAnimationFrame(updateCounter);
                         }
                         requestAnimationFrame(updateCounter);
+                    });
+                }
+                // Unreveal: reset counter when section leaves viewport
+                if (!entry.isIntersecting) {
+                    countersAnimated = false;
+                    counters.forEach(counter => {
+                        counter.textContent = '0';
                     });
                 }
             });
