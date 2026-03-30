@@ -27,6 +27,7 @@
                         'slide-up-delay2': 'slideUp 0.8s ease-out 0.4s forwards',
                         'fade-in': 'fadeIn 1s ease-out forwards',
                         'marquee': 'marquee 30s linear infinite',
+                        'marquee-reverse': 'marqueeReverse 35s linear infinite',
                         'pulse-dot': 'pulseDot 2s ease-in-out infinite',
                         'shimmer': 'shimmer 3s ease-in-out infinite',
                         'orbit': 'orbit 20s linear infinite',
@@ -48,6 +49,10 @@
                         marquee: {
                             '0%': { transform: 'translateX(0)' },
                             '100%': { transform: 'translateX(-50%)' },
+                        },
+                        marqueeReverse: {
+                            '0%': { transform: 'translateX(-50%)' },
+                            '100%': { transform: 'translateX(0)' },
                         },
                         pulseDot: {
                             '0%, 100%': { opacity: '1', transform: 'scale(1)' },
@@ -74,8 +79,6 @@
             }
         }
     </script>
-    <!-- EmailJS SDK -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #FFFFFF; color: #0A0A0A; }
@@ -107,7 +110,7 @@
         .portfolio-card:hover .overlay { opacity: 1; }
         
         .btn-primary {
-            background: #c05621; color: #fff;
+            background: #c05621; color: #fff !important;
             transition: all 0.3s ease;
             position: relative; overflow: hidden;
         }
@@ -142,6 +145,11 @@
             animation: marquee 30s linear infinite;
         }
         .marquee-track:hover { animation-play-state: paused; }
+        .marquee-track-reverse {
+            display: flex; width: max-content;
+            animation: marqueeReverse 35s linear infinite;
+        }
+        .marquee-track-reverse:hover { animation-play-state: paused; }
         
         .grid-bg {
             background-image: 
@@ -270,40 +278,78 @@
             transform: translate(-50%, -50%);
             pointer-events: none;
         }
-        .subscribe-input-wrap {
+        .subscribe-field-wrap {
             position: relative;
             display: flex;
             background: rgba(255,255,255,0.06);
             border: 1.5px solid rgba(255,255,255,0.12);
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
-        .subscribe-input-wrap:focus-within {
+        .subscribe-field-wrap:focus-within {
             border-color: rgba(192,86,33,0.6);
-            box-shadow: 0 0 0 4px rgba(192,86,33,0.1), 0 8px 32px -8px rgba(192,86,33,0.2);
+            box-shadow: 0 0 0 3px rgba(192,86,33,0.08);
         }
-        .subscribe-input-wrap input {
+        .subscribe-field-wrap input, .subscribe-field-wrap select {
             flex: 1;
             background: transparent;
             border: none;
-            padding: 18px 24px;
+            padding: 14px 18px;
             color: #fff;
-            font-size: 0.9375rem;
+            font-size: 0.875rem;
             outline: none;
+            font-family: 'Inter', sans-serif;
         }
-        .subscribe-input-wrap input::placeholder {
-            color: rgba(255,255,255,0.35);
+        .subscribe-field-wrap input::placeholder {
+            color: rgba(255,255,255,0.3);
         }
-        .subscribe-input-wrap button {
-            padding: 12px 28px;
-            margin: 6px;
+        .subscribe-field-wrap select {
+            appearance: none;
+            cursor: pointer;
+            color: rgba(255,255,255,0.3);
+        }
+        .subscribe-field-wrap select:focus,
+        .subscribe-field-wrap select:valid {
+            color: #fff;
+        }
+        .subscribe-field-wrap label {
+            position: absolute;
+            top: -9px;
+            left: 14px;
+            background: #111;
+            padding: 0 6px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+        }
+        .subscribe-field-wrap.optional label::after {
+            content: ' (optional)';
+            text-transform: none;
+            font-weight: 400;
+            color: rgba(255,255,255,0.2);
+        }
+        .subscribe-btn {
+            padding: 14px 32px;
             border-radius: 12px;
             white-space: nowrap;
             font-size: 0.875rem;
             font-weight: 600;
             transition: all 0.3s ease;
             flex-shrink: 0;
+            width: 100%;
+        }
+        .subscribe-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px -6px rgba(192,86,33,0.4);
+        }
+        .subscribe-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
         }
         .subscribe-feature-icon {
             width: 44px; height: 44px;
@@ -323,16 +369,6 @@
             background: rgba(192,86,33,0.4);
             border-radius: 50%;
             pointer-events: none;
-        }
-        @media (max-width: 640px) {
-            .subscribe-input-wrap {
-                flex-direction: column;
-                border-radius: 16px;
-            }
-            .subscribe-input-wrap button {
-                margin: 0 6px 6px 6px;
-                padding: 14px 28px;
-            }
         }
         .subscribe-success-msg {
             display: none;
@@ -364,6 +400,20 @@
         .subscribe-error-msg.show {
             display: flex;
         }
+        @media (max-width: 640px) {
+            .subscribe-grid-fields {
+                grid-template-columns: 1fr !important;
+            }
+            .subscribe-btn {
+                padding: 14px 28px;
+            }
+        }
+        .select-arrow-dark {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px !important;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -385,7 +435,7 @@
             </div>
             
             <div class="flex items-center gap-4">
-                <a href="#contact" class="hidden md:inline-flex btn-primary px-6 py-2.5 rounded-full text-sm font-semibold nav-link" data-page="home">
+                <a href="#contact" class="hidden md:inline-flex btn-primary px-6 py-2.5 rounded-full text-sm font-semibold" data-page="home">
                     Start a Project
                 </a>
                 <button id="menuBtn" class="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5 rounded-lg hover:bg-neutral-100 transition-colors">
@@ -694,7 +744,7 @@
                         Projects that<br><span class="gradient-text">speak volumes</span>
                     </h2>
                 </div>
-                <a href="#" class="mt-6 md:mt-0 btn-outline px-6 py-3 rounded-full text-sm font-semibold inline-flex items-center gap-2 self-start">
+                <a href="#" onclick="navigateTo('projects'); return false;" class="mt-6 md:mt-0 btn-outline px-6 py-3 rounded-full text-sm font-semibold inline-flex items-center gap-2 self-start">
                     View All Projects
                     <iconify-icon icon="lucide:arrow-up-right" width="16"></iconify-icon>
                 </a>
@@ -969,30 +1019,112 @@
         </div>
     </section>
 
-    <!-- TECH STACK -->
-    <section class="py-20 border-y border-neutral-100 bg-surface">
-        <div class="max-w-7xl mx-auto px-6">
-            <p class="text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400 mb-12">Technologies We Master</p>
-            <div class="grid grid-cols-3 md:grid-cols-5 gap-8 items-center justify-items-center">
-                <div class="group flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500">
-                    <iconify-icon icon="logos:react" width="36"></iconify-icon>
-                    <span class="text-[10px] font-medium text-neutral-500">React</span>
+    <!-- TECH STACK MARQUEE -->
+    <section class="py-20 border-y border-neutral-100 bg-surface overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 mb-10">
+            <p class="text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">Technologies We Master</p>
+        </div>
+        <div class="relative">
+            <div class="marquee-track-reverse">
+                <div class="flex items-center gap-20 px-10">
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:react" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">React</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:nextjs-icon" width="40" style="color:#171717;"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Next.js</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:tailwindcss-icon" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Tailwind</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:nodejs-icon" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Node.js</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:html-5" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">HTML</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:css-3" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">CSS</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:javascript" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">JavaScript</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:typescript-icon" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">TypeScript</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:shopify" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Shopify</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:python" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Python</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:postgresql" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">PostgreSQL</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:figma" width="28"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Figma</span>
+                    </div>
                 </div>
-                <div class="group flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500">
-                    <iconify-icon icon="logos:tailwindcss-icon" width="36"></iconify-icon>
-                    <span class="text-[10px] font-medium text-neutral-500">Tailwind</span>
-                </div>
-                <div class="group flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500">
-                    <iconify-icon icon="logos:html-5" width="36"></iconify-icon>
-                    <span class="text-[10px] font-medium text-neutral-500">HTML</span>
-                </div>
-                <div class="group flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500">
-                    <iconify-icon icon="logos:shopify" width="36"></iconify-icon>
-                    <span class="text-[10px] font-medium text-neutral-500">Shopify</span>
-                </div>
-                <div class="group flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 col-span-3 md:col-span-1">
-                    <iconify-icon icon="logos:java" width="36"></iconify-icon>
-                    <span class="text-[10px] font-medium text-neutral-500">Java</span>
+                <div class="flex items-center gap-20 px-10">
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:react" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">React</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:nextjs-icon" width="40" style="color:#171717;"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Next.js</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:tailwindcss-icon" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Tailwind</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:nodejs-icon" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Node.js</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:html-5" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">HTML</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:css-3" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">CSS</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:javascript" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">JavaScript</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:typescript-icon" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">TypeScript</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:shopify" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Shopify</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:python" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Python</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:postgresql" width="40"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">PostgreSQL</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
+                        <iconify-icon icon="logos:figma" width="28"></iconify-icon>
+                        <span class="text-[10px] font-medium text-neutral-500">Figma</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1024,22 +1156,39 @@
                 </p>
             </div>
 
-            <div class="scroll-reveal max-w-xl mx-auto mb-12" style="transition-delay:0.15s;">
+            <div class="scroll-reveal max-w-2xl mx-auto mb-12" style="transition-delay:0.15s;">
                 <form id="subscribeForm" class="space-y-4">
-                    <div class="subscribe-input-wrap">
-                        <input type="email" id="subscribeEmail" name="subscriber_email" placeholder="Enter your email address" required>
-                        <button type="submit" class="btn-primary">Subscribe</button>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 subscribe-grid-fields">
+                        <div class="subscribe-field-wrap">
+                            <label>Name</label>
+                            <input type="text" id="subName" name="name" placeholder="Your name" required>
+                        </div>
+                        <div class="subscribe-field-wrap">
+                            <label>Email</label>
+                            <input type="email" id="subscribeEmail" name="email" placeholder="your@email.com" required>
+                        </div>
+                        <div class="subscribe-field-wrap optional">
+                            <label>Birthday</label>
+                            <input type="date" id="subBirthday" name="birthday" class="select-arrow-dark" style="color:rgba(255,255,255,0.3);">
+                        </div>
+                        <div class="subscribe-field-wrap optional">
+                            <label>Phone No</label>
+                            <input type="tel" id="subPhone" name="phone" placeholder="+60 12-345 6789">
+                        </div>
                     </div>
+                    <button type="submit" id="subscribeBtn" class="subscribe-btn btn-primary">
+                        Subscribe
+                    </button>
                     <div class="flex items-center justify-center gap-2">
                         <iconify-icon icon="lucide:lock" width="12" class="text-neutral-600"></iconify-icon>
                         <span class="text-[11px] text-neutral-600">We respect your privacy. Unsubscribe anytime.</span>
                     </div>
                 </form>
-                <div id="subscribeSuccess" class="subscribe-success-msg">
+                <div id="subscribeSuccess" class="subscribe-success-msg mt-4">
                     <iconify-icon icon="lucide:check-circle" width="20"></iconify-icon>
                     <span>You're in! Check your inbox for a welcome email.</span>
                 </div>
-                <div id="subscribeError" class="subscribe-error-msg">
+                <div id="subscribeError" class="subscribe-error-msg mt-4">
                     <iconify-icon icon="lucide:alert-circle" width="20"></iconify-icon>
                     <span id="subscribeErrorText">Something went wrong. Please try again.</span>
                 </div>
@@ -1221,7 +1370,7 @@
                     Start Your Project
                     <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
                 </a>
-                <a href="#work" class="px-10 py-4 rounded-full text-sm font-semibold inline-flex items-center gap-2 border border-white/20 text-white hover:bg-white/10 transition-all duration-300">
+                <a href="#" onclick="navigateTo('projects'); return false;" class="px-10 py-4 rounded-full text-sm font-semibold inline-flex items-center gap-2 border border-white/20 text-white hover:bg-white/10 transition-all duration-300">
                     Explore Our Work
                 </a>
             </div>
@@ -1229,6 +1378,180 @@
     </section>
 
     </div><!-- END home-page -->
+
+    <!-- ==================== PROJECTS PAGE ==================== -->
+    <div id="projects-page" class="page page-hidden">
+
+    <section class="pt-32 pb-16 relative grid-bg overflow-hidden">
+        <div class="absolute top-32 right-20 w-72 h-72 bg-accent/5 rounded-full blur-3xl animate-float"></div>
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+            <a href="#" onclick="navigateTo('home'); return false;" class="inline-flex items-center gap-2 text-sm font-medium text-neutral-500 hover:text-accent transition-colors duration-300 mb-10">
+                <iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon>
+                Back to Home
+            </a>
+            <div class="max-w-3xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="h-px bg-accent line-reveal"></div>
+                    <span class="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Portfolio</span>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-tight">
+                    All <span class="gradient-text">Projects</span>
+                </h1>
+                <p class="text-lg text-neutral-500 font-light leading-relaxed max-w-xl">
+                    A curated collection of our best work across industries — from fintech dashboards to fashion e-commerce and enterprise SaaS platforms.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-16 bg-surface">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-wrap gap-3 mb-12 scroll-reveal">
+                <button class="filter-btn active px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all duration-300 bg-accent text-white border-accent" onclick="filterProjects('all', this)">All</button>
+                <button class="filter-btn px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider border border-neutral-200 text-neutral-500 hover:border-accent hover:text-accent transition-all duration-300 bg-white" onclick="filterProjects('web', this)">Web Design</button>
+                <button class="filter-btn px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider border border-neutral-200 text-neutral-500 hover:border-accent hover:text-accent transition-all duration-300 bg-white" onclick="filterProjects('ecom', this)">E-Commerce</button>
+                <button class="filter-btn px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider border border-neutral-200 text-neutral-500 hover:border-accent hover:text-accent transition-all duration-300 bg-white" onclick="filterProjects('saas', this)">SaaS</button>
+                <button class="filter-btn px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider border border-neutral-200 text-neutral-500 hover:border-accent hover:text-accent transition-all duration-300 bg-white" onclick="filterProjects('app', this)">Web App</button>
+            </div>
+
+            <div id="projectsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="scroll-reveal portfolio-card group relative rounded-2xl overflow-hidden cursor-pointer project-item" data-category="saas">
+                    <img src="https://picsum.photos/seed/project-fintech/600/450.jpg" alt="NovaPay Dashboard" class="w-full h-[320px] object-cover">
+                    <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-7">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">React</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">Node.js</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">SaaS</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">NovaPay Dashboard</h3>
+                        <p class="text-white/60 text-xs">Fintech platform with real-time analytics & AI fraud detection.</p>
+                    </div>
+                </div>
+
+                <div class="scroll-reveal portfolio-card group relative rounded-2xl overflow-hidden cursor-pointer project-item" data-category="ecom" style="transition-delay:0.05s;">
+                    <img src="https://picsum.photos/seed/project-ecom/600/450.jpg" alt="Lumina Fashion" class="w-full h-[320px] object-cover">
+                    <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-7">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">Shopify</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">E-Commerce</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">Lumina Fashion Store</h3>
+                        <p class="text-white/60 text-xs">Premium fashion e-commerce with 280% conversion increase.</p>
+                    </div>
+                </div>
+
+                <div class="scroll-reveal portfolio-card group relative rounded-2xl overflow-hidden cursor-pointer project-item" data-category="saas" style="transition-delay:0.1s;">
+                    <img src="https://picsum.photos/seed/project-saas/600/450.jpg" alt="CloudSync" class="w-full h-[320px] object-cover">
+                    <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-7">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">Next.js</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">SaaS</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">CloudSync Platform</h3>
+                        <p class="text-white/60 text-xs">Enterprise SaaS with 50K daily active users.</p>
+                    </div>
+                </div>
+
+                <div class="scroll-reveal portfolio-card group relative rounded-2xl overflow-hidden cursor-pointer project-item" data-category="app">
+                    <img src="https://picsum.photos/seed/project-health/600/450.jpg" alt="MediTrack" class="w-full h-[320px] object-cover">
+                    <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-7">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">React</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">Healthcare</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">MediTrack</h3>
+                        <p class="text-white/60 text-xs">Healthcare booking & patient management system.</p>
+                    </div>
+                </div>
+
+                <div class="scroll-reveal portfolio-card group relative rounded-2xl overflow-hidden cursor-pointer project-item" data-category="app" style="transition-delay:0.05s;">
+                    <img src="https://picsum.photos/seed/project-edu/600/450.jpg" alt="LearnPulse" class="w-full h-[320px] object-cover">
+                    <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-7">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">Next.js</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">EdTech</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">LearnPulse</h3>
+                        <p class="text-white/60 text-xs">LMS with live classes, quizzes & progress tracking.</p>
+                    </div>
+                </div>
+
+                <div class="scroll-reveal portfolio-card group relative rounded-2xl overflow-hidden cursor-pointer project-item" data-category="web" style="transition-delay:0.1s;">
+                    <img src="https://picsum.photos/seed/project-real/600/450.jpg" alt="HomeVista" class="w-full h-[320px] object-cover">
+                    <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-7">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">React</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">Mapbox</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">HomeVista</h3>
+                        <p class="text-white/60 text-xs">Real estate listing platform with interactive maps.</p>
+                    </div>
+                </div>
+
+                <div class="scroll-reveal portfolio-card group relative rounded-2xl overflow-hidden cursor-pointer project-item" data-category="ecom">
+                    <img src="https://picsum.photos/seed/project-food/600/450.jpg" alt="FoodGo" class="w-full h-[320px] object-cover">
+                    <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-7">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">WooCommerce</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">E-Commerce</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">FoodGo Marketplace</h3>
+                        <p class="text-white/60 text-xs">Multi-vendor food delivery with real-time tracking.</p>
+                    </div>
+                </div>
+
+                <div class="scroll-reveal portfolio-card group relative rounded-2xl overflow-hidden cursor-pointer project-item" data-category="web" style="transition-delay:0.05s;">
+                    <img src="https://picsum.photos/seed/project-law/600/450.jpg" alt="LexPro" class="w-full h-[320px] object-cover">
+                    <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-7">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">WordPress</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">Web Design</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">LexPro Law Firm</h3>
+                        <p class="text-white/60 text-xs">Corporate law firm website with appointment scheduling.</p>
+                    </div>
+                </div>
+
+                <div class="scroll-reveal portfolio-card group relative rounded-2xl overflow-hidden cursor-pointer project-item" data-category="saas" style="transition-delay:0.1s;">
+                    <img src="https://picsum.photos/seed/project-hr/600/450.jpg" alt="TalentHub" class="w-full h-[320px] object-cover">
+                    <div class="overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-7">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">Python</span>
+                            <span class="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-medium rounded-full">SaaS</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1">TalentHub HR</h3>
+                        <p class="text-white/60 text-xs">HR management SaaS with payroll & recruitment tools.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 bg-neutral-950 relative overflow-hidden">
+        <div class="absolute inset-0">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[150px]"></div>
+        </div>
+        <div class="max-w-3xl mx-auto px-6 text-center relative z-10 scroll-reveal">
+            <h2 class="text-3xl md:text-5xl font-bold text-white tracking-tight mb-6 leading-tight">
+                Have a project in<br><span class="gradient-text">mind?</span>
+            </h2>
+            <p class="text-lg text-neutral-400 font-light leading-relaxed max-w-lg mx-auto mb-10">
+                We'd love to hear about it. Let's discuss how we can bring your vision to life.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#contact" onclick="navigateTo('home'); setTimeout(function(){document.getElementById('contact').scrollIntoView({behavior:'smooth'})},100); return false;" class="btn-primary px-10 py-4 rounded-full text-sm font-semibold inline-flex items-center gap-2">
+                    Start a Project
+                    <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
+                </a>
+                <a href="#" onclick="navigateTo('home'); return false;" class="px-10 py-4 rounded-full text-sm font-semibold inline-flex items-center gap-2 border border-white/20 text-white hover:bg-white/10 transition-all duration-300">
+                    <iconify-icon icon="lucide:arrow-left" width="16"></iconify-icon>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </section>
+
+    </div><!-- END projects-page -->
 
     <!-- ==================== PRICING PAGE ==================== -->
     <div id="pricing-page" class="page page-hidden">
@@ -1376,7 +1699,7 @@
         <div class="absolute inset-0">
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[150px]"></div>
         </div>
-        <div class="max-w-3xl mx-auto px-6 text-center relative z-10">
+        <div class="max-w-3xl mx-auto px-6 text-center relative z-10 scroll-reveal">
             <h2 class="text-3xl md:text-5xl font-bold text-white tracking-tight mb-6 leading-tight">
                 Not sure which plan<br><span class="gradient-text">fits you?</span>
             </h2>
@@ -1384,7 +1707,7 @@
                 Let's have a quick chat. We'll understand your needs and recommend the best approach — no strings attached.
             </p>
             <div class="flex flex-wrap justify-center gap-4">
-                <a href="#contact" onclick="navigateTo('home'); setTimeout(()=>{document.getElementById('contact').scrollIntoView({behavior:'smooth'})},100); return false;" class="btn-primary px-10 py-4 rounded-full text-sm font-semibold inline-flex items-center gap-2">
+                <a href="#contact" onclick="navigateTo('home'); setTimeout(function(){document.getElementById('contact').scrollIntoView({behavior:'smooth'})},100); return false;" class="btn-primary px-10 py-4 rounded-full text-sm font-semibold inline-flex items-center gap-2">
                     Get a Free Consultation
                     <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
                 </a>
@@ -1798,7 +2121,7 @@
                     <h4 class="text-xs font-semibold uppercase tracking-[0.15em] text-neutral-400 mb-6">Company</h4>
                     <ul class="space-y-3">
                         <li><a href="#about" class="footer-link text-sm text-neutral-500 hover:text-white transition-colors duration-300" data-page="home" onclick="navigateTo('home')">About Us</a></li>
-                        <li><a href="#work" class="footer-link text-sm text-neutral-500 hover:text-white transition-colors duration-300" data-page="home" onclick="navigateTo('home')">Our Work</a></li>
+                        <li><a href="#" onclick="navigateTo('projects'); return false;" class="text-sm text-neutral-500 hover:text-white transition-colors duration-300">Our Work</a></li>
                         <li><a href="#" onclick="navigateTo('pricing'); return false;" class="text-sm text-neutral-500 hover:text-white transition-colors duration-300">Pricing</a></li>
                         <li><a href="#contact" class="footer-link text-sm text-neutral-500 hover:text-white transition-colors duration-300" data-page="home" onclick="navigateTo('home')">Contact</a></li>
                     </ul>
@@ -1838,14 +2161,8 @@
 
     <!-- ==================== JAVASCRIPT ==================== -->
     <script>
-        // ===== EmailJS Initialization =====
-        emailjs.init('YOUR_PUBLIC_KEY');
-
-        const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID';
-        const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
-
         // ===== SPA Navigation =====
-        const allPages = ['home', 'pricing', 'privacy', 'terms', 'payment', 'refund'];
+        const allPages = ['home', 'pricing', 'privacy', 'terms', 'payment', 'refund', 'projects'];
         let currentPage = 'home';
 
         function navigateTo(page) {
@@ -1927,7 +2244,7 @@
             }
         });
 
-        // ===== Scroll Reveal =====
+        // ===== Scroll Reveal with Unreveal =====
         let revealObserver;
 
         function initScrollReveals() {
@@ -1940,11 +2257,26 @@
                     if (entry.isIntersecting) {
                         entry.target.classList.add('visible');
                         entry.target.querySelectorAll('.line-reveal').forEach(el => el.classList.add('active'));
+                    } else {
+                        // Unreveal: reset when element scrolls far enough out of view
+                        const rect = entry.boundingClientRect;
+                        const outDistance = 200;
+                        if (rect.top > window.innerHeight + outDistance || rect.bottom < -outDistance) {
+                            entry.target.classList.remove('visible');
+                            entry.target.querySelectorAll('.line-reveal').forEach(el => el.classList.remove('active'));
+                        }
                     }
                 });
-            }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+            }, { 
+                threshold: 0.15, 
+                rootMargin: '0px 0px -50px 0px'
+            });
 
             scrollRevealElements.forEach(el => revealObserver.observe(el));
+
+            // Also observe already-visible elements for unreveal
+            const visibleElements = document.querySelectorAll('.scroll-reveal.visible');
+            visibleElements.forEach(el => revealObserver.observe(el));
         }
 
         initScrollReveals();
@@ -1979,8 +2311,10 @@
             counterObserver.observe(counters[0].closest('section') || counters[0]);
         }
 
-        // ===== Navbar Background on Scroll =====
+        // ===== Navbar: Background + "Start a Project" text color fix =====
         const nav = document.querySelector('nav');
+        const startProjectBtns = document.querySelectorAll('a.btn-primary[data-page="home"]');
+
         window.addEventListener('scroll', () => {
             if (window.scrollY > 50) {
                 nav.style.boxShadow = '0 1px 20px rgba(0,0,0,0.06)';
@@ -2031,7 +2365,7 @@
             document.getElementById('toast').classList.remove('show');
         }
 
-        // ===== Contact Form =====
+        // ===== Contact Form → FormSubmit =====
         document.getElementById('contactForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const btn = this.querySelector('button[type="submit"]');
@@ -2039,27 +2373,53 @@
             btn.innerHTML = '<iconify-icon icon="lucide:loader-2" width="16" class="animate-spin"></iconify-icon> Sending...';
             btn.disabled = true;
 
-            setTimeout(() => {
+            const formData = new FormData(this);
+            formData.append('_subject', 'Get in Touch');
+            formData.append('_captcha', 'false');
+            formData.append('_template', 'table');
+
+            fetch('https://formsubmit.co/ajax/support@ddnex.com', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
                 btn.innerHTML = originalHTML;
                 btn.disabled = false;
                 this.reset();
                 showToast('Message Sent!', 'We\'ll get back to you within 24 hours.');
-            }, 1500);
+            })
+            .catch(error => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                showToast('Error', 'Something went wrong. Please try again.', 'error');
+            });
         });
 
-        // ===== Subscribe Form (EmailJS) =====
+        // ===== Subscribe Form → FormSubmit =====
         document.getElementById('subscribeForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const nameInput = document.getElementById('subName');
             const emailInput = document.getElementById('subscribeEmail');
-            const email = emailInput.value.trim();
+            const birthdayInput = document.getElementById('subBirthday');
+            const phoneInput = document.getElementById('subPhone');
             const successMsg = document.getElementById('subscribeSuccess');
             const errorMsg = document.getElementById('subscribeError');
             const errorText = document.getElementById('subscribeErrorText');
-            const btn = this.querySelector('button[type="submit"]');
+            const btn = document.getElementById('subscribeBtn');
             const originalHTML = btn.innerHTML;
 
             successMsg.classList.remove('show');
             errorMsg.classList.remove('show');
+
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+
+            if (!name) {
+                errorText.textContent = 'Please enter your name.';
+                errorMsg.classList.add('show');
+                return;
+            }
 
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
@@ -2068,30 +2428,37 @@
                 return;
             }
 
-            btn.innerHTML = '<iconify-icon icon="lucide:loader-2" width="16" class="animate-spin"></iconify-icon>';
+            btn.innerHTML = '<iconify-icon icon="lucide:loader-2" width="16" class="animate-spin"></iconify-icon> Subscribing...';
             btn.disabled = true;
 
-            const templateParams = {
-                to_email: 'support@ddnex.com',
-                subscriber_email: email,
-                subscribe_date: new Date().toLocaleString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' })
-            };
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('email', email);
+            formData.append('birthday', birthdayInput.value || 'Not provided');
+            formData.append('phone', phoneInput.value || 'Not provided');
+            formData.append('_subject', 'Newsletter');
+            formData.append('_captcha', 'false');
+            formData.append('_template', 'table');
 
-            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-                .then(function(response) {
-                    btn.innerHTML = originalHTML;
-                    btn.disabled = false;
-                    emailInput.value = '';
-                    document.getElementById('subscribeForm').style.display = 'none';
-                    document.getElementById('subscribeForm').nextElementSibling.style.display = 'none';
-                    successMsg.classList.add('show');
-                }, function(error) {
-                    btn.innerHTML = originalHTML;
-                    btn.disabled = false;
-                    errorText.textContent = 'Something went wrong. Please try again later.';
-                    errorMsg.classList.add('show');
-                    console.error('EmailJS Error:', error);
-                });
+            fetch('https://formsubmit.co/ajax/support@ddnex.com', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                document.getElementById('subscribeForm').style.display = 'none';
+                document.getElementById('subscribeForm').nextElementSibling.style.display = 'none';
+                document.getElementById('subscribeForm').nextElementSibling.nextElementSibling.style.display = 'none';
+                successMsg.classList.add('show');
+            })
+            .catch(error => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                errorText.textContent = 'Something went wrong. Please try again later.';
+                errorMsg.classList.add('show');
+            });
         });
 
         // ===== Active Nav Link Highlighting (Home page only) =====
@@ -2130,6 +2497,38 @@
                 answer.classList.add('open');
                 icon.classList.add('rotated');
             }
+        }
+
+        // ===== Project Filter =====
+        function filterProjects(category, btn) {
+            const items = document.querySelectorAll('.project-item');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            buttons.forEach(b => {
+                b.classList.remove('active', 'bg-accent', 'text-white', 'border-accent');
+                b.classList.add('bg-white', 'text-neutral-500', 'border-neutral-200');
+            });
+            btn.classList.add('active', 'bg-accent', 'text-white', 'border-accent');
+            btn.classList.remove('bg-white', 'text-neutral-500', 'border-neutral-200');
+
+            items.forEach(item => {
+                const cat = item.getAttribute('data-category');
+                if (category === 'all' || cat === category) {
+                    item.style.display = '';
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        item.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateY(0)';
+                    }, 50);
+                } else {
+                    item.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateY(20px)';
+                    setTimeout(() => { item.style.display = 'none'; }, 300);
+                }
+            });
         }
     </script>
 </body>
