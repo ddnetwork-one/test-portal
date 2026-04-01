@@ -26,7 +26,6 @@
                         'slide-up-delay': 'slideUp 0.8s ease-out 0.2s forwards',
                         'slide-up-delay2': 'slideUp 0.8s ease-out 0.4s forwards',
                         'fade-in': 'fadeIn 1s ease-out forwards',
-                        // Update: Marquee now scrolls Right to Left
                         'marquee': 'marquee 30s linear infinite',
                         'marquee-reverse': 'marqueeReverse 35s linear infinite',
                         'pulse-dot': 'pulseDot 2s ease-in-out infinite',
@@ -47,15 +46,13 @@
                             '0%': { opacity: '0' },
                             '100%': { opacity: '1' },
                         },
-                        // Standard Right to Left
                         marquee: {
                             '0%': { transform: 'translateX(0)' },
                             '100%': { transform: 'translateX(-50%)' },
                         },
-                        // Standard Right to Left (slower)
                         marqueeReverse: {
-                            '0%': { transform: 'translateX(0)' },
-                            '100%': { transform: 'translateX(-50%)' },
+                            '0%': { transform: 'translateX(-50%)' },
+                            '100%': { transform: 'translateX(0)' },
                         },
                         pulseDot: {
                             '0%, 100%': { opacity: '1', transform: 'scale(1)' },
@@ -143,7 +140,6 @@
         
         .counter { font-variant-numeric: tabular-nums; }
         
-        /* Marquee Styling - Standard Right to Left */
         .marquee-track {
             display: flex; width: max-content;
             animation: marquee 30s linear infinite;
@@ -536,237 +532,59 @@
             display: flex;
         }
 
-        /* Birthday Trigger */
-        .birthday-trigger {
+        /* Birthday Dropdown Selects */
+        .birthday-selects-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .birthday-selects-row .sub-field-wrap {
+            flex: 1;
+        }
+        .birthday-selects-row .sub-field-wrap.day-wrap {
+            flex: 0 0 64px;
+            min-width: 64px;
+        }
+        .birthday-selects-row .sub-field-wrap.year-wrap {
+            flex: 0 0 88px;
+            min-width: 88px;
+        }
+        .sub-select {
             width: 100%;
             background: rgba(255,255,255,0.05);
             border: 1.5px solid rgba(255,255,255,0.1);
             border-radius: 12px;
-            padding: 13px 16px;
+            padding: 13px 30px 13px 16px;
             color: rgba(255,255,255,0.35);
             font-size: 0.875rem;
             font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            outline: none;
             transition: all 0.25s ease;
-            user-select: none;
             text-align: left;
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
         }
-        .birthday-trigger:hover {
-            border-color: rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.07);
-        }
-        .birthday-trigger:focus,
-        .birthday-trigger.active {
+        .sub-select:focus {
             border-color: rgba(192,86,33,0.6);
             box-shadow: 0 0 0 3px rgba(192,86,33,0.08);
             background: rgba(255,255,255,0.07);
-            outline: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
         }
-        .birthday-trigger.has-value {
+        .sub-select.has-value {
             color: #fff;
             border-color: rgba(192,86,33,0.35);
         }
-        .birthday-trigger.has-value .birthday-icon {
-            color: rgba(192,86,33,0.7);
-        }
-        .birthday-trigger .birthday-icon {
-            color: rgba(255,255,255,0.3);
-            transition: color 0.25s;
-            flex-shrink: 0;
-        }
-        .birthday-trigger.input-error {
+        .sub-select.input-error {
             border-color: rgba(239,68,68,0.6) !important;
             box-shadow: 0 0 0 3px rgba(239,68,68,0.08) !important;
         }
-
-        /* ===== UPDATED: Custom Calendar Dropdown (Solid Background) ===== */
-        .calendar-dropdown {
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            z-index: 200;
-            /* SOLID DARK BACKGROUND */
-            background: #151515;
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 16px;
-            padding: 18px;
-            box-shadow: 0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
-            min-width: 310px;
-            opacity: 0;
-            transform: translateY(-10px) scale(0.96);
-            pointer-events: none;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .calendar-dropdown.open {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto;
-        }
-        @media (max-width: 640px) {
-            .calendar-dropdown {
-                left: 50%;
-                transform: translateX(-50%) translateY(-10px) scale(0.96);
-                min-width: 290px;
-                width: calc(100vw - 64px);
-                max-width: 340px;
-            }
-            .calendar-dropdown.open {
-                transform: translateX(-50%) translateY(0) scale(1);
-            }
-        }
-        .cal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 14px;
-        }
-        .cal-nav-btn {
-            width: 34px; height: 34px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .cal-nav-btn:hover {
-            background: rgba(255,255,255,0.15);
-            color: #fff;
-            border-color: rgba(255,255,255,0.2);
-        }
-        .cal-month-year {
-            font-size: 14px;
-            font-weight: 600;
-            color: #fff;
-            cursor: pointer;
-            padding: 4px 12px;
-            border-radius: 8px;
-            transition: background 0.2s;
-            user-select: none;
-        }
-        .cal-month-year:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        .cal-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            margin-bottom: 6px;
-        }
-        .cal-weekday {
-            text-align: center;
-            font-size: 10px;
-            font-weight: 700;
-            color: rgba(255,255,255,0.4);
-            padding: 6px 0;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-        .cal-days {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 3px;
-        }
-        .cal-day {
-            width: 36px; height: 36px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.15s;
-            margin: 0 auto;
-        }
-        .cal-day:hover:not(.disabled):not(.empty) {
-            background: rgba(192,86,33,0.2);
-            color: #fff;
-        }
-        .cal-day.today {
-            border: 1.5px solid #c05621;
-            color: #fff;
-            font-weight: 600;
-        }
-        .cal-day.selected {
-            background: #c05621 !important;
-            color: #fff !important;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(192,86,33,0.4);
-        }
-        .cal-day.disabled {
-            color: rgba(255,255,255,0.15);
-            cursor: not-allowed;
-            background: transparent !important;
-            color: rgba(255,255,255,0.15) !important;
-        }
-        .cal-day.empty {
-            cursor: default;
-        }
-        .cal-footer {
-            text-align: center;
-            font-size: 10px;
-            color: rgba(255,255,255,0.4);
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        /* Year Grid */
-        .cal-year-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            max-height: 220px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-        .cal-year-grid::-webkit-scrollbar {
-            width: 4px;
-        }
-        .cal-year-grid::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.2);
-            border-radius: 4px;
-        }
-        .cal-year-item {
-            padding: 10px 8px;
-            text-align: center;
-            font-size: 13px;
-            font-weight: 500;
-            color: #fff;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .cal-year-item:hover:not(.disabled) {
-            background: rgba(192,86,33,0.2);
-            color: #fff;
-        }
-        .cal-year-item.selected {
-            background: #c05621 !important;
-            color: #fff !important;
-            font-weight: 600;
-        }
-        .cal-year-item.disabled {
-            color: rgba(255,255,255,0.15);
-            cursor: not-allowed;
-            background: transparent !important;
-        }
-        .cal-year-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 14px;
-        }
-        .cal-year-range {
-            font-size: 14px;
-            font-weight: 600;
+        .sub-select option {
+            background: #1a1a1a;
             color: #fff;
         }
 
@@ -989,7 +807,6 @@
             <p class="text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">Trusted by innovative companies worldwide</p>
         </div>
         <div class="relative overflow-hidden">
-            <!-- UPDATE: Standard Right to Left Animation -->
             <div class="marquee-track">
                 <div class="flex items-center gap-16 px-8">
                     <span class="text-2xl font-bold text-neutral-300 hover:text-neutral-600 transition-all duration-500 whitespace-nowrap cursor-default">TechFlow</span>
@@ -1425,8 +1242,7 @@
             <p class="text-center text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400">Technologies We Master</p>
         </div>
         <div class="relative overflow-hidden">
-            <!-- UPDATE: Standard Right to Left Animation -->
-            <div class="marquee-track-reverse">
+            <div class="marquee-track">
                 <div class="flex items-center gap-20 px-10">
                     <div class="flex flex-col items-center gap-3 opacity-40 hover:opacity-100 transition-opacity duration-500 min-w-[80px]">
                         <iconify-icon icon="logos:react" width="40"></iconify-icon>
@@ -1593,13 +1409,25 @@
                             <span class="label-text">Optional</span>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="sub-field-wrap" id="birthdayCalendarWrap">
+                            <div class="sub-field-wrap">
                                 <label class="sub-label">Date of Birth <span class="sub-optional">(must be 18+)</span></label>
-                                <div class="birthday-trigger" id="birthdayTrigger" tabindex="0" role="button" aria-label="Select date of birth">
-                                    <span class="birthday-placeholder">Select your date of birth</span>
-                                    <iconify-icon icon="lucide:calendar" width="16" class="birthday-icon"></iconify-icon>
+                                <div class="birthday-selects-row">
+                                    <div class="sub-field-wrap day-wrap" style="margin-bottom:0;">
+                                        <select id="bdDay" class="sub-select" aria-label="Day">
+                                            <option value="" disabled selected>Day</option>
+                                        </select>
+                                    </div>
+                                    <div class="sub-field-wrap" style="margin-bottom:0;flex:1;">
+                                        <select id="bdMonth" class="sub-select" aria-label="Month">
+                                            <option value="" disabled selected>Month</option>
+                                        </select>
+                                    </div>
+                                    <div class="sub-field-wrap year-wrap" style="margin-bottom:0;">
+                                        <select id="bdYear" class="sub-select" aria-label="Year">
+                                            <option value="" disabled selected>Year</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="calendar-dropdown" id="calendarDropdown"></div>
                                 <input type="hidden" id="subBirthday" name="birthday">
                                 <div class="sub-field-error" id="birthdayError">
                                     <iconify-icon icon="lucide:alert-circle" width="12"></iconify-icon>
@@ -1984,7 +1812,7 @@
             <p class="text-lg text-neutral-400 font-light leading-relaxed max-w-lg mx-auto mb-10 text-center">
                 We'd love to hear about it. Let's discuss how we can bring your vision to life.
             </p>
-                        <div class="flex flex-wrap justify-center gap-4">
+            <div class="flex flex-wrap justify-center gap-4">
                 <a href="#contact" onclick="navigateTo('home'); setTimeout(function(){document.getElementById('contact').scrollIntoView({behavior:'smooth'})},100); return false;" class="btn-primary px-10 py-4 rounded-full text-sm font-semibold inline-flex items-center gap-2">
                     Start a Project
                     <iconify-icon icon="lucide:arrow-right" width="16"></iconify-icon>
@@ -2233,7 +2061,7 @@
                 <p>DDNEX® may work with trusted third-party service providers, including:</p>
                 <ul>
                     <li>Analytics providers (for website performance analysis)</li>
-                    <li>Hosting and cloud services</li>
+                                        <li>Hosting and cloud services</li>
                     <li>Payment processors (Stripe)</li>
                     <li>Email marketing platforms</li>
                 </ul>
@@ -2801,11 +2629,10 @@
             });
         });
 
-        // ===== CUSTOM BIRTHDAY CALENDAR =====
+        // ===== BIRTHDAY DROPDOWN SELECTS =====
         (function() {
             const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
             const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            const WEEKDAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
             const today = new Date();
             const todayDate = today.getDate();
@@ -2817,245 +2644,121 @@
             // Min selectable date = 100 years ago
             const minDate = new Date(todayYear - 100, 0, 1);
 
-            let selectedDate = null; // { day, month, year }
-            let viewYear = maxDate.getFullYear();
-            let viewMonth = maxDate.getMonth();
-            let showingYearPicker = false;
-            let yearGridStart = Math.floor(maxDate.getFullYear() / 20) * 20;
-
-            const trigger = document.getElementById('birthdayTrigger');
-            const dropdown = document.getElementById('calendarDropdown');
+            const daySelect = document.getElementById('bdDay');
+            const monthSelect = document.getElementById('bdMonth');
+            const yearSelect = document.getElementById('bdYear');
             const hiddenInput = document.getElementById('subBirthday');
             const birthdayError = document.getElementById('birthdayError');
 
-            function getMaxDay(y, m) {
-                return new Date(y, m + 1, 0).getDate();
+            // Populate Day select (1-31)
+            for (let d = 1; d <= 31; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = String(d).padStart(2, '0');
+                daySelect.appendChild(opt);
             }
 
-            function formatDate(d) {
-                return String(d.day).padStart(2,'0') + ' ' + SHORT_MONTHS[d.month] + ' ' + d.year;
-            }
-
-            function isDateSelectable(y, m, d) {
-                const date = new Date(y, m, d);
-                return date <= maxDate && date >= minDate;
-            }
-
-            function isSameDate(d, y, m) {
-                return d && d.day === y && d.month === m && d.year === viewYear;
-            }
-
-            function openCalendar() {
-                if (selectedDate) {
-                    viewYear = selectedDate.year;
-                    viewMonth = selectedDate.month;
-                } else {
-                    viewYear = maxDate.getFullYear();
-                    viewMonth = maxDate.getMonth();
-                }
-                showingYearPicker = false;
-                yearGridStart = Math.floor(viewYear / 20) * 20;
-                renderCalendar();
-                dropdown.classList.add('open');
-                trigger.classList.add('active');
-            }
-
-            function closeCalendar() {
-                dropdown.classList.remove('open');
-                trigger.classList.remove('active');
-            }
-
-            function renderCalendar() {
-                let html = '';
-
-                if (showingYearPicker) {
-                    html += '<div class="cal-year-header">';
-                    html += '<button class="cal-nav-btn" id="calYearPrev"><iconify-icon icon="lucide:chevron-left" width="16"></iconify-icon></button>';
-                    html += '<span class="cal-year-range">' + yearGridStart + ' – ' + (yearGridStart + 19) + '</span>';
-                    html += '<button class="cal-nav-btn" id="calYearNext"><iconify-icon icon="lucide:chevron-right" width="16"></iconify-icon></button>';
-                    html += '</div>';
-                    html += '<div class="cal-year-grid">';
-                    for (let y = yearGridStart; y < yearGridStart + 20; y++) {
-                        const isDisabled = y > maxDate.getFullYear() || y < minDate.getFullYear();
-                        const isSel = selectedDate && selectedDate.year === y;
-                        html += '<div class="cal-year-item' + (isDisabled ? ' disabled' : '') + (isSel ? ' selected' : '') + '" data-year="' + y + '">' + y + '</div>';
-                    }
-                    html += '</div>';
-                } else {
-                    // Month header
-                    html += '<div class="cal-header">';
-                    html += '<button class="cal-nav-btn" id="calPrev"><iconify-icon icon="lucide:chevron-left" width="16"></iconify-icon></button>';
-                    html += '<span class="cal-month-year" id="calMonthYear">' + MONTHS[viewMonth] + ' ' + viewYear + '</span>';
-                    html += '<button class="cal-nav-btn" id="calNext"><iconify-icon icon="lucide:chevron-right" width="16"></iconify-icon></button>';
-                    html += '</div>';
-
-                    // Weekday headers
-                    html += '<div class="cal-weekdays">';
-                    WEEKDAYS.forEach(w => { html += '<div class="cal-weekday">' + w + '</div>'; });
-                    html += '</div>';
-
-                    // Days grid
-                    html += '<div class="cal-days">';
-                    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
-                    const maxDay = getMaxDay(viewYear, viewMonth);
-
-                    // Empty cells before first day
-                    for (let i = 0; i < firstDay; i++) {
-                        html += '<div class="cal-day empty"></div>';
-                    }
-
-                    for (let d = 1; d <= maxDay; d++) {
-                        const selectable = isDateSelectable(viewYear, viewMonth, d);
-                        const isToday = (d === todayDate && viewMonth === todayMonth && viewYear === todayYear);
-                        const isSel = selectedDate && selectedDate.day === d && selectedDate.month === viewMonth && selectedDate.year === viewYear;
-
-                        let cls = 'cal-day';
-                        if (!selectable) cls += ' disabled';
-                        if (isToday) cls += ' today';
-                        if (isSel) cls += ' selected';
-
-                        html += '<div class="' + cls + '" data-day="' + d + '">' + d + '</div>';
-                    }
-
-                    html += '</div>';
-
-                    // Footer
-                    html += '<div class="cal-footer">';
-                    html += '<iconify-icon icon="lucide:info" width="12"></iconify-icon>';
-                    html += '<span>You must be 18 years or older</span>';
-                    html += '</div>';
-                }
-
-                dropdown.innerHTML = html;
-                bindCalendarEvents();
-            }
-
-            function bindCalendarEvents() {
-                // Month navigation
-                const prevBtn = document.getElementById('calPrev');
-                const nextBtn = document.getElementById('calNext');
-                if (prevBtn) {
-                    prevBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        viewMonth--;
-                        if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-                        // Don't go before min date
-                        if (viewYear < minDate.getFullYear()) { viewYear = minDate.getFullYear(); viewMonth = 0; }
-                        renderCalendar();
-                    });
-                }
-                if (nextBtn) {
-                    nextBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        viewMonth++;
-                        if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-                        // Don't go beyond max date
-                        if (viewYear > maxDate.getFullYear()) { viewYear = maxDate.getFullYear(); viewMonth = maxDate.getMonth(); }
-                        renderCalendar();
-                    });
-                }
-
-                // Month/Year click → year picker
-                const monthYear = document.getElementById('calMonthYear');
-                if (monthYear) {
-                    monthYear.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        showingYearPicker = true;
-                        yearGridStart = Math.floor(viewYear / 20) * 20;
-                        renderCalendar();
-                    });
-                }
-
-                // Year navigation
-                const yearPrev = document.getElementById('calYearPrev');
-                const yearNext = document.getElementById('calYearNext');
-                if (yearPrev) {
-                    yearPrev.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        yearGridStart -= 20;
-                        if (yearGridStart < minDate.getFullYear()) yearGridStart = minDate.getFullYear();
-                        renderCalendar();
-                    });
-                }
-                if (yearNext) {
-                    yearNext.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        yearGridStart += 20;
-                        renderCalendar();
-                    });
-                }
-
-                // Year selection
-                dropdown.querySelectorAll('.cal-year-item:not(.disabled)').forEach(el => {
-                    el.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        viewYear = parseInt(el.dataset.year);
-                        viewMonth = 0;
-                        showingYearPicker = false;
-                        renderCalendar();
-                    });
-                });
-
-                // Day selection
-                dropdown.querySelectorAll('.cal-day:not(.disabled):not(.empty)').forEach(el => {
-                    el.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        selectedDate = { day: parseInt(el.dataset.day), month: viewMonth, year: viewYear };
-                        hiddenInput.value = selectedDate.year + '-' + String(selectedDate.month + 1).padStart(2,'0') + '-' + String(selectedDate.day).padStart(2,'0');
-                        trigger.querySelector('.birthday-placeholder').textContent = formatDate(selectedDate);
-                        trigger.classList.add('has-value');
-                        clearBirthdayError();
-                        closeCalendar();
-                    });
-                });
-            }
-
-            // Trigger click
-            trigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (dropdown.classList.contains('open')) {
-                    closeCalendar();
-                } else {
-                    openCalendar();
-                }
-            });
-            trigger.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    trigger.click();
-                }
+            // Populate Month select
+            MONTHS.forEach((m, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = m;
+                monthSelect.appendChild(opt);
             });
 
-            // Close on outside click
-            document.addEventListener('click', (e) => {
-                if (!dropdown.contains(e.target) && !trigger.contains(e.target)) {
-                    closeCalendar();
-                }
-            });
+            // Populate Year select (from maxYear down to minYear)
+            for (let y = maxDate.getFullYear(); y >= minDate.getFullYear(); y--) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                yearSelect.appendChild(opt);
+            }
 
-            // Prevent dropdown from closing on internal clicks
-            dropdown.addEventListener('click', (e) => { e.stopPropagation(); });
+            // Update max days when month or year changes
+            function updateMaxDays() {
+                const m = parseInt(monthSelect.value);
+                const y = parseInt(yearSelect.value);
+                let maxDay = 31;
+                if (!isNaN(m) && !isNaN(y)) {
+                    maxDay = new Date(y, m + 1, 0).getDate();
+                } else if (!isNaN(m)) {
+                    maxDay = new Date(2000, m + 1, 0).getDate();
+                }
+                const currentDay = parseInt(daySelect.value);
+                // Disable days beyond maxDay
+                for (let d = 1; d <= 31; d++) {
+                    const opt = daySelect.querySelector('option[value="' + d + '"]');
+                    if (opt) {
+                        opt.disabled = d > maxDay;
+                        opt.hidden = d > maxDay;
+                    }
+                }
+                // If current selected day is now invalid, reset it
+                if (!isNaN(currentDay) && currentDay > maxDay) {
+                    daySelect.value = '';
+                    updateSelectState(daySelect);
+                }
+                updateHiddenAndState();
+            }
+
+            function updateSelectState(select) {
+                if (select.value && select.value !== '') {
+                    select.classList.add('has-value');
+                    select.classList.remove('input-error');
+                } else {
+                    select.classList.remove('has-value');
+                }
+            }
+
+            function updateHiddenAndState() {
+                const d = parseInt(daySelect.value);
+                const m = parseInt(monthSelect.value);
+                const y = parseInt(yearSelect.value);
+                [daySelect, monthSelect, yearSelect].forEach(updateSelectState);
+                if (!isNaN(d) && !isNaN(m) && !isNaN(y)) {
+                    hiddenInput.value = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+                } else {
+                    hiddenInput.value = '';
+                }
+                clearBirthdayError();
+            }
 
             function clearBirthdayError() {
                 birthdayError.classList.remove('visible');
-                trigger.classList.remove('input-error');
+                [daySelect, monthSelect, yearSelect].forEach(s => s.classList.remove('input-error'));
             }
 
             function showBirthdayError(msg) {
                 birthdayError.querySelector('span').textContent = msg;
                 birthdayError.classList.add('visible');
-                trigger.classList.add('input-error');
+                [daySelect, monthSelect, yearSelect].forEach(s => s.classList.add('input-error'));
             }
+
+            monthSelect.addEventListener('change', updateMaxDays);
+            yearSelect.addEventListener('change', updateMaxDays);
+            daySelect.addEventListener('change', updateHiddenAndState);
 
             // Expose for form validation
             window.validateBirthday = function() {
-                if (!selectedDate) return true; // optional, skip if empty
-                const d = new Date(selectedDate.year, selectedDate.month, selectedDate.day);
-                if (d > maxDate) {
+                const d = parseInt(daySelect.value);
+                const m = parseInt(monthSelect.value);
+                const y = parseInt(yearSelect.value);
+
+                // If all empty, it's optional — skip
+                if (isNaN(d) && isNaN(m) && isNaN(y)) return true;
+
+                // If some but not all filled, show error
+                if (isNaN(d) || isNaN(m) || isNaN(y)) {
+                    showBirthdayError('Please select a complete date (day, month, year)');
+                    return false;
+                }
+
+                const selectedDate = new Date(y, m, d);
+                if (selectedDate > maxDate) {
                     showBirthdayError('You must be at least 18 years old');
                     return false;
                 }
-                if (d < minDate) {
+                if (selectedDate < minDate) {
                     showBirthdayError('Please enter a valid date of birth');
                     return false;
                 }
@@ -3064,7 +2767,13 @@
             };
 
             window.getSelectedBirthday = function() {
-                return selectedDate;
+                const d = parseInt(daySelect.value);
+                const m = parseInt(monthSelect.value);
+                const y = parseInt(yearSelect.value);
+                if (!isNaN(d) && !isNaN(m) && !isNaN(y)) {
+                    return { day: d, month: m, year: y };
+                }
+                return null;
             };
         })();
 
@@ -3106,7 +2815,7 @@
             successMsg.classList.remove('show');
             errorMsg.classList.remove('show');
             document.querySelectorAll('#subscribeForm .sub-field-error').forEach(el => el.classList.remove('visible'));
-            document.querySelectorAll('#subscribeForm .sub-input, #subscribeForm .birthday-trigger').forEach(el => el.classList.remove('input-error'));
+            document.querySelectorAll('#subscribeForm .sub-input, #subscribeForm .sub-select').forEach(el => el.classList.remove('input-error'));
 
             // Validate Name
             if (!nameInput.value.trim()) {
