@@ -60,6 +60,50 @@
 
     /* Process timeline */
     .process-line{position:absolute;left:19px;top:40px;bottom:0;width:2px;background:linear-gradient(180deg,#ff005e,rgba(255,0,94,.1))}
+
+    /* Stripe pricing table wrapper */
+    .stripe-table-wrapper {
+      width: 100%;
+      border-radius: 1.5rem;
+      overflow: hidden;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .stripe-table-wrapper.light-mode {
+      background-color: #ffffff;
+      border: 1px solid #e5e5e5;
+    }
+    .stripe-table-wrapper.dark-mode {
+      background-color: #171717;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* Override Stripe's default iframe styles for dark mode */
+    .dark .stripe-table-wrapper iframe {
+      color-scheme: dark;
+    }
+
+    /* Stripe loading state */
+    .stripe-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 16px;
+    }
+    .stripe-loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e5e5e5;
+      border-top-color: #ff005e;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .dark .stripe-loading-spinner {
+      border-color: #404040;
+      border-top-color: #ff005e;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 
@@ -279,15 +323,40 @@
   <div id="page-pricing" class="page">
     <section class="py-20 md:py-28 relative">
       <div class="absolute top-1/2 right-0 swirl-3 pointer-events-none"></div>
-      <div class="max-w-5xl mx-auto px-6 relative z-10">
-        <div class="text-center mb-12 fade-in-up">
+      <div class="max-w-full mx-auto px-4 md:px-6 relative z-10">
+        <div class="text-center mb-12 fade-in-up max-w-2xl mx-auto">
           <span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">Our packages</span>
           <h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Pricing</h2>
           <p class="text-neutral-500 dark:text-neutral-400 text-sm md:text-base mt-4 max-w-lg mx-auto">Choose the package that fits your needs. All plans include free consultation and 3 rounds of revisions.</p>
         </div>
-        <div class="fade-in-up delay-200">
-          <stripe-pricing-table pricing-table-id="prctbl_1TLFUQ7TzVI5KBwlttceiZgs" publishable-key="pk_live_51TCE7c7TzVI5KBwlo5A9OWBN5Ub4Ccr5L0iwzPIjCozeSGLiBmV6jzbmh9mvLmg6xveJN9zK4nHZMBUhqsQ5z6Lj0012fJkd42"></stripe-pricing-table>
+
+        <!-- Theme toggle for pricing -->
+        <div class="flex items-center justify-center gap-3 mb-8 fade-in-up delay-100">
+          <span class="text-xs text-neutral-400">Table Theme</span>
+          <button id="stripeThemeToggle" class="relative h-8 w-14 rounded-full bg-neutral-200 dark:bg-neutral-800 transition-colors flex items-center px-1" aria-label="Toggle pricing table theme">
+            <div id="stripeThemeKnob" class="w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center">
+              <svg class="w-3 h-3 text-neutral-600" id="stripeThemeIconLight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              <svg class="w-3 h-3 text-indigo-400 hidden" id="stripeThemeIconDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+          </button>
+          <span class="text-xs text-neutral-400" id="stripeThemeLabel">Light</span>
         </div>
+
+        <!-- Stripe Pricing Table — Full Width -->
+        <div class="fade-in-up delay-200">
+          <div id="stripeTableWrapper" class="stripe-table-wrapper light-mode">
+            <div id="stripeLoading" class="stripe-loading">
+              <div class="stripe-loading-spinner"></div>
+              <p class="text-sm text-neutral-400">Loading pricing table…</p>
+            </div>
+            <stripe-pricing-table
+              pricing-table-id="prctbl_1TLFUQ7TzVI5KBwlttceiZgs"
+              publishable-key="pk_live_51TCE7c7TzVI5KBwlo5A9OWBN5Ub4Ccr5L0iwzPIjCozeSGLiBmV6jzbmh9mvLmg6xveJN9zK4nHZMBUhqsQ5z6Lj0012fJkd42"
+            ></stripe-pricing-table>
+          </div>
+        </div>
+
+        <p class="text-center text-xs text-neutral-400 mt-8 fade-in-up delay-300">Secure payments powered by <span class="font-medium">Stripe</span>. FPX, DuitNow, and card payments accepted.</p>
       </div>
     </section>
   </div>
@@ -343,26 +412,11 @@
         <div class="relative">
           <div class="process-line hidden md:block"></div>
           <div class="space-y-12">
-            <div class="flex gap-6 fade-in-up delay-100">
-              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">1</div>
-              <div class="pt-1"><h3 class="font-semibold mb-1">Discovery & Consultation</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We start with a free consultation to understand your business, goals, target audience, and budget. This helps us recommend the best approach for your project.</p></div>
-            </div>
-            <div class="flex gap-6 fade-in-up delay-200">
-              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">2</div>
-              <div class="pt-1"><h3 class="font-semibold mb-1">Proposal & Scoping</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We prepare a detailed proposal with scope of work, timeline, deliverables, and pricing. Everything is transparent — no hidden fees, no surprises.</p></div>
-            </div>
-            <div class="flex gap-6 fade-in-up delay-300">
-              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">3</div>
-              <div class="pt-1"><h3 class="font-semibold mb-1">Design & Development</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">Our team designs and builds your solution with regular check-ins. You'll see progress through our client portal and can provide feedback throughout.</p></div>
-            </div>
-            <div class="flex gap-6 fade-in-up delay-400">
-              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">4</div>
-              <div class="pt-1"><h3 class="font-semibold mb-1">Review & Revisions</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">You review the completed work and request up to 3 rounds of revisions. We refine everything until you're 100% satisfied with the result.</p></div>
-            </div>
-            <div class="flex gap-6 fade-in-up delay-500">
-              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">5</div>
-              <div class="pt-1"><h3 class="font-semibold mb-1">Launch & Handover</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We deploy your project, handle all technical setup, and provide full documentation. You also get 3 months of free post-launch support.</p></div>
-            </div>
+            <div class="flex gap-6 fade-in-up delay-100"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">1</div><div class="pt-1"><h3 class="font-semibold mb-1">Discovery & Consultation</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We start with a free consultation to understand your business, goals, target audience, and budget. This helps us recommend the best approach for your project.</p></div></div>
+            <div class="flex gap-6 fade-in-up delay-200"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">2</div><div class="pt-1"><h3 class="font-semibold mb-1">Proposal & Scoping</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We prepare a detailed proposal with scope of work, timeline, deliverables, and pricing. Everything is transparent — no hidden fees, no surprises.</p></div></div>
+            <div class="flex gap-6 fade-in-up delay-300"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">3</div><div class="pt-1"><h3 class="font-semibold mb-1">Design & Development</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">Our team designs and builds your solution with regular check-ins. You'll see progress through our client portal and can provide feedback throughout.</p></div></div>
+            <div class="flex gap-6 fade-in-up delay-400"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">4</div><div class="pt-1"><h3 class="font-semibold mb-1">Review & Revisions</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">You review the completed work and request up to 3 rounds of revisions. We refine everything until you're 100% satisfied with the result.</p></div></div>
+            <div class="flex gap-6 fade-in-up delay-500"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">5</div><div class="pt-1"><h3 class="font-semibold mb-1">Launch & Handover</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We deploy your project, handle all technical setup, and provide full documentation. You also get 3 months of free post-launch support.</p></div></div>
           </div>
         </div>
       </div>
@@ -463,7 +517,6 @@
       </div>
     </section>
     <div class="ext-border-h max-w-4xl mx-auto"></div>
-    <!-- Team -->
     <section class="py-20 md:py-28">
       <div class="max-w-5xl mx-auto px-6">
         <div class="text-center mb-12 fade-in-up"><span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">The People</span><h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Our Team</h2></div>
@@ -485,26 +538,11 @@
       <div class="max-w-3xl mx-auto px-6">
         <div class="text-center mb-12 fade-in-up"><span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">Join Us</span><h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Careers at Luviio</h2><p class="text-neutral-500 dark:text-neutral-400 text-sm mt-4">We're always looking for talented people who are passionate about building great digital products.</p></div>
         <div class="space-y-4 fade-in-up delay-100">
-          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors">
-            <div><h3 class="text-sm font-semibold">Senior Frontend Developer</h3><p class="text-xs text-neutral-400 mt-1">Remote · Full-time · RM5,000–RM8,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">React</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Next.js</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">TypeScript</span></div></div>
-            <button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button>
-          </div>
-          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors">
-            <div><h3 class="text-sm font-semibold">UI/UX Designer</h3><p class="text-xs text-neutral-400 mt-1">Kuala Lumpur · Full-time · RM4,000–RM6,500/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Figma</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Prototyping</span></div></div>
-            <button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button>
-          </div>
-          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors">
-            <div><h3 class="text-sm font-semibold">Backend Developer (PHP/Laravel)</h3><p class="text-xs text-neutral-400 mt-1">Remote · Full-time · RM5,500–RM9,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Laravel</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">MySQL</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">API</span></div></div>
-            <button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button>
-          </div>
-          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors">
-            <div><h3 class="text-sm font-semibold">IT Support Specialist</h3><p class="text-xs text-neutral-400 mt-1">Kuala Lumpur · Full-time · RM3,000–RM4,500/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Helpdesk</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Networking</span></div></div>
-            <button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button>
-          </div>
-          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors">
-            <div><h3 class="text-sm font-semibold">Project Manager</h3><p class="text-xs text-neutral-400 mt-1">Hybrid · Full-time · RM4,500–RM7,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Agile</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Scrum</span></div></div>
-            <button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button>
-          </div>
+          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">Senior Frontend Developer</h3><p class="text-xs text-neutral-400 mt-1">Remote · Full-time · RM5,000–RM8,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">React</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Next.js</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">TypeScript</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
+          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">UI/UX Designer</h3><p class="text-xs text-neutral-400 mt-1">Kuala Lumpur · Full-time · RM4,000–RM6,500/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Figma</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Prototyping</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
+          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">Backend Developer (PHP/Laravel)</h3><p class="text-xs text-neutral-400 mt-1">Remote · Full-time · RM5,500–RM9,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Laravel</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">MySQL</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">API</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
+          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">IT Support Specialist</h3><p class="text-xs text-neutral-400 mt-1">Kuala Lumpur · Full-time · RM3,000–RM4,500/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Helpdesk</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Networking</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
+          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">Project Manager</h3><p class="text-xs text-neutral-400 mt-1">Hybrid · Full-time · RM4,500–RM7,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Agile</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Scrum</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
         </div>
       </div>
     </section>
@@ -518,22 +556,10 @@
       <div class="max-w-5xl mx-auto px-6">
         <div class="text-center mb-12 fade-in-up"><span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">Insights</span><h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Blog</h2></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <article class="bg-white dark:bg-white/5 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 hover:border-accent/30 transition-colors fade-in-up delay-100 cursor-pointer">
-            <img src="https://picsum.photos/seed/blog-1/600/300.jpg" class="w-full h-48 object-cover" />
-            <div class="p-6"><span class="text-[10px] font-medium tracking-widest uppercase text-accent">Web Design</span><h3 class="text-base font-semibold mt-2 mb-2">10 Web Design Trends Every Malaysian Business Should Know in 2025</h3><p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">From dark mode to micro-interactions, here are the trends shaping the digital landscape this year...</p><p class="text-[10px] text-neutral-400 mt-3">Jan 15, 2025 · 5 min read</p></div>
-          </article>
-          <article class="bg-white dark:bg-white/5 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 hover:border-accent/30 transition-colors fade-in-up delay-200 cursor-pointer">
-            <img src="https://picsum.photos/seed/blog-2/600/300.jpg" class="w-full h-48 object-cover" />
-            <div class="p-6"><span class="text-[10px] font-medium tracking-widest uppercase text-accent">E-Commerce</span><h3 class="text-base font-semibold mt-2 mb-2">How to Choose the Right E-Commerce Platform for Your Business</h3><p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">Shopify vs WooCommerce vs custom build — a practical comparison for Malaysian SMEs...</p><p class="text-[10px] text-neutral-400 mt-3">Jan 8, 2025 · 7 min read</p></div>
-          </article>
-          <article class="bg-white dark:bg-white/5 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 hover:border-accent/30 transition-colors fade-in-up delay-300 cursor-pointer">
-            <img src="https://picsum.photos/seed/blog-3/600/300.jpg" class="w-full h-48 object-cover" />
-            <div class="p-6"><span class="text-[10px] font-medium tracking-widest uppercase text-accent">SEO</span><h3 class="text-base font-semibold mt-2 mb-2">SEO Basics: How to Get Your Malaysian Website Ranking on Google</h3><p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">A beginner-friendly guide to improving your website's search engine visibility locally...</p><p class="text-[10px] text-neutral-400 mt-3">Dec 28, 2024 · 6 min read</p></div>
-          </article>
-          <article class="bg-white dark:bg-white/5 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 hover:border-accent/30 transition-colors fade-in-up delay-400 cursor-pointer">
-            <img src="https://picsum.photos/seed/blog-4/600/300.jpg" class="w-full h-48 object-cover" />
-            <div class="p-6"><span class="text-[10px] font-medium tracking-widest uppercase text-accent">IT Security</span><h3 class="text-base font-semibold mt-2 mb-2">Why Every SME Needs Basic Cybersecurity (And How to Start)</h3><p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">Cyber attacks on small businesses are rising. Here's how to protect yours without breaking the bank...</p><p class="text-[10px] text-neutral-400 mt-3">Dec 20, 2024 · 4 min read</p></div>
-          </article>
+          <article class="bg-white dark:bg-white/5 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 hover:border-accent/30 transition-colors fade-in-up delay-100 cursor-pointer"><img src="https://picsum.photos/seed/blog-1/600/300.jpg" class="w-full h-48 object-cover" /><div class="p-6"><span class="text-[10px] font-medium tracking-widest uppercase text-accent">Web Design</span><h3 class="text-base font-semibold mt-2 mb-2">10 Web Design Trends Every Malaysian Business Should Know in 2025</h3><p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">From dark mode to micro-interactions, here are the trends shaping the digital landscape this year...</p><p class="text-[10px] text-neutral-400 mt-3">Jan 15, 2025 · 5 min read</p></div></article>
+          <article class="bg-white dark:bg-white/5 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 hover:border-accent/30 transition-colors fade-in-up delay-200 cursor-pointer"><img src="https://picsum.photos/seed/blog-2/600/300.jpg" class="w-full h-48 object-cover" /><div class="p-6"><span class="text-[10px] font-medium tracking-widest uppercase text-accent">E-Commerce</span><h3 class="text-base font-semibold mt-2 mb-2">How to Choose the Right E-Commerce Platform for Your Business</h3><p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">Shopify vs WooCommerce vs custom build — a practical comparison for Malaysian SMEs...</p><p class="text-[10px] text-neutral-400 mt-3">Jan 8, 2025 · 7 min read</p></div></article>
+          <article class="bg-white dark:bg-white/5 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 hover:border-accent/30 transition-colors fade-in-up delay-300 cursor-pointer"><img src="https://picsum.photos/seed/blog-3/600/300.jpg" class="w-full h-48 object-cover" /><div class="p-6"><span class="text-[10px] font-medium tracking-widest uppercase text-accent">SEO</span><h3 class="text-base font-semibold mt-2 mb-2">SEO Basics: How to Get Your Malaysian Website Ranking on Google</h3><p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">A beginner-friendly guide to improving your website's search engine visibility locally...</p><p class="text-[10px] text-neutral-400 mt-3">Dec 28, 2024 · 6 min read</p></div></article>
+          <article class="bg-white dark:bg-white/5 rounded-2xl overflow-hidden border border-neutral-200 dark:border-white/10 hover:border-accent/30 transition-colors fade-in-up delay-400 cursor-pointer"><img src="https://picsum.photos/seed/blog-4/600/300.jpg" class="w-full h-48 object-cover" /><div class="p-6"><span class="text-[10px] font-medium tracking-widest uppercase text-accent">IT Security</span><h3 class="text-base font-semibold mt-2 mb-2">Why Every SME Needs Basic Cybersecurity (And How to Start)</h3><p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">Cyber attacks on small businesses are rising. Here's how to protect yours without breaking the bank...</p><p class="text-[10px] text-neutral-400 mt-3">Dec 20, 2024 · 4 min read</p></div></article>
         </div>
       </div>
     </section>
@@ -567,30 +593,12 @@
           <p class="text-lg font-semibold tracking-tight mb-4">LUVIIO</p>
           <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Professional website & IT services for Malaysian businesses.</p>
           <div class="flex gap-3">
-            <!-- Instagram -->
-            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="Instagram">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-            </a>
-            <!-- Facebook -->
-            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="Facebook">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-            </a>
-            <!-- LinkedIn -->
-            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="LinkedIn">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-            </a>
-            <!-- TikTok -->
-            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="TikTok">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
-            </a>
-            <!-- WhatsApp -->
-            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="WhatsApp">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            </a>
-            <!-- X / Twitter -->
-            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="X">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            </a>
+            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="Instagram"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="Facebook"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="LinkedIn"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="TikTok"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="WhatsApp"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+            <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="X"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
           </div>
         </div>
         <div>
@@ -633,67 +641,21 @@
   <!-- ===== JAVASCRIPT ===== -->
   <script>
     // ========== PAGE NAVIGATION ==========
-    const pageNames = {
-      home: 'Home',
-      pricing: 'Pricing',
-      faq: 'FAQ',
-      process: 'Process',
-      terms: 'Terms of Service',
-      contact: 'Contact Us',
-      about: 'About Us',
-      careers: 'Careers',
-      blog: 'Blog',
-      privacy: 'Privacy Policy'
-    };
-
     let currentPage = 'home';
 
     function navigateTo(pageId) {
       if (currentPage === pageId) return;
-
-      // Hide current
       const currentEl = document.getElementById('page-' + currentPage);
-      if (currentEl) {
-        currentEl.classList.remove('active');
-        currentEl.classList.remove('page-enter');
-      }
-
-      // Show new
+      if (currentEl) { currentEl.classList.remove('active'); currentEl.classList.remove('page-enter'); }
       const newEl = document.getElementById('page-' + pageId);
-      if (newEl) {
-        newEl.classList.add('active');
-        // Trigger reflow for animation
-        void newEl.offsetWidth;
-        newEl.classList.add('page-enter');
-      }
-
+      if (newEl) { newEl.classList.add('active'); void newEl.offsetWidth; newEl.classList.add('page-enter'); }
       currentPage = pageId;
-
-      // Update URL hash
       history.pushState(null, '', '#' + pageId);
-
-      // Update active nav link
-      document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.dataset.page === pageId) {
-          link.classList.remove('text-neutral-600', 'dark:text-neutral-400');
-          link.classList.add('text-neutral-900', 'dark:text-white');
-        } else {
-          link.classList.remove('text-neutral-900', 'dark:text-white');
-          link.classList.add('text-neutral-600', 'dark:text-neutral-400');
-        }
-      });
-
-      // Scroll to top
+      updateNavActive(pageId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      // Re-init animations & icons for new page
-      setTimeout(() => {
-        lucide.createIcons();
-        initScrollAnimations();
-      }, 50);
+      setTimeout(() => { lucide.createIcons(); initScrollAnimations(); syncStripeTheme(); }, 50);
     }
 
-    // Handle browser back/forward
     window.addEventListener('popstate', () => {
       const hash = location.hash.replace('#', '') || 'home';
       const currentEl = document.getElementById('page-' + currentPage);
@@ -716,21 +678,13 @@
       });
     }
 
-    // Load correct page from hash on init
     window.addEventListener('DOMContentLoaded', () => {
       const hash = location.hash.replace('#', '') || 'home';
       if (hash !== 'home') {
-        const homeEl = document.getElementById('page-home');
-        homeEl.classList.remove('active');
+        document.getElementById('page-home').classList.remove('active');
         const targetEl = document.getElementById('page-' + hash);
-        if (targetEl) {
-          targetEl.classList.add('active');
-          currentPage = hash;
-          updateNavActive(hash);
-        }
-      } else {
-        updateNavActive('home');
-      }
+        if (targetEl) { targetEl.classList.add('active'); currentPage = hash; updateNavActive(hash); }
+      } else { updateNavActive('home'); }
     });
 
     // ========== FAQ ACCORDION ==========
@@ -739,15 +693,9 @@
       const answer = item.querySelector('.faq-answer');
       const chevron = item.querySelector('.faq-chevron');
       const isOpen = answer.classList.contains('open');
-
-      // Close all
       document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('open'));
       document.querySelectorAll('.faq-chevron').forEach(c => c.classList.remove('open'));
-
-      if (!isOpen) {
-        answer.classList.add('open');
-        chevron.classList.add('open');
-      }
+      if (!isOpen) { answer.classList.add('open'); chevron.classList.add('open'); }
     }
 
     // ========== MOBILE MENU ==========
@@ -780,36 +728,22 @@
     document.getElementById('searchToggle').addEventListener('click', () => {
       const bar = document.getElementById('searchBar');
       bar.classList.toggle('hidden');
-      if (!bar.classList.contains('hidden')) {
-        bar.querySelector('input').focus();
-      } else {
-        document.getElementById('searchResults').classList.add('hidden');
-      }
+      if (!bar.classList.contains('hidden')) bar.querySelector('input').focus();
+      else document.getElementById('searchResults').classList.add('hidden');
     });
 
     function handleSearch(query) {
       const resultsEl = document.getElementById('searchResults');
       if (!query.trim()) { resultsEl.classList.add('hidden'); return; }
-
-      const matches = searchablePages.filter(p =>
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.desc.toLowerCase().includes(query.toLowerCase())
-      );
-
+      const matches = searchablePages.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.desc.toLowerCase().includes(query.toLowerCase()));
       if (matches.length === 0) {
         resultsEl.innerHTML = '<div class="p-4 text-sm text-neutral-400">No results found</div>';
       } else {
-        resultsEl.innerHTML = matches.map(p => `
-          <button onclick="navigateTo('${p.id}');document.getElementById('searchBar').classList.add('hidden');document.getElementById('searchResults').classList.add('hidden')" class="w-full text-left p-4 hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors border-b border-neutral-100 dark:border-white/5 last:border-0">
-            <p class="text-sm font-medium">${p.name}</p>
-            <p class="text-xs text-neutral-400 mt-0.5">${p.desc}</p>
-          </button>
-        `).join('');
+        resultsEl.innerHTML = matches.map(p => `<button onclick="navigateTo('${p.id}');document.getElementById('searchBar').classList.add('hidden');document.getElementById('searchResults').classList.add('hidden')" class="w-full text-left p-4 hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors border-b border-neutral-100 dark:border-white/5 last:border-0"><p class="text-sm font-medium">${p.name}</p><p class="text-xs text-neutral-400 mt-0.5">${p.desc}</p></button>`).join('');
       }
       resultsEl.classList.remove('hidden');
     }
 
-    // Close search on click outside
     document.addEventListener('click', (e) => {
       const bar = document.getElementById('searchBar');
       if (!bar.classList.contains('hidden') && !bar.contains(e.target) && !document.getElementById('searchToggle').contains(e.target)) {
@@ -822,20 +756,73 @@
     document.getElementById('themeToggle').addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
       lucide.createIcons();
+      syncStripeTheme();
     });
+
+    // ========== STRIPE TABLE THEME ==========
+    let stripeTableDark = false;
+
+    function syncStripeTheme() {
+      // Sync with site theme by default
+      const isSiteDark = document.documentElement.classList.contains('dark');
+      setStripeTableTheme(isSiteDark);
+    }
+
+    function setStripeTableTheme(isDark) {
+      stripeTableDark = isDark;
+      const wrapper = document.getElementById('stripeTableWrapper');
+      const knob = document.getElementById('stripeThemeKnob');
+      const label = document.getElementById('stripeThemeLabel');
+      const iconLight = document.getElementById('stripeThemeIconLight');
+      const iconDark = document.getElementById('stripeThemeIconDark');
+      const toggleBtn = document.getElementById('stripeThemeToggle');
+
+      if (isDark) {
+        wrapper.classList.remove('light-mode');
+        wrapper.classList.add('dark-mode');
+        knob.style.transform = 'translateX(24px)';
+        label.textContent = 'Dark';
+        iconLight.classList.add('hidden');
+        iconDark.classList.remove('hidden');
+        toggleBtn.classList.remove('bg-neutral-200');
+        toggleBtn.classList.add('bg-neutral-700');
+      } else {
+        wrapper.classList.remove('dark-mode');
+        wrapper.classList.add('light-mode');
+        knob.style.transform = 'translateX(0)';
+        label.textContent = 'Light';
+        iconLight.classList.remove('hidden');
+        iconDark.classList.add('hidden');
+        toggleBtn.classList.remove('bg-neutral-700');
+        toggleBtn.classList.add('bg-neutral-200');
+      }
+    }
+
+    // Separate toggle for pricing table theme (independent of site theme)
+    document.getElementById('stripeThemeToggle').addEventListener('click', () => {
+      setStripeTableTheme(!stripeTableDark);
+    });
+
+    // ========== HIDE STRIPE LOADING SPINNER ==========
+    function checkStripeLoaded() {
+      const iframe = document.querySelector('#stripeTableWrapper iframe');
+      if (iframe) {
+        const loading = document.getElementById('stripeLoading');
+        if (loading) loading.style.display = 'none';
+      } else {
+        setTimeout(checkStripeLoaded, 500);
+      }
+    }
+    setTimeout(checkStripeLoaded, 1000);
 
     // ========== SCROLL ANIMATIONS ==========
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.style.animationPlayState = 'running';
-          observer.unobserve(entry.target);
-        }
+        if (entry.isIntersecting) { entry.target.style.animationPlayState = 'running'; observer.unobserve(entry.target); }
       });
     }, { threshold: 0.1 });
 
     function initScrollAnimations() {
-      // Only observe elements inside the active page
       document.querySelectorAll('.page.active .fade-in-up').forEach(el => {
         el.style.animationPlayState = 'paused';
         observer.observe(el);
@@ -846,6 +833,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       setTimeout(initScrollAnimations, 100);
+      syncStripeTheme();
     });
   </script>
 </body>
