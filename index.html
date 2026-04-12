@@ -30,6 +30,14 @@
   </script>
 
   <style>
+    /* ===== FULL HEIGHT FIX FOR MOBILE ===== */
+    html, body {
+      height: 100%;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overscroll-behavior: none;
+    }
+
     .swirl-1{background:conic-gradient(from 0deg,#ff005e,#7c3aed,#3b82f6,#ff005e);width:500px;height:500px;filter:blur(80px);opacity:.25;animation:swirlRotate 20s ease-in-out infinite,swirlFloat 15s ease-in-out infinite}
     .swirl-2{background:conic-gradient(from 90deg,#10b981,#06b6d4,#8b5cf6,#10b981);width:400px;height:400px;filter:blur(80px);opacity:.2;animation:swirlRotate 25s ease-in-out infinite reverse,swirlFloat 18s ease-in-out infinite}
     .swirl-3{background:conic-gradient(from 180deg,#f59e0b,#ef4444,#ec4899,#f59e0b);width:450px;height:450px;filter:blur(80px);opacity:.15;animation:swirlRotate 22s ease-in-out infinite,swirlFloat 20s ease-in-out infinite}
@@ -40,7 +48,7 @@
     @keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}
     @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     .fade-in-up{opacity:0;animation:fadeInUp .8s cubic-bezier(.16,1,.3,1) forwards}
-    .delay-100{animation-delay:100ms}.delay-200{animation-delay:200ms}.delay-300{animation-delay:300ms}.delay-400{animation-delay:400ms}
+    .delay-100{animation-delay:100ms}.delay-200{animation-delay:200ms}.delay-300{animation-delay:300ms}.delay-400{animation-delay:400ms}.delay-500{animation-delay:500ms}
     .text-gradient-light{background:linear-gradient(to bottom right,#171717,#525252,#a3a3a3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .dark .text-gradient-dark{background:linear-gradient(to bottom right,#fff,#e5e5e5,#737373);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .shine-text{background:linear-gradient(90deg,#ff005e,#7c3aed,#3b82f6,#ff005e);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shine 4s linear infinite}
@@ -48,7 +56,7 @@
     .ext-border-h{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,94,.5),transparent)}
     .marquee-track{animation:marquee 30s linear infinite}
 
-    #announcementBar{transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s;background-color:#171717}
+    #announcementBar{transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s;background-color:#171717;padding-top:env(safe-area-inset-top,0)}
     .dark #announcementBar{background-color:#fafafa}
     #announcementBar.hidden-bar{transform:translateY(-100%);opacity:0;pointer-events:none;height:0;overflow:hidden;padding:0;margin:0}
 
@@ -84,7 +92,7 @@
       box-shadow:0 1px 3px rgba(0,0,0,.3);
     }
 
-    /* ===== MOBILE MENU — slide-in panel, NOT fullscreen ===== */
+    /* ===== MOBILE MENU — slide-in panel ===== */
     .mobile-menu{
       position:fixed;
       top:0;
@@ -99,6 +107,8 @@
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
       box-shadow:none;
+      padding-top:env(safe-area-inset-top,0);
+      padding-bottom:env(safe-area-inset-bottom,0);
     }
     .mobile-menu.open{
       transform:translateX(0);
@@ -113,7 +123,6 @@
     .mobile-menu-inner{
       padding:24px 20px 40px;
     }
-    /* Overlay behind menu */
     .mobile-overlay{
       position:fixed;
       inset:0;
@@ -127,8 +136,22 @@
       pointer-events:auto;
     }
 
-    .page{display:none}.page.active{display:block}
+    /* ===== PAGE CONTAINERS — full height on mobile ===== */
+    .page{
+      display:none;
+      min-height:0;
+    }
+    .page.active{
+      display:flex;
+      flex-direction:column;
+      min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+      min-height:-webkit-fill-available;
+    }
+    .page.active > section:first-child{
+      flex:1 0 auto;
+    }
     .page-enter{animation:fadeInUp .5s cubic-bezier(.16,1,.3,1) forwards}
+
     .faq-answer{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.16,1,.3,1),padding .3s}
     .faq-answer.open{max-height:300px}
     .faq-chevron{transition:transform .3s}.faq-chevron.open{transform:rotate(180deg)}
@@ -150,6 +173,22 @@
 
     ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#d4d4d4;border-radius:3px}
     .dark ::-webkit-scrollbar-thumb{background:#404040}
+
+    /* ===== FOOTER — push to bottom on short pages ===== */
+    footer {
+      margin-top:auto;
+      padding-bottom:env(safe-area-inset-bottom,0);
+    }
+
+    /* ===== Prevent overscroll bounce on iOS ===== */
+    @supports (-webkit-touch-callout: none) {
+      body {
+        position:fixed;
+        width:100%;
+        height:100%;
+        overflow-y:auto;
+      }
+    }
   </style>
 </head>
 
@@ -215,7 +254,7 @@
   <!-- ===== MOBILE OVERLAY ===== -->
   <div id="mobileOverlay" class="mobile-overlay"></div>
 
-  <!-- ===== MOBILE MENU — Slide-in panel ===== -->
+  <!-- ===== MOBILE MENU ===== -->
   <div id="mobileMenu" class="mobile-menu">
     <div class="mobile-menu-inner">
       <div class="flex items-center justify-between mb-8">
@@ -294,7 +333,6 @@
     </section>
     <div class="ext-border-h max-w-4xl mx-auto"></div>
 
-    <!-- Services -->
     <section class="py-20 md:py-28 relative">
       <div class="max-w-7xl mx-auto px-6">
         <div class="text-center mb-12 fade-in-up"><span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">What we do</span><h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Services</h2></div>
@@ -328,7 +366,6 @@
     </section>
     <div class="ext-border-h max-w-4xl mx-auto"></div>
 
-    <!-- Features -->
     <section class="py-20 md:py-28">
       <div class="max-w-7xl mx-auto px-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -341,7 +378,6 @@
     </section>
     <div class="ext-border-h max-w-4xl mx-auto"></div>
 
-    <!-- Portfolio -->
     <section class="py-20 md:py-28 relative overflow-hidden">
       <div class="absolute bottom-0 left-1/3 swirl-2 pointer-events-none"></div>
       <div class="max-w-7xl mx-auto px-6 relative z-10">
@@ -357,7 +393,6 @@
     </section>
     <div class="ext-border-h max-w-4xl mx-auto"></div>
 
-    <!-- Reviews -->
     <section class="py-20 md:py-28">
       <div class="max-w-7xl mx-auto px-6">
         <div class="text-center mb-12 fade-in-up"><span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">Client Feedback</span><h2 class="text-3xl md:text-5xl font-semibold tracking-tight">What Clients Say</h2></div>
@@ -370,7 +405,6 @@
     </section>
     <div class="ext-border-h max-w-4xl mx-auto"></div>
 
-    <!-- Newsletter -->
     <section class="py-20 md:py-28 relative overflow-hidden">
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 swirl-1 pointer-events-none"></div>
       <div class="max-w-xl mx-auto px-6 relative z-10">
@@ -702,7 +736,6 @@
 
   <!-- ===== JAVASCRIPT ===== -->
   <script>
-    // ========== PAGE NAVIGATION ==========
     let currentPage = 'home';
 
     function navigateTo(pageId) {
@@ -749,7 +782,6 @@
       updateNavState();
     });
 
-    // ========== ANNOUNCEMENT BAR + NAV SCROLL STATE ==========
     const announcementBar = document.getElementById('announcementBar');
     const mainNav = document.getElementById('mainNav');
 
@@ -768,7 +800,6 @@
 
     window.addEventListener('scroll', updateNavState, { passive: true });
 
-    // ========== FAQ ACCORDION ==========
     function toggleFaq(btn) {
       const item = btn.closest('.faq-item');
       const answer = item.querySelector('.faq-answer');
@@ -779,7 +810,6 @@
       if (!isOpen) { answer.classList.add('open'); chevron.classList.add('open'); }
     }
 
-    // ========== MOBILE MENU — Slide-in panel ==========
     const mobileMenu = document.getElementById('mobileMenu');
     const mobileOverlay = document.getElementById('mobileOverlay');
 
@@ -797,17 +827,13 @@
     });
 
     document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
-
-    // Close menu when clicking the overlay
     mobileOverlay.addEventListener('click', closeMobileMenu);
 
-    // ========== MOBILE THEME TOGGLE ==========
     document.getElementById('mobileThemeToggle').addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
       lucide.createIcons();
     });
 
-    // ========== SEARCH ==========
     const searchablePages = [
       { id:'home', name:'Home', desc:'Main page with hero, services, features, portfolio, reviews' },
       { id:'pricing', name:'Pricing', desc:'View all service packages and pricing' },
@@ -845,13 +871,11 @@
       }
     });
 
-    // ========== THEME TOGGLE ==========
     document.getElementById('themeToggle').addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
       lucide.createIcons();
     });
 
-    // ========== SCROLL ANIMATIONS ==========
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => { if (entry.isIntersecting) { entry.target.style.animationPlayState = 'running'; observer.unobserve(entry.target); } });
     }, { threshold: 0.1 });
@@ -863,7 +887,6 @@
       });
     }
 
-    // ========== INIT ==========
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       setTimeout(initScrollAnimations, 100);
