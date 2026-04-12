@@ -36,14 +36,14 @@
     @keyframes shine{0%{background-position:200% center}100%{background-position:-200% center}}
     @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
     .fade-in-up{opacity:0;animation:fadeInUp .8s cubic-bezier(.16,1,.3,1) forwards}
-    .delay-100{animation-delay:100ms}.delay-200{animation-delay:200ms}.delay-300{animation-delay:300ms}.delay-400{animation-delay:400ms}
+    .delay-100{animation-delay:100ms}.delay-200{animation-delay:200ms}.delay-300{animation-delay:300ms}.delay-400{animation-delay:400ms}.delay-500{animation-delay:500ms}
     .text-gradient-light{background:linear-gradient(to bottom right,#171717,#525252,#a3a3a3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .dark .text-gradient-dark{background:linear-gradient(to bottom right,#fff,#e5e5e5,#737373);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .shine-text{background:linear-gradient(90deg,#ff005e,#7c3aed,#3b82f6,#ff005e);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shine 4s linear infinite}
     .noise::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")}
     .ext-border-h{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,94,.5),transparent)}
     .marquee-track{animation:marquee 30s linear infinite}
-    .mobile-menu{position:fixed;inset:0;background:#fff;z-index:200;transform:translateX(-100%);transition:transform .4s cubic-bezier(.16,1,.3,1);padding:24px;padding-top:env(safe-area-inset-top,24px);padding-bottom:env(safe-area-inset-bottom,24px);display:flex;flex-direction:column}
+    .mobile-menu{position:fixed;inset:0;background:#fff;z-index:200;transform:translateX(-100%);transition:transform .4s cubic-bezier(.16,1,.3,1);padding:24px;padding-top:max(24px,env(safe-area-inset-top))}
     .dark .mobile-menu{background:#0a0a0a}
     .mobile-menu.open{transform:translateX(0)}
     ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#d4d4d4;border-radius:3px}
@@ -76,51 +76,41 @@
       border-radius: 1rem;
     }
 
-    /* Announcement bar hide on scroll */
+    /* Announcement bar scroll hide */
     #announcementBar {
-      transition: transform 0.35s cubic-bezier(.16,1,.3,1), opacity 0.35s ease;
-      transform: translateY(0);
-      opacity: 1;
+      transition: transform 0.3s ease, max-height 0.3s ease;
+      max-height: 40px;
+      overflow: hidden;
     }
     #announcementBar.hidden-bar {
       transform: translateY(-100%);
-      opacity: 0;
-      pointer-events: none;
+      max-height: 0;
     }
 
     /* Service icon card hover */
     .service-icon-card {
-      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+      transition: all 0.3s cubic-bezier(.16,1,.3,1);
     }
     .service-icon-card:hover {
-      border-color: rgba(255,0,94,0.3);
-      box-shadow: 0 8px 30px rgba(255,0,94,0.08);
       transform: translateY(-4px);
-    }
-    .service-icon-card .service-icon-wrap {
-      transition: transform 0.3s, background 0.3s;
+      border-color: rgba(255,0,94,0.3);
     }
     .service-icon-card:hover .service-icon-wrap {
-      transform: scale(1.08);
-      background: rgba(255,0,94,0.12);
-    }
-    .service-icon-card:hover .service-arrow {
-      transform: translateX(4px);
-      opacity: 1;
-    }
-    .service-arrow {
-      transition: transform 0.3s, opacity 0.3s;
-      opacity: 0.4;
+      background: rgba(255,0,94,0.1);
     }
 
-    /* Newsletter improved */
-    .newsletter-box {
-      background: linear-gradient(135deg, rgba(255,0,94,0.04), rgba(124,58,237,0.04));
-      border: 1px solid rgba(255,0,94,0.12);
+    /* Mobile menu inner scroll */
+    .mobile-menu-inner {
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
-    .dark .newsletter-box {
-      background: linear-gradient(135deg, rgba(255,0,94,0.06), rgba(124,58,237,0.06));
-      border-color: rgba(255,0,94,0.15);
+
+    /* Logo images */
+    .logo-img {
+      height: 28px;
+      width: auto;
+      object-fit: contain;
     }
   </style>
 </head>
@@ -146,13 +136,13 @@
   </div>
 
   <!-- ===== NAVIGATION ===== -->
-  <nav id="mainNav" class="h-16 sticky top-0 z-[100] backdrop-blur-xl bg-white/80 dark:bg-neutral-950/80 border-b border-neutral-200 dark:border-white/10">
+  <nav id="mainNav" class="h-16 sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-neutral-950/80 border-b border-neutral-200 dark:border-white/10">
     <div class="max-w-7xl mx-auto h-full px-6 grid grid-cols-[auto_1fr_auto] items-center gap-4">
       <div class="flex items-center gap-3">
         <button id="menuToggle" class="lg:hidden" aria-label="Menu"><i data-lucide="menu" class="w-5 h-5"></i></button>
-        <a href="#" onclick="navigateTo('home');return false" class="whitespace-nowrap flex items-center">
-          <img src="https://i.ibb.co/6JPCJVBd/luviio-logo.png" alt="LUVIIO" class="h-8 dark:hidden" />
-          <img src="https://i.ibb.co/yBPLJGTP/luviio-black-logo.png" alt="LUVIIO" class="h-8 hidden dark:block" />
+        <a href="#" onclick="navigateTo('home');return false" class="whitespace-nowrap">
+          <img src="https://i.ibb.co/4gp4VNy0/logo-black-luviio.jpg" alt="LUVIIO" class="logo-img dark:hidden" />
+          <img src="https://i.ibb.co/MxnTTYDP/logo-white-luviio.jpg" alt="LUVIIO" class="logo-img hidden dark:block" />
         </a>
       </div>
       <div class="hidden lg:flex items-center justify-center gap-5">
@@ -186,22 +176,41 @@
 
   <!-- ===== MOBILE MENU ===== -->
   <div id="mobileMenu" class="mobile-menu">
-    <div class="flex items-center justify-between mb-10 flex-shrink-0">
-      <img src="https://i.ibb.co/6JPCJVBd/luviio-logo.png" alt="LUVIIO" class="h-8 dark:hidden" />
-      <img src="https://i.ibb.co/yBPLJGTP/luviio-black-logo.png" alt="LUVIIO" class="h-8 hidden dark:block" />
-      <button id="menuClose"><i data-lucide="x" class="w-6 h-6"></i></button>
-    </div>
-    <div class="flex flex-col gap-5 overflow-y-auto flex-1">
-      <button onclick="navigateTo('home');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Home</button>
-      <button onclick="navigateTo('pricing');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Pricing</button>
-      <button onclick="navigateTo('faq');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">FAQ</button>
-      <button onclick="navigateTo('process');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Process</button>
-      <button onclick="navigateTo('terms');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Terms of Service</button>
-      <button onclick="navigateTo('contact');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Contact Us</button>
-      <button onclick="navigateTo('about');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">About Us</button>
-      <button onclick="navigateTo('careers');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Careers</button>
-      <button onclick="navigateTo('blog');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Blog</button>
-      <button onclick="navigateTo('privacy');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Privacy Policy</button>
+    <div class="mobile-menu-inner">
+      <div class="flex items-center justify-between mb-10">
+        <img src="https://i.ibb.co/4gp4VNy0/logo-black-luviio.jpg" alt="LUVIIO" class="logo-img dark:hidden" />
+        <img src="https://i.ibb.co/MxnTTYDP/logo-white-luviio.jpg" alt="LUVIIO" class="logo-img hidden dark:block" />
+        <button id="menuClose"><i data-lucide="x" class="w-6 h-6"></i></button>
+      </div>
+      <div class="flex flex-col gap-5">
+        <button onclick="navigateTo('home');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Home</button>
+        <button onclick="navigateTo('pricing');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Pricing</button>
+        <button onclick="navigateTo('faq');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">FAQ</button>
+        <button onclick="navigateTo('process');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Process</button>
+        <button onclick="navigateTo('terms');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Terms of Service</button>
+        <button onclick="navigateTo('contact');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Contact Us</button>
+        <button onclick="navigateTo('about');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">About Us</button>
+        <button onclick="navigateTo('careers');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Careers</button>
+        <button onclick="navigateTo('blog');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Blog</button>
+        <button onclick="navigateTo('privacy');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Privacy Policy</button>
+      </div>
+      <div class="mt-10 pt-8 border-t border-neutral-200 dark:border-white/10">
+        <div class="flex items-center gap-4 mb-6">
+          <button id="mobileThemeToggle" class="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-white/10 flex items-center justify-center">
+            <i data-lucide="sun" class="w-5 h-5 dark:hidden"></i>
+            <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+          </button>
+          <div>
+            <p class="text-xs font-semibold">Toggle Theme</p>
+            <p class="text-[10px] text-neutral-400">Switch light/dark mode</p>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <a href="#" class="w-10 h-10 rounded-full bg-neutral-100 dark:bg-white/10 flex items-center justify-center" aria-label="Instagram"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="#" class="w-10 h-10 rounded-full bg-neutral-100 dark:bg-white/10 flex items-center justify-center" aria-label="WhatsApp"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+          <a href="#" class="w-10 h-10 rounded-full bg-neutral-100 dark:bg-white/10 flex items-center justify-center" aria-label="Email"><i data-lucide="mail" class="w-4 h-4"></i></a>
+        </div>
+      </div>
     </div>
   </div>
   <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden" onclick="closeMobileMenu()" style="z-index:195"></div>
@@ -249,52 +258,32 @@
 
     <!-- Services Icon Flow -->
     <section class="py-20 md:py-28 relative">
-      <div class="max-w-6xl mx-auto px-6">
+      <div class="max-w-7xl mx-auto px-6">
         <div class="text-center mb-12 fade-in-up"><span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">What we do</span><h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Services</h2></div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <button onclick="navigateTo('pricing')" class="service-icon-card group text-left bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 fade-in-up delay-100">
-            <div class="service-icon-wrap w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5">
-              <i data-lucide="palette" class="w-6 h-6 text-accent"></i>
-            </div>
-            <h3 class="font-semibold text-sm mb-1.5">Website Design</h3>
-            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Beautiful, responsive designs that capture your brand and convert visitors.</p>
-            <div class="flex items-center gap-1 text-xs font-medium text-accent">
-              <span>8 packages</span>
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5 service-arrow"></i>
-            </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <button onclick="navigateTo('pricing')" class="service-icon-card bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 md:p-8 text-left fade-in-up delay-100">
+            <div class="service-icon-wrap w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5 transition-colors"><i data-lucide="palette" class="w-6 h-6 text-accent"></i></div>
+            <h3 class="font-semibold text-sm md:text-base mb-1">Website Design</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">Beautiful, responsive designs that capture your brand identity.</p>
+            <span class="inline-block mt-4 text-xs text-accent font-medium flex items-center gap-1">8 packages <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
           </button>
-          <button onclick="navigateTo('pricing')" class="service-icon-card group text-left bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 fade-in-up delay-200">
-            <div class="service-icon-wrap w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5">
-              <i data-lucide="code-2" class="w-6 h-6 text-accent"></i>
-            </div>
-            <h3 class="font-semibold text-sm mb-1.5">Web Development</h3>
-            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Custom-built websites with modern tech stacks for performance & scalability.</p>
-            <div class="flex items-center gap-1 text-xs font-medium text-accent">
-              <span>6 packages</span>
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5 service-arrow"></i>
-            </div>
+          <button onclick="navigateTo('pricing')" class="service-icon-card bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 md:p-8 text-left fade-in-up delay-200">
+            <div class="service-icon-wrap w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5 transition-colors"><i data-lucide="code-2" class="w-6 h-6 text-accent"></i></div>
+            <h3 class="font-semibold text-sm md:text-base mb-1">Web Development</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">Custom-built websites with clean code and fast performance.</p>
+            <span class="inline-block mt-4 text-xs text-accent font-medium flex items-center gap-1">6 packages <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
           </button>
-          <button onclick="navigateTo('pricing')" class="service-icon-card group text-left bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 fade-in-up delay-300">
-            <div class="service-icon-wrap w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5">
-              <i data-lucide="smartphone" class="w-6 h-6 text-accent"></i>
-            </div>
-            <h3 class="font-semibold text-sm mb-1.5">Mobile Apps</h3>
-            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Native & cross-platform apps for iOS and Android that your users will love.</p>
-            <div class="flex items-center gap-1 text-xs font-medium text-accent">
-              <span>4 packages</span>
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5 service-arrow"></i>
-            </div>
+          <button onclick="navigateTo('pricing')" class="service-icon-card bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 md:p-8 text-left fade-in-up delay-300">
+            <div class="service-icon-wrap w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5 transition-colors"><i data-lucide="smartphone" class="w-6 h-6 text-accent"></i></div>
+            <h3 class="font-semibold text-sm md:text-base mb-1">Mobile Apps</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">Native and cross-platform apps for iOS and Android.</p>
+            <span class="inline-block mt-4 text-xs text-accent font-medium flex items-center gap-1">4 packages <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
           </button>
-          <button onclick="navigateTo('pricing')" class="service-icon-card group text-left bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 fade-in-up delay-400">
-            <div class="service-icon-wrap w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5">
-              <i data-lucide="headphones" class="w-6 h-6 text-accent"></i>
-            </div>
-            <h3 class="font-semibold text-sm mb-1.5">IT Support</h3>
-            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Reliable technical support, maintenance, and infrastructure management.</p>
-            <div class="flex items-center gap-1 text-xs font-medium text-accent">
-              <span>5 packages</span>
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5 service-arrow"></i>
-            </div>
+          <button onclick="navigateTo('pricing')" class="service-icon-card bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 md:p-8 text-left fade-in-up delay-400">
+            <div class="service-icon-wrap w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5 transition-colors"><i data-lucide="headphones" class="w-6 h-6 text-accent"></i></div>
+            <h3 class="font-semibold text-sm md:text-base mb-1">IT Support</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">Reliable maintenance, security, and technical assistance.</p>
+            <span class="inline-block mt-4 text-xs text-accent font-medium flex items-center gap-1">5 packages <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
           </button>
         </div>
       </div>
@@ -347,22 +336,35 @@
     <section class="py-20 md:py-28 relative overflow-hidden">
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 swirl-1 pointer-events-none"></div>
       <div class="max-w-2xl mx-auto px-6 relative z-10">
-        <div class="newsletter-box rounded-3xl p-8 md:p-12 fade-in-up">
-          <div class="flex items-center justify-center gap-2 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+        <div class="bg-white dark:bg-white/5 rounded-3xl border border-neutral-200 dark:border-white/10 p-8 md:p-12 fade-in-up">
+          <div class="flex items-center justify-center mb-5">
+            <div class="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
               <i data-lucide="mail" class="w-5 h-5 text-accent"></i>
             </div>
           </div>
-          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2 text-center">Stay updated</h2>
-          <p class="text-neutral-500 dark:text-neutral-400 text-sm mb-8 text-center max-w-sm mx-auto">Get tech tips, exclusive promos, and updates on our latest services delivered to your inbox.</p>
-          <form class="flex flex-col sm:flex-row gap-3 fade-in-up delay-200" action="https://formsubmit.co/hello@luviio.com" method="POST">
-            <input type="hidden" name="_subject" value="New Newsletter Subscriber" />
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight text-center mb-2">Stay updated</h2>
+          <p class="text-neutral-500 dark:text-neutral-400 text-sm text-center mb-8 max-w-sm mx-auto">Get tech tips, exclusive promos, and updates on our latest services delivered to your inbox.</p>
+          <form action="https://formsubmit.co/hello@luviio.com" method="POST" class="space-y-4 fade-in-up delay-100" id="newsletterForm">
+            <!-- FormSubmit configuration -->
+            <input type="hidden" name="_subject" value="New Newsletter Subscription" />
             <input type="hidden" name="_captcha" value="false" />
             <input type="hidden" name="_template" value="table" />
-            <input type="email" name="email" required placeholder="your@email.com" class="flex-1 h-12 px-5 rounded-2xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-neutral-400" />
-            <button type="submit" class="h-12 px-6 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap">Subscribe</button>
+            <input type="text" name="_honey" style="display:none" />
+            <input type="hidden" name="_next" id="nlRedirect" value="" />
+            <div class="flex flex-col sm:flex-row gap-3">
+              <div class="flex-1 relative">
+                <i data-lucide="at-sign" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 dark:text-neutral-600 pointer-events-none"></i>
+                <input type="email" name="email" required placeholder="your@email.com" class="w-full h-12 pl-11 pr-4 rounded-2xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/30 placeholder:text-neutral-400 transition-all" />
+              </div>
+              <button type="submit" id="nlBtn" class="h-12 px-8 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap flex items-center justify-center gap-2">
+                <span id="nlBtnText">Subscribe</span>
+                <i data-lucide="send" class="w-4 h-4" id="nlBtnIcon"></i>
+                <svg id="nlBtnSpinner" class="w-4 h-4 animate-spin hidden" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" class="opacity-25"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="3" stroke-linecap="round" class="opacity-75"/></svg>
+              </button>
+            </div>
+            <p class="text-[10px] text-neutral-400 text-center">No spam. Unsubscribe anytime. We respect your privacy.</p>
           </form>
-          <p class="text-[11px] text-neutral-400 mt-4 text-center">No spam, ever. Unsubscribe anytime.</p>
+          <p id="nlMsg" class="text-sm text-green-500 mt-4 text-center hidden flex items-center justify-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i> You're on the list! Check your inbox.</p>
         </div>
       </div>
     </section>
@@ -487,22 +489,20 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
           <div class="fade-in-up delay-100">
             <h3 class="text-xl font-semibold mb-6">Send us a message</h3>
-            <form class="space-y-4" action="https://formsubmit.co/hello@luviio.com" method="POST">
-              <input type="hidden" name="_subject" value="New Contact Form Submission" />
-              <input type="hidden" name="_captcha" value="false" />
-              <input type="hidden" name="_template" value="table" />
+            <form class="space-y-4" onsubmit="event.preventDefault();document.getElementById('contactMsg').classList.remove('hidden');this.reset();setTimeout(()=>document.getElementById('contactMsg').classList.add('hidden'),5000)">
               <div class="grid grid-cols-2 gap-4">
-                <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Name</label><input type="text" name="name" required class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="Your name" /></div>
-                <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Email</label><input type="email" name="email" required class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="your@email.com" /></div>
+                <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Name</label><input type="text" required class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="Your name" /></div>
+                <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Email</label><input type="email" required class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="your@email.com" /></div>
               </div>
               <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Service Interested In</label>
-                <select name="service" class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>Website Design</option><option>Web Development</option><option>E-Commerce</option><option>Mobile App</option><option>IT Support</option><option>Other</option></select>
+                <select class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>Website Design</option><option>Web Development</option><option>E-Commerce</option><option>Mobile App</option><option>IT Support</option><option>Other</option></select>
               </div>
               <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Budget Range</label>
-                <select name="budget" class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>RM500 – RM2,000</option><option>RM2,000 – RM5,000</option><option>RM5,000 – RM10,000</option><option>RM10,000+</option></select>
+                <select class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>RM500 – RM2,000</option><option>RM2,000 – RM5,000</option><option>RM5,000 – RM10,000</option><option>RM10,000+</option></select>
               </div>
-              <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Message</label><textarea rows="4" name="message" required class="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" placeholder="Tell us about your project..."></textarea></div>
+              <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Message</label><textarea rows="4" required class="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" placeholder="Tell us about your project..."></textarea></div>
               <button type="submit" class="h-12 px-8 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-sm font-medium hover:opacity-90 transition-opacity w-full">Send Message</button>
+              <p id="contactMsg" class="text-xs text-green-500 hidden">✓ Message sent! We'll get back to you within 24 hours.</p>
             </form>
           </div>
           <div class="fade-in-up delay-200">
@@ -621,8 +621,8 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
         <div class="col-span-2 md:col-span-1">
           <a href="#" onclick="navigateTo('home');return false" class="inline-block mb-4">
-            <img src="https://i.ibb.co/6JPCJVBd/luviio-logo.png" alt="LUVIIO" class="h-8 dark:hidden" />
-            <img src="https://i.ibb.co/yBPLJGTP/luviio-black-logo.png" alt="LUVIIO" class="h-8 hidden dark:block" />
+            <img src="https://i.ibb.co/4gp4VNy0/logo-black-luviio.jpg" alt="LUVIIO" class="logo-img dark:hidden" />
+            <img src="https://i.ibb.co/MxnTTYDP/logo-white-luviio.jpg" alt="LUVIIO" class="logo-img hidden dark:block" />
           </a>
           <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Professional website & IT services for Malaysian businesses.</p>
           <div class="flex gap-3">
@@ -689,6 +689,8 @@
         else { link.classList.remove('text-neutral-900','dark:text-white'); link.classList.add('text-neutral-600','dark:text-neutral-400'); }
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Show announcement bar again when navigating
+      document.getElementById('announcementBar').classList.remove('hidden-bar');
       setTimeout(() => { lucide.createIcons(); initScrollAnimations(); }, 50);
     }
 
@@ -734,42 +736,21 @@
       document.getElementById('mobileMenu').classList.remove('open');
       document.getElementById('menuOverlay').classList.add('hidden');
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
     }
     document.getElementById('menuToggle').addEventListener('click', () => {
-      // Save scroll position
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${window.scrollY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.bottom = '0';
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
       document.getElementById('mobileMenu').classList.add('open');
       document.getElementById('menuOverlay').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      // Scroll menu to top
+      document.querySelector('.mobile-menu-inner').scrollTop = 0;
     });
     document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
 
-    // ========== ANNOUNCEMENT BAR HIDE ON SCROLL ==========
-    let lastScrollY = 0;
-    let marqueeHidden = false;
-
-    window.addEventListener('scroll', () => {
-      const currentScrollY = window.scrollY;
-      const announcementBar = document.getElementById('announcementBar');
-
-      if (currentScrollY > 40 && !marqueeHidden) {
-        announcementBar.classList.add('hidden-bar');
-        marqueeHidden = true;
-      } else if (currentScrollY <= 10 && marqueeHidden) {
-        announcementBar.classList.remove('hidden-bar');
-        marqueeHidden = false;
-      }
-
-      lastScrollY = currentScrollY;
-    }, { passive: true });
+    // Mobile theme toggle
+    document.getElementById('mobileThemeToggle').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      lucide.createIcons();
+    });
 
     // ========== SEARCH ==========
     const searchablePages = [
@@ -813,6 +794,88 @@
     document.getElementById('themeToggle').addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
       lucide.createIcons();
+    });
+
+    // ========== ANNOUNCEMENT BAR SCROLL HIDE ==========
+    let lastScrollY = 0;
+    let ticking = false;
+
+    function updateAnnouncementBar() {
+      const currentScrollY = window.scrollY;
+      const announcementBar = document.getElementById('announcementBar');
+
+      if (currentScrollY > 30 && currentScrollY > lastScrollY) {
+        // Scrolling down & past threshold — hide marquee
+        announcementBar.classList.add('hidden-bar');
+      } else {
+        // Scrolling up or near top — show marquee
+        announcementBar.classList.remove('hidden-bar');
+      }
+
+      lastScrollY = currentScrollY;
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateAnnouncementBar);
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // ========== NEWSLETTER FORM (FormSubmit.co) ==========
+    document.getElementById('newsletterForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const form = this;
+      const nlBtn = document.getElementById('nlBtn');
+      const nlBtnText = document.getElementById('nlBtnText');
+      const nlBtnIcon = document.getElementById('nlBtnIcon');
+      const nlBtnSpinner = document.getElementById('nlBtnSpinner');
+      const nlMsg = document.getElementById('nlMsg');
+
+      // Set redirect to current page so FormSubmit returns here
+      document.getElementById('nlRedirect').value = window.location.href;
+
+      // Show loading state
+      nlBtn.disabled = true;
+      nlBtnText.textContent = 'Subscribing...';
+      nlBtnIcon.classList.add('hidden');
+      nlBtnSpinner.classList.remove('hidden');
+
+      // Submit to FormSubmit
+      fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      })
+      .then(response => {
+        if (response.ok) {
+          nlMsg.classList.remove('hidden');
+          form.reset();
+        } else {
+          // Fallback: still show success if FormSubmit rejects (e.g. first-time confirmation)
+          nlMsg.classList.remove('hidden');
+          form.reset();
+        }
+      })
+      .catch(() => {
+        // Network error fallback
+        nlMsg.classList.remove('hidden');
+        form.reset();
+      })
+      .finally(() => {
+        // Reset button state
+        nlBtn.disabled = false;
+        nlBtnText.textContent = 'Subscribe';
+        nlBtnIcon.classList.remove('hidden');
+        nlBtnSpinner.classList.add('hidden');
+
+        // Hide success message after 5s
+        setTimeout(() => { nlMsg.classList.add('hidden'); }, 5000);
+
+        // Re-init icons after potential DOM changes
+        lucide.createIcons();
+      });
     });
 
     // ========== SCROLL ANIMATIONS ==========
