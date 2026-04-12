@@ -48,15 +48,12 @@
     .ext-border-h{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,94,.5),transparent)}
     .marquee-track{animation:marquee 30s linear infinite}
 
-    /* Announcement bar */
     #announcementBar{transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s;background-color:#171717}
     .dark #announcementBar{background-color:#fafafa}
     #announcementBar.hidden-bar{transform:translateY(-100%);opacity:0;pointer-events:none;height:0;overflow:hidden;padding:0;margin:0}
 
-    /* ===== NAV — SOLID backgrounds, no transparency, no backdrop-blur ===== */
     #mainNav{
       transition:background .3s, border-color .3s, box-shadow .3s;
-      /* Solid white by default — no transparency, no blur */
       background-color:#ffffff;
       border-bottom:1px solid #e5e5e5;
       box-shadow:none;
@@ -87,32 +84,47 @@
       box-shadow:0 1px 3px rgba(0,0,0,.3);
     }
 
-    /* ===== MOBILE MENU — guaranteed fullscreen overlay ===== */
+    /* ===== MOBILE MENU — slide-in panel, NOT fullscreen ===== */
     .mobile-menu{
       position:fixed;
-      inset:0;
-      /* Explicit height so nothing peeks through */
-      height:100dvh;
-      height:100vh;
-      width:100vw;
+      top:0;
+      left:0;
+      bottom:0;
+      width:300px;
+      max-width:80vw;
       background:#ffffff;
       z-index:999;
       transform:translateX(-100%);
-      transition:transform .4s cubic-bezier(.16,1,.3,1);
-      overflow:hidden;
+      transition:transform .35s cubic-bezier(.16,1,.3,1);
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      box-shadow:none;
+    }
+    .mobile-menu.open{
+      transform:translateX(0);
+      box-shadow:20px 0 60px rgba(0,0,0,.15);
     }
     .dark .mobile-menu{
       background:#0a0a0a;
     }
-    .mobile-menu.open{
-      transform:translateX(0);
+    .dark .mobile-menu.open{
+      box-shadow:20px 0 60px rgba(0,0,0,.5);
     }
-    /* Inner scrollable area — safe-area padding applied here */
     .mobile-menu-inner{
-      height:100%;
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-      padding:env(safe-area-inset-top,0px) 24px calc(env(safe-area-inset-bottom,0px) + 40px);
+      padding:24px 20px 40px;
+    }
+    /* Overlay behind menu */
+    .mobile-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0);
+      z-index:998;
+      pointer-events:none;
+      transition:background .35s;
+    }
+    .mobile-overlay.active{
+      background:rgba(0,0,0,.3);
+      pointer-events:auto;
     }
 
     .page{display:none}.page.active{display:block}
@@ -200,25 +212,43 @@
     </div>
   </nav>
 
-  <!-- ===== MOBILE MENU ===== -->
+  <!-- ===== MOBILE OVERLAY ===== -->
+  <div id="mobileOverlay" class="mobile-overlay"></div>
+
+  <!-- ===== MOBILE MENU — Slide-in panel ===== -->
   <div id="mobileMenu" class="mobile-menu">
     <div class="mobile-menu-inner">
-      <div class="flex items-center justify-between mb-10 pt-2">
+      <div class="flex items-center justify-between mb-8">
         <img src="https://i.ibb.co/8LkD1bym/logo-black-luviio-removebg-preview.png" alt="LUVIIO" class="logo-img-mobile dark:hidden" />
         <img src="https://i.ibb.co/7x07Tnt3/logo-white-luviio-removebg-preview.png" alt="LUVIIO" class="logo-img-mobile hidden dark:block" />
-        <button id="menuClose"><i data-lucide="x" class="w-6 h-6"></i></button>
+        <button id="menuClose" class="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-white/10 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/20 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
-      <div class="flex flex-col gap-5">
-        <button onclick="navigateTo('home');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Home</button>
-        <button onclick="navigateTo('pricing');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Pricing</button>
-        <button onclick="navigateTo('faq');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">FAQ</button>
-        <button onclick="navigateTo('process');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Process</button>
-        <button onclick="navigateTo('terms');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Terms of Service</button>
-        <button onclick="navigateTo('contact');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Contact Us</button>
-        <button onclick="navigateTo('about');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">About Us</button>
-        <button onclick="navigateTo('careers');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Careers</button>
-        <button onclick="navigateTo('blog');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Blog</button>
-        <button onclick="navigateTo('privacy');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Privacy Policy</button>
+      <div class="flex flex-col gap-1">
+        <button onclick="navigateTo('home');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">Home</button>
+        <button onclick="navigateTo('pricing');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">Pricing</button>
+        <button onclick="navigateTo('faq');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">FAQ</button>
+        <button onclick="navigateTo('process');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">Process</button>
+        <button onclick="navigateTo('terms');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">Terms of Service</button>
+        <button onclick="navigateTo('contact');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">Contact Us</button>
+        <button onclick="navigateTo('about');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">About Us</button>
+        <button onclick="navigateTo('careers');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">Careers</button>
+        <button onclick="navigateTo('blog');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">Blog</button>
+        <button onclick="navigateTo('privacy');closeMobileMenu()" class="text-left text-base font-medium py-2.5 px-3 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">Privacy Policy</button>
+      </div>
+      <div class="mt-8 pt-6 border-t border-neutral-200 dark:border-white/10">
+        <div class="flex items-center gap-3 mb-4">
+          <button id="mobileThemeToggle" class="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-white/10 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/20 transition-colors" aria-label="Theme">
+            <i data-lucide="sun" class="w-4 h-4 dark:hidden"></i>
+            <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+          </button>
+          <span class="text-xs text-neutral-400">Toggle theme</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="mailto:hello@luviio.com" class="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-white/10 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/20 transition-colors">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+          </a>
+          <span class="text-xs text-neutral-400">hello@luviio.com</span>
+        </div>
       </div>
     </div>
   </div>
@@ -722,12 +752,10 @@
     // ========== ANNOUNCEMENT BAR + NAV SCROLL STATE ==========
     const announcementBar = document.getElementById('announcementBar');
     const mainNav = document.getElementById('mainNav');
-    let lastScrollY = 0;
-    let scrollThreshold = 40;
 
     function updateNavState() {
       const scrollY = window.scrollY || window.pageYOffset;
-      if (scrollY > scrollThreshold) {
+      if (scrollY > 40) {
         announcementBar.classList.add('hidden-bar');
         mainNav.classList.remove('nav-top');
         mainNav.classList.add('nav-scrolled');
@@ -738,19 +766,7 @@
       }
     }
 
-    window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY || window.pageYOffset;
-      if (scrollY > scrollThreshold) {
-        announcementBar.classList.add('hidden-bar');
-        mainNav.classList.remove('nav-top');
-        mainNav.classList.add('nav-scrolled');
-      } else {
-        announcementBar.classList.remove('hidden-bar');
-        mainNav.classList.remove('nav-scrolled');
-        mainNav.classList.add('nav-top');
-      }
-      lastScrollY = scrollY;
-    }, { passive: true });
+    window.addEventListener('scroll', updateNavState, { passive: true });
 
     // ========== FAQ ACCORDION ==========
     function toggleFaq(btn) {
@@ -763,20 +779,33 @@
       if (!isOpen) { answer.classList.add('open'); chevron.classList.add('open'); }
     }
 
-    // ========== MOBILE MENU ==========
+    // ========== MOBILE MENU — Slide-in panel ==========
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
     function closeMobileMenu() {
-      document.getElementById('mobileMenu').classList.remove('open');
+      mobileMenu.classList.remove('open');
+      mobileOverlay.classList.remove('active');
       document.body.style.overflow = '';
     }
+
     document.getElementById('menuToggle').addEventListener('click', () => {
-      const menu = document.getElementById('mobileMenu');
-      menu.classList.add('open');
+      mobileMenu.classList.add('open');
+      mobileOverlay.classList.add('active');
       document.body.style.overflow = 'hidden';
-      // Scroll inner container to top
-      const inner = menu.querySelector('.mobile-menu-inner');
-      if (inner) inner.scrollTop = 0;
+      mobileMenu.scrollTop = 0;
     });
+
     document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
+
+    // Close menu when clicking the overlay
+    mobileOverlay.addEventListener('click', closeMobileMenu);
+
+    // ========== MOBILE THEME TOGGLE ==========
+    document.getElementById('mobileThemeToggle').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      lucide.createIcons();
+    });
 
     // ========== SEARCH ==========
     const searchablePages = [
