@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LUVIIO — Website & IT Services</title>
+  <title>luviio</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -61,49 +61,21 @@
     /* Process timeline */
     .process-line{position:absolute;left:19px;top:40px;bottom:0;width:2px;background:linear-gradient(180deg,#ff005e,rgba(255,0,94,.1))}
 
-    /* Stripe pricing table wrapper */
-    .stripe-table-wrapper {
-      width: 100%;
-      border-radius: 1.5rem;
+    /* Stripe pricing table — force white background always */
+    .stripe-pricing-wrapper {
+      background: #ffffff !important;
+      border-radius: 1rem;
       overflow: hidden;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+      position: relative;
+      z-index: 1;
     }
-    .stripe-table-wrapper.light-mode {
-      background-color: #ffffff;
-      border: 1px solid #e5e5e5;
+    .stripe-pricing-wrapper stripe-pricing-table {
+      display: block;
     }
-    .stripe-table-wrapper.dark-mode {
-      background-color: #171717;
-      border: 1px solid rgba(255,255,255,0.1);
+    /* Override the iframe container Stripe injects */
+    .stripe-pricing-wrapper iframe {
+      border-radius: 1rem;
     }
-
-    /* Override Stripe's default iframe styles for dark mode */
-    .dark .stripe-table-wrapper iframe {
-      color-scheme: dark;
-    }
-
-    /* Stripe loading state */
-    .stripe-loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 400px;
-      gap: 16px;
-    }
-    .stripe-loading-spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid #e5e5e5;
-      border-top-color: #ff005e;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    .dark .stripe-loading-spinner {
-      border-color: #404040;
-      border-top-color: #ff005e;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 
@@ -130,13 +102,10 @@
   <!-- ===== NAVIGATION ===== -->
   <nav class="h-16 sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-neutral-950/80 border-b border-neutral-200 dark:border-white/10">
     <div class="max-w-7xl mx-auto h-full px-6 grid grid-cols-[auto_1fr_auto] items-center gap-4">
-      <!-- Left: Logo + Mobile Toggle -->
       <div class="flex items-center gap-3">
         <button id="menuToggle" class="lg:hidden" aria-label="Menu"><i data-lucide="menu" class="w-5 h-5"></i></button>
         <a href="#" onclick="navigateTo('home');return false" class="text-xl font-semibold tracking-tight whitespace-nowrap">LUVIIO</a>
       </div>
-
-      <!-- Center: Nav Links -->
       <div class="hidden lg:flex items-center justify-center gap-5">
         <button onclick="navigateTo('home')" class="nav-link text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors" data-page="home">Home</button>
         <button onclick="navigateTo('pricing')" class="nav-link text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors" data-page="pricing">Pricing</button>
@@ -149,8 +118,6 @@
         <button onclick="navigateTo('blog')" class="nav-link text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors" data-page="blog">Blog</button>
         <button onclick="navigateTo('privacy')" class="nav-link text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors" data-page="privacy">Privacy</button>
       </div>
-
-      <!-- Right: Actions -->
       <div class="flex items-center gap-3">
         <button id="searchToggle" class="hover:opacity-70 transition-opacity" aria-label="Search"><i data-lucide="search" class="w-5 h-5"></i></button>
         <button id="themeToggle" class="hover:opacity-70 transition-opacity hidden sm:block" aria-label="Theme">
@@ -323,40 +290,21 @@
   <div id="page-pricing" class="page">
     <section class="py-20 md:py-28 relative">
       <div class="absolute top-1/2 right-0 swirl-3 pointer-events-none"></div>
-      <div class="max-w-full mx-auto px-4 md:px-6 relative z-10">
-        <div class="text-center mb-12 fade-in-up max-w-2xl mx-auto">
+      <div class="max-w-6xl mx-auto px-6 relative z-10">
+        <div class="text-center mb-12 fade-in-up">
           <span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">Our packages</span>
           <h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Pricing</h2>
           <p class="text-neutral-500 dark:text-neutral-400 text-sm md:text-base mt-4 max-w-lg mx-auto">Choose the package that fits your needs. All plans include free consultation and 3 rounds of revisions.</p>
         </div>
-
-        <!-- Theme toggle for pricing -->
-        <div class="flex items-center justify-center gap-3 mb-8 fade-in-up delay-100">
-          <span class="text-xs text-neutral-400">Table Theme</span>
-          <button id="stripeThemeToggle" class="relative h-8 w-14 rounded-full bg-neutral-200 dark:bg-neutral-800 transition-colors flex items-center px-1" aria-label="Toggle pricing table theme">
-            <div id="stripeThemeKnob" class="w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center">
-              <svg class="w-3 h-3 text-neutral-600" id="stripeThemeIconLight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              <svg class="w-3 h-3 text-indigo-400 hidden" id="stripeThemeIconDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            </div>
-          </button>
-          <span class="text-xs text-neutral-400" id="stripeThemeLabel">Light</span>
-        </div>
-
-        <!-- Stripe Pricing Table — Full Width -->
         <div class="fade-in-up delay-200">
-          <div id="stripeTableWrapper" class="stripe-table-wrapper light-mode">
-            <div id="stripeLoading" class="stripe-loading">
-              <div class="stripe-loading-spinner"></div>
-              <p class="text-sm text-neutral-400">Loading pricing table…</p>
-            </div>
+          <!-- Stripe Pricing Table — always white background, full width -->
+          <div class="stripe-pricing-wrapper shadow-xl">
             <stripe-pricing-table
               pricing-table-id="prctbl_1TLFUQ7TzVI5KBwlttceiZgs"
-              publishable-key="pk_live_51TCE7c7TzVI5KBwlo5A9OWBN5Ub4Ccr5L0iwzPIjCozeSGLiBmV6jzbmh9mvLmg6xveJN9zK4nHZMBUhqsQ5z6Lj0012fJkd42"
-            ></stripe-pricing-table>
+              publishable-key="pk_live_51TCE7c7TzVI5KBwlo5A9OWBN5Ub4Ccr5L0iwzPIjCozeSGLiBmV6jzbmh9mvLmg6xveJN9zK4nHZMBUhqsQ5z6Lj0012fJkd42">
+            </stripe-pricing-table>
           </div>
         </div>
-
-        <p class="text-center text-xs text-neutral-400 mt-8 fade-in-up delay-300">Secure payments powered by <span class="font-medium">Stripe</span>. FPX, DuitNow, and card payments accepted.</p>
       </div>
     </section>
   </div>
@@ -461,14 +409,10 @@
                 <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Email</label><input type="email" required class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="your@email.com" /></div>
               </div>
               <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Service Interested In</label>
-                <select class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400">
-                  <option>Website Design</option><option>Web Development</option><option>E-Commerce</option><option>Mobile App</option><option>IT Support</option><option>Other</option>
-                </select>
+                <select class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>Website Design</option><option>Web Development</option><option>E-Commerce</option><option>Mobile App</option><option>IT Support</option><option>Other</option></select>
               </div>
               <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Budget Range</label>
-                <select class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400">
-                  <option>RM500 – RM2,000</option><option>RM2,000 – RM5,000</option><option>RM5,000 – RM10,000</option><option>RM10,000+</option>
-                </select>
+                <select class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>RM500 – RM2,000</option><option>RM2,000 – RM5,000</option><option>RM5,000 – RM10,000</option><option>RM10,000+</option></select>
               </div>
               <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Message</label><textarea rows="4" required class="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" placeholder="Tell us about your project..."></textarea></div>
               <button type="submit" class="h-12 px-8 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-sm font-medium hover:opacity-90 transition-opacity w-full">Send Message</button>
@@ -651,13 +595,16 @@
       if (newEl) { newEl.classList.add('active'); void newEl.offsetWidth; newEl.classList.add('page-enter'); }
       currentPage = pageId;
       history.pushState(null, '', '#' + pageId);
-      updateNavActive(pageId);
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.dataset.page === pageId) { link.classList.remove('text-neutral-600','dark:text-neutral-400'); link.classList.add('text-neutral-900','dark:text-white'); }
+        else { link.classList.remove('text-neutral-900','dark:text-white'); link.classList.add('text-neutral-600','dark:text-neutral-400'); }
+      });
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => { lucide.createIcons(); initScrollAnimations(); syncStripeTheme(); }, 50);
+      setTimeout(() => { lucide.createIcons(); initScrollAnimations(); }, 50);
     }
 
     window.addEventListener('popstate', () => {
-      const hash = location.hash.replace('#', '') || 'home';
+      const hash = location.hash.replace('#','') || 'home';
       const currentEl = document.getElementById('page-' + currentPage);
       if (currentEl) { currentEl.classList.remove('active'); currentEl.classList.remove('page-enter'); }
       const newEl = document.getElementById('page-' + hash);
@@ -668,18 +615,13 @@
 
     function updateNavActive(pageId) {
       document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.dataset.page === pageId) {
-          link.classList.remove('text-neutral-600', 'dark:text-neutral-400');
-          link.classList.add('text-neutral-900', 'dark:text-white');
-        } else {
-          link.classList.remove('text-neutral-900', 'dark:text-white');
-          link.classList.add('text-neutral-600', 'dark:text-neutral-400');
-        }
+        if (link.dataset.page === pageId) { link.classList.remove('text-neutral-600','dark:text-neutral-400'); link.classList.add('text-neutral-900','dark:text-white'); }
+        else { link.classList.remove('text-neutral-900','dark:text-white'); link.classList.add('text-neutral-600','dark:text-neutral-400'); }
       });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      const hash = location.hash.replace('#', '') || 'home';
+      const hash = location.hash.replace('#','') || 'home';
       if (hash !== 'home') {
         document.getElementById('page-home').classList.remove('active');
         const targetEl = document.getElementById('page-' + hash);
@@ -713,16 +655,16 @@
 
     // ========== SEARCH ==========
     const searchablePages = [
-      { id: 'home', name: 'Home', desc: 'Main page with hero, services, features, portfolio, reviews' },
-      { id: 'pricing', name: 'Pricing', desc: 'View all service packages and pricing' },
-      { id: 'faq', name: 'FAQ', desc: 'Frequently asked questions' },
-      { id: 'process', name: 'Process', desc: 'How we work — our 5-step process' },
-      { id: 'terms', name: 'Terms of Service', desc: 'Legal terms and conditions' },
-      { id: 'contact', name: 'Contact Us', desc: 'Get in touch via form, email, WhatsApp' },
-      { id: 'about', name: 'About Us', desc: 'Our story, team, and stats' },
-      { id: 'careers', name: 'Careers', desc: 'Open job positions' },
-      { id: 'blog', name: 'Blog', desc: 'Tech articles and insights' },
-      { id: 'privacy', name: 'Privacy Policy', desc: 'Data protection and PDPA compliance' },
+      { id:'home', name:'Home', desc:'Main page with hero, services, features, portfolio, reviews' },
+      { id:'pricing', name:'Pricing', desc:'View all service packages and pricing' },
+      { id:'faq', name:'FAQ', desc:'Frequently asked questions' },
+      { id:'process', name:'Process', desc:'How we work — our 5-step process' },
+      { id:'terms', name:'Terms of Service', desc:'Legal terms and conditions' },
+      { id:'contact', name:'Contact Us', desc:'Get in touch via form, email, WhatsApp' },
+      { id:'about', name:'About Us', desc:'Our story, team, and stats' },
+      { id:'careers', name:'Careers', desc:'Open job positions' },
+      { id:'blog', name:'Blog', desc:'Tech articles and insights' },
+      { id:'privacy', name:'Privacy Policy', desc:'Data protection and PDPA compliance' },
     ];
 
     document.getElementById('searchToggle').addEventListener('click', () => {
@@ -736,11 +678,8 @@
       const resultsEl = document.getElementById('searchResults');
       if (!query.trim()) { resultsEl.classList.add('hidden'); return; }
       const matches = searchablePages.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.desc.toLowerCase().includes(query.toLowerCase()));
-      if (matches.length === 0) {
-        resultsEl.innerHTML = '<div class="p-4 text-sm text-neutral-400">No results found</div>';
-      } else {
-        resultsEl.innerHTML = matches.map(p => `<button onclick="navigateTo('${p.id}');document.getElementById('searchBar').classList.add('hidden');document.getElementById('searchResults').classList.add('hidden')" class="w-full text-left p-4 hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors border-b border-neutral-100 dark:border-white/5 last:border-0"><p class="text-sm font-medium">${p.name}</p><p class="text-xs text-neutral-400 mt-0.5">${p.desc}</p></button>`).join('');
-      }
+      if (matches.length === 0) { resultsEl.innerHTML = '<div class="p-4 text-sm text-neutral-400">No results found</div>'; }
+      else { resultsEl.innerHTML = matches.map(p => `<button onclick="navigateTo('${p.id}');document.getElementById('searchBar').classList.add('hidden');document.getElementById('searchResults').classList.add('hidden')" class="w-full text-left p-4 hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors border-b border-neutral-100 dark:border-white/5 last:border-0"><p class="text-sm font-medium">${p.name}</p><p class="text-xs text-neutral-400 mt-0.5">${p.desc}</p></button>`).join(''); }
       resultsEl.classList.remove('hidden');
     }
 
@@ -756,70 +695,11 @@
     document.getElementById('themeToggle').addEventListener('click', () => {
       document.documentElement.classList.toggle('dark');
       lucide.createIcons();
-      syncStripeTheme();
     });
-
-    // ========== STRIPE TABLE THEME ==========
-    let stripeTableDark = false;
-
-    function syncStripeTheme() {
-      // Sync with site theme by default
-      const isSiteDark = document.documentElement.classList.contains('dark');
-      setStripeTableTheme(isSiteDark);
-    }
-
-    function setStripeTableTheme(isDark) {
-      stripeTableDark = isDark;
-      const wrapper = document.getElementById('stripeTableWrapper');
-      const knob = document.getElementById('stripeThemeKnob');
-      const label = document.getElementById('stripeThemeLabel');
-      const iconLight = document.getElementById('stripeThemeIconLight');
-      const iconDark = document.getElementById('stripeThemeIconDark');
-      const toggleBtn = document.getElementById('stripeThemeToggle');
-
-      if (isDark) {
-        wrapper.classList.remove('light-mode');
-        wrapper.classList.add('dark-mode');
-        knob.style.transform = 'translateX(24px)';
-        label.textContent = 'Dark';
-        iconLight.classList.add('hidden');
-        iconDark.classList.remove('hidden');
-        toggleBtn.classList.remove('bg-neutral-200');
-        toggleBtn.classList.add('bg-neutral-700');
-      } else {
-        wrapper.classList.remove('dark-mode');
-        wrapper.classList.add('light-mode');
-        knob.style.transform = 'translateX(0)';
-        label.textContent = 'Light';
-        iconLight.classList.remove('hidden');
-        iconDark.classList.add('hidden');
-        toggleBtn.classList.remove('bg-neutral-700');
-        toggleBtn.classList.add('bg-neutral-200');
-      }
-    }
-
-    // Separate toggle for pricing table theme (independent of site theme)
-    document.getElementById('stripeThemeToggle').addEventListener('click', () => {
-      setStripeTableTheme(!stripeTableDark);
-    });
-
-    // ========== HIDE STRIPE LOADING SPINNER ==========
-    function checkStripeLoaded() {
-      const iframe = document.querySelector('#stripeTableWrapper iframe');
-      if (iframe) {
-        const loading = document.getElementById('stripeLoading');
-        if (loading) loading.style.display = 'none';
-      } else {
-        setTimeout(checkStripeLoaded, 500);
-      }
-    }
-    setTimeout(checkStripeLoaded, 1000);
 
     // ========== SCROLL ANIMATIONS ==========
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) { entry.target.style.animationPlayState = 'running'; observer.unobserve(entry.target); }
-      });
+      entries.forEach(entry => { if (entry.isIntersecting) { entry.target.style.animationPlayState = 'running'; observer.unobserve(entry.target); } });
     }, { threshold: 0.1 });
 
     function initScrollAnimations() {
@@ -833,7 +713,6 @@
     document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       setTimeout(initScrollAnimations, 100);
-      syncStripeTheme();
     });
   </script>
 </body>
