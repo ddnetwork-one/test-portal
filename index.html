@@ -48,15 +48,18 @@
     .ext-border-h{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,94,.5),transparent)}
     .marquee-track{animation:marquee 30s linear infinite}
 
-    /* Announcement bar hide on scroll */
-    #announcementBar{transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s}
-    #announcementBar.hidden-bar{transform:translateY(-100%);opacity:0;pointer-events:none;height:0;overflow:hidden;padding:0}
+    /* Announcement bar — explicit background for cross-browser compat */
+    #announcementBar{transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s;background-color:#171717}
+    .dark #announcementBar{background-color:#fafafa}
+    #announcementBar.hidden-bar{transform:translateY(-100%);opacity:0;pointer-events:none;height:0;overflow:hidden;padding:0;margin:0}
 
-    /* Nav transparency */
-    #mainNav{transition:background .3s,border-color .3s,box-shadow .3s}
-    #mainNav.nav-transparent{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
-    #mainNav.nav-solid{background:rgba(255,255,255,.85);border-color:rgba(229,229,229,.8);box-shadow:0 1px 3px rgba(0,0,0,.04)}
-    .dark #mainNav.nav-solid{background:rgba(10,10,10,.85);border-color:rgba(255,255,255,.08);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    /* Nav — always has a real background, never transparent */
+    #mainNav{transition:background .3s,border-color .3s,box-shadow .3s;background-color:rgba(250,250,250,.6);border-bottom:1px solid rgba(229,229,229,.4);box-shadow:none}
+    .dark #mainNav{background-color:rgba(10,10,10,.6);border-bottom-color:rgba(255,255,255,.04);box-shadow:none}
+    #mainNav.nav-top{background-color:rgba(250,250,250,.6);border-bottom-color:rgba(229,229,229,.4);box-shadow:none}
+    .dark #mainNav.nav-top{background-color:rgba(10,10,10,.6);border-bottom-color:rgba(255,255,255,.04);box-shadow:none}
+    #mainNav.nav-scrolled{background-color:rgba(250,250,250,.88);border-bottom-color:rgba(229,229,229,.8);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    .dark #mainNav.nav-scrolled{background-color:rgba(10,10,10,.88);border-bottom-color:rgba(255,255,255,.1);box-shadow:0 1px 3px rgba(0,0,0,.25)}
 
     /* Mobile menu — truly fullscreen */
     .mobile-menu{position:fixed;inset:0;background:#fff;z-index:200;transform:translateX(-100%);transition:transform .4s cubic-bezier(.16,1,.3,1);padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -113,7 +116,7 @@
   </div>
 
   <!-- ===== NAVIGATION ===== -->
-  <nav id="mainNav" class="h-16 sticky top-0 z-50 backdrop-blur-xl nav-transparent">
+  <nav id="mainNav" class="h-16 sticky top-0 z-50 backdrop-blur-xl nav-top">
     <div class="max-w-7xl mx-auto h-full px-6 grid grid-cols-[auto_1fr_auto] items-center gap-4">
       <div class="flex items-center gap-3">
         <button id="menuToggle" class="lg:hidden" aria-label="Menu"><i data-lucide="menu" class="w-5 h-5"></i></button>
@@ -196,7 +199,7 @@
           <div class="relative rounded-3xl overflow-hidden shadow-2xl mx-auto max-w-5xl">
             <img src="https://picsum.photos/seed/luviio-hero-dev/1200/600.jpg" alt="Website Development" class="w-full h-[300px] md:h-[500px] object-cover" />
             <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-            <div class="absolute bottom-6 left-6 md:bottom-10 md:left-10 text-left">
+            <div class="absolute bottom-6 right-6 md:bottom-10 md:right-10 text-right">
               <p class="text-white/70 text-xs tracking-widest uppercase mb-1">Featured Service</p>
               <p class="text-white text-xl md:text-2xl font-medium">Business Website Development</p>
               <p class="text-white/80 text-sm mt-1">Starting from RM1,500</p>
@@ -213,7 +216,7 @@
     </section>
     <div class="ext-border-h max-w-4xl mx-auto"></div>
 
-    <!-- Services — Icon Flow Version -->
+    <!-- Services -->
     <section class="py-20 md:py-28 relative">
       <div class="max-w-7xl mx-auto px-6">
         <div class="text-center mb-12 fade-in-up"><span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">What we do</span><h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Services</h2></div>
@@ -289,7 +292,7 @@
     </section>
     <div class="ext-border-h max-w-4xl mx-auto"></div>
 
-    <!-- Newsletter — Improved -->
+    <!-- Newsletter -->
     <section class="py-20 md:py-28 relative overflow-hidden">
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 swirl-1 pointer-events-none"></div>
       <div class="max-w-xl mx-auto px-6 relative z-10">
@@ -668,50 +671,36 @@
       updateNavState();
     });
 
-    // ========== ANNOUNCEMENT BAR HIDE ON SCROLL ==========
+    // ========== ANNOUNCEMENT BAR + NAV SCROLL STATE ==========
     const announcementBar = document.getElementById('announcementBar');
     const mainNav = document.getElementById('mainNav');
     let lastScrollY = 0;
     let scrollThreshold = 40;
 
     function updateNavState() {
-      // Immediately set correct state based on current scroll
       const scrollY = window.scrollY || window.pageYOffset;
       if (scrollY > scrollThreshold) {
         announcementBar.classList.add('hidden-bar');
-        mainNav.classList.remove('nav-transparent');
-        mainNav.classList.add('nav-solid');
+        mainNav.classList.remove('nav-top');
+        mainNav.classList.add('nav-scrolled');
       } else {
         announcementBar.classList.remove('hidden-bar');
-        // Only transparent on home page at top
-        if (currentPage === 'home') {
-          mainNav.classList.add('nav-transparent');
-          mainNav.classList.remove('nav-solid');
-        } else {
-          mainNav.classList.remove('nav-transparent');
-          mainNav.classList.add('nav-solid');
-        }
+        mainNav.classList.remove('nav-scrolled');
+        mainNav.classList.add('nav-top');
       }
     }
 
     window.addEventListener('scroll', () => {
       const scrollY = window.scrollY || window.pageYOffset;
-
       if (scrollY > scrollThreshold) {
         announcementBar.classList.add('hidden-bar');
-        mainNav.classList.remove('nav-transparent');
-        mainNav.classList.add('nav-solid');
+        mainNav.classList.remove('nav-top');
+        mainNav.classList.add('nav-scrolled');
       } else {
         announcementBar.classList.remove('hidden-bar');
-        if (currentPage === 'home') {
-          mainNav.classList.add('nav-transparent');
-          mainNav.classList.remove('nav-solid');
-        } else {
-          mainNav.classList.remove('nav-transparent');
-          mainNav.classList.add('nav-solid');
-        }
+        mainNav.classList.remove('nav-scrolled');
+        mainNav.classList.add('nav-top');
       }
-
       lastScrollY = scrollY;
     }, { passive: true });
 
@@ -735,12 +724,8 @@
       const menu = document.getElementById('mobileMenu');
       menu.classList.add('open');
       document.body.style.overflow = 'hidden';
-      // Scroll menu to top
       menu.scrollTop = 0;
-      // Try to hide browser chrome on mobile
-      try {
-        if (window.scrollTo) window.scrollTo(0, 1);
-      } catch(e) {}
+      try { if (window.scrollTo) window.scrollTo(0, 1); } catch(e) {}
     });
     document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
 
