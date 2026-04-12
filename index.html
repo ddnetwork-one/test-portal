@@ -37,12 +37,17 @@
       min-height: -webkit-fill-available;
       overscroll-behavior: none;
     }
+    /* Prevent iOS bounce ONLY on html, never lock body position */
+    html {
+      overflow: hidden;
+      height: 100%;
+    }
     body {
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       height: 100%;
     }
-    /* When mobile menu is open, prevent background scroll */
+    /* When mobile menu is open, prevent background scroll via html */
     html.menu-open {
       overflow: hidden;
     }
@@ -742,6 +747,11 @@
 
     function navigateTo(pageId) {
       if (currentPage === pageId) return;
+
+      /* Instant scroll reset BEFORE page swap — no animation */
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+
       const currentEl = document.getElementById('page-' + currentPage);
       if (currentEl) { currentEl.classList.remove('active'); currentEl.classList.remove('page-enter'); }
       const newEl = document.getElementById('page-' + pageId);
@@ -752,12 +762,16 @@
         if (link.dataset.page === pageId) { link.classList.remove('text-neutral-600','dark:text-neutral-400'); link.classList.add('text-neutral-900','dark:text-white'); }
         else { link.classList.remove('text-neutral-900','dark:text-white'); link.classList.add('text-neutral-600','dark:text-neutral-400'); }
       });
-      window.scrollTo(0, 0);
       setTimeout(() => { lucide.createIcons(); initScrollAnimations(); updateNavState(); }, 50);
     }
 
     window.addEventListener('popstate', () => {
       const hash = location.hash.replace('#','') || 'home';
+
+      /* Instant scroll reset on back/forward too */
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+
       const currentEl = document.getElementById('page-' + currentPage);
       if (currentEl) { currentEl.classList.remove('active'); currentEl.classList.remove('page-enter'); }
       const newEl = document.getElementById('page-' + hash);
@@ -765,7 +779,7 @@
       currentPage = hash;
       updateNavActive(hash);
       updateNavState();
-      window.scrollTo(0, 0);
+      setTimeout(() => { lucide.createIcons(); initScrollAnimations(); }, 50);
     });
 
     function updateNavActive(pageId) {
