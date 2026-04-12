@@ -2,7 +2,7 @@
 <html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>luviio</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -43,7 +43,7 @@
     .noise::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")}
     .ext-border-h{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,94,.5),transparent)}
     .marquee-track{animation:marquee 30s linear infinite}
-    .mobile-menu{position:fixed;inset:0;background:#fff;z-index:90;transform:translateX(-100%);transition:transform .4s cubic-bezier(.16,1,.3,1);padding:24px}
+    .mobile-menu{position:fixed;inset:0;background:#fff;z-index:200;transform:translateX(-100%);transition:transform .4s cubic-bezier(.16,1,.3,1);padding:24px;padding-top:env(safe-area-inset-top,24px);padding-bottom:env(safe-area-inset-bottom,24px);display:flex;flex-direction:column}
     .dark .mobile-menu{background:#0a0a0a}
     .mobile-menu.open{transform:translateX(0)}
     ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#d4d4d4;border-radius:3px}
@@ -72,9 +72,55 @@
     .stripe-pricing-wrapper stripe-pricing-table {
       display: block;
     }
-    /* Override the iframe container Stripe injects */
     .stripe-pricing-wrapper iframe {
       border-radius: 1rem;
+    }
+
+    /* Announcement bar hide on scroll */
+    #announcementBar {
+      transition: transform 0.35s cubic-bezier(.16,1,.3,1), opacity 0.35s ease;
+      transform: translateY(0);
+      opacity: 1;
+    }
+    #announcementBar.hidden-bar {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Service icon card hover */
+    .service-icon-card {
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+    }
+    .service-icon-card:hover {
+      border-color: rgba(255,0,94,0.3);
+      box-shadow: 0 8px 30px rgba(255,0,94,0.08);
+      transform: translateY(-4px);
+    }
+    .service-icon-card .service-icon-wrap {
+      transition: transform 0.3s, background 0.3s;
+    }
+    .service-icon-card:hover .service-icon-wrap {
+      transform: scale(1.08);
+      background: rgba(255,0,94,0.12);
+    }
+    .service-icon-card:hover .service-arrow {
+      transform: translateX(4px);
+      opacity: 1;
+    }
+    .service-arrow {
+      transition: transform 0.3s, opacity 0.3s;
+      opacity: 0.4;
+    }
+
+    /* Newsletter improved */
+    .newsletter-box {
+      background: linear-gradient(135deg, rgba(255,0,94,0.04), rgba(124,58,237,0.04));
+      border: 1px solid rgba(255,0,94,0.12);
+    }
+    .dark .newsletter-box {
+      background: linear-gradient(135deg, rgba(255,0,94,0.06), rgba(124,58,237,0.06));
+      border-color: rgba(255,0,94,0.15);
     }
   </style>
 </head>
@@ -82,7 +128,7 @@
 <body class="bg-neutral-50 text-neutral-900 font-sans dark:bg-neutral-950 dark:text-neutral-100 noise transition-colors duration-300">
 
   <!-- ===== ANNOUNCEMENT BAR ===== -->
-  <div class="bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 py-2 overflow-hidden">
+  <div id="announcementBar" class="bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 py-2 overflow-hidden">
     <div class="marquee-track flex whitespace-nowrap" style="width:max-content">
       <span class="mx-8 text-xs tracking-widest uppercase font-medium">Free consultation for new clients</span>
       <span class="mx-8 text-xs tracking-widest uppercase font-medium">✦</span>
@@ -100,11 +146,14 @@
   </div>
 
   <!-- ===== NAVIGATION ===== -->
-  <nav class="h-16 sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-neutral-950/80 border-b border-neutral-200 dark:border-white/10">
+  <nav id="mainNav" class="h-16 sticky top-0 z-[100] backdrop-blur-xl bg-white/80 dark:bg-neutral-950/80 border-b border-neutral-200 dark:border-white/10">
     <div class="max-w-7xl mx-auto h-full px-6 grid grid-cols-[auto_1fr_auto] items-center gap-4">
       <div class="flex items-center gap-3">
         <button id="menuToggle" class="lg:hidden" aria-label="Menu"><i data-lucide="menu" class="w-5 h-5"></i></button>
-        <a href="#" onclick="navigateTo('home');return false" class="text-xl font-semibold tracking-tight whitespace-nowrap">LUVIIO</a>
+        <a href="#" onclick="navigateTo('home');return false" class="whitespace-nowrap flex items-center">
+          <img src="https://i.ibb.co/6JPCJVBd/luviio-logo.png" alt="LUVIIO" class="h-8 dark:hidden" />
+          <img src="https://i.ibb.co/yBPLJGTP/luviio-black-logo.png" alt="LUVIIO" class="h-8 hidden dark:block" />
+        </a>
       </div>
       <div class="hidden lg:flex items-center justify-center gap-5">
         <button onclick="navigateTo('home')" class="nav-link text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors" data-page="home">Home</button>
@@ -137,11 +186,12 @@
 
   <!-- ===== MOBILE MENU ===== -->
   <div id="mobileMenu" class="mobile-menu">
-    <div class="flex items-center justify-between mb-10">
-      <span class="text-xl font-semibold tracking-tight">LUVIIO</span>
+    <div class="flex items-center justify-between mb-10 flex-shrink-0">
+      <img src="https://i.ibb.co/6JPCJVBd/luviio-logo.png" alt="LUVIIO" class="h-8 dark:hidden" />
+      <img src="https://i.ibb.co/yBPLJGTP/luviio-black-logo.png" alt="LUVIIO" class="h-8 hidden dark:block" />
       <button id="menuClose"><i data-lucide="x" class="w-6 h-6"></i></button>
     </div>
-    <div class="flex flex-col gap-5">
+    <div class="flex flex-col gap-5 overflow-y-auto flex-1">
       <button onclick="navigateTo('home');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Home</button>
       <button onclick="navigateTo('pricing');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Pricing</button>
       <button onclick="navigateTo('faq');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">FAQ</button>
@@ -154,7 +204,7 @@
       <button onclick="navigateTo('privacy');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Privacy Policy</button>
     </div>
   </div>
-  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden" onclick="closeMobileMenu()" style="z-index:85"></div>
+  <div id="menuOverlay" class="fixed inset-0 bg-black/50 hidden" onclick="closeMobileMenu()" style="z-index:195"></div>
 
   <!-- ============================================================ -->
   <!-- ===== PAGE: HOME ===== -->
@@ -197,30 +247,54 @@
     </section>
     <div class="ext-border-h max-w-4xl mx-auto"></div>
 
-    <!-- Services Grid -->
+    <!-- Services Icon Flow -->
     <section class="py-20 md:py-28 relative">
-      <div class="max-w-7xl mx-auto px-6">
+      <div class="max-w-6xl mx-auto px-6">
         <div class="text-center mb-12 fade-in-up"><span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">What we do</span><h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Services</h2></div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          <button onclick="navigateTo('pricing')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] text-left fade-in-up delay-100">
-            <img src="https://picsum.photos/seed/luviio-web-design/400/530.jpg" alt="Website Design" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
-            <div class="absolute bottom-4 left-4"><h3 class="text-white font-semibold text-sm md:text-base">Website Design</h3><p class="text-white/60 text-xs">8 packages</p></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <button onclick="navigateTo('pricing')" class="service-icon-card group text-left bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 fade-in-up delay-100">
+            <div class="service-icon-wrap w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5">
+              <i data-lucide="palette" class="w-6 h-6 text-accent"></i>
+            </div>
+            <h3 class="font-semibold text-sm mb-1.5">Website Design</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Beautiful, responsive designs that capture your brand and convert visitors.</p>
+            <div class="flex items-center gap-1 text-xs font-medium text-accent">
+              <span>8 packages</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 service-arrow"></i>
+            </div>
           </button>
-          <button onclick="navigateTo('pricing')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] text-left fade-in-up delay-200">
-            <img src="https://picsum.photos/seed/luviio-web-dev/400/530.jpg" alt="Web Development" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
-            <div class="absolute bottom-4 left-4"><h3 class="text-white font-semibold text-sm md:text-base">Web Development</h3><p class="text-white/60 text-xs">6 packages</p></div>
+          <button onclick="navigateTo('pricing')" class="service-icon-card group text-left bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 fade-in-up delay-200">
+            <div class="service-icon-wrap w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5">
+              <i data-lucide="code-2" class="w-6 h-6 text-accent"></i>
+            </div>
+            <h3 class="font-semibold text-sm mb-1.5">Web Development</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Custom-built websites with modern tech stacks for performance & scalability.</p>
+            <div class="flex items-center gap-1 text-xs font-medium text-accent">
+              <span>6 packages</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 service-arrow"></i>
+            </div>
           </button>
-          <button onclick="navigateTo('pricing')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] text-left fade-in-up delay-300">
-            <img src="https://picsum.photos/seed/luviio-mobile-app/400/530.jpg" alt="Mobile Apps" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
-            <div class="absolute bottom-4 left-4"><h3 class="text-white font-semibold text-sm md:text-base">Mobile Apps</h3><p class="text-white/60 text-xs">4 packages</p></div>
+          <button onclick="navigateTo('pricing')" class="service-icon-card group text-left bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 fade-in-up delay-300">
+            <div class="service-icon-wrap w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5">
+              <i data-lucide="smartphone" class="w-6 h-6 text-accent"></i>
+            </div>
+            <h3 class="font-semibold text-sm mb-1.5">Mobile Apps</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Native & cross-platform apps for iOS and Android that your users will love.</p>
+            <div class="flex items-center gap-1 text-xs font-medium text-accent">
+              <span>4 packages</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 service-arrow"></i>
+            </div>
           </button>
-          <button onclick="navigateTo('pricing')" class="group relative rounded-2xl overflow-hidden aspect-[3/4] text-left fade-in-up delay-400">
-            <img src="https://picsum.photos/seed/luviio-it-support/400/530.jpg" alt="IT Support" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
-            <div class="absolute bottom-4 left-4"><h3 class="text-white font-semibold text-sm md:text-base">IT Support</h3><p class="text-white/60 text-xs">5 packages</p></div>
+          <button onclick="navigateTo('pricing')" class="service-icon-card group text-left bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 fade-in-up delay-400">
+            <div class="service-icon-wrap w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5">
+              <i data-lucide="headphones" class="w-6 h-6 text-accent"></i>
+            </div>
+            <h3 class="font-semibold text-sm mb-1.5">IT Support</h3>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Reliable technical support, maintenance, and infrastructure management.</p>
+            <div class="flex items-center gap-1 text-xs font-medium text-accent">
+              <span>5 packages</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 service-arrow"></i>
+            </div>
           </button>
         </div>
       </div>
@@ -272,14 +346,24 @@
     <!-- Newsletter -->
     <section class="py-20 md:py-28 relative overflow-hidden">
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 swirl-1 pointer-events-none"></div>
-      <div class="max-w-2xl mx-auto px-6 text-center relative z-10">
-        <h2 class="text-3xl md:text-4xl font-semibold tracking-tight mb-4 fade-in-up">Stay updated</h2>
-        <p class="text-neutral-500 dark:text-neutral-400 text-sm mb-8 fade-in-up delay-100">Get tech tips, exclusive promos, and updates on our latest services.</p>
-        <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto fade-in-up delay-200" onsubmit="event.preventDefault();document.getElementById('nlMsg').classList.remove('hidden');this.reset();setTimeout(()=>document.getElementById('nlMsg').classList.add('hidden'),4000)">
-          <input type="email" required placeholder="your@email.com" class="flex-1 h-12 px-5 rounded-2xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-neutral-400" />
-          <button type="submit" class="h-12 px-6 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap">Subscribe</button>
-        </form>
-        <p id="nlMsg" class="text-xs text-green-500 mt-3 hidden">✓ You're on the list!</p>
+      <div class="max-w-2xl mx-auto px-6 relative z-10">
+        <div class="newsletter-box rounded-3xl p-8 md:p-12 fade-in-up">
+          <div class="flex items-center justify-center gap-2 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+              <i data-lucide="mail" class="w-5 h-5 text-accent"></i>
+            </div>
+          </div>
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2 text-center">Stay updated</h2>
+          <p class="text-neutral-500 dark:text-neutral-400 text-sm mb-8 text-center max-w-sm mx-auto">Get tech tips, exclusive promos, and updates on our latest services delivered to your inbox.</p>
+          <form class="flex flex-col sm:flex-row gap-3 fade-in-up delay-200" action="https://formsubmit.co/hello@luviio.com" method="POST">
+            <input type="hidden" name="_subject" value="New Newsletter Subscriber" />
+            <input type="hidden" name="_captcha" value="false" />
+            <input type="hidden" name="_template" value="table" />
+            <input type="email" name="email" required placeholder="your@email.com" class="flex-1 h-12 px-5 rounded-2xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-neutral-400" />
+            <button type="submit" class="h-12 px-6 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap">Subscribe</button>
+          </form>
+          <p class="text-[11px] text-neutral-400 mt-4 text-center">No spam, ever. Unsubscribe anytime.</p>
+        </div>
       </div>
     </section>
   </div>
@@ -403,20 +487,22 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
           <div class="fade-in-up delay-100">
             <h3 class="text-xl font-semibold mb-6">Send us a message</h3>
-            <form class="space-y-4" onsubmit="event.preventDefault();document.getElementById('contactMsg').classList.remove('hidden');this.reset();setTimeout(()=>document.getElementById('contactMsg').classList.add('hidden'),5000)">
+            <form class="space-y-4" action="https://formsubmit.co/hello@luviio.com" method="POST">
+              <input type="hidden" name="_subject" value="New Contact Form Submission" />
+              <input type="hidden" name="_captcha" value="false" />
+              <input type="hidden" name="_template" value="table" />
               <div class="grid grid-cols-2 gap-4">
-                <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Name</label><input type="text" required class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="Your name" /></div>
-                <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Email</label><input type="email" required class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="your@email.com" /></div>
+                <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Name</label><input type="text" name="name" required class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="Your name" /></div>
+                <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Email</label><input type="email" name="email" required class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" placeholder="your@email.com" /></div>
               </div>
               <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Service Interested In</label>
-                <select class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>Website Design</option><option>Web Development</option><option>E-Commerce</option><option>Mobile App</option><option>IT Support</option><option>Other</option></select>
+                <select name="service" class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>Website Design</option><option>Web Development</option><option>E-Commerce</option><option>Mobile App</option><option>IT Support</option><option>Other</option></select>
               </div>
               <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Budget Range</label>
-                <select class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>RM500 – RM2,000</option><option>RM2,000 – RM5,000</option><option>RM5,000 – RM10,000</option><option>RM10,000+</option></select>
+                <select name="budget" class="w-full h-11 px-4 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 text-neutral-500 dark:text-neutral-400"><option>RM500 – RM2,000</option><option>RM2,000 – RM5,000</option><option>RM5,000 – RM10,000</option><option>RM10,000+</option></select>
               </div>
-              <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Message</label><textarea rows="4" required class="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" placeholder="Tell us about your project..."></textarea></div>
+              <div><label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">Message</label><textarea rows="4" name="message" required class="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 resize-none" placeholder="Tell us about your project..."></textarea></div>
               <button type="submit" class="h-12 px-8 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-sm font-medium hover:opacity-90 transition-opacity w-full">Send Message</button>
-              <p id="contactMsg" class="text-xs text-green-500 hidden">✓ Message sent! We'll get back to you within 24 hours.</p>
             </form>
           </div>
           <div class="fade-in-up delay-200">
@@ -534,7 +620,10 @@
     <div class="max-w-7xl mx-auto px-6 py-16">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
         <div class="col-span-2 md:col-span-1">
-          <p class="text-lg font-semibold tracking-tight mb-4">LUVIIO</p>
+          <a href="#" onclick="navigateTo('home');return false" class="inline-block mb-4">
+            <img src="https://i.ibb.co/6JPCJVBd/luviio-logo.png" alt="LUVIIO" class="h-8 dark:hidden" />
+            <img src="https://i.ibb.co/yBPLJGTP/luviio-black-logo.png" alt="LUVIIO" class="h-8 hidden dark:block" />
+          </a>
           <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-4">Professional website & IT services for Malaysian businesses.</p>
           <div class="flex gap-3">
             <a href="#" class="w-9 h-9 rounded-full bg-neutral-100 dark:bg-white/5 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-white/10 transition-colors" aria-label="Instagram"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
@@ -645,13 +734,42 @@
       document.getElementById('mobileMenu').classList.remove('open');
       document.getElementById('menuOverlay').classList.add('hidden');
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
     }
     document.getElementById('menuToggle').addEventListener('click', () => {
+      // Save scroll position
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${window.scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.bottom = '0';
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
       document.getElementById('mobileMenu').classList.add('open');
       document.getElementById('menuOverlay').classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
     });
     document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
+
+    // ========== ANNOUNCEMENT BAR HIDE ON SCROLL ==========
+    let lastScrollY = 0;
+    let marqueeHidden = false;
+
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+      const announcementBar = document.getElementById('announcementBar');
+
+      if (currentScrollY > 40 && !marqueeHidden) {
+        announcementBar.classList.add('hidden-bar');
+        marqueeHidden = true;
+      } else if (currentScrollY <= 10 && marqueeHidden) {
+        announcementBar.classList.remove('hidden-bar');
+        marqueeHidden = false;
+      }
+
+      lastScrollY = currentScrollY;
+    }, { passive: true });
 
     // ========== SEARCH ==========
     const searchablePages = [
