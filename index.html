@@ -48,23 +48,72 @@
     .ext-border-h{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,94,.5),transparent)}
     .marquee-track{animation:marquee 30s linear infinite}
 
-    /* Announcement bar — explicit background for cross-browser compat */
+    /* Announcement bar */
     #announcementBar{transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s;background-color:#171717}
     .dark #announcementBar{background-color:#fafafa}
     #announcementBar.hidden-bar{transform:translateY(-100%);opacity:0;pointer-events:none;height:0;overflow:hidden;padding:0;margin:0}
 
-    /* Nav — always has a real background, never transparent */
-    #mainNav{transition:background .3s,border-color .3s,box-shadow .3s;background-color:rgba(250,250,250,.6);border-bottom:1px solid rgba(229,229,229,.4);box-shadow:none}
-    .dark #mainNav{background-color:rgba(10,10,10,.6);border-bottom-color:rgba(255,255,255,.04);box-shadow:none}
-    #mainNav.nav-top{background-color:rgba(250,250,250,.6);border-bottom-color:rgba(229,229,229,.4);box-shadow:none}
-    .dark #mainNav.nav-top{background-color:rgba(10,10,10,.6);border-bottom-color:rgba(255,255,255,.04);box-shadow:none}
-    #mainNav.nav-scrolled{background-color:rgba(250,250,250,.88);border-bottom-color:rgba(229,229,229,.8);box-shadow:0 1px 3px rgba(0,0,0,.05)}
-    .dark #mainNav.nav-scrolled{background-color:rgba(10,10,10,.88);border-bottom-color:rgba(255,255,255,.1);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+    /* ===== NAV — SOLID backgrounds, no transparency, no backdrop-blur ===== */
+    #mainNav{
+      transition:background .3s, border-color .3s, box-shadow .3s;
+      /* Solid white by default — no transparency, no blur */
+      background-color:#ffffff;
+      border-bottom:1px solid #e5e5e5;
+      box-shadow:none;
+    }
+    .dark #mainNav{
+      background-color:#0a0a0a;
+      border-bottom-color:rgba(255,255,255,.06);
+      box-shadow:none;
+    }
+    #mainNav.nav-top{
+      background-color:#ffffff;
+      border-bottom-color:#e5e5e5;
+      box-shadow:none;
+    }
+    .dark #mainNav.nav-top{
+      background-color:#0a0a0a;
+      border-bottom-color:rgba(255,255,255,.06);
+      box-shadow:none;
+    }
+    #mainNav.nav-scrolled{
+      background-color:#ffffff;
+      border-bottom-color:#e5e5e5;
+      box-shadow:0 1px 3px rgba(0,0,0,.06);
+    }
+    .dark #mainNav.nav-scrolled{
+      background-color:#0a0a0a;
+      border-bottom-color:rgba(255,255,255,.1);
+      box-shadow:0 1px 3px rgba(0,0,0,.3);
+    }
 
-    /* Mobile menu — truly fullscreen */
-    .mobile-menu{position:fixed;inset:0;background:#fff;z-index:200;transform:translateX(-100%);transition:transform .4s cubic-bezier(.16,1,.3,1);padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom);overflow-y:auto;-webkit-overflow-scrolling:touch}
-    .dark .mobile-menu{background:#0a0a0a}
-    .mobile-menu.open{transform:translateX(0)}
+    /* ===== MOBILE MENU — guaranteed fullscreen overlay ===== */
+    .mobile-menu{
+      position:fixed;
+      inset:0;
+      /* Explicit height so nothing peeks through */
+      height:100dvh;
+      height:100vh;
+      width:100vw;
+      background:#ffffff;
+      z-index:999;
+      transform:translateX(-100%);
+      transition:transform .4s cubic-bezier(.16,1,.3,1);
+      overflow:hidden;
+    }
+    .dark .mobile-menu{
+      background:#0a0a0a;
+    }
+    .mobile-menu.open{
+      transform:translateX(0);
+    }
+    /* Inner scrollable area — safe-area padding applied here */
+    .mobile-menu-inner{
+      height:100%;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:env(safe-area-inset-top,0px) 24px calc(env(safe-area-inset-bottom,0px) + 40px);
+    }
 
     .page{display:none}.page.active{display:block}
     .page-enter{animation:fadeInUp .5s cubic-bezier(.16,1,.3,1) forwards}
@@ -77,17 +126,14 @@
     .stripe-pricing-wrapper stripe-pricing-table{display:block}
     .stripe-pricing-wrapper iframe{border-radius:1rem}
 
-    /* Logo sizing */
     .logo-img{height:32px;width:auto;display:block}
     .logo-img-mobile{height:28px;width:auto;display:block}
 
-    /* Service icon card hover */
     .service-icon-card{transition:all .3s cubic-bezier(.16,1,.3,1)}
     .service-icon-card:hover{transform:translateY(-4px);border-color:rgba(255,0,94,.3)}
     .service-icon-card:hover .service-icon-bg{background:rgba(255,0,94,.08)}
     .dark .service-icon-card:hover .service-icon-bg{background:rgba(255,0,94,.12)}
 
-    /* Newsletter input glow */
     .nl-input:focus{box-shadow:0 0 0 3px rgba(255,0,94,.15)}
 
     ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#d4d4d4;border-radius:3px}
@@ -116,7 +162,7 @@
   </div>
 
   <!-- ===== NAVIGATION ===== -->
-  <nav id="mainNav" class="h-16 sticky top-0 z-50 backdrop-blur-xl nav-top">
+  <nav id="mainNav" class="h-16 sticky top-0 z-50 nav-top">
     <div class="max-w-7xl mx-auto h-full px-6 grid grid-cols-[auto_1fr_auto] items-center gap-4">
       <div class="flex items-center gap-3">
         <button id="menuToggle" class="lg:hidden" aria-label="Menu"><i data-lucide="menu" class="w-5 h-5"></i></button>
@@ -156,22 +202,24 @@
 
   <!-- ===== MOBILE MENU ===== -->
   <div id="mobileMenu" class="mobile-menu">
-    <div class="flex items-center justify-between mb-10 pt-2">
-      <img src="https://i.ibb.co/8LkD1bym/logo-black-luviio-removebg-preview.png" alt="LUVIIO" class="logo-img-mobile dark:hidden" />
-      <img src="https://i.ibb.co/7x07Tnt3/logo-white-luviio-removebg-preview.png" alt="LUVIIO" class="logo-img-mobile hidden dark:block" />
-      <button id="menuClose"><i data-lucide="x" class="w-6 h-6"></i></button>
-    </div>
-    <div class="flex flex-col gap-5">
-      <button onclick="navigateTo('home');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Home</button>
-      <button onclick="navigateTo('pricing');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Pricing</button>
-      <button onclick="navigateTo('faq');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">FAQ</button>
-      <button onclick="navigateTo('process');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Process</button>
-      <button onclick="navigateTo('terms');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Terms of Service</button>
-      <button onclick="navigateTo('contact');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Contact Us</button>
-      <button onclick="navigateTo('about');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">About Us</button>
-      <button onclick="navigateTo('careers');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Careers</button>
-      <button onclick="navigateTo('blog');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Blog</button>
-      <button onclick="navigateTo('privacy');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Privacy Policy</button>
+    <div class="mobile-menu-inner">
+      <div class="flex items-center justify-between mb-10 pt-2">
+        <img src="https://i.ibb.co/8LkD1bym/logo-black-luviio-removebg-preview.png" alt="LUVIIO" class="logo-img-mobile dark:hidden" />
+        <img src="https://i.ibb.co/7x07Tnt3/logo-white-luviio-removebg-preview.png" alt="LUVIIO" class="logo-img-mobile hidden dark:block" />
+        <button id="menuClose"><i data-lucide="x" class="w-6 h-6"></i></button>
+      </div>
+      <div class="flex flex-col gap-5">
+        <button onclick="navigateTo('home');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Home</button>
+        <button onclick="navigateTo('pricing');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Pricing</button>
+        <button onclick="navigateTo('faq');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">FAQ</button>
+        <button onclick="navigateTo('process');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Process</button>
+        <button onclick="navigateTo('terms');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Terms of Service</button>
+        <button onclick="navigateTo('contact');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Contact Us</button>
+        <button onclick="navigateTo('about');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">About Us</button>
+        <button onclick="navigateTo('careers');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Careers</button>
+        <button onclick="navigateTo('blog');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Blog</button>
+        <button onclick="navigateTo('privacy');closeMobileMenu()" class="text-left text-2xl font-medium tracking-tight hover:text-accent transition-colors">Privacy Policy</button>
+      </div>
     </div>
   </div>
 
@@ -296,7 +344,7 @@
     <section class="py-20 md:py-28 relative overflow-hidden">
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 swirl-1 pointer-events-none"></div>
       <div class="max-w-xl mx-auto px-6 relative z-10">
-        <div class="bg-white dark:bg-neutral-900/80 backdrop-blur-xl rounded-3xl border border-neutral-200 dark:border-white/10 p-8 md:p-10 text-center fade-in-up">
+        <div class="bg-white dark:bg-neutral-900/80 rounded-3xl border border-neutral-200 dark:border-white/10 p-8 md:p-10 text-center fade-in-up">
           <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-5">
             <i data-lucide="mail" class="w-6 h-6 text-accent"></i>
           </div>
@@ -724,8 +772,9 @@
       const menu = document.getElementById('mobileMenu');
       menu.classList.add('open');
       document.body.style.overflow = 'hidden';
-      menu.scrollTop = 0;
-      try { if (window.scrollTo) window.scrollTo(0, 1); } catch(e) {}
+      // Scroll inner container to top
+      const inner = menu.querySelector('.mobile-menu-inner');
+      if (inner) inner.scrollTop = 0;
     });
     document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
 
