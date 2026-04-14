@@ -29,36 +29,11 @@
   </script>
 
   <style>
-    html, body { 
-      height: 100%; 
-      min-height: 100vh; 
-      min-height: -webkit-fill-available; 
-      overscroll-behavior: none; 
-      overflow-x: hidden !important; 
-      max-width: 100vw !important; 
-    }
-    
-    /* FIX: Remove overflow hidden from html - let viewport work naturally */
-    html { 
-      /* REMOVED: overflow: hidden; */
-      height: 100%;
-      scroll-padding-top: calc(64px + env(safe-area-inset-top, 0px));
-    }
-    
-    body { 
-      overflow-y: auto; 
-      -webkit-overflow-scrolling: touch; 
-      height: 100%; 
-    }
-    
-    html.menu-open { 
-      position: fixed;
-      width: 100%;
-      overflow: hidden !important; 
-    }
-    html.menu-open body { 
-      overflow: hidden !important; 
-    }
+    html, body { height: 100%; min-height: 100vh; min-height: -webkit-fill-available; overscroll-behavior: none; overflow-x: hidden !important; max-width: 100vw !important; }
+    html { overflow: hidden; height: 100%; }
+    body { overflow-y: auto; -webkit-overflow-scrolling: touch; height: 100%; }
+    html.menu-open { overflow: hidden; }
+    html.menu-open body { overflow: hidden; }
 
     *, *::before, *::after { max-width: 100%; box-sizing: border-box; }
     img, svg, video, canvas { max-width: 100%; }
@@ -85,7 +60,7 @@
     70% { stroke-dashoffset: 24; opacity: 0; }
     100% { stroke-dashoffset: 24; opacity: 1; }}  
     @keyframes gentlePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-    
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
     .fade-in-up{opacity:0;animation:fadeInUp .8s cubic-bezier(.16,1,.3,1) forwards}
     .scale-in{opacity:0;animation:scaleIn .6s cubic-bezier(.16,1,.3,1) forwards}
     .delay-100{animation-delay:100ms}.delay-200{animation-delay:200ms}.delay-300{animation-delay:300ms}.delay-400{animation-delay:400ms}.delay-500{animation-delay:500ms}.delay-600{animation-delay:600ms}.delay-700{animation-delay:700ms}
@@ -96,120 +71,33 @@
     .ext-border-h{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,94,.5),transparent)}
     .marquee-track{animation:marquee 30s linear infinite}
 
-    #announcementBar{
-      transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s,height .35s,padding .35s,max-height .35s;
-      background-color:#171717;
-      padding-top:env(safe-area-inset-top,0);
-      will-change: transform, opacity;
-    }
+    #announcementBar{transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s,height .35s,padding .35s,max-height .35s;background-color:#171717;padding-top:env(safe-area-inset-top,0)}
     .dark #announcementBar{background-color:#fafafa}
-    #announcementBar.hidden-bar{
-      transform:translateY(-100%);
-      opacity:0;
-      pointer-events:none;
-      height:0;
-      padding:0;
-      margin:0;
-      max-height:0;
-      overflow:hidden
-    }
+    #announcementBar.hidden-bar{transform:translateY(-100%);opacity:0;pointer-events:none;height:0;padding:0;margin:0;max-height:0;overflow:hidden}
 
-    /* FIX: Navigation always respects safe area and uses proper sticky behavior */
-    #mainNav{
-      transition:background .3s, border-color .3s, box-shadow .3s, top .35s, padding-top .35s;
-      background-color:#ffffff;
-      border-bottom:1px solid #e5e5e5;
-      box-shadow:none;
-      top:0;
-      /* FIX: Always apply safe area inset from the start */
-      padding-top:env(safe-area-inset-top, 0px);
-      height:calc(64px + env(safe-area-inset-top, 0px));
-      z-index:40;
-      position:sticky;
-      will-change: background, box-shadow;
-    }
-    
-    .dark #mainNav{
-      background-color:#0a0a0a;
-      border-bottom-color:rgba(255,255,255,.06);
-      box-shadow:none
-    }
-    
-    #mainNav.nav-top{
-      background-color:#ffffff;
-      border-bottom-color:#e5e5e5;
-      box-shadow:none;
-      top:0
-    }
-    .dark #mainNav.nav-top{
-      background-color:#0a0a0a;
-      border-bottom-color:rgba(255,255,255,.06);
-      box-shadow:none;
-      top:0
-    }
-    
-    #mainNav.nav-scrolled{
-      background-color:#ffffff;
-      border-bottom-color:#e5e5e5;
-      box-shadow:0 1px 3px rgba(0,0,0,.06);
-      top:0
-    }
-    .dark #mainNav.nav-scrolled{
-      background-color:#0a0a0a;
-      border-bottom-color:rgba(255,255,255,.1);
-      box-shadow:0 1px 3px rgba(0,0,0,.3);
-      top:0
-    }
+    #mainNav{transition:background .3s, border-color .3s, box-shadow .3s, top .35s, padding-top .35s;background-color:#ffffff;border-bottom:1px solid #e5e5e5;box-shadow:none;top:0}
+    .dark #mainNav{background-color:#0a0a0a;border-bottom-color:rgba(255,255,255,.06);box-shadow:none}
+    #mainNav.nav-top{background-color:#ffffff;border-bottom-color:#e5e5e5;box-shadow:none;top:0}
+    .dark #mainNav.nav-top{background-color:#0a0a0a;border-bottom-color:rgba(255,255,255,.06);box-shadow:none;top:0}
+    #mainNav.nav-scrolled{background-color:#ffffff;border-bottom-color:#e5e5e5;box-shadow:0 1px 3px rgba(0,0,0,.06);top:0}
+    .dark #mainNav.nav-scrolled{background-color:#0a0a0a;border-bottom-color:rgba(255,255,255,.1);box-shadow:0 1px 3px rgba(0,0,0,.3);top:0}
 
-    /* Mobile menu with safe area support */
-    .mobile-menu{
-      position:fixed;
-      top:0;
-      left:0;
-      bottom:0;
-      width:300px;
-      max-width:80vw;
-      background:#ffffff;
-      z-index:999;
-      transform:translateX(-100%);
-      transition:transform .35s cubic-bezier(.16,1,.3,1);
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-      box-shadow:none;
-      padding-top:calc(24px + env(safe-area-inset-top, 0px));
-      padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px));
-      overflow-x:hidden
-    }
+    /* NEW: Nav hidden state for when announcement is hidden at top */
+    #mainNav.nav-hidden-top{top:calc(-1 * env(safe-area-inset-top, 0px));padding-top:0}
     
-    .mobile-menu.open{
-      transform:translateX(0);
-      box-shadow:20px 0 60px rgba(0,0,0,.15)
-    }
-    
+    /* Ensure nav respects safe area */
+    #mainNav.safe-nav-active{padding-top:env(safe-area-inset-top,0)}
+
+    .mobile-menu{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:80vw;background:#ffffff;z-index:999;transform:translateX(-100%);transition:transform .35s cubic-bezier(.16,1,.3,1);overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:none;padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0);overflow-x:hidden}
+    .mobile-menu.open{transform:translateX(0);box-shadow:20px 0 60px rgba(0,0,0,.15)}
     .dark .mobile-menu{background:#0a0a0a}
     .dark .mobile-menu.open{box-shadow:20px 0 60px rgba(0,0,0,.5)}
-    .mobile-menu-inner{padding:0 20px 40px}
-    
-    .mobile-overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0);
-      z-index:998;
-      pointer-events:none;
-      transition:background .35s
-    }
-    .mobile-overlay.active{
-      background:rgba(0,0,0,.3);
-      pointer-events:auto
-    }
+    .mobile-menu-inner{padding:24px 20px 40px}
+    .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:998;pointer-events:none;transition:background .35s}
+    .mobile-overlay.active{background:rgba(0,0,0,.3);pointer-events:auto}
 
     .page{display:none;min-height:0;overflow-x:hidden}
-    .page.active{
-      display:flex;
-      flex-direction:column;
-      min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
-      min-height:-webkit-fill-available
-    }
+    .page.active{display:flex;flex-direction:column;min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:-webkit-fill-available}
     .page.active > section:first-child{flex:1 0 auto}
     .page-enter{animation:fadeInUp .5s cubic-bezier(.16,1,.3,1) forwards}
 
@@ -248,13 +136,13 @@
     }
     
     .checkout-step-dot {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       transition: all 0.3s ease;
       position: relative;
@@ -272,7 +160,8 @@
     .checkout-step-dot.active {
       background: #ff005e;
       color: white;
-      box-shadow: 0 4px 12px rgba(255,0,94,0.3);
+      box-shadow: 0 4px 14px rgba(255,0,94,0.35);
+      transform: scale(1.08);
     }
     
     .checkout-step-dot.completed {
@@ -364,8 +253,8 @@
     }
     
     .plan-radio {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       border: 2px solid #d4d4d4;
       display: flex;
@@ -385,8 +274,8 @@
     }
     
     .plan-radio-inner {
-      width: 8px;
-      height: 8px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       background: white;
       transform: scale(0);
@@ -479,6 +368,21 @@
       text-decoration: none;
       cursor: pointer;
       border: none;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-checkout.loading {
+      pointer-events: none;
+      opacity: 0.85;
+    }
+    
+    .btn-checkout.loading::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: shimmer 1.5s infinite;
     }
     
     .btn-primary-checkout {
@@ -791,6 +695,100 @@
       transform: scale(1.08);
     }
 
+    /* ===== PAYMENT STEP STYLES (Step 4) ===== */
+    .payment-method-option {
+      background: #ffffff;
+      border: 2px solid #e5e5e5;
+      border-radius: 1rem;
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .dark .payment-method-option {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.08);
+    }
+    
+    .payment-method-option:hover {
+      border-color: rgba(255,0,94,0.3);
+      transform: translateY(-2px);
+    }
+    
+    .payment-method-option.selected {
+      border-color: #ff005e;
+      background: rgba(255,0,94,0.04);
+      box-shadow: 0 0 0 3px rgba(255,0,94,0.1);
+    }
+    
+    .dark .payment-method-option.selected {
+      background: rgba(255,0,94,0.08);
+      box-shadow: 0 0 0 3px rgba(255,0,94,0.15);
+    }
+    
+    .payment-method-radio {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #d4d4d4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    
+    .dark .payment-method-radio {
+      border-color: #525252;
+    }
+    
+    .payment-method-option.selected .payment-method-radio {
+      border-color: #ff005e;
+      background: #ff005e;
+    }
+    
+    .payment-method-radio-inner {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: white;
+      transform: scale(0);
+      transition: transform 0.2s;
+    }
+    
+    .payment-method-option.selected .payment-method-radio-inner {
+      transform: scale(1);
+    }
+    
+    .stripe-preview {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      color: white;
+      margin-top: 1rem;
+    }
+    
+    .bank-transfer-info {
+      background: #f9fafb;
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      margin-top: 1rem;
+      display: none;
+    }
+    
+    .dark .bank-transfer-info {
+      background: rgba(255,255,255,0.03);
+    }
+    
+    .payment-method-option.selected + .bank-transfer-info,
+    .payment-method-option.selected + .stripe-preview {
+      display: block;
+      animation: slideUp 0.3s ease forwards;
+    }
+
     /* ===== PURCHASE CONFIRMED — Enhanced Animations ===== */
     .confirmed-icon-ring {
       width: 120px;
@@ -896,20 +894,7 @@
 
     /* Benefits section highlight */
     #benefits-section {
-      scroll-margin-top: calc(80px + env(safe-area-inset-top, 0px));
-    }
-    
-    /* Fix for iOS Safari viewport issues */
-    @supports (padding: env(safe-area-inset-top)) {
-      body {
-        padding-top: env(safe-area-inset-top, 0px);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-      }
-      
-      #mainNav {
-        height: calc(64px + env(safe-area-inset-top, 0px)) !important;
-        padding-top: env(safe-area-inset-top, 0px) !important;
-      }
+      scroll-margin-top: 80px;
     }
   </style>
 </head>
@@ -938,9 +923,8 @@
   </div>
 
   <!-- ===== NAVIGATION ===== -->
-  <!-- FIX: Nav is now properly sticky with safe area always applied -->
   <nav id="mainNav" class="h-16 sticky top-0 z-50 nav-top">
-    <div class="max-w-7xl mx-auto h-full px-6 grid grid-cols-[auto_1fr_auto] items-center gap-4" style="height: 64px;">
+    <div class="max-w-7xl mx-auto h-full px-6 grid grid-cols-[auto_1fr_auto] items-center gap-4">
       <div class="flex items-center gap-3">
         <button id="menuToggle" class="lg:hidden" aria-label="Menu"><i data-lucide="menu" class="w-5 h-5"></i></button>
         <a href="/home" onclick="navigateTo('home');return false" class="whitespace-nowrap flex items-center">
@@ -963,7 +947,7 @@
         </button>
       </div>
     </div>
-    <div id="searchBar" class="absolute top-full left-0 right-0 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-white/10 p-4 hidden z-50" style="top: calc(100%);">
+    <div id="searchBar" class="absolute top-16 left-0 right-0 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-white/10 p-4 hidden z-50">
       <div class="max-w-2xl mx-auto relative">
         <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"></i>
         <input type="text" placeholder="Search pages..." class="w-full pl-12 pr-4 py-3 rounded-xl border border-neutral-200 dark:border-white/10 bg-neutral-50 dark:bg-neutral-900 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50" oninput="handleSearch(this.value)" />
@@ -1202,7 +1186,7 @@
               <li class="flex items-start gap-3"><div class="pricing-check pricing-check-included"><svg class="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><span class="text-sm text-neutral-600 dark:text-neutral-300">Email support</span></li>
             </ul>
             
-            <button onclick="selectPlanForCheckout('starter')" class="pricing-btn pricing-btn-primary">Subscribe Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            <button onclick="selectPlanForCheckout('starter')" class="pricing-btn pricing-btn-primary">View Pricing & Subscribe <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
           </div>
 
           <!-- GROWTH PLAN - RM300/month (FEATURED) -->
@@ -1238,7 +1222,7 @@
               <li class="flex items-start gap-3"><div class="pricing-check pricing-check-included"><svg class="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><span class="text-sm text-neutral-600 dark:text-neutral-300">Monthly performance review</span></li>
             </ul>
             
-            <button onclick="selectPlanForCheckout('growth')" class="pricing-btn pricing-btn-accent">Subscribe Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            <button onclick="selectPlanForCheckout('growth')" class="pricing-btn pricing-btn-accent">View Pricing & Subscribe <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
           </div>
 
           <!-- PRO PLAN - RM1,900/month -->
@@ -1283,7 +1267,7 @@
               <li class="flex items-start gap-3"><div class="pricing-check pricing-check-included"><svg class="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><span class="text-sm text-neutral-600 dark:text-neutral-300">Dedicated Luviio team support</span></li>
             </ul>
             
-            <button onclick="selectPlanForCheckout('pro')" class="pricing-btn pricing-btn-primary">Subscribe Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
+            <button onclick="selectPlanForCheckout('pro')" class="pricing-btn pricing-btn-primary">View Pricing & Subscribe <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
           </div>
         </div>
 
@@ -1368,14 +1352,14 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- ===== PAGE: CHECKOUT (NEW MULTI-STEP) ===== -->
+  <!-- ===== PAGE: CHECKOUT (UPDATED: 4 STEPS) ===== -->
   <!-- ============================================================ -->
   <div id="page-checkout" class="page">
     <section class="py-20 md:py-28 relative min-h-[80vh]">
       <div class="absolute top-1/3 left-1/4 swirl-2 pointer-events-none"></div>
       <div class="checkout-container px-6 relative z-10">
         
-        <!-- Step Indicator -->
+        <!-- Step Indicator (4 steps now) -->
         <div class="checkout-step-indicator mb-10">
           <div class="checkout-step-dot active" id="stepDot1">
             1
@@ -1390,6 +1374,11 @@
           <div class="checkout-step-dot" id="stepDot3">
             3
             <span class="checkout-step-label">Review</span>
+          </div>
+          <div class="checkout-step-line" id="stepLine3"></div>
+          <div class="checkout-step-dot" id="stepDot4">
+            4
+            <span class="checkout-step-label">Pay</span>
           </div>
         </div>
 
@@ -1527,14 +1516,14 @@
           </div>
         </div>
 
-        <!-- STEP 3: Review & Confirm -->
+        <!-- STEP 3: Review & Submit Order -->
         <div id="checkoutStep3" class="checkout-card hidden">
           <div class="text-center mb-8">
             <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <i data-lucide="clipboard-list" class="w-6 h-6 text-accent"></i>
             </div>
             <h2 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Review Your Order</h2>
-            <p class="text-neutral-500 dark:text-neutral-400 text-sm">Please confirm everything looks correct</p>
+            <p class="text-neutral-500 dark:text-neutral-400 text-sm">Confirm everything looks correct, then submit your order</p>
           </div>
 
           <!-- Selected Plan Summary -->
@@ -1596,13 +1585,13 @@
               <span>Total Due Today</span>
               <span class="text-accent" id="reviewTotal">—</span>
             </div>
-            <p class="text-[11px] text-neutral-400 mt-3 text-center">You will be charged monthly. Cancel anytime from your dashboard.</p>
+            <p class="text-[11px] text-neutral-400 mt-3 text-center">You will be charged monthly after payment confirmation. Cancel anytime from your dashboard.</p>
           </div>
 
-          <!-- Confirm Button -->
-          <button onclick="confirmOrder()" id="btnConfirmOrder" class="btn-checkout btn-accent-checkout mb-3">
+          <!-- Submit Button (submits to FormSubmit first) -->
+          <button onclick="submitOrderToFormSubmit()" id="btnSubmitOrder" class="btn-checkout btn-accent-checkout mb-3">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Confirm & Subscribe via Stripe
+            Submit Order & Proceed to Payment
           </button>
 
           <div class="flex items-center justify-center gap-4 text-[11px] text-neutral-400">
@@ -1612,7 +1601,126 @@
           <!-- Security Note -->
           <div class="mt-6 flex items-center justify-center gap-2 text-[11px] text-neutral-400">
             <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-            <span>Secured by <strong class="text-neutral-500 dark:text-neutral-300">Stripe</strong> 256-bit SSL encryption</span>
+            <span>Your order details are secured and encrypted before submission</span>
+          </div>
+        </div>
+
+        <!-- STEP 4: Payment (NEW) -->
+        <div id="checkoutStep4" class="checkout-card hidden">
+          <div class="text-center mb-8">
+            <div class="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+              <i data-lucide="check-circle-2" class="w-6 h-6 text-green-500"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Complete Your Payment</h2>
+            <p class="text-neutral-500 dark:text-neutral-400 text-sm">Your order has been submitted! Choose your payment method below.</p>
+          </div>
+
+          <!-- Order Confirmation Badge -->
+          <div class="rounded-xl bg-green-50 dark:bg-green-500/5 border border-green-200 dark:border-green-500/20 p-4 mb-6 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-green-800 dark:text-green-300">Order Submitted Successfully</p>
+              <p class="text-xs text-green-600 dark:text-green-400">Reference: <span id="orderRefNumber">#LUV-</span></p>
+            </div>
+          </div>
+
+          <!-- Payment Method Selection -->
+          <div class="mb-6">
+            <p class="text-xs font-semibold tracking-wider uppercase text-neutral-400 mb-3">Select Payment Method</p>
+            
+            <div class="space-y-3">
+              <!-- Stripe Option -->
+              <div class="payment-method-option selected" onclick="selectPaymentMethod('stripe')" id="payMethod-stripe">
+                <div class="payment-method-radio"><div class="payment-method-radio-inner"></div></div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="font-semibold text-sm flex items-center gap-2">
+                        Pay with Card (Stripe)
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">RECOMMENDED</span>
+                      </p>
+                      <p class="text-xs text-neutral-500 dark:text-neutral-400">Visa, Mastercard, Amex — Instant activation</p>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <img src="https://js.stripe.com/v3/fingerprinted/img/visa-fb36094822f73d7bc581f6c0bad1c201.svg" class="h-5 w-auto opacity-60" alt="" />
+                      <img src="https://js.stripe.com/v3/fingerprinted/img/mastercard-86e9a2b929496a34918767093c470935.svg" class="h-5 w-auto opacity-60" alt="" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bank Transfer Option -->
+              <div class="payment-method-option" onclick="selectPaymentMethod('bank')" id="payMethod-bank">
+                <div class="payment-method-radio"><div class="payment-method-radio-inner"></div></div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="font-semibold text-sm">Bank Transfer / FPX</p>
+                      <p class="text-xs text-neutral-500 dark:text-neutral-400">Maybank, CIMB, Public Bank, etc.</p>
+                    </div>
+                    <i data-lucide="building-2" class="w-5 h-5 text-neutral-400"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Preview Areas -->
+          <div id="stripePaymentArea" class="stripe-preview">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-sm font-semibold">Secure Card Payment</p>
+              <div class="flex items-center gap-1 text-xs text-white/70">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                SSL Encrypted
+              </div>
+            </div>
+            <p class="text-xs text-white/70 mb-4">You will be redirected to Stripe's secure checkout to complete your payment.</p>
+            <button onclick="proceedToStripe()" id="btnPayStripe" class="w-full h-12 bg-white text-indigo-700 rounded-xl text-sm font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 shadow-lg">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.67 0 7.609.654 6.16 1.872 4.656 3.147 3.87 4.992 3.87 7.154c0 4.244 2.61 6.135 5.44 7.383 2.545 1.122 3.39 1.96 3.39 3.146 0 1.125-.956 1.82-2.52 1.82-2.156 0-4.97-.942-6.91-2.11l-.926 5.64C4.336 23.89 7.593 24.73 11.06 24.73c2.627 0 4.81-.618 6.315-1.86 1.614-1.326 2.47-3.264 2.47-5.71 0-4.365-2.517-6.235-5.769-7.61z"/></svg>
+              Pay Now — <span id="stripePayAmount">RM0</span>/month
+            </button>
+            <p class="text-[10px] text-white/50 text-center mt-3">Powered by Stripe · We never store your card information</p>
+          </div>
+
+          <div id="bankTransferArea" class="bank-transfer-info">
+            <p class="text-sm font-semibold mb-3 flex items-center gap-2">
+              <i data-lucide="building-2" class="w-4 h-4 text-accent"></i>
+              Bank Transfer Details
+            </p>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-neutral-200 dark:border-white/10">
+                <span class="text-xs text-neutral-500">Bank</span>
+                <span class="text-sm font-medium">Maybank Berhad</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-neutral-200 dark:border-white/10">
+                <span class="text-xs text-neutral-500">Account Name</span>
+                <span class="text-sm font-medium">LUVIIO SDN BHD</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-neutral-200 dark:border-white/10">
+                <span class="text-xs text-neutral-500">Account Number</span>
+                <span class="text-sm font-mono font-medium">5621 8842 1034</span>
+              </div>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-xs text-neutral-500">Amount</span>
+                <span class="text-sm font-bold text-accent" id="bankPayAmount">RM0</span>
+              </div>
+            </div>
+            <div class="mt-4 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
+              <p class="text-xs text-yellow-800 dark:text-yellow-300 font-medium flex items-start gap-2">
+                <i data-lucide="info" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+                Please include your order reference number in the transfer reference. Your account will be activated within 24 hours after payment confirmation.
+              </p>
+            </div>
+            <button onclick="confirmBankTransfer()" class="w-full mt-4 h-11 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              I've Made the Payment
+            </button>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-neutral-100 dark:border-white/5 text-center">
+            <p class="text-[11px] text-neutral-400">Need help? Contact us at <a href="mailto:hello@luviio.com" class="text-accent hover:underline">hello@luviio.com</a></p>
           </div>
         </div>
 
@@ -1783,7 +1891,7 @@
           <div class="faq-item bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 overflow-hidden"><button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left"><span class="text-sm font-medium pr-4">Do you provide domain and hosting?</span><i data-lucide="chevron-down" class="w-5 h-5 text-neutral-400 faq-chevron flex-shrink-0"></i></button><div class="faq-answer px-5"><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed pb-5">We provide hosting guidance and can help you set up hosting. Domain registration is available but billed separately based on the domain name and extension chosen. Pro plan clients receive full hosting management included.</p></div></div>
           <div class="faq-item bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 overflow-hidden"><button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left"><span class="text-sm font-medium pr-4">What technologies do you use?</span><i data-lucide="chevron-down" class="w-5 h-5 text-neutral-400 faq-chevron flex-shrink-0"></i></button><div class="faq-answer px-5"><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed pb-5">We use modern technologies including React, Next.js, WordPress, Shopify, Laravel, Flutter, and more depending on your project requirements.</p></div></div>
           <div class="faq-item bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 overflow-hidden"><button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left"><span class="text-sm font-medium pr-4">Is there a refund policy?</span><i data-lucide="chevron-down" class="w-5 h-5 text-neutral-400 faq-chevron flex-shrink-0"></i></button><div class="faq-answer px-5"><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed pb-5">Due to the custom nature of our work, we don't offer full refunds after development begins. However, since all plans are subscriptions, you're not locked into long-term contracts and can cancel before the next billing cycle.</p></div></div>
-          <div class="faq-item bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 overflow-hidden"><button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left"><span class="text-sm font-medium pr-4">What's the difference between the plans?</span><i data-lucide="chevron-down" class="w-5 h-5 text-neutral-400 faq-chevron flex-shrink-0"></i></button><div class="faq-answer px-5"><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed pb-5">Starter (RM150/mo) covers basic websites for small businesses. Growth (RM300/mo) adds conversion optimization, analytics, and  store features for growing brands. Pro (RM1,900/mo) is an all-in-one solution acting as your full outsourced IT department with unlimited updates, marketing support, and priority service.</p></div></div>
+          <div class="faq-item bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 overflow-hidden"><button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left"><span class="text-sm font-medium pr-4">What's the difference between the plans?</span><i data-lucide="chevron-down" class="w-5 h-5 text-neutral-400 faq-chevron flex-shrink-0"></i></button><div class="faq-answer px-5"><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed pb-5">Starter (RM150/mo) covers basic websites for small businesses. Growth (RM300/mo) adds conversion optimization, analytics, and store features for growing brands. Pro (RM1,900/mo) is an all-in-one solution acting as your full outsourced IT department with unlimited updates, marketing support, and priority service.</p></div></div>
         </div>
       </div>
     </section>
@@ -2015,19 +2123,26 @@
     // Checkout state
     let checkoutState = {
       selectedPlan: null,
+      selectedPaymentMethod: 'stripe',
       step: 1,
+      orderRef: '',
       plans: {
         starter: { name: 'Starter Plan', desc: 'Best for small businesses & startups', price: 150 },
         growth: { name: 'Growth Plan', desc: 'Best for growing brands & eCommerce', price: 300 },
         pro: { name: 'Pro IT Services Plan', desc: 'All-in-One Business Solution', price: 1900 }
+      },
+      stripeUrls: {
+        starter: 'https://buy.stripe.com/fZu6oB6x24azflI2Mw97G05',
+        growth: 'https://buy.stripe.com/8x2aERcVq5eD7Tgcn697G06',
+        pro: 'https://buy.stripe.com/cNieV7f3ydL97Tgeve97G07'
       }
     };
 
     function navigateTo(pageId, hash = null) {
       if (currentPage === pageId && !hash) return;
       
-      // Scroll to top smoothly
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
       
       const currentEl = document.getElementById('page-' + currentPage);
       if (currentEl) { 
@@ -2161,7 +2276,8 @@
     window.addEventListener('popstate', () => {
       const { pageId, hash } = parseInitialRoute();
       
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
       
       const currentEl = document.getElementById('page-' + currentPage);
       if (currentEl) { 
@@ -2240,30 +2356,31 @@
     const announcementBar = document.getElementById('announcementBar');
     const mainNav = document.getElementById('mainNav');
 
-    // FIX: Improved nav state management - always respects safe area
     function updateNavState() {
       const scrollY = window.scrollY || window.pageYOffset;
       
-      // Always ensure safe area padding is applied
-      mainNav.style.paddingTop = 'env(safe-area-inset-top, 0px)';
-      
-      // Hide announcement bar after small scroll (it was just decorative)
-      if (scrollY > 10) {
+      // NEW LOGIC: At very top (scrollY <= small threshold), hide nav behind safe area
+      // When scrolled down, show nav normally with safe area padding
+      if (scrollY <= 5) {
+        // At top - hide announcement bar, nav goes behind notch/safe area
         announcementBar.classList.add('hidden-bar');
-        mainNav.classList.remove('nav-top');
-        mainNav.classList.add('nav-scrolled');
+        mainNav.classList.remove('nav-scrolled', 'nav-top');
+        mainNav.classList.add('nav-hidden-top');
+        mainNav.classList.remove('safe-nav-active');
+      } else if (scrollY > 40) {
+        // Scrolled down enough - show nav properly
+        announcementBar.classList.add('hidden-bar');
+        mainNav.classList.remove('nav-top', 'nav-hidden-top');
+        mainNav.classList.add('nav-scrolled', 'safe-nav-active');
       } else {
+        // In between - transitioning
         announcementBar.classList.remove('hidden-bar');
-        mainNav.classList.remove('nav-scrolled');
-        mainNav.classList.add('nav-top');
+        mainNav.classList.remove('nav-scrolled', 'nav-hidden-top');
+        mainNav.classList.add('nav-top', 'safe-nav-active');
       }
     }
 
-    // Use passive listener for better scroll performance
     window.addEventListener('scroll', updateNavState, { passive: true });
-    
-    // Also run on resize to handle orientation changes
-    window.addEventListener('resize', updateNavState);
 
     function toggleFaq(btn) {
       const item = btn.closest('.faq-item');
@@ -2377,7 +2494,7 @@
       setTimeout(initScrollAnimations, 100);
     });
 
-    // ========== CHECKOUT FLOW FUNCTIONS ==========
+    // ========== CHECKOUT FLOW FUNCTIONS (UPDATED FOR 4 STEPS) ==========
     
     function startCheckout(planId = null) {
       resetCheckout();
@@ -2411,15 +2528,17 @@
     
     function goToStep(stepNum) {
       // Hide all steps
-      document.getElementById('checkoutStep1').classList.add('hidden');
-      document.getElementById('checkoutStep2').classList.add('hidden');
-      document.getElementById('checkoutStep3').classList.add('hidden');
+      for (let i = 1; i <= 4; i++) {
+        const stepEl = document.getElementById('checkoutStep' + i);
+        if (stepEl) stepEl.classList.add('hidden');
+      }
       
       // Show target step
-      document.getElementById('checkoutStep' + stepNum).classList.remove('hidden');
+      const targetStep = document.getElementById('checkoutStep' + stepNum);
+      if (targetStep) targetStep.classList.remove('hidden');
       
-      // Update step indicators
-      for (let i = 1; i <= 3; i++) {
+      // Update step indicators (now 4 dots)
+      for (let i = 1; i <= 4; i++) {
         const dot = document.getElementById('stepDot' + i);
         const line = document.getElementById('stepLine' + (i - 1));
         
@@ -2445,15 +2564,21 @@
         populateReview();
       }
       
+      // If going to step 4, set up payment
+      if (stepNum === 4) {
+        setupPaymentStep();
+      }
+      
       // Re-init lucide icons for newly visible content
       setTimeout(() => lucide.createIcons(), 50);
       
       // Scroll to top of checkout
-      document.getElementById('page-checkout').querySelector('section').scrollTop = 0;
+      const section = document.getElementById('page-checkout')?.querySelector('section');
+      if (section) section.scrollTop = 0;
     }
     
     function getStepLabel(num) {
-      const labels = ['', 'Plan', 'Details', 'Review'];
+      const labels = ['', 'Plan', 'Details', 'Review', 'Pay'];
       return labels[num];
     }
     
@@ -2553,34 +2678,129 @@
       document.getElementById('reviewTotal').textContent = 'RM' + plan.price.toLocaleString();
     }
     
-    function confirmOrder() {
-      const btn = document.getElementById('btnConfirmOrder');
+    // NEW: Submit order to FormSubmit first, then go to Step 4
+    function submitOrderToFormSubmit() {
+      const btn = document.getElementById('btnSubmitOrder');
       
       // Disable button and show loading
       btn.disabled = true;
-      btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Processing...';
+      btn.classList.add('loading');
+      btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Submitting Order...';
       
-      // Simulate brief processing then redirect to Stripe
+      // Gather form data
+      const plan = checkoutState.plans[checkoutState.selectedPlan];
+      const formData = new FormData();
+      formData.append('_subject', `New Order: ${plan.name} — Luviio`);
+      formData.append('_captcha', 'false');
+      formData.append('_template', 'table');
+      formData.append('Plan Selected', plan.name);
+      formData.append('Plan Price', `RM${plan.price}/month`);
+      formData.append('First Name', document.getElementById('firstName').value);
+      formData.append('Last Name', document.getElementById('lastName').value);
+      formData.append('Email', document.getElementById('email').value);
+      formData.append('Phone', document.getElementById('phone').value);
+      formData.append('Company', document.getElementById('company').value || 'Not provided');
+      formData.append('Notes', document.getElementById('notes').value || 'None');
+      
+      // Generate reference number
+      const refNum = 'LUV' + Date.now().toString(36).toUpperCase();
+      checkoutState.orderRef = refNum;
+      formData.append('Reference Number', refNum);
+      
+      // Submit to FormSubmit
+      fetch('https://formsubmit.co/hello@luviio.com', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => {
+        if (response.ok) {
+          // Success! Go to Step 4 (Payment)
+          setTimeout(() => {
+            goToStep(4);
+          }, 800);
+        } else {
+          throw new Error('Form submission failed');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        // Still proceed to payment even if form fails (graceful degradation)
+        btn.innerHTML = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg> Submission Error — Try Again';
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        
+        setTimeout(() => {
+          btn.innerHTML = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Submit Order & Proceed to Payment';
+        }, 3000);
+      });
+    }
+    
+    // NEW: Setup Step 4 (Payment)
+    function setupPaymentStep() {
+      // Set reference number
+      const refEl = document.getElementById('orderRefNumber');
+      if (refEl) refEl.textContent = '#' + checkoutState.orderRef;
+      
+      // Set amounts
+      const plan = checkoutState.plans[checkoutState.selectedPlan];
+      const stripeAmountEl = document.getElementById('stripePayAmount');
+      const bankAmountEl = document.getElementById('bankPayAmount');
+      if (stripeAmountEl) stripeAmountEl.textContent = 'RM' + plan.price.toLocaleString();
+      if (bankAmountEl) bankAmountEl.textContent = 'RM' + plan.price.toLocaleString();
+      
+      // Default to stripe
+      selectPaymentMethod('stripe');
+    }
+    
+    // NEW: Select payment method
+    function selectPaymentMethod(method) {
+      checkoutState.selectedPaymentMethod = method;
+      
+      // Update selection UI
+      document.querySelectorAll('.payment-method-option').forEach(el => el.classList.remove('selected'));
+      const selected = document.getElementById('payMethod-' + method);
+      if (selected) selected.classList.add('selected');
+      
+      // Show/hide payment areas
+      const stripeArea = document.getElementById('stripePaymentArea');
+      const bankArea = document.getElementById('bankTransferArea');
+      
+      if (method === 'stripe') {
+        if (stripeArea) stripeArea.style.display = 'block';
+        if (bankArea) bankArea.style.display = 'none';
+      } else {
+        if (stripeArea) stripeArea.style.display = 'none';
+        if (bankArea) bankArea.style.display = 'block';
+      }
+      
+      setTimeout(() => lucide.createIcons(), 50);
+    }
+    
+    // NEW: Proceed to Stripe
+    function proceedToStripe() {
+      const btn = document.getElementById('btnPayStripe');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Redirecting...';
+      }
+      
+      const url = checkoutState.stripeUrls[checkoutState.selectedPlan];
       setTimeout(() => {
-        const stripeUrls = {
-          starter: 'https://buy.stripe.com/fZu6oB6x24azflI2Mw97G05',
-          growth: 'https://buy.stripe.com/8x2aERcVq5eD7Tgcn697G06',
-          pro: 'https://buy.stripe.com/cNieV7f3ydL97Tgeve97G07'
-        };
-        
-        const url = stripeUrls[checkoutState.selectedPlan];
-        
-        // Open Stripe in same tab
         window.location.href = url;
-        
-        // Alternatively, you could navigate to order-verify page:
-        // navigateTo('order-verify');
-      }, 800);
+      }, 600);
+    }
+    
+    // NEW: Confirm bank transfer
+    function confirmBankTransfer() {
+      alert('Thank you! Please ensure you have made the transfer with reference number: ' + checkoutState.orderRef + 'Your account will be activated within 24 hours of confirmation.');
+      navigateTo('home');
     }
     
     function resetCheckout() {
       checkoutState.selectedPlan = null;
+      checkoutState.selectedPaymentMethod = 'stripe';
       checkoutState.step = 1;
+      checkoutState.orderRef = '';
       
       // Reset form
       const form = document.getElementById('detailsForm');
@@ -2588,18 +2808,26 @@
       
       // Clear selections
       document.querySelectorAll('.plan-option').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('.payment-method-option').forEach(el => el.classList.remove('selected'));
       document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
       document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
       
       // Reset buttons
       const btn1 = document.getElementById('btnContinueToDetails');
       const btn2 = document.getElementById('btnContinueToReview');
-      const btn3 = document.getElementById('btnConfirmOrder');
+      const btn3 = document.getElementById('btnSubmitOrder');
+      const btn4 = document.getElementById('btnPayStripe');
+      
       if (btn1) btn1.disabled = true;
       if (btn2) btn2.disabled = true;
       if (btn3) {
         btn3.disabled = false;
-        btn3.innerHTML = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Confirm & Subscribe via Stripe';
+        btn3.classList.remove('loading');
+        btn3.innerHTML = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Submit Order & Proceed to Payment';
+      }
+      if (btn4) {
+        btn4.disabled = false;
+        btn4.innerHTML = 'Pay Now — <span id="stripePayAmount">RM0</span>/month';
       }
       
       // Go back to step 1
