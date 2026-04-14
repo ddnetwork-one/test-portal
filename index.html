@@ -70,16 +70,22 @@
     .ext-border-h{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,94,.5),transparent)}
     .marquee-track{animation:marquee 30s linear infinite}
 
-    #announcementBar{transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s,height .35s,padding .35s;background-color:#171717;padding-top:env(safe-area-inset-top,0)}
+    #announcementBar{transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s,height .35s,padding .35s,max-height .35s;background-color:#171717;padding-top:env(safe-area-inset-top,0)}
     .dark #announcementBar{background-color:#fafafa}
-    #announcementBar.hidden-bar{transform:translateY(-100%);opacity:0;pointer-events:none;height:0;overflow:hidden;padding:0;margin:0}
+    #announcementBar.hidden-bar{transform:translateY(-100%);opacity:0;pointer-events:none;height:0;padding:0;margin:0;max-height:0;overflow:hidden}
 
-    #mainNav{transition:background .3s, border-color .3s, box-shadow .3s;background-color:#ffffff;border-bottom:1px solid #e5e5e5;box-shadow:none}
+    #mainNav{transition:background .3s, border-color .3s, box-shadow .3s, top .35s, padding-top .35s;background-color:#ffffff;border-bottom:1px solid #e5e5e5;box-shadow:none;top:0}
     .dark #mainNav{background-color:#0a0a0a;border-bottom-color:rgba(255,255,255,.06);box-shadow:none}
-    #mainNav.nav-top{background-color:#ffffff;border-bottom-color:#e5e5e5;box-shadow:none}
-    .dark #mainNav.nav-top{background-color:#0a0a0a;border-bottom-color:rgba(255,255,255,.06);box-shadow:none}
-    #mainNav.nav-scrolled{background-color:#ffffff;border-bottom-color:#e5e5e5;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-    .dark #mainNav.nav-scrolled{background-color:#0a0a0a;border-bottom-color:rgba(255,255,255,.1);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+    #mainNav.nav-top{background-color:#ffffff;border-bottom-color:#e5e5e5;box-shadow:none;top:0}
+    .dark #mainNav.nav-top{background-color:#0a0a0a;border-bottom-color:rgba(255,255,255,.06);box-shadow:none;top:0}
+    #mainNav.nav-scrolled{background-color:#ffffff;border-bottom-color:#e5e5e5;box-shadow:0 1px 3px rgba(0,0,0,.06);top:0}
+    .dark #mainNav.nav-scrolled{background-color:#0a0a0a;border-bottom-color:rgba(255,255,255,.1);box-shadow:0 1px 3px rgba(0,0,0,.3);top:0}
+
+    /* NEW: Nav hidden state for when announcement is hidden at top */
+    #mainNav.nav-hidden-top{top:calc(-1 * env(safe-area-inset-top, 0px));padding-top:0}
+    
+    /* Ensure nav respects safe area */
+    #mainNav.safe-nav-active{padding-top:env(safe-area-inset-top,0)}
 
     .mobile-menu{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:80vw;background:#ffffff;z-index:999;transform:translateX(-100%);transition:transform .35s cubic-bezier(.16,1,.3,1);overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:none;padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0);overflow-x:hidden}
     .mobile-menu.open{transform:translateX(0);box-shadow:20px 0 60px rgba(0,0,0,.15)}
@@ -114,6 +120,318 @@
 
     footer { margin-top:auto; padding-bottom:env(safe-area-inset-bottom,0); overflow:x-hidden; }
 
+    /* ===== CHECKOUT FLOW STYLES ===== */
+    .checkout-container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    
+    .checkout-step-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 2rem;
+    }
+    
+    .checkout-step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+      background: #e5e5e5;
+      color: #737373;
+      flex-shrink: 0;
+    }
+    
+    .dark .checkout-step-dot {
+      background: rgba(255,255,255,0.1);
+      color: #737373;
+    }
+    
+    .checkout-step-dot.active {
+      background: #ff005e;
+      color: white;
+      box-shadow: 0 4px 12px rgba(255,0,94,0.3);
+    }
+    
+    .checkout-step-dot.completed {
+      background: #22c55e;
+      color: white;
+    }
+    
+    .checkout-step-line {
+      width: 60px;
+      height: 2px;
+      background: #e5e5e5;
+      transition: background 0.3s ease;
+    }
+    
+    .dark .checkout-step-line {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .checkout-step-line.completed {
+      background: #22c55e;
+    }
+    
+    .checkout-step-label {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 6px;
+      font-size: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+      color: #a3a3a3;
+    }
+    
+    .checkout-step-dot.active .checkout-step-label,
+    .checkout-step-dot.completed .checkout-step-label {
+      color: #171717;
+    }
+    
+    .dark .checkout-step-dot.active .checkout-step-label,
+    .dark .checkout-step-dot.completed .checkout-step-label {
+      color: #fff;
+    }
+    
+    .checkout-card {
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 1.25rem;
+      padding: 2rem;
+      transition: all 0.3s ease;
+    }
+    
+    .dark .checkout-card {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.08);
+    }
+    
+    .plan-option {
+      background: #ffffff;
+      border: 2px solid #e5e5e5;
+      border-radius: 1rem;
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .dark .plan-option {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.08);
+    }
+    
+    .plan-option:hover {
+      border-color: rgba(255,0,94,0.3);
+      transform: translateY(-2px);
+    }
+    
+    .plan-option.selected {
+      border-color: #ff005e;
+      background: rgba(255,0,94,0.04);
+      box-shadow: 0 0 0 3px rgba(255,0,94,0.1);
+    }
+    
+    .dark .plan-option.selected {
+      background: rgba(255,0,94,0.08);
+      box-shadow: 0 0 0 3px rgba(255,0,94,0.15);
+    }
+    
+    .plan-radio {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #d4d4d4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    
+    .dark .plan-radio {
+      border-color: #525252;
+    }
+    
+    .plan-option.selected .plan-radio {
+      border-color: #ff005e;
+      background: #ff005e;
+    }
+    
+    .plan-radio-inner {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      transform: scale(0);
+      transition: transform 0.2s;
+    }
+    
+    .plan-option.selected .plan-radio-inner {
+      transform: scale(1);
+    }
+    
+    .form-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e5e5e5;
+      background: #fafafa;
+      font-size: 14px;
+      transition: all 0.2s;
+      outline: none;
+    }
+    
+    .dark .form-input {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    
+    .form-input:focus {
+      border-color: #ff005e;
+      box-shadow: 0 0 0 3px rgba(255,0,94,0.1);
+      background: #fff;
+    }
+    
+    .dark .form-input:focus {
+      background: rgba(255,255,255,0.08);
+    }
+    
+    .form-input.error {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+    }
+    
+    .form-textarea {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e5e5e5;
+      background: #fafafa;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      transition: all 0.2s;
+      min-height: 100px;
+    }
+    
+    .dark .form-textarea {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    
+    .form-textarea:focus {
+      border-color: #ff005e;
+      box-shadow: 0 0 0 3px rgba(255,0,94,0.1);
+    }
+    
+    .error-message {
+      font-size: 11px;
+      color: #ef4444;
+      margin-top: 4px;
+      display: none;
+    }
+    
+    .error-message.show {
+      display: block;
+    }
+    
+    .btn-checkout {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 52px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.2s;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .btn-primary-checkout {
+      background: #171717;
+      color: #ffffff;
+    }
+    
+    .dark .btn-primary-checkout {
+      background: #ffffff;
+      color: #171717;
+    }
+    
+    .btn-primary-checkout:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    
+    .btn-accent-checkout {
+      background: #ff005e;
+      color: #ffffff;
+    }
+    
+    .btn-accent-checkout:hover:not(:disabled) {
+      background: #e60055;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px -8px rgba(255,0,94,0.4);
+    }
+    
+    .btn-checkout:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .review-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 13px;
+    }
+    
+    .dark .review-row {
+      border-bottom-color: rgba(255,255,255,0.05);
+    }
+    
+    .review-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    
+    .review-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0 0;
+      margin-top: 0.5rem;
+      border-top: 2px solid #e5e5e5;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    
+    .dark .review-total {
+      border-top-color: rgba(255,255,255,0.1);
+    }
+    
     .pricing-card {
       background: #ffffff;
       border: 1px solid #e5e5e5;
@@ -400,7 +718,6 @@
     .confirmed-icon-inner svg {
   stroke-dasharray: 24;
   stroke-dashoffset: 24;
-  /* 2s duration = 0.6s draw, 0.4s un-draw, 0.4s disappear, 0.6s appear */
   animation: checkDraw 2s ease-in-out .8s infinite;
 }
     .confirmed-heading {
@@ -581,7 +898,7 @@
         </h1>
         <p class="text-lg md:text-xl text-neutral-500 dark:text-neutral-400 max-w-xl mx-auto mb-10 fade-in-up delay-200">Professional websites, apps, and IT solutions tailored for Malaysian businesses.</p>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 fade-in-up delay-300">
-          <button onclick="navigateTo('pricing')" class="h-12 px-8 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">View Pricing <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+          <button onclick="startCheckout()" class="h-12 px-8 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity">Get Started <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
           <button onclick="navigateTo('about')" class="h-12 px-8 border border-neutral-200 dark:border-white/10 rounded-2xl text-sm font-medium flex items-center gap-2 hover:border-neutral-400 dark:hover:border-white/30 transition-colors">Our Story</button>
         </div>
         <div class="mt-16 md:mt-20 relative fade-in-up delay-400">
@@ -608,25 +925,25 @@
       <div class="max-w-7xl mx-auto px-6">
         <div class="text-center mb-12 fade-in-up"><span class="text-xs font-medium tracking-widest uppercase text-neutral-400 mb-3 block">What we do</span><h2 class="text-3xl md:text-5xl font-semibold tracking-tight">Services</h2></div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <button onclick="navigateTo('pricing')" class="service-icon-card group bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 text-left fade-in-up delay-100">
+          <button onclick="startCheckout()" class="service-icon-card group bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 text-left fade-in-up delay-100">
             <div class="service-icon-bg w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5 transition-colors"><i data-lucide="palette" class="w-6 h-6 text-accent"></i></div>
             <h3 class="font-semibold text-sm mb-1.5">Website Design</h3>
             <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-3">Custom UI/UX design with modern aesthetics tailored to your brand identity.</p>
             <span class="text-xs text-accent font-medium flex items-center gap-1 group-hover:gap-2 transition-all">From RM150/mo <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
           </button>
-          <button onclick="navigateTo('pricing')" class="service-icon-card group bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 text-left fade-in-up delay-200">
+          <button onclick="startCheckout()" class="service-icon-card group bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 text-left fade-in-up delay-200">
             <div class="service-icon-bg w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5 transition-colors"><i data-lucide="code-2" class="w-6 h-6 text-accent"></i></div>
             <h3 class="font-semibold text-sm mb-1.5">Web Development</h3>
             <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-3">Fast, responsive, and scalable websites built with modern technologies.</p>
             <span class="text-xs text-accent font-medium flex items-center gap-1 group-hover:gap-2 transition-all">From RM150/mo <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
           </button>
-          <button onclick="navigateTo('pricing')" class="service-icon-card group bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 text-left fade-in-up delay-300">
+          <button onclick="startCheckout()" class="service-icon-card group bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 text-left fade-in-up delay-300">
             <div class="service-icon-bg w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5 transition-colors"><i data-lucide="smartphone" class="w-6 h-6 text-accent"></i></div>
             <h3 class="font-semibold text-sm mb-1.5">Mobile Apps</h3>
             <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-3">Native and cross-platform mobile applications for iOS and Android.</p>
             <span class="text-xs text-accent font-medium flex items-center gap-1 group-hover:gap-2 transition-all">Custom Quote <i data-lucide="arrow-right" class="w-3 h-3"></i></span>
           </button>
-          <button onclick="navigateTo('pricing')" class="service-icon-card group bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 text-left fade-in-up delay-400">
+          <button onclick="startCheckout()" class="service-icon-card group bg-white dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 p-6 text-left fade-in-up delay-400">
             <div class="service-icon-bg w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-white/5 flex items-center justify-center mb-5 transition-colors"><i data-lucide="headphones" class="w-6 h-6 text-accent"></i></div>
             <h3 class="font-semibold text-sm mb-1.5">IT Support</h3>
             <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed mb-3">Reliable technical support, maintenance, and infrastructure management.</p>
@@ -758,7 +1075,7 @@
               <li class="flex items-start gap-3"><div class="pricing-check pricing-check-included"><svg class="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><span class="text-sm text-neutral-600 dark:text-neutral-300">Email support</span></li>
             </ul>
             
-            <a href="https://buy.stripe.com/fZu6oB6x24azflI2Mw97G05" target="_blank" rel="noopener" class="pricing-btn pricing-btn-primary">Subscribe Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            <button onclick="selectPlanForCheckout('starter')" class="pricing-btn pricing-btn-primary">Subscribe Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
           </div>
 
           <!-- GROWTH PLAN - RM300/month (FEATURED) -->
@@ -794,7 +1111,7 @@
               <li class="flex items-start gap-3"><div class="pricing-check pricing-check-included"><svg class="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><span class="text-sm text-neutral-600 dark:text-neutral-300">Monthly performance review</span></li>
             </ul>
             
-            <a href="https://buy.stripe.com/8x2aERcVq5eD7Tgcn697G06" target="_blank" rel="noopener" class="pricing-btn pricing-btn-accent">Subscribe Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            <button onclick="selectPlanForCheckout('growth')" class="pricing-btn pricing-btn-accent">Subscribe Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
           </div>
 
           <!-- PRO PLAN - RM1,900/month -->
@@ -839,7 +1156,7 @@
               <li class="flex items-start gap-3"><div class="pricing-check pricing-check-included"><svg class="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div><span class="text-sm text-neutral-600 dark:text-neutral-300">Dedicated Luviio team support</span></li>
             </ul>
             
-            <a href="https://buy.stripe.com/cNieV7f3ydL97Tgeve97G07" target="_blank" rel="noopener" class="pricing-btn pricing-btn-primary">Subscribe Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+            <button onclick="selectPlanForCheckout('pro')" class="pricing-btn pricing-btn-primary">Subscribe Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></button>
           </div>
         </div>
 
@@ -919,6 +1236,259 @@
             <p class="text-xs text-neutral-400">Payments processed securely via <span class="font-medium text-neutral-500 dark:text-neutral-300">Stripe</span>. We never store your card details.</p>
           </div>
         </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ===== PAGE: CHECKOUT (NEW MULTI-STEP) ===== -->
+  <!-- ============================================================ -->
+  <div id="page-checkout" class="page">
+    <section class="py-20 md:py-28 relative min-h-[80vh]">
+      <div class="absolute top-1/3 left-1/4 swirl-2 pointer-events-none"></div>
+      <div class="checkout-container px-6 relative z-10">
+        
+        <!-- Step Indicator -->
+        <div class="checkout-step-indicator mb-10">
+          <div class="checkout-step-dot active" id="stepDot1">
+            1
+            <span class="checkout-step-label">Plan</span>
+          </div>
+          <div class="checkout-step-line" id="stepLine1"></div>
+          <div class="checkout-step-dot" id="stepDot2">
+            2
+            <span class="checkout-step-label">Details</span>
+          </div>
+          <div class="checkout-step-line" id="stepLine2"></div>
+          <div class="checkout-step-dot" id="stepDot3">
+            3
+            <span class="checkout-step-label">Review</span>
+          </div>
+        </div>
+
+        <!-- STEP 1: Select Plan -->
+        <div id="checkoutStep1" class="checkout-card fade-in-up">
+          <div class="text-center mb-8">
+            <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <i data-lucide="credit-card" class="w-6 h-6 text-accent"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Choose Your Plan</h2>
+            <p class="text-neutral-500 dark:text-neutral-400 text-sm">Select the plan that best fits your needs</p>
+          </div>
+
+          <div class="space-y-3 mb-8">
+            <div class="plan-option" onclick="selectPlan('starter')" id="planOption-starter">
+              <div class="plan-radio"><div class="plan-radio-inner"></div></div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold text-sm">Starter Plan</p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Best for small businesses & startups</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-bold text-lg">RM150<span class="text-xs font-normal text-neutral-400">/mo</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="plan-option" onclick="selectPlan('growth')" id="planOption-growth">
+              <div class="plan-radio"><div class="plan-radio-inner"></div></div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold text-sm">Growth Plan <span class="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-accent text-white">POPULAR</span></p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">Best for growing brands & eCommerce</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-bold text-lg text-accent">RM300<span class="text-xs font-normal text-neutral-400">/mo</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="plan-option" onclick="selectPlan('pro')" id="planOption-pro">
+              <div class="plan-radio"><div class="plan-radio-inner"></div></div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="font-semibold text-sm">Pro IT Services Plan</p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400">All-in-One Business Solution</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-bold text-lg">RM1,900<span class="text-xs font-normal text-neutral-400">/mo</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="goToStep(2)" id="btnContinueToDetails" class="btn-checkout btn-primary-checkout" disabled>
+            Continue to Details
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </button>
+          
+          <p class="text-center text-[11px] text-neutral-400 mt-4">
+            <button onclick="navigateTo('pricing')" class="hover:text-accent transition-colors">← Back to Pricing</button>
+          </p>
+        </div>
+
+        <!-- STEP 2: Fill Details -->
+        <div id="checkoutStep2" class="checkout-card hidden">
+          <div class="text-center mb-8">
+            <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <i data-lucide="user" class="w-6 h-6 text-accent"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Your Details</h2>
+            <p class="text-neutral-500 dark:text-neutral-400 text-sm">Fill in your information to proceed</p>
+          </div>
+
+          <form id="detailsForm" class="space-y-4" onsubmit="return false;">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1.5 block">First Name *</label>
+                <input type="text" id="firstName" class="form-input" placeholder="John" oninput="validateDetailsForm()" />
+                <p class="error-message" id="firstNameError">Please enter your first name</p>
+              </div>
+              <div>
+                <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1.5 block">Last Name *</label>
+                <input type="text" id="lastName" class="form-input" placeholder="Doe" oninput="validateDetailsForm()" />
+                <p class="error-message" id="lastNameError">Please enter your last name</p>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1.5 block">Email Address *</label>
+              <input type="email" id="email" class="form-input" placeholder="john@example.com" oninput="validateDetailsForm()" />
+              <p class="error-message" id="emailError">Please enter a valid email address</p>
+            </div>
+
+            <div>
+              <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1.5 block">Phone Number (WhatsApp) *</label>
+              <input type="tel" id="phone" class="form-input" placeholder="+60 12-345 6789" oninput="validateDetailsForm()" />
+              <p class="error-message" id="phoneError">Please enter your phone number</p>
+            </div>
+
+            <div>
+              <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1.5 block">Company / Business Name</label>
+              <input type="text" id="company" class="form-input" placeholder="Your Company Sdn Bhd (optional)" />
+            </div>
+
+            <div>
+              <label class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1.5 block">Project Notes / Requirements</label>
+              <textarea id="notes" class="form-textarea" placeholder="Tell us about your project goals, timeline, or any specific requirements..."></textarea>
+            </div>
+
+            <div class="flex items-start gap-3 pt-2">
+              <input type="checkbox" id="agreeTerms" class="mt-1 w-4 h-4 accent-[#ff005e]" onchange="validateDetailsForm()" />
+              <label for="agreeTerms" class="text-xs text-neutral-500 dark:text-neutral-400">
+                I agree to the <button type="button" onclick="navigateTo('terms')" class="text-accent hover:underline">Terms of Service</button> and <button type="button" onclick="navigateTo('privacy')" class="text-accent hover:underline">Privacy Policy</button>. I understand this is a monthly subscription that can be cancelled anytime. *
+              </label>
+            </div>
+            <p class="error-message" id="termsError" style="margin-left: 1.25rem;">You must agree to the terms</p>
+          </form>
+
+          <div class="flex gap-3 mt-8">
+            <button onclick="goToStep(1)" class="flex-1 btn-checkout border border-neutral-200 dark:border-white/10 bg-transparent text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-white/5">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
+              Back
+            </button>
+            <button onclick="goToStep(3)" id="btnContinueToReview" class="flex-[2] btn-checkout btn-primary-checkout" disabled>
+              Review Order
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Review & Confirm -->
+        <div id="checkoutStep3" class="checkout-card hidden">
+          <div class="text-center mb-8">
+            <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <i data-lucide="clipboard-list" class="w-6 h-6 text-accent"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Review Your Order</h2>
+            <p class="text-neutral-500 dark:text-neutral-400 text-sm">Please confirm everything looks correct</p>
+          </div>
+
+          <!-- Selected Plan Summary -->
+          <div class="rounded-xl bg-neutral-50 dark:bg-white/[0.03] p-5 mb-6">
+            <div class="flex items-center justify-between mb-4">
+              <p class="text-xs font-semibold tracking-wider uppercase text-neutral-400">Selected Plan</p>
+              <button onclick="goToStep(1)" class="text-xs text-accent hover:underline font-medium">Change</button>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="package" class="w-5 h-5 text-accent"></i>
+              </div>
+              <div class="flex-1">
+                <p class="font-semibold text-sm" id="reviewPlanName">—</p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400" id="reviewPlanDesc">—</p>
+              </div>
+              <p class="font-bold text-lg" id="reviewPlanPrice">—</p>
+            </div>
+          </div>
+
+          <!-- Your Details Summary -->
+          <div class="rounded-xl border border-neutral-200 dark:border-white/10 p-5 mb-6">
+            <div class="flex items-center justify-between mb-4">
+              <p class="text-xs font-semibold tracking-wider uppercase text-neutral-400">Your Details</p>
+              <button onclick="goToStep(2)" class="text-xs text-accent hover:underline font-medium">Edit</button>
+            </div>
+            <div class="space-y-3">
+              <div class="review-row">
+                <span class="text-neutral-500 dark:text-neutral-400">Name</span>
+                <span class="font-medium" id="reviewName">—</span>
+              </div>
+              <div class="review-row">
+                <span class="text-neutral-500 dark:text-neutral-400">Email</span>
+                <span class="font-medium" id="reviewEmail">—</span>
+              </div>
+              <div class="review-row">
+                <span class="text-neutral-500 dark:text-neutral-400">Phone</span>
+                <span class="font-medium" id="reviewPhone">—</span>
+              </div>
+              <div class="review-row" id="reviewCompanyRow" style="display:none;">
+                <span class="text-neutral-500 dark:text-neutral-400">Company</span>
+                <span class="font-medium" id="reviewCompany">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pricing Breakdown -->
+          <div class="rounded-xl border border-neutral-200 dark:border-white/10 p-5 mb-6">
+            <p class="text-xs font-semibold tracking-wider uppercase text-neutral-400 mb-4">Payment Summary</p>
+            <div class="review-row">
+              <span class="text-neutral-500 dark:text-neutral-400">Plan (Monthly)</span>
+              <span id="reviewSubtotal">—</span>
+            </div>
+            <div class="review-row">
+              <span class="text-neutral-500 dark:text-neutral-400">Setup Fee</span>
+              <span class="text-green-600 dark:text-green-400 font-medium">FREE</span>
+            </div>
+            <div class="review-total">
+              <span>Total Due Today</span>
+              <span class="text-accent" id="reviewTotal">—</span>
+            </div>
+            <p class="text-[11px] text-neutral-400 mt-3 text-center">You will be charged monthly. Cancel anytime from your dashboard.</p>
+          </div>
+
+          <!-- Confirm Button -->
+          <button onclick="confirmOrder()" id="btnConfirmOrder" class="btn-checkout btn-accent-checkout mb-3">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Confirm & Subscribe via Stripe
+          </button>
+
+          <div class="flex items-center justify-center gap-4 text-[11px] text-neutral-400">
+            <button onclick="goToStep(2)" class="hover:text-accent transition-colors">← Back to Details</button>
+          </div>
+
+          <!-- Security Note -->
+          <div class="mt-6 flex items-center justify-center gap-2 text-[11px] text-neutral-400">
+            <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span>Secured by <strong class="text-neutral-500 dark:text-neutral-300">Stripe</strong> 256-bit SSL encryption</span>
+          </div>
+        </div>
+
       </div>
     </section>
   </div>
@@ -1103,7 +1673,7 @@
           <div class="process-line hidden md:block"></div>
           <div class="space-y-12">
             <div class="flex gap-6 fade-in-up delay-100"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">1</div><div class="pt-1"><h3 class="font-semibold mb-1">Discovery & Consultation</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We start with a free consultation to understand your business, goals, target audience, and budget.</p></div></div>
-            <div class="flex gap-6 fade-in-up delay-200"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">2</div><div class="pt-1"><h3 class="font-semibold mb-1">Proposal & Scoping</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We prepare a detailed proposal with scope of work, timeline, deliverables, and pricing.</p></div></div>
+            <div class="flex gap-6 fade-in-up delay-200"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent  text-white flex items-center justify-center text-sm font-bold relative z-10">2</div><div class="pt-1"><h3 class="font-semibold mb-1">Proposal & Scoping</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We prepare a detailed proposal with scope of work, timeline, deliverables, and pricing.</p></div></div>
             <div class="flex gap-6 fade-in-up delay-300"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">3</div><div class="pt-1"><h3 class="font-semibold mb-1">Design & Development</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">Our team designs and builds your solution with regular check-ins and feedback throughout.</p></div></div>
             <div class="flex gap-6 fade-in-up delay-400"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">4</div><div class="pt-1"><h3 class="font-semibold mb-1">Review & Revisions</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">You review the completed work and request up to 3 rounds of revisions until you're satisfied.</p></div></div>
             <div class="flex gap-6 fade-in-up delay-500"><div class="flex-shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center text-sm font-bold relative z-10">5</div><div class="pt-1"><h3 class="font-semibold mb-1">Launch & Handover</h3><p class="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">We deploy your project, handle all technical setup, and provide ongoing support as per your plan.</p></div></div>
@@ -1225,7 +1795,8 @@
           <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">Senior Frontend Developer</h3><p class="text-xs text-neutral-400 mt-1">Remote · Full-time · RM5,000–RM8,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">React</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Next.js</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">TypeScript</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
           <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">UI/UX Designer</h3><p class="text-xs text-neutral-400 mt-1">Kuala Lumpur · Full-time · RM4,000–RM6,500/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Figma</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Prototyping</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
           <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">Backend Developer (PHP/Laravel)</h3><p class="text-xs text-neutral-400 mt-1">Remote · Full-time · RM5,500–RM9,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Laravel</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">MySQL</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">API</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
-          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">IT Support Specialist</h3><p class="text-xs text-neutral-400 mt-1">Kuala Lumpur · Full-time · RM3,000–RM4,500/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Helpdesk</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Networking</span></div><div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">Project Manager</h3><p class="text-xs text-neutral-400 mt-1">Hybrid · Full-time · RM4,500–RM7,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Agile</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Scrum</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
+          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">IT Support Specialist</h3><p class="text-xs text-neutral-400 mt-1">Kuala Lumpur · Full-time · RM3,000–RM4,500/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Helpdesk</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Networking</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
+          <div class="bg-white dark:bg-white/5 rounded-2xl p-6 border border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-accent/30 transition-colors"><div><h3 class="text-sm font-semibold">Project Manager</h3><p class="text-xs text-neutral-400 mt-1">Hybrid · Full-time · RM4,500–RM7,000/mo</p><div class="flex gap-2 mt-2"><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Agile</span><span class="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-white/5 text-[10px] font-medium">Scrum</span></div></div><button class="h-10 px-6 border border-neutral-200 dark:border-white/10 rounded-xl text-xs font-medium hover:bg-neutral-900 hover:text-white dark:hover:bg-white dark:hover:text-neutral-900 transition-all flex-shrink-0">Apply</button></div>
         </div>
       </div>
     </section>
@@ -1313,6 +1884,17 @@
     })();
 
     let currentPage = 'home';
+    
+    // Checkout state
+    let checkoutState = {
+      selectedPlan: null,
+      step: 1,
+      plans: {
+        starter: { name: 'Starter Plan', desc: 'Best for small businesses & startups', price: 150 },
+        growth: { name: 'Growth Plan', desc: 'Best for growing brands & eCommerce', price: 300 },
+        pro: { name: 'Pro IT Services Plan', desc: 'All-in-One Business Solution', price: 1900 }
+      }
+    };
 
     function navigateTo(pageId, hash = null) {
       if (currentPage === pageId && !hash) return;
@@ -1374,6 +1956,10 @@
       if (pageId !== 'purchased-confirmed') {
         const container = document.getElementById('confettiContainer');
         if (container) container.innerHTML = '';
+      }
+      // Reset checkout when leaving
+      if (pageId !== 'checkout' && pageId !== 'order-verify' && pageId !== 'purchased-confirmed') {
+        resetCheckout();
       }
     }
 
@@ -1530,14 +2116,25 @@
 
     function updateNavState() {
       const scrollY = window.scrollY || window.pageYOffset;
-      if (scrollY > 40) {
+      
+      // NEW LOGIC: At very top (scrollY <= small threshold), hide nav behind safe area
+      // When scrolled down, show nav normally with safe area padding
+      if (scrollY <= 5) {
+        // At top - hide announcement bar, nav goes behind notch/safe area
         announcementBar.classList.add('hidden-bar');
-        mainNav.classList.remove('nav-top');
-        mainNav.classList.add('nav-scrolled');
+        mainNav.classList.remove('nav-scrolled', 'nav-top');
+        mainNav.classList.add('nav-hidden-top');
+        mainNav.classList.remove('safe-nav-active');
+      } else if (scrollY > 40) {
+        // Scrolled down enough - show nav properly
+        announcementBar.classList.add('hidden-bar');
+        mainNav.classList.remove('nav-top', 'nav-hidden-top');
+        mainNav.classList.add('nav-scrolled', 'safe-nav-active');
       } else {
+        // In between - transitioning
         announcementBar.classList.remove('hidden-bar');
-        mainNav.classList.remove('nav-scrolled');
-        mainNav.classList.add('nav-top');
+        mainNav.classList.remove('nav-scrolled', 'nav-hidden-top');
+        mainNav.classList.add('nav-top', 'safe-nav-active');
       }
     }
 
@@ -1654,6 +2251,235 @@
       lucide.createIcons();
       setTimeout(initScrollAnimations, 100);
     });
+
+    // ========== CHECKOUT FLOW FUNCTIONS ==========
+    
+    function startCheckout(planId = null) {
+      resetCheckout();
+      if (planId) {
+        selectPlan(planId);
+      }
+      navigateTo('checkout');
+      // Small delay then init icons
+      setTimeout(() => {
+        lucide.createIcons();
+        initScrollAnimations();
+      }, 100);
+    }
+    
+    function selectPlanForCheckout(planId) {
+      startCheckout(planId);
+    }
+    
+    function selectPlan(planId) {
+      checkoutState.selectedPlan = planId;
+      
+      // Update UI selection
+      document.querySelectorAll('.plan-option').forEach(el => el.classList.remove('selected'));
+      const selectedOption = document.getElementById('planOption-' + planId);
+      if (selectedOption) selectedOption.classList.add('selected');
+      
+      // Enable continue button
+      const btn = document.getElementById('btnContinueToDetails');
+      if (btn) btn.disabled = false;
+    }
+    
+    function goToStep(stepNum) {
+      // Hide all steps
+      document.getElementById('checkoutStep1').classList.add('hidden');
+      document.getElementById('checkoutStep2').classList.add('hidden');
+      document.getElementById('checkoutStep3').classList.add('hidden');
+      
+      // Show target step
+      document.getElementById('checkoutStep' + stepNum).classList.remove('hidden');
+      
+      // Update step indicators
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById('stepDot' + i);
+        const line = document.getElementById('stepLine' + (i - 1));
+        
+        dot.classList.remove('active', 'completed');
+        if (line) line.classList.remove('completed');
+        
+        if (i < stepNum) {
+          dot.classList.add('completed');
+          dot.innerHTML = '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+          if (line) line.classList.add('completed');
+        } else if (i === stepNum) {
+          dot.classList.add('active');
+          dot.innerHTML = i + '<span class="checkout-step-label">' + getStepLabel(i) + '</span>';
+        } else {
+          dot.innerHTML = i + '<span class="checkout-step-label">' + getStepLabel(i) + '</span>';
+        }
+      }
+      
+      checkoutState.step = stepNum;
+      
+      // If going to step 3, populate review
+      if (stepNum === 3) {
+        populateReview();
+      }
+      
+      // Re-init lucide icons for newly visible content
+      setTimeout(() => lucide.createIcons(), 50);
+      
+      // Scroll to top of checkout
+      document.getElementById('page-checkout').querySelector('section').scrollTop = 0;
+    }
+    
+    function getStepLabel(num) {
+      const labels = ['', 'Plan', 'Details', 'Review'];
+      return labels[num];
+    }
+    
+    function validateDetailsForm() {
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const terms = document.getElementById('agreeTerms').checked;
+      
+      let valid = true;
+      
+      // First Name
+      if (!firstName) {
+        showError('firstName', 'firstNameError');
+        valid = false;
+      } else {
+        clearError('firstName', 'firstNameError');
+      }
+      
+      // Last Name
+      if (!lastName) {
+        showError('lastName', 'lastNameError');
+        valid = false;
+      } else {
+        clearError('lastName', 'lastNameError');
+      }
+      
+      // Email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        showError('email', 'emailError');
+        valid = false;
+      } else {
+        clearError('email', 'emailError');
+      }
+      
+      // Phone
+      if (!phone) {
+        showError('phone', 'phoneError');
+        valid = false;
+      } else {
+        clearError('phone', 'phoneError');
+      }
+      
+      // Terms
+      if (!terms) {
+        document.getElementById('termsError').classList.add('show');
+        valid = false;
+      } else {
+        document.getElementById('termsError').classList.remove('show');
+      }
+      
+      const btn = document.getElementById('btnContinueToReview');
+      if (btn) btn.disabled = !valid;
+      
+      return valid;
+    }
+    
+    function showError(inputId, errorId) {
+      document.getElementById(inputId).classList.add('error');
+      document.getElementById(errorId).classList.add('show');
+    }
+    
+    function clearError(inputId, errorId) {
+      document.getElementById(inputId).classList.remove('error');
+      document.getElementById(errorId).classList.remove('show');
+    }
+    
+    function populateReview() {
+      const plan = checkoutState.plans[checkoutState.selectedPlan];
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const company = document.getElementById('company').value.trim();
+      
+      // Plan info
+      document.getElementById('reviewPlanName').textContent = plan.name;
+      document.getElementById('reviewPlanDesc').textContent = plan.desc;
+      document.getElementById('reviewPlanPrice').textContent = 'RM' + plan.price.toLocaleString() + '/mo';
+      
+      // User info
+      document.getElementById('reviewName').textContent = firstName + ' ' + lastName;
+      document.getElementById('reviewEmail').textContent = email;
+      document.getElementById('reviewPhone').textContent = phone;
+      
+      if (company) {
+        document.getElementById('reviewCompanyRow').style.display = 'flex';
+        document.getElementById('reviewCompany').textContent = company;
+      } else {
+        document.getElementById('reviewCompanyRow').style.display = 'none';
+      }
+      
+      // Pricing
+      document.getElementById('reviewSubtotal').textContent = 'RM' + plan.price.toLocaleString() + '/month';
+      document.getElementById('reviewTotal').textContent = 'RM' + plan.price.toLocaleString();
+    }
+    
+    function confirmOrder() {
+      const btn = document.getElementById('btnConfirmOrder');
+      
+      // Disable button and show loading
+      btn.disabled = true;
+      btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Processing...';
+      
+      // Simulate brief processing then redirect to Stripe
+      setTimeout(() => {
+        const stripeUrls = {
+          starter: 'https://buy.stripe.com/fZu6oB6x24azflI2Mw97G05',
+          growth: 'https://buy.stripe.com/8x2aERcVq5eD7Tgcn697G06',
+          pro: 'https://buy.stripe.com/cNieV7f3ydL97Tgeve97G07'
+        };
+        
+        const url = stripeUrls[checkoutState.selectedPlan];
+        
+        // Open Stripe in same tab
+        window.location.href = url;
+        
+        // Alternatively, you could navigate to order-verify page:
+        // navigateTo('order-verify');
+      }, 800);
+    }
+    
+    function resetCheckout() {
+      checkoutState.selectedPlan = null;
+      checkoutState.step = 1;
+      
+      // Reset form
+      const form = document.getElementById('detailsForm');
+      if (form) form.reset();
+      
+      // Clear selections
+      document.querySelectorAll('.plan-option').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
+      document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
+      
+      // Reset buttons
+      const btn1 = document.getElementById('btnContinueToDetails');
+      const btn2 = document.getElementById('btnContinueToReview');
+      const btn3 = document.getElementById('btnConfirmOrder');
+      if (btn1) btn1.disabled = true;
+      if (btn2) btn2.disabled = true;
+      if (btn3) {
+        btn3.disabled = false;
+        btn3.innerHTML = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Confirm & Subscribe via Stripe';
+      }
+      
+      // Go back to step 1
+      goToStep(1);
+    }
   </script>
 </body>
 </html>
