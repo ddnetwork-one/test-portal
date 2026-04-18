@@ -436,6 +436,7 @@ form.addEventListener("submit", async (e) => {
       const uploadPromises = files.map(f => uploadToImgBB(f.file));
       urls = await Promise.all(uploadPromises);
       imageUrlsField.value = urls.join(", ");
+      console.log("Images uploaded successfully:", urls);
     } catch (err) {
       console.error("Image Upload Error", err);
       // Continue anyway but note it
@@ -446,16 +447,42 @@ form.addEventListener("submit", async (e) => {
   btn.innerText = "Sending Request...";
   
   try {
+    // CRITICAL FIX: Build FormData properly and convert to URL-encoded string
+    // FormSubmit REQUIRES application/x-www-form-urlencoded format when using fetch()
     const formData = new FormData(form);
     
+    // Convert FormData to URL-encoded string manually
+    const urlEncodedData = new URLSearchParams(formData).toString();
+    
+    console.log("Submitting form to:", FORM_ENDPOINT);
+    console.log("Form data prepared, length:", urlEncodedData.length);
+    
     // We use fetch to send in background so we don't leave the page
+    // IMPORTANT: Must use URL-encoded format and proper headers for FormSubmit
     const response = await fetch(FORM_ENDPOINT, {
       method: 'POST',
-      body: formData,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
+      },
+      body: urlEncodedData,
     });
+
+    console.log("Response status:", response.status);
+    
+    // Try to parse response as JSON (FormSubmit returns JSON when Accept: application/json is set)
+    let responseData;
+    try {
+      responseData = await response.json();
+      console.log("Response data:", responseData);
+    } catch (parseError) {
+      console.log("Could not parse JSON response, checking status code only");
+      responseData = {};
+    }
 
     if (response.ok) {
       // 5. Show Success UI
+      console.log("✅ Form submitted successfully! Request ID:", reqId);
       document.getElementById("app").style.display = "none";
       document.getElementById("successView").style.display = "flex";
       document.getElementById("requestIdDisplay").innerText = "Reference ID: #" + reqId;
@@ -463,12 +490,17 @@ form.addEventListener("submit", async (e) => {
       // Scroll to top
       window.scrollTo(0,0);
     } else {
-      throw new Error("FormSubmit Error");
+      // Handle specific error messages from FormSubmit
+      const errorMessage = responseData.message || "Form submission failed";
+      console.error("❌ FormSubmit Error:", response.status, errorMessage);
+      throw new Error(`FormSubmit Error (${response.status}): ${errorMessage}`);
     }
 
   } catch (error) {
-    console.error("Submission Error:", error);
-    alert("There was an error sending your request. Please try again or email us directly.");
+    console.error("❌ Submission Error:", error);
+    alert("There was an error sending your request: " + error.message + "
+
+Please try again or email us directly at support@luviio.com");
     btn.disabled = false;
     btn.innerText = "Submit Request"; // Reset button
   }
