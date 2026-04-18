@@ -8,106 +8,56 @@
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-body { background:#f8fafc; font-family: Inter, sans-serif; }
-.container { max-width:720px; margin:auto; padding:48px 20px; }
+body {
+  background: linear-gradient(180deg,#fafafa,#f4f4f5);
+  font-family: Inter, sans-serif;
+}
 
+/* Glass card */
 .card {
-  background:white;
-  border-radius:20px;
-  padding:28px;
-  box-shadow:0 12px 30px rgba(0,0,0,0.05);
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
+/* Inputs */
 .input {
-  width:100%; height:52px;
-  border-radius:12px; padding:0 14px;
-  border:1px solid #e5e7eb;
+  width:100%;
+  height:52px;
+  border-radius:12px;
+  padding:0 14px;
+  border:1px solid #e5e5e5;
+  transition:.2s;
 }
+
 .input:focus {
   border-color:#ff005e;
   box-shadow:0 0 0 3px rgba(255,0,94,0.12);
   outline:none;
 }
 
-.textarea { height:150px; padding:12px; resize:none; }
+.textarea {
+  height:130px;
+  padding:12px;
+  resize:none;
+}
 
-/* Top guide box */
-.guide {
-  border:1px solid #e5e7eb;
+/* Checkbox cards */
+.checkbox {
+  padding:12px;
   border-radius:14px;
-  padding:16px;
-  background:#fafafa;
-  font-size:13px;
-  color:#6b7280;
-  line-height:1.6;
-}
-
-/* Dropzone */
-.dropzone {
-  border:2px dashed #e5e7eb;
-  border-radius:16px;
-  padding:30px;
-  text-align:center;
-  cursor:pointer;
-  transition:.2s;
-}
-.dropzone.active { border-color:#ff005e; background:#fff5f8; }
-
-/* Preview */
-.preview {
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-  margin-top:16px;
-}
-
-.preview-item {
-  position:relative;
-  border-radius:14px;
-  overflow:hidden;
-}
-
-.preview-item img {
-  width:100%;
-  height:100px;
-  object-fit:cover;
-}
-
-.overlay {
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,0.4);
+  border:1px solid #eee;
   display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  opacity:0;
+  gap:10px;
+  cursor:pointer;
   transition:.2s;
 }
-.preview-item:hover .overlay { opacity:1; }
 
-.overlay button {
-  background:white;
-  padding:4px 8px;
-  border-radius:6px;
-  font-size:12px;
-  cursor:pointer;
-}
-
-/* Modal */
-.modal {
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.85);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-}
-.modal img {
-  max-width:90%;
-  max-height:90%;
-  border-radius:12px;
+.checkbox:hover {
+  border-color:#ff005e;
+  background:rgba(255,0,94,0.03);
 }
 
 /* Button */
@@ -117,404 +67,433 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
   background:#ff005e;
   color:white;
   font-weight:600;
-  cursor:pointer;
-  border:none;
+  transition:.2s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   width:100%;
-  transition:opacity 0.2s;
 }
-.btn:hover { opacity:0.9; }
-.btn:disabled { opacity:0.6; cursor:not-allowed; }
+
+.btn:hover {
+  transform:translateY(-1px);
+}
+
+/* Drop Zone */
+.drop-zone {
+  border: 2px dashed #e5e5e5;
+  border-radius: 16px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
+  background: rgba(255,255,255,0.5);
+}
+
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: #ff005e;
+  background: rgba(255,0,94,0.03);
+}
+
+/* Image Preview Grid */
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.preview-item {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.preview-item img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-item .remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: 0.2s;
+  border: none;
+}
+
+.preview-item .remove-btn:hover {
+  background: #ff005e;
+}
 
 /* Success View */
 .success-view {
-  display:none;
-  min-height:100vh;
-  align-items:center;
-  justify-content:center;
-  padding: 20px;
+  display: none;
 }
+
 .success-card {
-  background:white;
-  padding:40px;
-  border-radius:24px;
-  text-align:center;
-  box-shadow:0 20px 60px rgba(0,0,0,0.08);
-  max-width: 500px;
-  width: 100%;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 48px 32px;
+  border: 1px solid rgba(0,0,0,0.05);
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
 }
+
 .contact-grid {
-  display: grid;
-  gap: 12px;
   margin-top: 24px;
-  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
+
 .contact-item {
-  background: #f8fafc;
-  padding: 16px;
+  background: #f4f4f5;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  padding: 12px;
 }
+
 .contact-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
   display: block;
+  font-size: 12px;
+  color: #71717a;
+  margin-bottom: 2px;
 }
+
 .contact-email {
   color: #ff005e;
   font-weight: 600;
+  font-size: 14px;
   text-decoration: none;
 }
-.contact-email:hover { text-decoration: underline; }
+
+.contact-email:hover {
+  text-decoration: underline;
+}
 </style>
 </head>
 
 <body>
 
-<!-- FORM VIEW -->
-<div id="app" class="container">
+<div id="app" class="max-w-2xl mx-auto px-6 py-12">
 
-<h1 class="text-3xl font-semibold text-center mb-6">Request an Update</h1>
+<!-- Header -->
+<div class="text-center mb-10">
+  <h1 class="text-4xl font-semibold mb-2">Request an Update</h1>
+  <p class="text-gray-500 text-sm">
+    Tell us what to change. We’ll handle the rest.
+  </p>
+</div>
 
-<form id="form" class="space-y-6">
+<form id="form" action="https://formsubmit.co/forms@luviio.com" method="POST" class="space-y-6">
 
-<!-- Hidden fields for processing -->
-<input type="hidden" name="Image URLs" id="imageUrls">
-<input type="hidden" name="_captcha" value="false"> <!-- Disables captcha redirect -->
-<input type="hidden" name="_template" value="table"> <!-- Nice table format in email -->
+<input type="hidden" name="_subject" value="Content Update Request">
+<input type="hidden" name="_captcha" value="false">
+<input type="hidden" name="_template" value="table">
+<input type="hidden" name="Image URLs" id="imageUrl">
 
-<!-- INFO CARD -->
+<!-- INFO -->
 <div class="card space-y-4">
 
-<div class="guide">
-  Please provide your contact details so we can follow up on your request.
-
-  <div class="mt-2">
-    <strong>Required:</strong> Full Name, Email Address, Website URL<br>
-    <strong>Optional:</strong> Business Name (recommended for faster identification)
+  <div>
+    <label class="text-sm font-medium">Full Name *</label>
+    <input required name="Name" class="input" placeholder="Ahmad Danial">
   </div>
 
-  <div class="mt-2 text-gray-400">
-    Example:<br>
-    Ahmad Danial — ahmad@email.com — Luviio Studio — https://yourwebsite.com
+  <div>
+    <label class="text-sm font-medium">Email *</label>
+    <input required type="email" name="Email" class="input" placeholder="you@email.com">
   </div>
-</div>
 
-<input required name="Name" class="input"
-placeholder="Full Name — person we should contact regarding this request">
+  <div>
+    <label class="text-sm font-medium">WhatsApp (Optional)</label>
+    <input name="WhatsApp" class="input" placeholder="+60 12-345 6789">
+  </div>
 
-<input required type="email" name="Email" class="input"
-placeholder="Email Address — we'll send updates and confirmations here">
-
-<input name="Business Name" class="input"
-placeholder="Business Name (Optional) — helps us identify your brand or project">
-
-<input required name="Website" class="input"
-placeholder="Website URL — required (include exact page if applicable)">
+  <div>
+    <label class="text-sm font-medium">Website URL *</label>
+    <input required name="Website" class="input" placeholder="https://yourwebsite.com">
+  </div>
 
 </div>
 
-<!-- DETAILS CARD -->
+<!-- TYPE -->
+<div class="card">
+  <label class="text-sm font-medium mb-3 block">What needs updating?</label>
+
+  <div class="grid grid-cols-2 gap-3">
+    <label class="checkbox"><input type="checkbox" name="Type" value="Text"> Text</label>
+    <label class="checkbox"><input type="checkbox" name="Type" value="Images"> Images</label>
+    <label class="checkbox"><input type="checkbox" name="Type" value="Branding"> Branding</label>
+    <label class="checkbox"><input type="checkbox" name="Type" value="Pricing"> Pricing</label>
+    <label class="checkbox"><input type="checkbox" name="Type" value="Design"> Design</label>
+    <label class="checkbox"><input type="checkbox" name="Type" value="New Page"> New Page</label>
+  </div>
+</div>
+
+<!-- DETAILS -->
 <div class="card space-y-4">
 
-<textarea required name="Details" class="input textarea"
-placeholder="Please describe your requested updates clearly and in detail.
+  <div>
+    <label class="text-sm font-medium">Page / Section *</label>
+    <input required name="Section" class="input" placeholder="Homepage - Hero Section">
+  </div>
 
-Include:
-• The exact page or section (e.g. Homepage, Services page)
-• What content should be changed and what it should be replaced with
-• Any references, examples, or instructions
+  <div>
+    <label class="text-sm font-medium">Description *</label>
+    <textarea required name="Details" class="input textarea" placeholder="Describe exactly what needs to be updated..."></textarea>
+  </div>
 
-Example:
-- Change headline to: 'Premium Car Detailing in Kuala Lumpur'
-- Replace hero image with the uploaded file
-- Update phone number to +60 12-345 6789
+  <div>
+    <label class="text-sm font-medium">Upload Images (Optional)</label>
+    <div id="dropZone" class="drop-zone">
+      <div class="text-gray-400 mb-2">
+        <svg class="w-10 h-10 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+      </div>
+      <p class="text-sm text-gray-500 font-medium">Drag and drop images here, or click to upload</p>
+      <p class="text-xs text-gray-400 mt-2">Supported formats: JPG, JPEG, PNG.<br>Up to 10 images • Max 5MB each<br>Images will be used as references or replacements.</p>
+      <input type="file" id="fileInput" class="hidden" accept="image/jpeg,image/png" multiple>
+    </div>
+    
+    <div id="previewGrid" class="preview-grid"></div>
+  </div>
 
-Clear instructions help us complete your request faster and more accurately."></textarea>
-
-<div id="dropzone" class="dropzone">
-  <p class="text-sm text-gray-600">
-    Drag and drop images here, or click to upload
-  </p>
-  <p class="text-xs text-gray-400 mt-1 leading-relaxed">
-    Supported formats: JPG, JPEG, PNG.<br>
-    Up to 10 images • Max 5MB each<br>
-    Images will be used as references or replacements.
-  </p>
-  <input type="file" id="fileInput" multiple accept="image/png,image/jpeg" hidden>
-</div>
-
-<div id="preview" class="preview"></div>
-
-<p class="text-xs text-gray-400 mt-2">
-Selected: <span id="fileCount">0</span> / 10 images
-</p>
+  <div>
+    <label class="text-sm font-medium">Priority (Optional)</label>
+    <select name="Priority" class="input">
+      <option>Normal</option>
+      <option>Urgent</option>
+      <option>Critical</option>
+    </select>
+  </div>
 
 </div>
 
 <!-- TERMS -->
-<div class="flex gap-2 text-sm text-gray-600 leading-relaxed items-start bg-white p-4 rounded-xl border border-gray-100">
-<input type="checkbox" required class="mt-1 rounded text-pink-600 focus:ring-pink-500">
-<p>
-By submitting this request, you confirm that all information provided is accurate and that you have the rights to any content shared.  
-You agree to our 
-<a href="https://www.luviio.com/terms" target="_blank" class="text-[#ff005e] underline font-medium">
-Terms of Service
-</a>, including scope, timelines, and communication policies.
-</p>
+<div class="flex gap-2 text-sm">
+  <input type="checkbox" required>
+  <p>
+    By submitting, you agree to 
+    <a href="https://www.luviio.com/terms" target="_blank" class="text-[#ff005e] underline">
+      Terms of Service
+    </a>.
+  </p>
 </div>
 
-<button type="submit" id="btn" class="btn w-full mt-2">Submit Request</button>
+<button id="btn" type="submit" class="btn">Submit Request</button>
 
 </form>
 </div>
 
 <!-- SUCCESS VIEW -->
 <div id="successView" class="success-view">
-<div class="success-card">
+  <div class="success-card">
 
-<!-- Icon/Animation Placeholder -->
-<div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-  <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-</div>
+    <!-- Icon/Animation Placeholder -->
+    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    </div>
 
-<h2 class="text-2xl font-bold text-gray-800 mb-2">Request Submitted!</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Request Submitted!</h2>
 
-<p class="text-gray-600 mt-2 text-sm leading-relaxed">
-  We've received your update request. Our team will review the details and get back to you within 24 hours.
-</p>
+    <p class="text-gray-600 mt-2 text-sm leading-relaxed">
+      We've received your update request. Our team will review the details and get back to you within 24 hours.
+    </p>
 
-<div class="contact-grid">
-  <p class="text-xs font-bold text-gray-400 uppercase tracking-wide text-center mb-1">Need immediate assistance?</p>
-  
-  <div class="contact-item">
-    <span class="contact-label">General Support & Inquiries</span>
-    <a href="mailto:support@luviio.com" class="contact-email">support@luviio.com</a>
+    <div class="contact-grid">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-wide text-center mb-1">Need immediate assistance?</p>
+      
+      <div class="contact-item">
+        <span class="contact-label">General Support & Inquiries</span>
+        <a href="mailto:support@luviio.com" class="contact-email">support@luviio.com</a>
+      </div>
+
+      <div class="contact-item">
+        <span class="contact-label">Complaints</span>
+        <a href="mailto:care@luviio.com" class="contact-email">care@luviio.com</a>
+      </div>
+
+      <div class="contact-item">
+        <span class="contact-label">Feedback</span>
+        <a href="mailto:feedback@luviio.com" class="contact-email">feedback@luviio.com</a>
+      </div>
+    </div>
+
+    <button onclick="window.location.href='https://luviio.com'" class="btn mt-8">
+      Back to Home
+    </button>
+
   </div>
-
-  <div class="contact-item">
-    <span class="contact-label">Complaints</span>
-    <a href="mailto:care@luviio.com" class="contact-email">care@luviio.com</a>
-  </div>
-
-  <div class="contact-item">
-    <span class="contact-label">Feedback</span>
-    <a href="mailto:feedback@luviio.com" class="contact-email">feedback@luviio.com</a>
-  </div>
-</div>
-
-<button onclick="window.location.href='https://luviio.com'" class="btn mt-8">
-Back to Home
-</button>
-
-</div>
-</div>
-
-<!-- IMAGE MODAL -->
-<div id="modal" class="modal" onclick="this.style.display='none'">
-  <img id="modalImg" src="" alt="Preview">
 </div>
 
 <script>
-// --- CONFIGURATION ---
-const FORM_ENDPOINT = "https://formsubmit.co/forms@luviio.com";
-const IMGBB_API_KEY = "b71c4d815f32121f479535866ad1de1c";
-
-// --- ELEMENTS ---
-const dropzone = document.getElementById("dropzone");
-const fileInput = document.getElementById("fileInput");
-const previewContainer = document.getElementById("preview");
-const fileCountEl = document.getElementById("fileCount");
 const form = document.getElementById("form");
 const btn = document.getElementById("btn");
-const imageUrlsField = document.getElementById("imageUrls");
+const imageUrlInput = document.getElementById("imageUrl");
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const previewGrid = document.getElementById("previewGrid");
 
-// --- STATE ---
-let files = [];
+const API = "b71c4d815f32121f479535866ad1de1c";
+let uploadQueue = []; // Array to hold multiple files
 
-function updateCount() { 
-  fileCountEl.innerText = files.length; 
-}
+// --- IMAGE UPLOAD & PREVIEW LOGIC ---
 
-// --- FILE HANDLING ---
-function addFile(file) {
-  // Validation
-  if (files.length >= 10) return alert("Maximum 10 images allowed.");
-  if (!['image/jpeg', 'image/png'].includes(file.type)) return alert("Only JPG or PNG formats are allowed.");
-  if (file.size > 5 * 1024 * 1024) return alert("File size must be less than 5MB.");
+// Click to open file dialog
+dropZone.addEventListener("click", () => fileInput.click());
 
-  const id = Date.now() + Math.random().toString(36).substr(2, 9);
-  files.push({ file, id });
-  updateCount();
-
-  const url = URL.createObjectURL(file);
-
-  const div = document.createElement("div");
-  div.className = "preview-item";
-  div.dataset.id = id;
-
-  div.innerHTML = `
-    <img src="${url}" alt="Upload preview">
-    <div class="overlay">
-      <button type="button" onclick="event.stopPropagation(); viewImage('${url}')">View</button>
-      <button type="button" onclick="event.stopPropagation(); removeImage('${id}')">Remove</button>
-    </div>
-  `;
-
-  div.onclick = () => viewImage(url);
-  previewContainer.appendChild(div);
-}
-
-window.removeImage = function(id) {
-  files = files.filter(f => f.id !== id);
-  const el = document.querySelector(`[data-id="${id}"]`);
-  if (el) el.remove();
-  updateCount();
-};
-
-window.viewImage = function(src) {
-  document.getElementById("modalImg").src = src;
-  document.getElementById("modal").style.display = "flex";
-};
-
-// --- DROPZONE EVENTS ---
-dropzone.onclick = () => fileInput.click();
-dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add("active"); };
-dropzone.ondragleave = () => dropzone.classList.remove("active");
-dropzone.ondrop = e => {
+// Drag and Drop events
+dropZone.addEventListener("dragover", (e) => {
   e.preventDefault();
-  dropzone.classList.remove("active");
-  if (e.dataTransfer.files) [...e.dataTransfer.files].forEach(addFile);
-};
-fileInput.onchange = () => [...fileInput.files].forEach(addFile);
+  dropZone.classList.add("drag-over");
+});
 
+dropZone.addEventListener("dragleave", () => {
+  dropZone.classList.remove("drag-over");
+});
 
-// --- UTILITIES ---
-async function uploadToImgBB(file) {
-  const fd = new FormData();
-  fd.append("image", file);
-  try {
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:"POST", body:fd });
-    const data = await res.json();
-    
-    // Check for API errors
-    if (data.status !== 200) {
-      console.error("ImgBB Error:", data.error || "Unknown error");
-      return "Error uploading: " + (data.error?.message || "API Error");
+dropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropZone.classList.remove("drag-over");
+  handleFiles(e.dataTransfer.files);
+});
+
+// File input change
+fileInput.addEventListener("change", () => {
+  handleFiles(fileInput.files);
+  fileInput.value = ""; // Reset so same file can be selected again
+});
+
+function handleFiles(files) {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+
+    // Validate type
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      alert(`"${file.name}" is not a valid format. Only JPG, JPEG, PNG allowed.`);
+      continue;
     }
-    
-    return data.data.url || "Error uploading";
-  } catch (err) {
-    console.error("ImgBB Upload Exception:", err);
-    return "Upload Failed: " + err.message;
+
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`"${file.name}" exceeds the 5MB limit.`);
+      continue;
+    }
+
+    // Max 10 images limit
+    if (uploadQueue.length >= 10) {
+      alert("You can upload a maximum of 10 images.");
+      break;
+    }
+
+    const fileId = Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+    uploadQueue.push({ id: fileId, file: file });
+    renderPreview(file, fileId);
   }
 }
 
+function renderPreview(file, fileId) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const div = document.createElement("div");
+    div.className = "preview-item";
+    div.id = fileId;
+    div.innerHTML = `
+      <img src="${e.target.result}" alt="Preview">
+      <button type="button" class="remove-btn">&times;</button>
+    `;
+    // Remove image functionality
+    div.querySelector(".remove-btn").addEventListener("click", (ev) => {
+      ev.stopPropagation(); // Prevent triggering the dropzone click
+      uploadQueue = uploadQueue.filter(item => item.id !== fileId);
+      div.remove();
+    });
 
-// --- MAIN SUBMISSION HANDLER ---
+    previewGrid.appendChild(div);
+  };
+  reader.readAsDataURL(file);
+}
+
+
+// --- FORM SUBMISSION LOGIC ---
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // 1. UI Loading State
-  btn.disabled = true;
-  btn.innerText = "Processing...";
-
-  let urls = [];
-  
-  // 2. Upload Images (if any) - Do this FIRST before form submission
-  if (files.length > 0) {
-    btn.innerText = "Uploading images...";
-    try {
-      const uploadPromises = files.map(f => uploadToImgBB(f.file));
-      urls = await Promise.all(uploadPromises);
-      
-      // Check if any uploads failed
-      const failedUploads = urls.filter(url => url.startsWith("Error") || url.startsWith("Upload Failed"));
-      if (failedUploads.length > 0) {
-        console.warn("Some images failed to upload:", failedUploads);
-        alert("Warning: Some images could not be uploaded. The request will continue without them.
-
-Errors:
-" + failedUploads.join("
-"));
-      }
-      
-      // Only include successful URLs
-      const successfulUrls = urls.filter(url => url.startsWith("http"));
-      imageUrlsField.value = successfulUrls.join(", ");
-      
-      console.log("Images uploaded successfully:", successfulUrls);
-    } catch (err) {
-      console.error("Image Upload Process Error:", err);
-      alert("There was an error uploading your images. You can continue without images or try again.");
-    }
-  } else {
-    imageUrlsField.value = "";
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
   }
 
-  // 3. Send Email via Fetch (Background)
-  btn.innerText = "Sending Request...";
-  
+  btn.disabled = true;
+  btn.innerHTML = "Processing...";
+
   try {
-    // CRITICAL FIX: Build FormData properly and convert to URL-encoded string
-    // FormSubmit REQUIRES application/x-www-form-urlencoded format when using fetch()
-    const formData = new FormData(form);
-    
-    // Convert FormData to URL-encoded string manually
-    const urlEncodedData = new URLSearchParams(formData).toString();
-    
-    console.log("Submitting form to:", FORM_ENDPOINT);
-    console.log("Form data prepared, length:", urlEncodedData.length);
-    console.log("Image URLs included:", imageUrlsField.value || "None");
-    
-    // We use fetch to send in background so we don't leave the page
-    // IMPORTANT: Must use URL-encoded format and proper headers for FormSubmit
-    const response = await fetch(FORM_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
-      },
-      body: urlEncodedData,
+    // Upload all queued images
+    if (uploadQueue.length > 0) {
+      btn.innerHTML = `Uploading images (0/${uploadQueue.length})...`;
+      
+      const uploadedUrls = [];
+      
+      for (let i = 0; i < uploadQueue.length; i++) {
+        btn.innerHTML = `Uploading images (${i + 1}/${uploadQueue.length})...`;
+        
+        const fd = new FormData();
+        fd.append("image", uploadQueue[i].file);
+
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${API}`, {
+          method: "POST",
+          body: fd
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          uploadedUrls.push(data.data.url);
+        } else {
+          console.error("Failed to upload an image");
+        }
+      }
+
+      // Join multiple URLs with a comma so it sends cleanly in Formsubmit email
+      imageUrlInput.value = uploadedUrls.join(", ");
+    }
+
+    btn.innerHTML = "Submitting request...";
+
+    await fetch(form.action, {
+      method: "POST",
+      body: new FormData(form)
     });
 
-    console.log("Response status:", response.status);
-    
-    // Try to parse response as JSON (FormSubmit returns JSON when Accept: application/json is set)
-    let responseData;
-    try {
-      responseData = await response.json();
-      console.log("Response data:", responseData);
-    } catch (parseError) {
-      console.log("Could not parse JSON response, checking status code only");
-      responseData = {};
-    }
-
-    if (response.ok) {
-      // 4. Show Success UI
-      console.log("✅ Form submitted successfully!");
-      document.getElementById("app").style.display = "none";
-      document.getElementById("successView").style.display = "flex";
-      
-      // Scroll to top
-      window.scrollTo(0,0);
-    } else {
-      // Handle specific error messages from FormSubmit
-      const errorMessage = responseData.message || "Form submission failed";
-      console.error("❌ FormSubmit Error:", response.status, errorMessage);
-      throw new Error(`FormSubmit Error (${response.status}): ${errorMessage}`);
-    }
+    // Switch views on success
+    document.getElementById("app").style.display = "none";
+    document.getElementById("successView").style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
   } catch (error) {
-    console.error("❌ Submission Error:", error);
-    alert("There was an error sending your request: " + error.message + "
-
-Please try again or email us directly at support@luviio.com");
+    console.error("Error:", error);
+    alert("Something went wrong. Please try again.");
     btn.disabled = false;
-    btn.innerText = "Submit Request"; // Reset button
+    btn.innerHTML = "Submit Request";
   }
 });
 </script>
