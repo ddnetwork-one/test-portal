@@ -31,6 +31,7 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
 
 .textarea { height:150px; padding:12px; resize:none; }
 
+/* Top guide box */
 .guide {
   border:1px solid #e5e7eb;
   border-radius:14px;
@@ -38,21 +39,102 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
   background:#fafafa;
   font-size:13px;
   color:#6b7280;
+  line-height:1.6;
 }
 
+/* Dropzone */
+.dropzone {
+  border:2px dashed #e5e7eb;
+  border-radius:16px;
+  padding:30px;
+  text-align:center;
+  cursor:pointer;
+  transition:.2s;
+}
+.dropzone.active { border-color:#ff005e; background:#fff5f8; }
+
+/* Preview */
+.preview {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-top:16px;
+}
+
+.preview-item {
+  position:relative;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.preview-item img {
+  width:100%;
+  height:100px;
+  object-fit:cover;
+}
+
+.overlay {
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  opacity:0;
+  transition:.2s;
+}
+.preview-item:hover .overlay { opacity:1; }
+
+.overlay button {
+  background:white;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+/* Modal */
+.modal {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.modal img {
+  max-width:90%;
+  max-height:90%;
+  border-radius:12px;
+}
+
+/* Button */
 .btn {
   height:54px;
   border-radius:14px;
   background:#ff005e;
   color:white;
   font-weight:600;
+  cursor:pointer;
+  transition:opacity 0.2s;
 }
+.btn:hover { opacity:0.9; }
+.btn:disabled { opacity:0.6; cursor:not-allowed; }
 
+/* Success */
 .success {
   display:none;
   min-height:100vh;
   align-items:center;
   justify-content:center;
+}
+.success-card {
+  background:white;
+  padding:40px;
+  border-radius:24px;
+  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.08);
 }
 </style>
 </head>
@@ -63,64 +145,201 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
 
 <h1 class="text-3xl font-semibold text-center mb-6">Request an Update</h1>
 
-<form id="form" action="https://formsubmit.co/ajax/forms@luviio.com" method="POST" class="space-y-6">
-
-<input type="hidden" name="_subject" value="New Update Request — Luviio">
-<input type="hidden" name="_captcha" value="false">
-<input type="hidden" name="_template" value="table">
+<form id="form" action="https://formsubmit.co/forms@luviio.com" method="POST" class="space-y-6">
 
 <input type="hidden" name="Request ID" id="requestId">
 <input type="hidden" name="Image URLs" id="imageUrls">
+<!-- Required by FormSubmit for proper email delivery -->
+<input type="hidden" name="_captcha" value="false">
+<input type="hidden" name="_template" value="table">
 
 <!-- INFO -->
 <div class="card space-y-4">
 
 <div class="guide">
-Please provide your contact details so we can follow up on your request.
+  Please provide your contact details so we can follow up on your request.
+
+  <div class="mt-2">
+    <strong>Required:</strong> Full Name, Email Address, Website URL<br>
+    <strong>Optional:</strong> Business Name (recommended for faster identification)
+  </div>
+
+  <div class="mt-2 text-gray-400">
+    Example:<br>
+    Ahmad Danial — ahmad@email.com — Luviio Studio — https://yourwebsite.com
+  </div>
 </div>
 
-<input required name="Name" class="input" placeholder="Full Name">
-<input required type="email" name="Email" class="input" placeholder="Email Address">
-<input name="Business Name" class="input" placeholder="Business Name (Optional)">
-<input required name="Website" class="input" placeholder="Website URL">
+<input required name="Name" class="input"
+placeholder="Full Name — person we should contact regarding this request">
+
+<input required type="email" name="Email" class="input"
+placeholder="Email Address — we'll send updates and confirmations here">
+
+<input name="Business Name" class="input"
+placeholder="Business Name (Optional) — helps us identify your brand or project">
+
+<input required name="Website" class="input"
+placeholder="Website URL — required (include exact page if applicable)">
 
 </div>
 
 <!-- DETAILS -->
 <div class="card space-y-4">
 
-<textarea required name="Details" class="input textarea" placeholder="Describe your requested updates clearly..."></textarea>
+<textarea required name="Details" class="input textarea"
+placeholder="Please describe your requested updates clearly and in detail.
+
+Include:
+• The exact page or section (e.g. Homepage, Services page)
+• What content should be changed and what it should be replaced with
+• Any references, examples, or instructions
+
+Example:
+- Change headline to: 'Premium Car Detailing in Kuala Lumpur'
+- Replace hero image with the uploaded file
+- Update phone number to +60 12-345 6789
+
+Clear instructions help us complete your request faster and more accurately."></textarea>
+
+<div id="dropzone" class="dropzone">
+  <p class="text-sm text-gray-600">
+    Drag and drop images here, or click to upload
+  </p>
+  <p class="text-xs text-gray-400 mt-1 leading-relaxed">
+    Supported formats: JPG, JPEG, PNG.<br>
+    Up to 10 images • Max 5MB each<br>
+    Images will be used as references or replacements.
+  </p>
+  <input type="file" id="fileInput" multiple accept="image/png,image/jpeg" hidden>
+</div>
+
+<div id="preview" class="preview"></div>
+
+<p class="text-xs text-gray-400 mt-2">
+Selected: <span id="fileCount">0</span> / 10 images
+</p>
 
 </div>
 
 <!-- TERMS -->
-<div class="flex gap-2 text-sm text-gray-600 leading-relaxed">
-  <input type="checkbox" required>
-  <p>
-    By submitting this request, you confirm that all information provided is accurate and that you have the rights to any content shared.
-    You agree to our
-    <a href="https://www.luviio.com/terms" target="_blank" class="text-[#ff005e] underline">
-      Terms of Service
-    </a>,
-    including scope, timelines, and communication policies.
-  </p>
+<div class="flex gap-2 text-sm text-gray-600 leading-relaxed items-start">
+<input type="checkbox" required class="mt-1">
+<p>
+By submitting this request, you confirm that all information provided is accurate and that you have the rights to any content shared.  
+You agree to our 
+<a href="https://www.luviio.com/terms" target="_blank" class="text-[#ff005e] underline">
+Terms of Service
+</a>, including scope, timelines, and communication policies.
+</p>
 </div>
 
-<button id="btn" class="btn w-full">Submit Request</button>
+<button type="submit" id="btn" class="btn w-full">Submit Request</button>
 
 </form>
 </div>
 
 <!-- SUCCESS -->
 <div id="success" class="success">
-  <h2 class="text-xl font-semibold">Request Submitted</h2>
-  <p id="requestIdDisplay"></p>
+<div class="success-card">
+
+<h2 class="text-xl font-semibold mb-2">Request Submitted</h2>
+<p id="requestIdDisplay" class="text-sm text-gray-500"></p>
+
+<p class="text-gray-500 mt-4 text-sm">
+We'll review your request and respond within 24 hours.
+</p>
+
+<button onclick="window.location.href='https://luviio.com'" class="btn mt-6 w-full">
+Back to Home
+</button>
+
+</div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal" onclick="this.style.display='none'">
+  <img id="modalImg">
 </div>
 
 <script>
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+const preview = document.getElementById("preview");
+const fileCount = document.getElementById("fileCount");
+
+let files = [];
+
+function updateCount() { 
+  fileCount.innerText = files.length; 
+}
+
+function addFile(file) {
+  if (files.length >= 10) return alert("Max 10 images allowed");
+  if (!file.type.match("image/jpeg") && !file.type.match("image/png")) return alert("Only JPG/PNG files are supported");
+  if (file.size > 5 * 1024 * 1024) return alert("Max file size is 5MB");
+
+  const id = Date.now() + Math.random().toString(36).substr(2, 9);
+  files.push({file, id});
+  updateCount();
+
+  const url = URL.createObjectURL(file);
+
+  const div = document.createElement("div");
+  div.className = "preview-item";
+  div.dataset.id = id;
+
+  div.innerHTML = `
+    <img src="${url}" alt="Preview">
+    <div class="overlay">
+      <button onclick="event.stopPropagation(); viewImage('${url}')" type="button">View</button>
+      <button onclick="event.stopPropagation(); removeImage('${id}')" type="button">Remove</button>
+    </div>
+  `;
+
+  div.onclick = () => viewImage(url);
+  preview.appendChild(div);
+}
+
+function removeImage(id) {
+  files = files.filter(f => f.id != id);
+  const item = document.querySelector(`[data-id="${id}"]`);
+  if (item) item.remove();
+  updateCount();
+}
+
+function viewImage(src) {
+  const modalImg = document.getElementById("modalImg");
+  modalImg.src = src;
+  document.getElementById("modal").style.display = "flex";
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.getElementById("modal").style.display = 'none';
+  }
+});
+
+dropzone.onclick = () => fileInput.click();
+dropzone.ondragover = e => { 
+  e.preventDefault(); 
+  dropzone.classList.add("active"); 
+};
+dropzone.ondragleave = () => dropzone.classList.remove("active");
+dropzone.ondrop = e => {
+  e.preventDefault();
+  dropzone.classList.remove("active");
+  [...e.dataTransfer.files].forEach(addFile);
+};
+fileInput.onchange = () => [...fileInput.files].forEach(addFile);
+
 const form = document.getElementById("form");
 const btn = document.getElementById("btn");
+const imageUrlsField = document.getElementById("imageUrls");
 const requestIdField = document.getElementById("requestId");
+
+const IMGBB_API_KEY = "b71c4d815f32121f479535866ad1de1c";
 
 function generateId() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -129,37 +348,78 @@ function generateId() {
   ).join("");
 }
 
+async function uploadImage(file) {
+  const fd = new FormData();
+  fd.append("image", file);
+  
+  try {
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { 
+      method:"POST", 
+      body:fd 
+    });
+    
+    if (!res.ok) throw new Error("Upload failed");
+    
+    const data = await res.json();
+    if (data.data && data.data.url) {
+      return data.data.url;
+    } else {
+      throw new Error("No URL in response");
+    }
+  } catch (error) {
+    console.error("Image upload error:", error);
+    return "[Upload failed: " + file.name + "]";
+  }
+}
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  btn.disabled = true;
-  btn.innerHTML = "Processing...";
+  // Basic validation
+  const email = form.querySelector('[name="Email"]').value;
+  const name = form.querySelector('[name="Name"]').value;
+  
+  if (!email || !name) {
+    alert("Please fill in all required fields.");
+    return;
+  }
 
+  // Disable button and show loading
+  btn.disabled = true;
+  btn.textContent = "Uploading images...";
+
+  // Generate unique request ID
   const requestId = generateId();
   requestIdField.value = requestId;
 
-  try {
-    const response = await fetch(form.action, {
-      method: "POST",
-      body: new FormData(form),
-      headers: { 'Accept': 'application/json' }
-    });
+  // Upload images if any exist
+  let urls = [];
+  if (files.length > 0) {
+    try {
+      const uploads = files.map(f => uploadImage(f.file));
+      urls = await Promise.all(uploads);
+      imageUrlsField.value = urls.join(", ");
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Some images failed to upload. Continuing without them...");
+    }
+  }
 
-    const result = await response.json();
+  // Update button text
+  btn.textContent = "Sending...";
 
-    if (result.success === "true") {
+  // Submit the form normally - this triggers FormSubmit's email system
+  // We use a small delay to ensure all fields are populated
+  setTimeout(() => {
+    form.submit();
+    
+    // Show success state after a brief moment (form will redirect away, but this handles edge cases)
+    setTimeout(() => {
       document.getElementById("app").style.display = "none";
       document.getElementById("success").style.display = "flex";
-      document.getElementById("requestIdDisplay").innerText = "Reference ID: #" + requestId;
-    } else {
-      throw new Error();
-    }
-
-  } catch (err) {
-    alert("Submission failed. Please try again.");
-    btn.disabled = false;
-    btn.innerHTML = "Submit Request";
-  }
+      document.getElementById("requestIdDisplay").textContent = "Reference ID: #" + requestId;
+    }, 500);
+  }, 300);
 });
 </script>
 
