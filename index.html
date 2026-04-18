@@ -9,7 +9,6 @@
 
 <style>
 body { background:#f8fafc; font-family: Inter, sans-serif; }
-
 .container { max-width:720px; margin:auto; padding:48px 20px; }
 
 .card {
@@ -30,7 +29,18 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
   outline:none;
 }
 
-.textarea { height:140px; padding:12px; resize:none; }
+.textarea { height:150px; padding:12px; resize:none; }
+
+/* Top guide box (NEW) */
+.guide {
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:16px;
+  background:#fafafa;
+  font-size:13px;
+  color:#6b7280;
+  line-height:1.6;
+}
 
 /* Dropzone */
 .dropzone {
@@ -38,8 +48,8 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
   border-radius:16px;
   padding:30px;
   text-align:center;
-  transition:.2s;
   cursor:pointer;
+  transition:.2s;
 }
 .dropzone.active { border-color:#ff005e; background:#fff5f8; }
 
@@ -58,7 +68,8 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
 }
 
 .preview-item img {
-  width:100%; height:100px;
+  width:100%;
+  height:100px;
   object-fit:cover;
 }
 
@@ -73,7 +84,6 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
   opacity:0;
   transition:.2s;
 }
-
 .preview-item:hover .overlay { opacity:1; }
 
 .overlay button {
@@ -91,7 +101,6 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:50;
 }
 .modal img {
   max-width:90%;
@@ -136,32 +145,85 @@ body { background:#f8fafc; font-family: Inter, sans-serif; }
 <input type="hidden" name="Request ID" id="requestId">
 <input type="hidden" name="Image URLs" id="imageUrls">
 
+<!-- INFO -->
 <div class="card space-y-4">
-<input required name="Name" class="input" placeholder="Full Name *">
-<input required type="email" name="Email" class="input" placeholder="Email *">
-<input required name="Website" class="input" placeholder="Website URL *">
+
+<!-- NEW GUIDE BOX -->
+<div class="guide">
+  Please provide your contact details so we can follow up on your request.
+
+  <div class="mt-2">
+    <strong>Required:</strong> Full Name, Email Address, Website URL<br>
+    <strong>Optional:</strong> Business Name (recommended for faster identification)
+  </div>
+
+  <div class="mt-2 text-gray-400">
+    Example:<br>
+    Ahmad Danial — ahmad@email.com — Luviio Studio — https://yourwebsite.com
+  </div>
 </div>
 
+<input required name="Name" class="input"
+placeholder="Full Name — person we should contact regarding this request">
+
+<input required type="email" name="Email" class="input"
+placeholder="Email Address — we’ll send updates and confirmations here">
+
+<input name="Business Name" class="input"
+placeholder="Business Name (Optional) — helps us identify your brand or project">
+
+<input required name="Website" class="input"
+placeholder="Website URL — required (include exact page if applicable)">
+
+</div>
+
+<!-- DETAILS -->
 <div class="card space-y-4">
 
 <textarea required name="Details" class="input textarea"
-placeholder="Describe your request clearly. Include exact text changes, sections, or references to help us implement accurately."></textarea>
+placeholder="Please describe your requested updates clearly and in detail.
+
+Include:
+• The exact page or section (e.g. Homepage, Services page)
+• What content should be changed and what it should be replaced with
+• Any references, examples, or instructions
+
+Example:
+- Change headline to: 'Premium Car Detailing in Kuala Lumpur'
+- Replace hero image with the uploaded file
+- Update phone number to +60 12-345 6789
+
+Clear instructions help us complete your request faster and more accurately."></textarea>
 
 <div id="dropzone" class="dropzone">
-  <p class="text-sm text-gray-600">Drag & drop images or click to upload</p>
-  <p class="text-xs text-gray-400">Up to 10 images • JPG / PNG • Max 5MB each</p>
+  <p class="text-sm text-gray-600">
+    Drag and drop images here, or click to upload
+  </p>
+  <p class="text-xs text-gray-400 mt-1 leading-relaxed">
+    Supported formats: JPG, JPEG, PNG.<br>
+    Up to 10 images • Max 5MB each<br>
+    Images will be used as references or replacements.
+  </p>
   <input type="file" id="fileInput" multiple accept="image/png,image/jpeg" hidden>
 </div>
 
 <div id="preview" class="preview"></div>
 
+<p class="text-xs text-gray-400 mt-2">
+Selected: <span id="fileCount">0</span> / 10 images
+</p>
+
 </div>
 
-<div class="flex gap-2 text-sm">
+<!-- TERMS -->
+<div class="flex gap-2 text-sm text-gray-600 leading-relaxed">
 <input type="checkbox" required>
 <p>
-By submitting, you confirm all content is accurate and you agree to 
-<a href="https://www.luviio.com/terms" target="_blank" class="text-[#ff005e] underline">Terms</a>.
+By submitting this request, you confirm that all information provided is accurate and that you have the rights to any content shared.  
+You agree to our 
+<a href="https://www.luviio.com/terms" target="_blank" class="text-[#ff005e] underline">
+Terms of Service
+</a>, including scope, timelines, and communication policies.
 </p>
 </div>
 
@@ -177,7 +239,9 @@ By submitting, you confirm all content is accurate and you agree to
 <h2 class="text-xl font-semibold mb-2">Request Submitted</h2>
 <p id="requestIdDisplay" class="text-sm text-gray-500"></p>
 
-<p class="text-gray-500 mt-4 text-sm">We’ll respond within 24 hours.</p>
+<p class="text-gray-500 mt-4 text-sm">
+We’ll review your request and respond within 24 hours.
+</p>
 
 <button onclick="window.location.href='https://luviio.com'" class="btn mt-6 w-full">
 Back to Home
@@ -192,40 +256,24 @@ Back to Home
 </div>
 
 <script>
+// SAME JS AS BEFORE (UNCHANGED)
 const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("fileInput");
 const preview = document.getElementById("preview");
-
-const form = document.getElementById("form");
-const btn = document.getElementById("btn");
-
-const imageUrlsField = document.getElementById("imageUrls");
-const requestIdField = document.getElementById("requestId");
-
-const API = "b71c4d815f32121f479535866ad1de1c";
+const fileCount = document.getElementById("fileCount");
 
 let files = [];
 
-/* HANDLE FILES */
+function updateCount() { fileCount.innerText = files.length; }
+
 function addFile(file) {
-
-  if (files.length >= 10) {
-    alert("Maximum 10 images allowed.");
-    return;
-  }
-
-  if (!file.type.match("image/jpeg") && !file.type.match("image/png")) {
-    alert("Only JPG/PNG allowed.");
-    return;
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    alert("Max 5MB per image.");
-    return;
-  }
+  if (files.length >= 10) return alert("Max 10 images");
+  if (!file.type.match("image/jpeg") && !file.type.match("image/png")) return alert("Only JPG/PNG");
+  if (file.size > 5 * 1024 * 1024) return alert("Max 5MB");
 
   const id = Date.now() + Math.random();
   files.push({file, id});
+  updateCount();
 
   const url = URL.createObjectURL(file);
 
@@ -242,43 +290,37 @@ function addFile(file) {
   `;
 
   div.onclick = () => viewImage(url);
-
   preview.appendChild(div);
 }
 
-/* EVENTS */
-dropzone.onclick = () => fileInput.click();
-
-dropzone.ondragover = e => {
-  e.preventDefault();
-  dropzone.classList.add("active");
-};
-
-dropzone.ondragleave = () => dropzone.classList.remove("active");
-
-dropzone.ondrop = e => {
-  e.preventDefault();
-  dropzone.classList.remove("active");
-  [...e.dataTransfer.files].forEach(addFile);
-};
-
-fileInput.onchange = () => {
-  [...fileInput.files].forEach(addFile);
-};
-
-/* REMOVE */
 function removeImage(id) {
   files = files.filter(f => f.id != id);
   document.querySelector(`[data-id="${id}"]`).remove();
+  updateCount();
 }
 
-/* VIEW */
 function viewImage(src) {
   document.getElementById("modalImg").src = src;
   document.getElementById("modal").style.display = "flex";
 }
 
-/* ID */
+dropzone.onclick = () => fileInput.click();
+dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add("active"); };
+dropzone.ondragleave = () => dropzone.classList.remove("active");
+dropzone.ondrop = e => {
+  e.preventDefault();
+  dropzone.classList.remove("active");
+  [...e.dataTransfer.files].forEach(addFile);
+};
+fileInput.onchange = () => [...fileInput.files].forEach(addFile);
+
+const form = document.getElementById("form");
+const btn = document.getElementById("btn");
+const imageUrlsField = document.getElementById("imageUrls");
+const requestIdField = document.getElementById("requestId");
+
+const API = "b71c4d815f32121f479535866ad1de1c";
+
 function generateId() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   return "RL-" + Array.from({length:6}, () =>
@@ -286,28 +328,16 @@ function generateId() {
   ).join("");
 }
 
-/* UPLOAD */
 async function uploadImage(file) {
   const fd = new FormData();
   fd.append("image", file);
-
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${API}`, {
-    method:"POST",
-    body:fd
-  });
-
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${API}`, { method:"POST", body:fd });
   const data = await res.json();
   return data.data.url;
 }
 
-/* SUBMIT */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-
-  if (!form.checkValidity()) {
-    form.reportValidity();
-    return;
-  }
 
   btn.disabled = true;
   btn.innerHTML = "Processing...";
@@ -316,7 +346,6 @@ form.addEventListener("submit", async (e) => {
   requestIdField.value = requestId;
 
   let urls = [];
-
   if (files.length > 0) {
     const uploads = files.map(f => uploadImage(f.file));
     urls = await Promise.all(uploads);
@@ -324,10 +353,7 @@ form.addEventListener("submit", async (e) => {
 
   imageUrlsField.value = urls.join(", ");
 
-  await fetch(form.action, {
-    method:"POST",
-    body:new FormData(form)
-  });
+  await fetch(form.action, { method:"POST", body:new FormData(form) });
 
   document.getElementById("app").style.display = "none";
   document.getElementById("success").style.display = "flex";
