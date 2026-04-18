@@ -8,16 +8,9 @@
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-body {
-  background:#f8fafc;
-  font-family: Inter, sans-serif;
-}
+body { background:#f8fafc; font-family: Inter, sans-serif; }
 
-.container {
-  max-width:720px;
-  margin:auto;
-  padding:48px 20px;
-}
+.container { max-width:720px; margin:auto; padding:48px 20px; }
 
 .card {
   background:white;
@@ -26,66 +19,87 @@ body {
   box-shadow:0 12px 30px rgba(0,0,0,0.05);
 }
 
-.label {
-  font-size:13px;
-  font-weight:500;
-  margin-bottom:6px;
-  display:block;
-}
-
 .input {
-  width:100%;
-  height:52px;
-  border-radius:12px;
-  padding:0 14px;
+  width:100%; height:52px;
+  border-radius:12px; padding:0 14px;
   border:1px solid #e5e7eb;
 }
-
 .input:focus {
   border-color:#ff005e;
   box-shadow:0 0 0 3px rgba(255,0,94,0.12);
   outline:none;
 }
 
-.textarea {
-  height:140px;
-  padding:12px;
-  resize:none;
-}
+.textarea { height:140px; padding:12px; resize:none; }
 
+/* Dropzone */
 .dropzone {
   border:2px dashed #e5e7eb;
   border-radius:16px;
   padding:30px;
   text-align:center;
   transition:.2s;
+  cursor:pointer;
 }
+.dropzone.active { border-color:#ff005e; background:#fff5f8; }
 
-.dropzone.active {
-  border-color:#ff005e;
-  background:#fff5f8;
-}
-
+/* Preview */
 .preview {
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-top:15px;
+  gap:12px;
+  margin-top:16px;
 }
 
-.preview img {
-  width:100%;
-  height:90px;
+.preview-item {
+  position:relative;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.preview-item img {
+  width:100%; height:100px;
   object-fit:cover;
-  border-radius:10px;
 }
 
-.helper {
+.overlay {
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  opacity:0;
+  transition:.2s;
+}
+
+.preview-item:hover .overlay { opacity:1; }
+
+.overlay button {
+  background:white;
+  padding:4px 8px;
+  border-radius:6px;
   font-size:12px;
-  color:#6b7280;
-  margin-top:6px;
 }
 
+/* Modal */
+.modal {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+}
+.modal img {
+  max-width:90%;
+  max-height:90%;
+  border-radius:12px;
+}
+
+/* Button */
 .btn {
   height:54px;
   border-radius:14px;
@@ -94,13 +108,13 @@ body {
   font-weight:600;
 }
 
+/* Success */
 .success {
   display:none;
   min-height:100vh;
   align-items:center;
   justify-content:center;
 }
-
 .success-card {
   background:white;
   padding:40px;
@@ -115,88 +129,39 @@ body {
 
 <div id="app" class="container">
 
-<div class="text-center mb-10">
-  <h1 class="text-3xl font-semibold mb-2">Request an Update</h1>
-  <p class="text-gray-500 text-sm">
-    Share what you’d like changed on your website. The more detail you provide, the faster we can implement it accurately.
-  </p>
-</div>
+<h1 class="text-3xl font-semibold text-center mb-6">Request an Update</h1>
 
 <form id="form" action="https://formsubmit.co/forms@luviio.com" method="POST" class="space-y-6">
 
 <input type="hidden" name="Request ID" id="requestId">
 <input type="hidden" name="Image URLs" id="imageUrls">
 
-<!-- INFO -->
+<div class="card space-y-4">
+<input required name="Name" class="input" placeholder="Full Name *">
+<input required type="email" name="Email" class="input" placeholder="Email *">
+<input required name="Website" class="input" placeholder="Website URL *">
+</div>
+
 <div class="card space-y-4">
 
-<div>
-<label class="label">Full Name *</label>
-<input required name="Name" class="input"
-placeholder="e.g. Ahmad Danial — person we should contact regarding this request">
-</div>
-
-<div>
-<label class="label">Email Address *</label>
-<input required type="email" name="Email" class="input"
-placeholder="We’ll send updates and confirmations to this email">
-</div>
-
-<div>
-<label class="label">Website URL *</label>
-<input required name="Website" class="input"
-placeholder="Paste the exact page or website where changes are needed (e.g. https://yourwebsite.com)">
-</div>
-
-</div>
-
-<!-- DETAILS -->
-<div class="card space-y-4">
-
-<div>
-<label class="label">What would you like us to update? *</label>
 <textarea required name="Details" class="input textarea"
-placeholder="Be as specific as possible. For example:
-
-• Replace homepage headline with: 'Best Nasi Lemak in Kuala Lumpur'
-• Update pricing on Services page to the latest version
-• Change hero image to the new one provided below
-
-Clear instructions help us complete your request faster and more accurately."></textarea>
-
-<div class="helper">
-Tip: Include exact text, page sections, or references whenever possible.
-</div>
-</div>
-
-<!-- DROPZONE -->
-<div>
-<label class="label">Upload Images (Optional)</label>
+placeholder="Describe your request clearly. Include exact text changes, sections, or references to help us implement accurately."></textarea>
 
 <div id="dropzone" class="dropzone">
-  <p class="text-sm text-gray-600">
-    Drag and drop images here, or click to upload
-  </p>
-  <p class="helper">
-    Supports JPG, JPEG, PNG • Up to 10 images • Max 5MB each
-  </p>
+  <p class="text-sm text-gray-600">Drag & drop images or click to upload</p>
+  <p class="text-xs text-gray-400">Up to 10 images • JPG / PNG • Max 5MB each</p>
   <input type="file" id="fileInput" multiple accept="image/png,image/jpeg" hidden>
 </div>
 
 <div id="preview" class="preview"></div>
-</div>
 
 </div>
 
-<!-- TERMS -->
-<div class="text-sm text-gray-600 flex gap-2">
+<div class="flex gap-2 text-sm">
 <input type="checkbox" required>
 <p>
-By submitting this request, you confirm that all information provided is accurate and that you have the rights to any content or images shared.  
-You also agree to our 
-<a href="https://www.luviio.com/terms" target="_blank" class="text-[#ff005e] underline">
-Terms of Service
-</a>, including timelines, scope of updates, and communication policies.
+By submitting, you confirm all content is accurate and you agree to 
+<a href="https://www.luviio.com/terms" target="_blank" class="text-[#ff005e] underline">Terms</a>.
 </p>
 </div>
 
@@ -209,25 +174,21 @@ Terms of Service
 <div id="success" class="success">
 <div class="success-card">
 
-<h2 class="text-xl font-semibold mb-2">Request Submitted Successfully</h2>
-
+<h2 class="text-xl font-semibold mb-2">Request Submitted</h2>
 <p id="requestIdDisplay" class="text-sm text-gray-500"></p>
 
-<p class="text-gray-500 mt-4 text-sm">
-Our team will review your request and get back to you within 24 hours.
-</p>
-
-<div class="mt-6 text-sm text-gray-500 space-y-1">
-<p>support@luviio.com</p>
-<p>care@luviio.com</p>
-<p>feedback@luviio.com</p>
-</div>
+<p class="text-gray-500 mt-4 text-sm">We’ll respond within 24 hours.</p>
 
 <button onclick="window.location.href='https://luviio.com'" class="btn mt-6 w-full">
 Back to Home
 </button>
 
 </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal" onclick="this.style.display='none'">
+  <img id="modalImg">
 </div>
 
 <script>
@@ -246,53 +207,76 @@ const API = "b71c4d815f32121f479535866ad1de1c";
 let files = [];
 
 /* HANDLE FILES */
-function handleFiles(selected) {
-  for (let file of selected) {
+function addFile(file) {
 
-    if (files.length >= 10) {
-      alert("Maximum 10 images allowed.");
-      return;
-    }
-
-    if (!file.type.match("image/jpeg") && !file.type.match("image/png")) {
-      alert("Only JPG and PNG formats are supported.");
-      continue;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Each image must be under 5MB.");
-      continue;
-    }
-
-    files.push(file);
-
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    preview.appendChild(img);
+  if (files.length >= 10) {
+    alert("Maximum 10 images allowed.");
+    return;
   }
+
+  if (!file.type.match("image/jpeg") && !file.type.match("image/png")) {
+    alert("Only JPG/PNG allowed.");
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Max 5MB per image.");
+    return;
+  }
+
+  const id = Date.now() + Math.random();
+  files.push({file, id});
+
+  const url = URL.createObjectURL(file);
+
+  const div = document.createElement("div");
+  div.className = "preview-item";
+  div.dataset.id = id;
+
+  div.innerHTML = `
+    <img src="${url}">
+    <div class="overlay">
+      <button onclick="event.stopPropagation(); viewImage('${url}')">View</button>
+      <button onclick="event.stopPropagation(); removeImage('${id}')">Remove</button>
+    </div>
+  `;
+
+  div.onclick = () => viewImage(url);
+
+  preview.appendChild(div);
 }
 
 /* EVENTS */
-dropzone.addEventListener("click", () => fileInput.click());
+dropzone.onclick = () => fileInput.click();
 
-dropzone.addEventListener("dragover", e => {
+dropzone.ondragover = e => {
   e.preventDefault();
   dropzone.classList.add("active");
-});
+};
 
-dropzone.addEventListener("dragleave", () => {
-  dropzone.classList.remove("active");
-});
+dropzone.ondragleave = () => dropzone.classList.remove("active");
 
-dropzone.addEventListener("drop", e => {
+dropzone.ondrop = e => {
   e.preventDefault();
   dropzone.classList.remove("active");
-  handleFiles(e.dataTransfer.files);
-});
+  [...e.dataTransfer.files].forEach(addFile);
+};
 
-fileInput.addEventListener("change", () => {
-  handleFiles(fileInput.files);
-});
+fileInput.onchange = () => {
+  [...fileInput.files].forEach(addFile);
+};
+
+/* REMOVE */
+function removeImage(id) {
+  files = files.filter(f => f.id != id);
+  document.querySelector(`[data-id="${id}"]`).remove();
+}
+
+/* VIEW */
+function viewImage(src) {
+  document.getElementById("modalImg").src = src;
+  document.getElementById("modal").style.display = "flex";
+}
 
 /* ID */
 function generateId() {
@@ -334,7 +318,7 @@ form.addEventListener("submit", async (e) => {
   let urls = [];
 
   if (files.length > 0) {
-    const uploads = files.map(uploadImage);
+    const uploads = files.map(f => uploadImage(f.file));
     urls = await Promise.all(uploads);
   }
 
