@@ -195,48 +195,11 @@
     .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:998;pointer-events:none;transition:background .35s}
     .mobile-overlay.active{background:rgba(0,0,0,.3);pointer-events:auto}
 
-    .page{display:none;min-height:0;overflow-x:hidden;position:relative}
+    .page{display:none;min-height:0;overflow-x:hidden}
     .page.active{display:flex;flex-direction:column;min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:-webkit-fill-available}
     .page.active > section:first-child{flex:1 0 auto}
     .page-enter{animation:fadeInUp .5s cubic-bezier(.16,1,.3,1) forwards}
-    /* CRITICAL FIX: Force all pages to start at top */
-.page {
-  scroll-behavior: auto !important; /* Disable smooth scroll for programmatic resets */
-}
 
-.page.active {
-  display: flex !important;
-  flex-direction: column;
-  min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-  min-height: -webkit-fill-available;
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: relative;
-  /* Force top alignment */
-  align-items: flex-start;
-}
-
-/* Ensure sections don't push content down */
-.page.active > section:first-child {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-    /* Fix horizontal scroll getting stuck */
-html, body {
-  overscroll-behavior-y: none; /* Prevent bounce-back on mobile */
-  position: relative; /* Establish positioning context */
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-/* Ensure pages never exceed viewport width */
-.page {
-  max-width: 100vw;
-  width: 100%;
-  box-sizing: border-box;
-}
     .faq-answer{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.16,1,.3,1),padding .3s}
     .faq-answer.open{max-height:300px}
     .faq-chevron{transition:transform .3s}.faq-chevron.open{transform:rotate(180deg)}
@@ -1401,7 +1364,7 @@ html, body {
           <input type="hidden" name="_subject" value="Student Education Program Application — Luviio">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_template" value="table">
-          <input type="hidden"  name="_next" value="">
+          <input type="hidden" name="_next" value="">
           <input type="text" name="_honey" style="display:none">
 
             <!-- Row 1 -->
@@ -2130,7 +2093,6 @@ html, body {
     })();
 
     let currentPage = 'home';
-    let isNavigating = false; // FIX: Prevent double navigation
 
     /* ============================================
        TYPING EFFECT — NO LAYOUT SHIFT
@@ -2176,85 +2138,36 @@ html, body {
       }
     }
 
-function navigateTo(pageId, hash = null) {
-  // Prevent double navigation
-  if (isNavigating || (currentPage === pageId && !hash)) return;
-  isNavigating = true;
-  
-  // FIX 1: IMMEDIATE SCROLL RESET (before any DOM changes)
-  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-  
-  // Also reset any potential scroll containers
-  const scrollContainers = document.querySelectorAll('.page');
-  scrollContainers.forEach(container => {
-    container.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  });
-
-  // Hide current page
-  const currentEl = document.getElementById('page-' + currentPage);
-  if (currentEl) { 
-    currentEl.classList.remove('active'); 
-    currentEl.classList.remove('page-enter'); 
-    // Reset its scroll
-    currentEl.style.transform = 'translateY(0)';
-    currentEl.style.display = 'none';
-  }
-  
-  // Show new page
-  const newEl = document.getElementById('page-' + pageId);
-  if (newEl) { 
-    newEl.classList.add('active'); 
-    newEl.style.display = 'flex'; // Ensure display:flex is set
-    void newEl.offsetWidth; // Force reflow
-    
-    // CRITICAL: Reset scroll position AFTER element is visible
-    newEl.scrollTop = 0;
-    newEl.scrollTo(0, 0);
-    
-    // Double-check scroll is at top (fixes iOS Safari issues)
-    requestAnimationFrame(() => {
-      newEl.scrollTop = 0;
-      window.scrollTo(0, 0);
-    });
-    
-    newEl.classList.add('page-enter'); 
-  }
-  
-  currentPage = pageId;
-  
-  // Update URL
-  let urlPath = '/' + pageId;
-  if (hash) urlPath += '/' + hash.replace('#', '');
-  history.pushState(null, '', urlPath);
-  updateNavActive(pageId);
-  updateNavState();
-  
-  // Initialize page content after a tiny delay to ensure layout is complete
-  setTimeout(() => {
-    lucide.createIcons(); 
-    initScrollAnimations(); 
-    handlePageSpecific(pageId);
-    
-    // Final scroll safety check
-    if (newEl) newEl.scrollTop = 0;
-    
-    if (hash) {
+    function navigateTo(pageId, hash = null) {
+      if (currentPage === pageId && !hash) return;
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      const currentEl = document.getElementById('page-' + currentPage);
+      if (currentEl) { currentEl.classList.remove('active'); currentEl.classList.remove('page-enter'); }
+      const newEl = document.getElementById('page-' + pageId);
+      if (newEl) { newEl.classList.add('active'); void newEl.offsetWidth; newEl.classList.add('page-enter'); }
+      currentPage = pageId;
+      let urlPath = '/' + pageId;
+      if (hash) urlPath += '/' + hash.replace('#', '');
+      history.pushState(null, '', urlPath);
+      updateNavActive(pageId);
       setTimeout(() => {
-        const targetElement = document.querySelector(hash);
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        lucide.createIcons(); initScrollAnimations(); updateNavState(); handlePageSpecific(pageId);
+        if (hash) {
+          setTimeout(() => {
+            const targetElement = document.querySelector(hash);
+            if (targetElement) {
+              targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              targetElement.style.transition = 'box-shadow 0.5s ease';
+              targetElement.style.boxShadow = '0 0 0 3px rgba(255, 0, 94, 0.3)';
+              setTimeout(() => { targetElement.style.boxShadow = ''; }, 2000);
+            }
+          }, 300);
         }
-      }, 100);
+      }, 50);
     }
-    
-    isNavigating = false; // Unlock navigation
-  }, 50);
-}
 
     function handlePageSpecific(pageId) {
-      // FIX: Only run initialization once per page visit, not on every call
       if (pageId === 'purchased-confirmed') {
         generateOrderDetails();
         setTimeout(launchConfetti, 400);
@@ -2345,54 +2258,27 @@ function navigateTo(pageId, hash = null) {
       return { pageId, hash };
     }
 
-window.addEventListener('popstate', () => {
-  const { pageId, hash } = parseInitialRoute();
-  
-  // IMMEDIATE SCROLL RESET
-  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  document.documentElement.scrollTop = 0;
-  
-  const currentEl = document.getElementById('page-' + currentPage);
-  if (currentEl) { 
-    currentEl.classList.remove('active'); 
-    currentEl.classList.remove('page-enter');
-    currentEl.style.display = 'none';
-  }
-  
-  const newEl = document.getElementById('page-' + pageId);
-  if (newEl) { 
-    newEl.classList.add('active'); 
-    newEl.style.display = 'flex';
-    newEl.scrollTop = 0;
-    newEl.classList.add('page-enter'); 
-  }
-  
-  currentPage = pageId;
-  updateNavActive(pageId);
-  updateNavState();
-  
-  setTimeout(() => {
-    lucide.createIcons(); 
-    initScrollAnimations(); 
-    handlePageSpecific(pageId);
-    if (newEl) newEl.scrollTop = 0;
-    if (hash) { 
-      const te = document.querySelector(hash); 
-      if (te) te.scrollIntoView({ behavior: 'auto', block: 'start' }); 
-    }
-  }, 50);
-});
+    window.addEventListener('popstate', () => {
+      const { pageId, hash } = parseInitialRoute();
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+      const currentEl = document.getElementById('page-' + currentPage);
+      if (currentEl) { currentEl.classList.remove('active'); currentEl.classList.remove('page-enter'); }
+      const newEl = document.getElementById('page-' + pageId);
+      if (newEl) { newEl.classList.add('active'); newEl.classList.add('page-enter'); }
+      currentPage = pageId;
+      updateNavActive(pageId);
+      updateNavState();
+      setTimeout(() => {
+        lucide.createIcons(); initScrollAnimations(); handlePageSpecific(pageId);
+        if (hash) { const targetElement = document.querySelector(hash); if (targetElement) { setTimeout(() => { targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100); } }
+      }, 50);
+    });
 
     function updateNavActive(pageId) {
       document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.dataset.page === pageId) { 
-          link.classList.remove('text-neutral-600','dark:text-neutral-400'); 
-          link.classList.add('text-neutral-900','dark:text-white'); 
-        }
-        else { 
-          link.classList.remove('text-neutral-900','dark:text-white'); 
-          link.classList.add('text-neutral-600','dark:text-neutral-400'); 
-        }
+        if (link.dataset.page === pageId) { link.classList.remove('text-neutral-600','dark:text-neutral-400'); link.classList.add('text-neutral-900','dark:text-white'); }
+        else { link.classList.remove('text-neutral-900','dark:text-white'); link.classList.add('text-neutral-600','dark:text-neutral-400'); }
       });
     }
 
@@ -2401,26 +2287,12 @@ window.addEventListener('popstate', () => {
       if (pageId !== 'home') {
         document.getElementById('page-home').classList.remove('active');
         const targetEl = document.getElementById('page-' + pageId);
-        if (targetEl) { 
-          targetEl.classList.add('active'); 
-          currentPage = pageId; 
-          updateNavActive(pageId);
-          if (hash) { 
-            setTimeout(() => { 
-              const te = document.querySelector(hash); 
-              if (te) te.scrollIntoView({ behavior: 'auto', block: 'start' }); 
-            }, 150); 
-          }
+        if (targetEl) { targetEl.classList.add('active'); currentPage = pageId; updateNavActive(pageId);
+          if (hash) { setTimeout(() => { const te = document.querySelector(hash); if (te) te.scrollIntoView({ behavior: 'auto', block: 'start' }); }, 150); }
         }
-      } else { 
-        updateNavActive('home'); 
-      }
+      } else { updateNavActive('home'); }
       updateNavState();
-      setTimeout(() => { 
-        handlePageSpecific(currentPage); 
-        initCodeEditor(); 
-        startTypingEffect(); 
-      }, 100);
+      setTimeout(() => { handlePageSpecific(currentPage); initCodeEditor(); startTypingEffect(); }, 100);
     });
 
     const announcementBar = document.getElementById('announcementBar');
@@ -2530,19 +2402,12 @@ window.addEventListener('popstate', () => {
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) { 
-          entry.target.style.animationPlayState = 'running'; 
-          observer.unobserve(entry.target); 
-        }
+        if (entry.isIntersecting) { entry.target.style.animationPlayState = 'running'; observer.unobserve(entry.target); }
       });
     }, { threshold: 0.1 });
 
     function initScrollAnimations() {
-      // FIX: Only observe elements in currently active page
-      const activePage = document.querySelector('.page.active');
-      if (!activePage) return;
-      
-      activePage.querySelectorAll('.fade-in-up:not([style*="animation"]), .scale-in:not([style*="animation"])').forEach(el => {
+      document.querySelectorAll('.page.active .fade-in-up, .page.active .scale-in').forEach(el => {
         el.style.animationPlayState = 'paused';
         observer.observe(el);
       });
@@ -2605,7 +2470,8 @@ window.addEventListener('popstate', () => {
         const now = new Date();
         dateEl.textContent = now.toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       }
-      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
       lucide.createIcons();
       initScrollAnimations();
     }
@@ -2614,7 +2480,8 @@ window.addEventListener('popstate', () => {
       document.getElementById('contactForm').reset();
       document.getElementById('contactFormWrapper').classList.remove('hidden');
       document.getElementById('contactSuccessWrapper').classList.add('hidden');
-      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
       lucide.createIcons();
     }
 
@@ -2912,3 +2779,4 @@ window.addEventListener('popstate', () => {
   </script>
 </body>
 </html>
+WITHOUT REMOVE anything help me full fix all issues.
