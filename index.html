@@ -41,8 +41,34 @@
       min-width: 260px;
       background: #ffffff;
       border-right: 1px solid #e2e8f0;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, opacity 0.3s ease;
       z-index: 40;
+    }
+    
+    /* HIDDEN STATE for no-permission users - completely hidden */
+    .sidebar.hidden-sidebar {
+      transform: translateX(-100%);
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        box-shadow: none;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 20px 0 60px rgba(0,0,0,0.15);
+      }
+      .sidebar.hidden-sidebar.open {
+        display: none !important;
+      }
     }
     
     .sidebar-link {
@@ -68,7 +94,11 @@
     }
     
     .sidebar-link.active svg { stroke: white; }
-    .sidebar-link.disabled-link { opacity: 0.4; pointer-events: none; }
+    
+    /* COMPLETELY HIDDEN for permission denied */
+    .sidebar-link.permission-hidden {
+      display: none !important;
+    }
 
     .stat-card {
       background: #ffffff;
@@ -188,11 +218,6 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner { width: 20px; height: 20px; border: 2px solid #e2e8f0; border-top-color: #ff005e; border-radius: 50%; animation: spin 0.8s linear infinite; }
 
-    @media (max-width: 1024px) {
-      .sidebar { position: fixed; left: 0; top: 0; bottom: 0; transform: translateX(-100%); }
-      .sidebar.open { transform: translateX(0); box-shadow: 20px 0 60px rgba(0,0,0,0.15); }
-    }
-
     .tab-btn {
       padding: 8px 18px; font-size: 13px; font-weight: 500; color: #64748b;
       border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s;
@@ -297,6 +322,14 @@
       justify-content: center; z-index: 100; transition: opacity 0.3s;
     }
     .loading-screen.hidden { opacity: 0; pointer-events: none; }
+
+    /* No sidebar layout when user has no permissions */
+    .no-sidebar-layout {
+      margin-left: 0 !important;
+    }
+    .no-sidebar-layout header {
+      padding-left: 1.5rem;
+    }
   </style>
 </head>
 <body>
@@ -360,8 +393,8 @@
         </button>
       </div>
 
-      <nav class="flex-1 py-4 overflow-y-auto space-y-1">
-        <div class="sidebar-link active" data-page="dashboard" data-perm="dashboard" onclick="navigateTo('dashboard')">
+      <nav class="flex-1 py-4 overflow-y-auto space-y-1" id="sidebarNav">
+        <div class="sidebar-link" data-page="dashboard" data-perm="dashboard" onclick="navigateTo('dashboard')">
           <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg> Dashboard
         </div>
         
@@ -414,10 +447,10 @@
     </aside>
 
     <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 flex flex-col overflow-hidden bg-slate-50/50">
+    <main class="flex-1 flex flex-col overflow-hidden bg-slate-50/50" id="mainContentArea">
       <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
         <div class="flex items-center gap-3">
-          <button onclick="toggleSidebar()" class="lg:hidden w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center">
+          <button onclick="toggleSidebar()" id="menuToggleBtn" class="lg:hidden w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center">
             <svg class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
           <nav id="breadcrumb" class="flex items-center gap-2 text-sm">
@@ -529,7 +562,7 @@
     }
 
     // ==========================================
-    // PERMISSION SYSTEM
+    // PERMISSION SYSTEM (UPDATED: Hide tabs completely)
     // ==========================================
     const ALL_PERMISSIONS = {
       dashboard: { label: 'Dashboard', default: true },
@@ -558,15 +591,35 @@
       return true;
     }
 
+    // UPDATED: Apply permissions - hide tabs completely instead of just disabling
     function applySidebarPermissions() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContentArea');
+      const menuToggle = document.getElementById('menuToggleBtn');
+      
+      let hasAnyVisibleTab = false;
+
       document.querySelectorAll('.sidebar-link[data-perm]').forEach(link => {
         const perm = link.dataset.perm;
         if (!hasPermission(perm)) {
-          link.classList.add('disabled-link');
+          // Completely hide the tab from DOM
+          link.classList.add('permission-hidden');
         } else {
-          link.classList.remove('disabled-link');
+          link.classList.remove('permission-hidden');
+          hasAnyVisibleTab = true;
         }
       });
+
+      // If user has NO visible tabs at all, hide entire sidebar and go full-width
+      if (!hasAnyVisibleTab && adminRole !== 'superadmin' && adminRole !== 'standard') {
+        sidebar.classList.add('hidden-sidebar');
+        mainContent.classList.add('no-sidebar-layout');
+        if (menuToggle) menuToggle.style.display = 'none';
+      } else {
+        sidebar.classList.remove('hidden-sidebar');
+        mainContent.classList.remove('no-sidebar-layout');
+        if (menuToggle) menuToggle.style.display = '';
+      }
     }
 
     // ==========================================
@@ -603,38 +656,54 @@
     document.addEventListener('click', e => { const c=document.getElementById('notifContainer'); if(c&&!c.contains(e.target)) document.getElementById('notifDropdown').classList.remove('show'); });
 
     // ==========================================
-    // EMAIL TEMPLATES (HTML - DO NOT MODIFY STRUCTURE)
+    // EMAIL TEMPLATES (HTML - UPDATED TO NEW TEMPLATE)
     // ==========================================
     const EMAIL_HTML_TEMPLATE = `
-<div style="max-width:600px;margin:0 auto;font-family:'Inter',Arial,sans-serif;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-  <div style="background:linear-gradient(135deg,#ff005e 0%,#ff3377 100%);padding:32px 40px;text-align:center;">
-    <img src="https://i.ibb.co/8LkD1bym/logo-black-luviio-removebg-preview.png" alt="Luviio" style="height:36px;filter:brightness(0) invert(1);margin:0 auto 12px;display:block;">
-    <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">{{title}}</h1>
+<div style="max-width:560px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1d1d1f;">
+
+  <div style="padding:32px 32px 0 32px;">
+    <img src="https://i.ibb.co/8LkD1bym/logo-black-luviio-removebg-preview.png" alt="Luviio" style="height:28px;">
   </div>
-  <div style="padding:36px 40px;">
-    <p style="margin:0 0 20px;color:#475569;font-size:15px;line-height:1.7;">Dear Valued Customer,</p>
-    <div style="background:#f8fafc;border-radius:12px;padding:20px 24px;margin-bottom:24px;border-left:4px solid #ff005e;">
-      <p style="margin:0;color:#1e293b;font-size:14px;line-height:1.7;">{{message}}</p>
-    </div>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-      <tr><td style="padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px;color:#64748b;font-weight:600;width:140px;">Service Name</td><td style="padding:10px 14px;border:1px solid #e2e8f0;font-size:13px;color:#1e293b;">{{service_name}}</td></tr>
-      <tr><td style="padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px;color:#64748b;font-weight:600;">Renewed / Action By</td><td style="padding:10px 14px;border:1px solid #e2e8f0;font-size:13px;color:#1e293b;">{{renewed_by}}</td></tr>
-      <tr><td style="padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px;color:#64748b;font-weight:600;">Requested By</td><td style="padding:10px 14px;border:1px solid #e2e8f0;font-size:13px;color:#1e293b;">{{requested_by}}</td></tr>
-      <tr><td style="padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;font-size:12px;color:#64748b;font-weight:600;">Relevant Date</td><td style="padding:10px 14px;border:1px solid #e2e8f0;font-size:13px;color:#1e293b;">{{renewal_date}}</td></tr>
+
+  <div style="padding:28px 32px 32px 32px;">
+    <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">Hi {{recipient_name}},</p>
+    
+    <p style="margin:0 0 20px;font-size:16px;line-height:1.6;color:#3a3a3c;">{{message}}</p>
+    
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:28px;border:1px solid #e5e5ea;border-radius:10px;overflow:hidden;">
+      <tr>
+        <td style="padding:12px 16px;background:#f5f5f7;color:#86868b;font-weight:600;border-bottom:1px solid #e5e5ea;">Service Name</td>
+        <td style="padding:12px 16px;color:#1d1d1f;border-bottom:1px solid #e5e5ea;">{{service_name}}</td>
+      </tr>
+      <tr>
+        <td style="padding:12px 16px;background:#f5f5f7;color:#86868b;font-weight:600;border-bottom:1px solid #e5e5ea;">Action By</td>
+        <td style="padding:12px 16px;color:#1d1d1f;border-bottom:1px solid #e5e5ea;">{{renewed_by}}</td>
+      </tr>
+      <tr>
+        <td style="padding:12px 16px;background:#f5f5f7;color:#86868b;font-weight:600;border-bottom:1px solid #e5e5ea;">Requested By</td>
+        <td style="padding:12px 16px;color:#1d1d1f;border-bottom:1px solid #e5e5ea;">{{requested_by}}</td>
+      </tr>
+      <tr>
+        <td style="padding:12px 16px;background:#f5f5f7;color:#86868b;font-weight:600;">Date</td>
+        <td style="padding:12px 16px;color:#1d1d1f;">{{renewal_date}}</td>
+      </tr>
     </table>
-    <p style="margin:0 0 8px;color:#475569;font-size:14px;line-height:1.7;">If you have any questions, feel free to reach out to us.</p>
-    <p style="margin:0;color:#475569;font-size:14px;line-height:1.7;">Best regards,<br><strong style="color:#ff005e;">Luviio Team</strong></p>
+
+    <p style="margin:28px 0 0;font-size:16px;line-height:1.6;">Take care,<br>We'luviio</p>
   </div>
-  <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
-    <p style="margin:0;color:#94a3b8;font-size:11px;">&copy; ${new Date().getFullYear()} Luviio. All rights reserved.</p>
-    <p style="margin:4px 0 0;color:#94a3b8;font-size:11px;">This is an automated message. Please do not reply directly to this email.</p>
+
+  <div style="padding:0 32px 32px 32px;">
+    <div style="border-top:1px solid #e5e5ea;padding-top:20px;">
+      <p style="margin:0;font-size:12px;color:#aeaeb2;line-height:1.5;">© 2026 luviio.com</p>
+    </div>
   </div>
+
 </div>`;
 
     // WhatsApp text template
     const WA_TEXT_TEMPLATE = `*{{title}}*
 
-Dear Valued Customer,
+Dear {{recipient_name}},
 
 {{message}}
 
@@ -696,8 +765,9 @@ Best regards,
         emailTitle: '', emailMessage: '', waMessage: '', category: 'Custom' }
     ];
 
-    function renderEmailPreview(title, message, serviceName, renewedBy, requestedBy, renewalDate) {
+    function renderEmailPreview(title, message, serviceName, renewedBy, requestedBy, renewalDate, recipientName) {
       return EMAIL_HTML_TEMPLATE
+        .replace(/\{\{recipient_name\}\}/g, recipientName || 'Valued Customer')
         .replace(/\{\{title\}\}/g, title || 'Notification')
         .replace(/\{\{message\}\}/g, message || '-')
         .replace(/\{\{service_name\}\}/g, serviceName || '-')
@@ -706,8 +776,9 @@ Best regards,
         .replace(/\{\{renewal_date\}\}/g, renewalDate || '-');
     }
 
-    function renderWaPreview(title, message, serviceName, renewedBy, requestedBy, renewalDate) {
+    function renderWaPreview(title, message, serviceName, renewedBy, requestedBy, renewalDate, recipientName) {
       return WA_TEXT_TEMPLATE
+        .replace(/\{\{recipient_name\}\}/g, recipientName || 'Valued Customer')
         .replace(/\{\{title\}\}/g, title || 'Notification')
         .replace(/\{\{message\}\}/g, message || '-')
         .replace(/\{\{service_name\}\}/g, serviceName || '-')
@@ -719,11 +790,17 @@ Best regards,
     // ==========================================
     // EMAILJS SEND
     // ==========================================
-    async function sendSystemEmail(toEmail, title, message, serviceName, renewedBy, requestedBy, renewalDate) {
+    async function sendSystemEmail(toEmail, title, message, serviceName, renewedBy, requestedBy, renewalDate, recipientName) {
       try {
         await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-          to_email: toEmail, title: title||'System Notification', message: message||'Please find the details below.',
-          service_name: serviceName||'-', renewed_by: renewedBy||'-', requested_by: requestedBy||'-', renewal_date: renewalDate||'-'
+          to_email: toEmail,
+          recipient_name: recipientName || 'Valued Customer',
+          title: title||'System Notification',
+          message: message||'Please find the details below.',
+          service_name: serviceName||'-',
+          renewed_by: renewedBy||'-',
+          requested_by: requestedBy||'-',
+          renewal_date: renewalDate||'-'
         });
         addNotification('Email Sent', `Notification sent to ${toEmail}`, 'success');
         return true;
@@ -737,8 +814,8 @@ Best regards,
     // ==========================================
     // WHATSAPP SEND
     // ==========================================
-    function sendWhatsApp(phone, title, message, serviceName, renewedBy, requestedBy, renewalDate) {
-      const text = renderWaPreview(title, message, serviceName, renewedBy, requestedBy, renewalDate);
+    function sendWhatsApp(phone, title, message, serviceName, renewedBy, requestedBy, renewalDate, recipientName) {
+      const text = renderWaPreview(title, message, serviceName, renewedBy, requestedBy, renewalDate, recipientName);
       let cleanPhone = (phone||'').replace(/[^0-9+]/g, '');
       if (cleanPhone.startsWith('0')) cleanPhone = '6' + cleanPhone;
       if (!cleanPhone.startsWith('+')) cleanPhone = '+' + cleanPhone;
@@ -796,6 +873,10 @@ Best regards,
               <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Phone (WhatsApp)</label>
               <input id="cnToPhone" type="tel" class="input-field" value="${ctx.clientPhone||''}" placeholder="+60 12-345 6789">
             </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Recipient Name</label>
+            <input id="cnRecipientName" class="input-field" value="${ctx.clientName||''}" placeholder="John Doe">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Email Title</label>
@@ -879,6 +960,7 @@ Best regards,
       return {
         email: document.getElementById('cnToEmail').value,
         phone: document.getElementById('cnToPhone').value,
+        recipientName: document.getElementById('cnRecipientName').value,
         title: document.getElementById('cnTitle').value,
         message: document.getElementById('cnMessage').value,
         service: document.getElementById('cnService').value,
@@ -893,8 +975,8 @@ Best regards,
         const f = getNotifFields();
         const ep = document.getElementById('emailPreviewBody');
         const wp = document.getElementById('waPreviewBody');
-        if (ep) ep.innerHTML = renderEmailPreview(f.title, f.message, f.service, f.renewedBy, f.requestedBy, f.date);
-        if (wp) wp.textContent = renderWaPreview(f.title, f.message, f.service, f.renewedBy, f.requestedBy, f.date);
+        if (ep) ep.innerHTML = renderEmailPreview(f.title, f.message, f.service, f.renewedBy, f.requestedBy, f.date, f.recipientName);
+        if (wp) wp.textContent = renderWaPreview(f.title, f.message, f.service, f.renewedBy, f.requestedBy, f.date, f.recipientName);
       }, 50);
     }
 
@@ -908,7 +990,7 @@ Best regards,
       if (!f.email) { showToast('Please enter recipient email', 'error'); return; }
       const btn = document.getElementById('sendEmailBtn');
       btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Sending...';
-      const ok = await sendSystemEmail(f.email, f.title, f.message, f.service, f.renewedBy, f.requestedBy, f.date);
+      const ok = await sendSystemEmail(f.email, f.title, f.message, f.service, f.renewedBy, f.requestedBy, f.date, f.recipientName);
       btn.disabled = false; btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> Send Email';
       if (ok) { showToast('Email sent!'); if(pendingNotifContext?.onSuccess) pendingNotifContext.onSuccess(); closeCustomerNotif(); }
       else showToast('Failed to send email', 'error');
@@ -917,7 +999,7 @@ Best regards,
     function handleSendWaFromModal() {
       const f = getNotifFields();
       if (!f.phone) { showToast('Please enter phone number for WhatsApp', 'error'); return; }
-      sendWhatsApp(f.phone, f.title, f.message, f.service, f.renewedBy, f.requestedBy, f.date);
+      sendWhatsApp(f.phone, f.title, f.message, f.service, f.renewedBy, f.requestedBy, f.date, f.recipientName);
       if(pendingNotifContext?.onSuccess) pendingNotifContext.onSuccess();
       closeCustomerNotif();
     }
@@ -936,7 +1018,7 @@ Best regards,
       else { badge.className='role-badge standard'; badge.textContent='Standard'; }
     }
     function deleteBtnHTML(col,id,label) { return (!isSuperAdmin() && !hasPermission('delete')) ? '' : `<button onclick="deleteDoc('${col}','${id}','${label}')" class="p-1.5 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-600" title="Delete"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`; }
-    function deleteRowBtnHTML(col,id,label) { return (!isSuperAdmin() && !hasPermission('delete')) ? '' : `<button onclick="deleteDoc('${col}','${id}','${label}')" class="btn-danger-sm"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Delete</button>`; }
+    function deleteRowBtnHTML(col,id,label) { return (!isSuperAdmin() && !hasPermission('delete')) ? '' : `<button onclick="deleteDoc('${col}','${id}','${label}')" class="btn-danger-sm"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Delete</button>`; }
     function editBtnHTML(fn,id) { return (!isSuperAdmin() && !hasPermission('edit')) ? '' : `<button onclick="${fn}('${id}')" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="Edit"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>`; }
 
     function remarksCell(r) { return !r ? '<span class="text-slate-300 text-xs">-</span>' : `<div class="remarks-inline" title="${r.replace(/"/g,'&quot;')}"><svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg><span class="remarks-text">${r}</span></div>`; }
@@ -976,6 +1058,8 @@ Best regards,
           updateRoleUI();
           applySidebarPermissions();
           document.getElementById('avatarInitial').textContent = (currentUser.email||'A')[0].toUpperCase();
+          
+          // Navigate to first available page or dashboard
           const path = window.location.pathname.replace('/admin/','') || 'dashboard';
           showPage(path);
         } else {
@@ -1006,15 +1090,36 @@ Best regards,
     initAuth();
 
     // ==========================================
-    // NAVIGATION
+    // NAVIGATION (Updated: redirect if no permission)
     // ==========================================
     function navigateTo(page) {
-      if (!hasPermission(page)) { showToast('You do not have permission to access this page.', 'error'); return; }
+      if (!hasPermission(page)) { 
+        // Find first available page
+        const firstAvailable = Object.keys(ALL_PERMISSIONS).find(p => hasPermission(p) && ['dashboard','clients','subscriptions','requests','invoices','feedback','expenses','company-subs','team','crew','emails','templates','imgbb'].includes(p));
+        if (firstAvailable && firstAvailable !== page) {
+          showToast('You do not have access to that page.', 'warning');
+          showPage(firstAvailable);
+        } else {
+          showToast('You do not have permission to access this page.', 'error');
+        }
+        return; 
+      }
       currentPage = page;
       window.history.pushState({page}, '', `/admin/${page}`);
       showPage(page);
     }
+
     function showPage(page) {
+      // Check permission before showing page
+      if (!hasPermission(page)) {
+        const firstAvailable = Object.keys(ALL_PERMISSIONS).find(p => hasPermission(p) && ['dashboard','clients','subscriptions','requests','invoices','feedback','expenses','company-subs','team','crew','emails','templates','imgbb'].includes(p));
+        if (firstAvailable) {
+          page = firstAvailable;
+        } else {
+          page = 'dashboard'; // fallback
+        }
+      }
+
       currentPage = page;
       const content = document.getElementById('pageContent');
       const title = document.getElementById('pageTitle');
@@ -1048,7 +1153,13 @@ Best regards,
     }
     window.addEventListener('popstate', e => { if(currentUser && e.state?.page) showPage(e.state.page); else if(currentUser) showPage(window.location.pathname.replace('/admin/','')||'dashboard'); });
     window.addEventListener('load', () => { if(currentUser) showPage(window.location.pathname.replace('/admin/','')||'dashboard'); });
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('hidden'); }
+    function toggleSidebar() { 
+      const sb = document.getElementById('sidebar');
+      // Don't toggle if sidebar is hidden due to permissions
+      if (sb.classList.contains('hidden-sidebar')) return;
+      sb.classList.toggle('open'); 
+      document.getElementById('sidebarOverlay').classList.toggle('hidden'); 
+    }
 
     function showToast(msg, type) {
       const t = document.getElementById('toast'), ic = document.getElementById('toastIcon');
@@ -1086,15 +1197,15 @@ Best regards,
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="content-card p-6"><h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2"><svg class="w-5 h-5 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Quick Actions</h3><div class="space-y-2">
-              <button onclick="openModal('addClient')" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Add New Client</button>
-              <button onclick="openModal('addExpense')" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Log Expense</button>
-              <button onclick="openModal('addInvoice')" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Create Invoice</button>
-              <button onclick="navigateTo('requests')" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>View Requests (${requestsSnap.size})</button>
-              <button onclick="openQuickSendNotif()" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Send Notification</button>
+              ${hasPermission('edit') && hasPermission('clients') ? `<button onclick="openModal('addClient')" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Add New Client</button>` : ''}
+              ${hasPermission('edit') && hasPermission('expenses') ? `<button onclick="openModal('addExpense')" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Log Expense</button>` : ''}
+              ${hasPermission('edit') && hasPermission('invoices') ? `<button onclick="openModal('addInvoice')" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Create Invoice</button>` : ''}
+              ${hasPermission('requests') ? `<button onclick="navigateTo('requests')" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>View Requests (${requestsSnap.size})</button>` : ''}
+              ${(hasPermission('sendEmail') || hasPermission('sendWhatsApp')) ? `<button onclick="openQuickSendNotif()" class="w-full btn-secondary !justify-start text-left"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Send Notification</button>` : ''}
             </div></div>
-            <div class="lg:col-span-2 content-card"><div class="p-5 border-b border-slate-100 flex items-center justify-between"><h3 class="font-semibold text-slate-800 text-sm">Recent Invoices</h3><button onclick="navigateTo('invoices')" class="text-xs text-pink-600 font-medium hover:underline">View All</button></div><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>ID</th><th>Client</th><th>Amount</th><th>Status</th><th>Remarks</th></tr></thead><tbody>${invoicesSnap.docs.length===0?'<tr><td colspan="5" class="text-center text-slate-400 py-8">No invoices yet</td></tr>':invoicesSnap.docs.map(doc=>{const d=doc.data();return`<tr><td class="font-mono text-xs">#${doc.id.slice(0,8)}</td><td>${d.clientName||'-'}</td><td class="font-medium">RM${parseFloat(d.amount||0).toLocaleString()}</td><td>${getStatusBadge(d.status)}</td><td>${remarksCell(d.remarks)}</td></tr>`;}).join('')}</tbody></table></div></div>
+            <div class="lg:col-span-2 content-card"><div class="p-5 border-b border-slate-100 flex items-center justify-between"><h3 class="font-semibold text-slate-800 text-sm">Recent Invoices</h3>${hasPermission('invoices') ? `<button onclick="navigateTo('invoices')" class="text-xs text-pink-600 font-medium hover:underline">View All</button>` : ''}</div><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>ID</th><th>Client</th><th>Amount</th><th>Status</th><th>Remarks</th></tr></thead><tbody>${invoicesSnap.docs.length===0?'<tr><td colspan="5" class="text-center text-slate-400 py-8">No invoices yet</td></tr>':invoicesSnap.docs.map(doc=>{const d=doc.data();return`<tr><td class="font-mono text-xs">#${doc.id.slice(0,8)}</td><td>${d.clientName||'-'}</td><td class="font-medium">RM${parseFloat(d.amount||0).toLocaleString()}</td><td>${getStatusBadge(d.status)}</td><td>${remarksCell(d.remarks)}</td></tr>`;}).join('')}</tbody></table></div></div>
           </div>
-          <div class="content-card"><div class="p-5 border-b border-slate-100 flex items-center justify-between"><h3 class="font-semibold text-slate-800 text-sm">Recent Client Requests</h3><button onclick="navigateTo('requests')" class="text-xs text-pink-600 font-medium hover:underline">View All</button></div><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Type</th><th>Client</th><th>Date</th><th>Status</th><th>Remarks</th></tr></thead><tbody>${requestsSnap.docs.length===0?'<tr><td colspan="5" class="text-center text-slate-400 py-8">No requests yet</td></tr>':requestsSnap.docs.map(doc=>{const d=doc.data();return`<tr><td><span class="badge badge-neutral">${d.type||'Update'}</span></td><td>${d.clientName||d.name||'-'}</td><td class="text-xs text-slate-500">${formatDate(d.createdAt)}</td><td>${getStatusBadge(d.status||'pending')}</td><td>${remarksCell(d.remarks)}</td></tr>`;}).join('')}</tbody></table></div></div>
+          <div class="content-card"><div class="p-5 border-b border-slate-100 flex items-center justify-between"><h3 class="font-semibold text-slate-800 text-sm">Recent Client Requests</h3>${hasPermission('requests') ? `<button onclick="navigateTo('requests')" class="text-xs text-pink-600 font-medium hover:underline">View All</button>` : ''}</div><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Type</th><th>Client</th><th>Date</th><th>Status</th><th>Remarks</th></tr></thead><tbody>${requestsSnap.docs.length===0?'<tr><td colspan="5" class="text-center text-slate-400 py-8">No requests yet</td></tr>':requestsSnap.docs.map(doc=>{const d=doc.data();return`<tr><td><span class="badge badge-neutral">${d.type||'Update'}</span></td><td>${d.clientName||d.name||'-'}</td><td class="text-xs text-slate-500">${formatDate(d.createdAt)}</td><td>${getStatusBadge(d.status||'pending')}</td><td>${remarksCell(d.remarks)}</td></tr>`;}).join('')}</tbody></table></div></div>
         </div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p><button onclick="renderDashboard()" class="btn-primary mt-4">Retry</button></div>`; }
     }
@@ -1111,7 +1222,7 @@ Best regards,
       try {
         const snap = await db.collection('clients').orderBy('createdAt','desc').get();
         content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">All Clients (${snap.size})</h3><p class="text-xs text-slate-500 mt-0.5">Manage your client database</p></div><div class="flex gap-2"><div class="relative"><input type="text" placeholder="Search clients..." class="input-field !w-64 !py-2 !pl-9 !pr-4 !text-xs" onkeyup="filterTable(this.value,'client-table')"><svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>${hasPermission('edit')?`<button onclick="openModal('addClient')" class="btn-primary whitespace-nowrap"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Add Client</button>`:''}</div></div>
-        <div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table" id="client-table"><thead><tr><th>Client Name</th><th>Email</th><th>Phone</th><th>Business Type</th><th>Plan</th><th>Status</th><th>Joined</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>${snap.docs.length===0?'<tr><td colspan="9" class="text-center text-slate-400 py-12">No clients found.</td></tr>':snap.docs.map(doc=>{const c=doc.data();return`<tr data-search="${(c.name||''+' '+c.email||''+' '+c.businessType||''+' '+c.plan||'').toLowerCase()}"><td><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-xs font-bold">${(c.name||'?')[0].toUpperCase()}</div><span class="font-medium text-sm">${c.name||'-'}</span></div></td><td class="text-slate-600 text-sm">${c.email||'-'}</td><td class="text-slate-600 text-sm">${c.phone||'-'}</td><td><span class="badge badge-neutral">${c.businessType||'-'}</span></td><td class="text-sm font-medium">${c.plan||'-'}</td><td>${getStatusBadge(c.status||'active')}</td><td class="text-xs text-slate-500">${formatDate(c.createdAt)}</td><td>${remarksCell(c.remarks)}</td><td><div class="flex gap-1"><button onclick="viewClient('${doc.id}')" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="View"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>${editBtnHTML('editClient',doc.id)}<button onclick="sendToClient('${doc.id}')" class="p-1.5 rounded-lg hover:bg-green-50 text-slate-500 hover:text-green-600" title="Send Notification"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></button>${deleteBtnHTML('clients',doc.id,'client')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
+        <div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table" id="client-table"><thead><tr><th>Client Name</th><th>Email</th><th>Phone</th><th>Business Type</th><th>Plan</th><th>Status</th><th>Joined</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>${snap.docs.length===0?'<tr><td colspan="9" class="text-center text-slate-400 py-12">No clients found.</td></tr>':snap.docs.map(doc=>{const c=doc.data();return`<tr data-search="${(c.name||''+' '+c.email||''+' '+c.businessType||''+' '+c.plan||'').toLowerCase()}"><td><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-xs font-bold">${(c.name||'?')[0].toUpperCase()}</div><span class="font-medium text-sm">${c.name||'-'}</span></div></td><td class="text-slate-600 text-sm">${c.email||'-'}</td><td class="text-slate-600 text-sm">${c.phone||'-'}</td><td><span class="badge badge-neutral">${c.businessType||'-'}</span></td><td class="text-sm font-medium">${c.plan||'-'}</td><td>${getStatusBadge(c.status||'active')}</td><td class="text-xs text-slate-500">${formatDate(c.createdAt)}</td><td>${remarksCell(c.remarks)}</td><td><div class="flex gap-1"><button onclick="viewClient('${doc.id}')" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="View"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>${editBtnHTML('editClient',doc.id)}${(hasPermission('sendEmail') || hasPermission('sendWhatsApp')) ? `<button onclick="sendToClient('${doc.id}')" class="p-1.5 rounded-lg hover:bg-green-50 text-slate-500 hover:text-green-600" title="Send Notification"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></button>` : ''}${deleteBtnHTML('clients',doc.id,'client')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
@@ -1142,7 +1253,7 @@ Best regards,
         const snap = await db.collection('client_requests').orderBy('createdAt','desc').get();
         content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Client Request History</h3><p class="text-xs text-slate-500 mt-0.5">Track all update requests</p></div>${hasPermission('edit')?`<button onclick="openModal('addRequest')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Log Request</button>`:''}</div>
         <div class="flex gap-1 bg-white rounded-xl p-1 border border-slate-200 w-fit"><button class="tab-btn active" onclick="filterRequests('all',this)">All (${snap.size})</button><button class="tab-btn" onclick="filterRequests('pending',this)">Pending</button><button class="tab-btn" onclick="filterRequests('in-progress',this)">In Progress</button><button class="tab-btn" onclick="filterRequests('completed',this)">Completed</button></div>
-        <div id="requestsList" class="space-y-3">${snap.docs.length===0?'<div class="content-card p-12 text-center text-slate-400">No requests recorded</div>':snap.docs.map(doc=>{const r=doc.data();return`<div class="content-card p-5 request-item" data-status="${r.status||'pending'}"><div class="flex flex-col md:flex-row md:items-start justify-between gap-4"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><span class="badge ${r.type==='Urgent'?'badge-danger':r.type==='Design Change'?'badge-info':'badge-neutral'}">${r.type||'Update'}</span>${getStatusBadge(r.status||'pending')}<span class="text-xs text-slate-400">#${doc.id.slice(0,6)}</span></div><h4 class="font-medium text-slate-800 text-sm mb-1">${r.title||r.details?.slice(0,60)||'No title'}</h4><p class="text-xs text-slate-500 line-clamp-2">${r.details||r.description||'-'}</p>${r.remarks?`<div class="mt-2 p-2 bg-slate-50 rounded-lg text-xs text-slate-600 flex items-start gap-1.5"><svg class="w-3 h-3 mt-0.5 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>${r.remarks}</div>`:''}<div class="flex flex-wrap gap-4 mt-3 text-xs text-slate-400"><span>${r.clientName||r.name||'-'}</span><span>${formatDate(r.createdAt)}</span>${r.price?`<span class="text-pink-600 font-medium">RM${r.price}</span>`:''}</div></div><div class="flex gap-2 flex-shrink-0"><button onclick="updateRequestStatus('${doc.id}','in-progress')" class="btn-secondary !py-2 !px-3 !text-xs" title="In Progress"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button><button onclick="completeRequestWithNotif('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs !text-green-600" title="Complete & Notify"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></button>${deleteBtnHTML('client_requests',doc.id,'request')}</div></div></div>`;}).join('')}</div></div>`;
+        <div id="requestsList" class="space-y-3">${snap.docs.length===0?'<div class="content-card p-12 text-center text-slate-400">No requests recorded</div>':snap.docs.map(doc=>{const r=doc.data();return`<div class="content-card p-5 request-item" data-status="${r.status||'pending'}"><div class="flex flex-col md:flex-row md:items-start justify-between gap-4"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><span class="badge ${r.type==='Urgent'?'badge-danger':r.type==='Design Change'?'badge-info':'badge-neutral'}">${r.type||'Update'}</span>${getStatusBadge(r.status||'pending')}<span class="text-xs text-slate-400">#${doc.id.slice(0,6)}</span></div><h4 class="font-medium text-slate-800 text-sm mb-1">${r.title||r.details?.slice(0,60)||'No title'}</h4><p class="text-xs text-slate-500 line-clamp-2">${r.details||r.description||'-'}</p>${r.remarks?`<div class="mt-2 p-2 bg-slate-50 rounded-lg text-xs text-slate-600 flex items-start gap-1.5"><svg class="w-3 h-3 mt-0.5 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>${r.remarks}</div>`:''}<div class="flex flex-wrap gap-4 mt-3 text-xs text-slate-400"><span>${r.clientName||r.name||'-'}</span><span>${formatDate(r.createdAt)}</span>${r.price?`<span class="text-pink-600 font-medium">RM${r.price}</span>`:''}</div></div><div class="flex gap-2 flex-shrink-0"><button onclick="updateRequestStatus('${doc.id}','in-progress')" class="btn-secondary !py-2 !px-3 !text-xs" title="In Progress"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button><button onclick="completeRequestWithNotif('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs !text-green-600" title="Complete & Notify"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></button>${deleteRowBtnHTML('client_requests',doc.id,'request')}</div></div></div>`;}).join('')}</div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
     function filterRequests(s,btn) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); document.querySelectorAll('.request-item').forEach(i=>{i.style.display=(s==='all'||i.dataset.status===s)?'block':'none';}); }
@@ -1232,7 +1343,7 @@ Best regards,
       const content = document.getElementById('pageContent');
       try {
         const snap = await db.collection('team').orderBy('name','asc').get();
-        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Team Members (${snap.size})</h3></div>${hasPermission('edit')?`<button onclick="openModal('addTeamMember')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Add Member</button>`:''}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">${snap.docs.length===0?'<div class="col-span-full content-card p-12 text-center text-slate-400">No team members</div>':snap.docs.map(doc=>{const t=doc.data();return`<div class="content-card p-6 text-center hover:shadow-lg transition-shadow"><div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">${(t.name||'?')[0].toUpperCase()}</div><h4 class="font-semibold text-slate-800">${t.name||'-'}</h4><p class="text-sm text-pink-600 font-medium mt-1">${t.role||t.position||'-'}</p><p class="text-xs text-slate-500 mt-2">${t.department||'-'}</p>${t.remarks?`<div class="mt-2 mx-4 p-2 bg-slate-50 rounded text-xs text-slate-500 text-left">${t.remarks}</div>`:''}<div class="mt-4 pt-4 border-t border-slate-100 space-y-1.5 text-xs text-slate-500">${t.email?`<div>${t.email}</div>`:''}${t.phone?`<div>${t.phone}</div>`:''}</div><div class="mt-4 flex gap-2 justify-center">${editBtnHTML('editTeamMember',doc.id)}${deleteRowBtnHTML('team',doc.id,'member')}</div></div>`;}).join('')}</div></div>`;
+        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Team Members (${snap.size})</h3></div>${hasPermission('edit')?`<button onclick="openModal('addTeamMember')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"  stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Add Member</button>`:''}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">${snap.docs.length===0?'<div class="col-span-full content-card p-12 text-center text-slate-400">No team members</div>':snap.docs.map(doc=>{const t=doc.data();return`<div class="content-card p-6 text-center hover:shadow-lg transition-shadow"><div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">${(t.name||'?')[0].toUpperCase()}</div><h4 class="font-semibold text-slate-800">${t.name||'-'}</h4><p class="text-sm text-pink-600 font-medium mt-1">${t.role||t.position||'-'}</p><p class="text-xs text-slate-500 mt-2">${t.department||'-'}</p>${t.remarks?`<div class="mt-2 mx-4 p-2 bg-slate-50 rounded text-xs text-slate-500 text-left">${t.remarks}</div>`:''}<div class="mt-4 pt-4 border-t border-slate-100 space-y-1.5 text-xs text-slate-500">${t.email?`<div>${t.email}</div>`:''}${t.phone?`<div>${t.phone}</div>`:''}</div><div class="mt-4 flex gap-2 justify-center">${editBtnHTML('editTeamMember',doc.id)}${deleteRowBtnHTML('team',doc.id,'member')}</div></div>`;}).join('')}</div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
@@ -1294,7 +1405,7 @@ Best regards,
       const content = document.getElementById('pageContent');
       try {
         const snap = await db.collection('company_emails').orderBy('addedAt','desc').get();
-        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Active Email Accounts</h3></div>${hasPermission('edit')?`<button onclick="openModal('addEmail')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Add Email</button>`:''}</div><div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Email</th><th>Purpose</th><th>Password</th><th>Owner</th><th>Status</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>${snap.docs.length===0?'<tr><td colspan="7" class="text-center text-slate-400 py-12">No emails</td></tr>':snap.docs.map(doc=>{const em=doc.data();return`<tr><td class="font-mono text-sm font-medium">${em.email||'-'}</td><td class="text-sm">${em.purpose||'-'}</td><td><div class="flex items-center gap-2"><code class="text-xs bg-slate-100 px-2 py-1 rounded">${em.password?'********':'-'}</code>${em.password?`<button onclick="copyToClipboard('${em.password.replace(/'/g,"\\'")}')" class="text-pink-600 hover:text-pink-700" title="Copy"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>`:''}</div></td><td class="text-sm">${em.owner||em.user||'-'}</td><td>${getStatusBadge(em.status||'active')}</td><td>${remarksCell(em.remarks)}</td><td><div class="flex gap-1">${editBtnHTML('editEmail',doc.id)}${deleteBtnHTML('company_emails',doc.id,'email')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
+        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Active Email Accounts</h3></div>${hasPermission('edit')?`<button onclick="openModal('addEmail')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Add Email</button>`:''}</div><div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Email</th><th>Purpose</th><th>Password</th><th>Owner</th><th>Status</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>${snap.docs.length===0?'<tr><td colspan="7" class="text-center text-slate-400 py-12">No emails</td></tr>':snap.docs.map(doc=>{const em=doc.data();return`<tr><td class="font-mono text-sm font-medium">${em.email||'-'}</td><td class="text-sm">${em.purpose||'-'}</td><td><div class="flex items-center gap-2"><code class="text-xs bg-slate-100 px-2 py-1 rounded">${em.password?'********':'-'}</code>${em.password?`<button onclick="copyToClipboard('${em.password.replace(/'/g,"\'")}')" class="text-pink-600 hover:text-pink-700" title="Copy"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>`:''}</div></td><td class="text-sm">${em.owner||em.user||'-'}</td><td>${getStatusBadge(em.status||'active')}</td><td>${remarksCell(em.remarks)}</td><td><div class="flex gap-1">${editBtnHTML('editEmail',doc.id)}${deleteBtnHTML('company_emails',doc.id,'email')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
@@ -1343,7 +1454,6 @@ Best regards,
         defaultTitle: t.emailTitle, defaultMessage: t.emailMessage,
         serviceName: 'Service Name', renewedBy: 'Luviio Team', requestedBy: 'Client', relevantDate: formatDate(new Date())
       });
-      // Auto-select the template
       setTimeout(() => selectMsgTemplate(id), 100);
     }
 
