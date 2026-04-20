@@ -1482,7 +1482,34 @@
       document.getElementById('uploadFileSize').textContent = formatFileSize(file.size);
       document.getElementById('uploadImageName').value = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
       document.getElementById('uploadNameModal').classList.add('show');
-      setTimeout(() => { const ni = document.getElementById('uploadImageName'); ni.focus(); ni.select(); }, 200);
+      setTimeout(() => { const ni = document.getElementById('uploadImageName'); ni.focus(); ni.select(); previewNameFormat(); }, 200);
+    }
+
+    // ---- Name Formatting Functions ----
+    function applyFormat(type) {
+      const input = document.getElementById('uploadImageName');
+      if (!input) return;
+      let val = input.value.trim();
+      if (!val) return;
+      switch(type) {
+        case 'lower': val = val.toLowerCase(); break;
+        case 'upper': val = val.toUpperCase(); break;
+        case 'title': val = val.toLowerCase().replace(/(?:^|\s|[-_])\S/g, c => c.toUpperCase()).replace(/[-_]/g, ' '); break;
+        case 'slug':  val = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); break;
+        case 'camel': val = val.toLowerCase().replace(/[^a-z0-9]+(.)/g, (_, c) => c.toUpperCase()); break;
+        case 'snake': val = val.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''); break;
+      }
+      input.value = val;
+      previewNameFormat();
+    }
+
+    function previewNameFormat() {
+      const input = document.getElementById('uploadImageName');
+      const preview = document.getElementById('namePreview');
+      if (!input || !preview) return;
+      const val = input.value.trim();
+      preview.textContent = val || '—';
+      preview.style.color = val ? '#1e293b' : '#94a3b8';
     }
 
     function showBatchNamingDialog(files) {
@@ -1517,6 +1544,12 @@
           <div class="flex items-center gap-2 mb-2">
             <button onclick="applyPrefixToBatch()" class="btn-secondary !py-1.5 !px-3 !text-[10px]">Apply Prefix to All</button>
             <button onclick="setSameNameBatch()" class="btn-secondary !py-1.5 !px-3 !text-[10px]">Same Name + Number</button>
+            <button onclick="applyBatchFormat('lower')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">lowercase</button>
+            <button onclick="applyBatchFormat('upper')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">UPPERCASE</button>
+            <button onclick="applyBatchFormat('title')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">Title Case</button>
+            <button onclick="applyBatchFormat('slug')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">slug-case</button>
+            <button onclick="applyBatchFormat('camel')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">camelCase</button>
+            <button onclick="applyBatchFormat('snake')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">snake_case</button>
           </div>
           <div class="space-y-2 max-h-[45vh] overflow-y-auto pr-1">${fileListHTML}</div>
           <div>
@@ -1531,6 +1564,23 @@
             <button onclick="cancelImageUpload()" class="btn-secondary">Cancel</button>
           </div>
         </div>`;
+
+          function applyBatchFormat(type) {
+      document.querySelectorAll('.batch-name-input').forEach(input => {
+        let val = input.value.trim();
+        if (!val) return;
+        switch(type) {
+          case 'lower': val = val.toLowerCase(); break;
+          case 'upper': val = val.toUpperCase(); break;
+          case 'title': val = val.toLowerCase().replace(/(?:^|\s|[-_])\S/g, c => c.toUpperCase()).replace(/[-_]/g, ' '); break;
+          case 'slug':  val = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); break;
+          case 'camel': val = val.toLowerCase().replace(/[^a-z0-9]+(.)/g, (_, c) => c.toUpperCase()); break;
+          case 'snake': val = val.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''); break;
+        }
+        input.value = val;
+      });
+      showToast(`Applied ${type} format`);
+    }
 
       // Load thumbnails
       files.forEach((f, i) => {
@@ -1682,8 +1732,23 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Image Name *</label>
-            <input type="text" id="uploadImageName" class="input-field" placeholder="e.g., client-logo-v2" autofocus>
+            <input type="text" id="uploadImageName" class="input-field" placeholder="e.g., client-logo-v2" oninput="previewNameFormat()" autofocus>
             <p class="text-[10px] text-slate-400 mt-1">This name will be saved for easy identification</p>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-2 uppercase">Quick Format</label>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="applyFormat('lower')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">lowercase</button>
+              <button onclick="applyFormat('upper')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">UPPERCASE</button>
+              <button onclick="applyFormat('title')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">Title Case</button>
+              <button onclick="applyFormat('slug')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">slug-case</button>
+              <button onclick="applyFormat('camel')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">camelCase</button>
+              <button onclick="applyFormat('snake')" class="btn-secondary !py-1.5 !px-3 !text-[10px]">snake_case</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
+            <span class="text-[10px] font-semibold text-slate-500 uppercase flex-shrink-0">Preview:</span>
+            <span id="namePreview" class="text-xs font-medium text-slate-800 truncate">—</span>
           </div>
           <div class="flex gap-3 pt-2">
             <button onclick="confirmImageUpload()" class="btn-primary flex-1 justify-center" id="confirmUploadBtn">
@@ -1694,7 +1759,6 @@
           </div>
         </div>`;
     }
-
     function cancelImageUpload() {
       document.getElementById('uploadNameModal').classList.remove('show');
       pendingUploadFile = null;
