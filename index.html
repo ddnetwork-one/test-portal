@@ -1572,18 +1572,54 @@
       // Collect names
       const names = [];
       let hasEmpty = false;
-      document.querySelectorAll('.batch-name-input').forEach((input, i) => {
+      document.querySelectorAll('.batch-name-input').forEach(input => {
+        input.style.borderColor = '#e2e8f0';
+        input.style.boxShadow = '';
         const val = input.value.trim();
-        if (!val) hasEmpty = true;
+        if (!val) { hasEmpty = true; input.style.borderColor = '#ef4444'; }
         names.push(val);
       });
       if (hasEmpty) { showToast('Please fill in all image names', 'error'); return; }
 
+      // ---- Check for duplicates ----
       btn.disabled = true;
-      btn.innerHTML = '<div class="spinner"></div> Uploading 0/' + files.length + '...';
+      btn.innerHTML = '<div class="spinner"></div> Checking names...';
 
+      const nameSet = new Set();
+      let hasDupInForm = false;
+      for (let i = 0; i < names.length; i++) {
+        if (nameSet.has(names[i])) {
+          const input = document.querySelector(`.batch-name-input[data-idx="${i}"]`);
+          if (input) { input.style.borderColor = '#ef4444'; input.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.1)'; }
+          hasDupInForm = true;
+        }
+        nameSet.add(names[i]);
+      }
+      if (hasDupInForm) {
+        btn.disabled = false;
+        btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg> Upload All (${files.length})`;
+        showToast('Duplicate names found within this batch. Please fix highlighted fields.', 'error');
+        return;
+      }
+
+      // Check against Firestore
+      let dbDupFound = false;
+      for (let i = 0; i < names.length; i++) {
+        if (await isImageNameTaken(names[i])) {
+          const input = document.querySelector(`.batch-name-input[data-idx="${i}"]`);
+          if (input) { input.style.borderColor = '#ef4444'; input.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.1)'; }
+          dbDupFound = true;
+        }
+      }
+      if (dbDupFound) {
+        btn.disabled = false;
+        btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg> Upload All (${files.length})`;
+        showToast('Some names already exist in the database. Please fix highlighted fields.', 'error');
+        return;
+      }
+
+      // ---- Proceed with upload ----
       let success = 0, failed = 0;
-
       for (let i = 0; i < files.length; i++) {
         btn.innerHTML = `<div class="spinner"></div> Uploading ${i + 1}/${files.length}...`;
         const formData = new FormData();
@@ -1594,12 +1630,8 @@
           const data = await res.json();
           if (data.url) {
             await db.collection('uploaded_images').add({
-              url: data.url,
-              filename: files[i].name,
-              imageName: names[i],
-              size: files[i].size,
-              mime: files[i].type,
-              remarks: remarks,
+              url: data.url, filename: files[i].name, imageName: names[i],
+              size: files[i].size, mime: files[i].type, remarks: remarks,
               uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             success++;
@@ -1618,6 +1650,12 @@
         showToast(`${success} uploaded, ${failed} failed`, 'error');
       }
       renderImages();
+    }
+
+        async function isImageNameTaken(name) {
+      if (!name || !name.trim()) return false;
+      const snap = await db.collection('uploaded_images').where('imageName', '==', name.trim()).limit(1).get();
+      return !snap.empty;
     }
 
     function restoreSingleNamingDialog() {
@@ -1667,49 +1705,53 @@
     async function confirmImageUpload() {
       const file = pendingUploadFile;
       if (!file) return;
-      // If array (shouldn't happen here, but safety)
       if (Array.isArray(file)) { confirmBatchUpload(); return; }
 
       const imageName = document.getElementById('uploadImageName').value.trim();
       if (!imageName) { showToast('Please enter an image name', 'error'); document.getElementById('uploadImageName').focus(); return; }
 
-      // Close naming dialog
+      // ---- Duplicate name check ----
+      const nameInput = document.getElementById('uploadImageName');
+      nameInput.style.borderColor = '#e2e8f0'; // reset border first
+      const taken = await isImageNameTaken(imageName);
+      if (taken) {
+        showToast(`"${imageName}" already exists. Please use a different name.`, 'error');
+        nameInput.style.borderColor = '#ef4444';
+        nameInput.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.1)';
+        nameInput.focus();
+        nameInput.select();
+        // Clear red border on next typing
+        nameInput.oninput = () => {
+          nameInput.style.borderColor = '#e2e8f0';
+          nameInput.style.boxShadow = '';
+          nameInput.oninput = null;
+        };
+        return;
+      }
+
       document.getElementById('uploadNameModal').classList.remove('show');
       const btn = document.getElementById('confirmUploadBtn');
       btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Uploading...';
-
       showToast('Uploading image...');
 
       const formData = new FormData();
       formData.append('file', file);
 
       try {
-        const res = await fetch(IMAGE_UPLOAD_URL, {
-          method: 'POST',
-          body: formData
-        });
-
+        const res = await fetch(IMAGE_UPLOAD_URL, { method: 'POST', body: formData });
         if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
-
         const data = await res.json();
-
         if (data.url) {
           const remarks = prompt('Add internal remarks (optional):') || '';
           await db.collection('uploaded_images').add({
-            url: data.url,
-            filename: file.name,
-            imageName: imageName,
-            size: file.size,
-            mime: file.type,
-            remarks: remarks,
+            url: data.url, filename: file.name, imageName: imageName,
+            size: file.size, mime: file.type, remarks: remarks,
             uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           showToast(`"${imageName}" uploaded successfully!`);
           addNotification('Image Uploaded', imageName, 'success');
           renderImages();
-        } else {
-          showToast('Upload failed - no URL returned', 'error');
-        }
+        } else { showToast('Upload failed - no URL returned', 'error'); }
       } catch (e) {
         console.error('Upload error:', e);
         showToast('Upload error: ' + e.message, 'error');
@@ -1718,8 +1760,6 @@
       pendingUploadFile = null;
       btn.disabled = false;
       btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg> Upload & Save';
-
-      // Reset thumbnail
       document.getElementById('uploadThumbPreview').innerHTML = '<svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>';
     }
 
