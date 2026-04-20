@@ -197,13 +197,49 @@
     }
     .input-field:focus { border-color: #ff005e; box-shadow: 0 0 0 3px rgba(255,0,94,0.08); }
 
-    /* Enhanced Search Dropdown for Forms */
-    .search-wrapper { position: relative; }
-    .search-dropdown {
+    /* Universal Search Dropdown */
+    .af-container { position: relative; }
+    .af-dropdown {
       position: absolute; top: 100%; left: 0; right: 0;
       background: white; border: 1px solid #e2e8f0; border-radius: 12px;
       box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
       max-height: 280px; overflow-y: auto; z-index: 60;
+      margin-top: 4px; display: none;
+    }
+    .af-dropdown.show { display: block; }
+    .af-item {
+      padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9;
+      display: flex; align-items: center; gap: 10px; transition: background 0.12s;
+    }
+    .af-item:last-child { border-bottom: none; }
+    .af-item:hover, .af-item.active { background: #fef2f4; }
+    .af-item .af-match {
+      background: #fef08a; color: #854d0e; padding: 0 2px; border-radius: 2px;
+      font-weight: 600;
+    }
+    .af-item .af-sub {
+      font-size: 10px; color: #94a3b8; margin-top: 1px;
+    }
+    .af-item .af-meta {
+      font-size: 10px; color: #94a3b8; margin-left: auto; white-space: nowrap;
+    }
+    .af-empty {
+      padding: 16px; text-align: center; color: #94a3b8; font-size: 12px;
+    }
+    .af-badge {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.03em; flex-shrink: 0;
+    }
+    .af-badge-client { background: #fce7f3; color: #be185d; }
+    .af-badge-team { background: #dbeafe; color: #1d4ed8; }
+
+    /* Table Search Dropdown */
+    .search-container { position: relative; }
+    .search-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+      max-height: 320px; overflow-y: auto; z-index: 50;
       margin-top: 4px; display: none;
     }
     .search-dropdown.show { display: block; }
@@ -218,18 +254,8 @@
       font-weight: 600;
     }
     .search-no-results {
-      padding: 16px; text-center; color: #94a3b8; font-size: 12px;
+      padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;
     }
-    .dropdown-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: linear-gradient(135deg, #ff005e, #ff3377);
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 11px; font-weight: 700; flex-shrink: 0;
-    }
-    .dropdown-info { flex: 1; min-width: 0; }
-    .dropdown-name { font-size: 13px; font-weight: 600; color: #1e293b; }
-    .dropdown-sub { font-size: 11px; color: #64748b; margin-top: 1px; }
-    .dropdown-meta { font-size: 10px; color: #94a3b8; margin-top: 2px; }
 
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px);
@@ -377,7 +403,6 @@
       0%, 100% { box-shadow: 0 0 0 0 rgba(255, 0, 94, 0.3); }
       50% { box-shadow: 0 0 0 8px rgba(255, 0, 94, 0); }
     }
-    .pulse-glow { animation: pulseGlow 2s infinite; }
 
     .notif-action-btn {
       padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 600;
@@ -388,17 +413,14 @@
     .notif-action-btn-secondary { background: #f1f5f9; color: #475569; }
     .notif-action-btn-secondary:hover { background: #e2e8f0; }
 
-    /* Auto-fill hint styles */
-    .auto-fill-hint {
-      display: flex; gap: 8px; margin-top: 6px; padding: 8px 10px;
-      background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
-      font-size: 11px; color: #166534; animation: fadeInUp 0.2s ease-out;
+    .af-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #fef2f4; border: 1px solid #fecdd3; color: #be123c;
+      padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 500;
+      margin-top: 4px;
     }
-    .auto-fill-hint.warning { background: #fffbeb; border-color: #fde68a; color: #92400e; }
-    .auto-fill-tag {
-      background: white; padding: 2px 6px; border-radius: 4px;
-      font-weight: 600; font-size: 10px;
-    }
+    .af-chip svg { cursor: pointer; opacity: 0.6; }
+    .af-chip svg:hover { opacity: 1; }
   </style>
 </head>
 <body>
@@ -538,10 +560,6 @@
               <div id="notifList" class="overflow-y-auto" style="max-height:360px;"></div>
             </div>
           </div>
-          <div class="relative hidden sm:block">
-            <input type="text" placeholder="Search..." class="input-field !w-56 !py-2 !pl-9 !pr-4 !text-xs" onkeyup="globalSearch(this.value)">
-            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          </div>
           <div class="flex items-center gap-2">
             <span id="roleBadge" class="role-badge superadmin">SuperAdmin</span>
             <div class="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white text-xs font-bold" id="avatarInitial">A</div>
@@ -609,6 +627,304 @@
     let cachedClients = {};
     let cachedTeam = {};
     let reminderChecked = false;
+
+    // ==========================================
+    // UNIVERSAL AUTO-FILL ENGINE
+    // ==========================================
+    let activeAfId = null; // track which af dropdown is open
+
+    function searchClientsAndTeam(query) {
+      if (!query || query.length < 1) return [];
+      const q = query.toLowerCase().trim();
+      const results = [];
+
+      // Search clients: name, businessName, email
+      Object.entries(cachedClients).forEach(([id, c]) => {
+        const nameStr = (c.name || '').toLowerCase();
+        const bizStr = (c.businessName || '').toLowerCase();
+        const emailStr = (c.email || '').toLowerCase();
+        if (nameStr.includes(q) || bizStr.includes(q) || emailStr.includes(q)) {
+          results.push({
+            type: 'client',
+            id,
+            name: c.name || '',
+            businessName: c.businessName || '',
+            email: c.email || '',
+            phone: c.phone || '',
+            plan: c.plan || '',
+            businessType: c.businessType || '',
+            website: c.website || ''
+          });
+        }
+      });
+
+      // Search team: name, email, role
+      Object.entries(cachedTeam).forEach(([id, t]) => {
+        const nameStr = (t.name || '').toLowerCase();
+        const emailStr = (t.email || '').toLowerCase();
+        const roleStr = (t.role || t.position || '').toLowerCase();
+        if (nameStr.includes(q) || emailStr.includes(q) || roleStr.includes(q)) {
+          results.push({
+            type: 'team',
+            id,
+            name: t.name || '',
+            businessName: '',
+            email: t.email || '',
+            phone: t.phone || '',
+            plan: t.role || t.position || '',
+            businessType: t.department || '',
+            website: ''
+          });
+        }
+      });
+
+      // Sort: clients first, then by relevance (starts-with > contains)
+      results.sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'client' ? -1 : 1;
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+        const aStarts = aName.startsWith(q) ? 0 : 1;
+        const bStarts = bName.startsWith(q) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        return aName.localeCompare(bName);
+      });
+
+      return results.slice(0, 10);
+    }
+
+    function highlightMatch(text, query) {
+      if (!text || !query) return escapeHtml(text || '');
+      const escaped = escapeHtml(text);
+      const qEscaped = escapeRegex(query);
+      const regex = new RegExp(`(${qEscaped})`, 'gi');
+      return escaped.replace(regex, '<span class="af-match">$1</span>');
+    }
+
+    function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+    // Initialize af input — call after modal content is rendered
+    function initAfInput(inputName, options = {}) {
+      // options: { filter: 'client'|'team'|null, onSelect: fn, autoFocus: bool }
+      setTimeout(() => {
+        const input = document.querySelector(`[name="${inputName}"]`);
+        if (!input) return;
+
+        // Create wrapper and dropdown
+        if (input.closest('.af-container')) return; // already initialized
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'af-container';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        const dd = document.createElement('div');
+        dd.className = 'af-dropdown';
+        dd.id = 'af-dd-' + inputName;
+        wrapper.appendChild(dd);
+
+        input.setAttribute('autocomplete', 'off');
+        input.setAttribute('data-af-name', inputName);
+
+        let afActiveIndex = -1;
+        let afItems = [];
+
+        input.addEventListener('input', () => {
+          const q = input.value;
+          let results = searchClientsAndTeam(q);
+
+          // Apply filter if specified
+          if (options.filter === 'client') results = results.filter(r => r.type === 'client');
+          if (options.filter === 'team') results = results.filter(r => r.type === 'team');
+
+          afItems = results;
+          afActiveIndex = -1;
+
+          if (!q || results.length === 0) {
+            dd.classList.remove('show');
+            dd.innerHTML = q ? '<div class="af-empty">No matches found</div>' : '';
+            if (q && results.length === 0) dd.classList.add('show');
+            return;
+          }
+
+          dd.innerHTML = results.map((r, i) => {
+            const badgeClass = r.type === 'client' ? 'af-badge-client' : 'af-badge-team';
+            const badgeLabel = r.type === 'client' ? 'Client' : 'Team';
+            const subLine = r.businessName ? `<div class="af-sub">${highlightMatch(r.businessName, q)}</div>` : '';
+            const metaText = r.email || r.phone || '';
+
+            return `<div class="af-item" data-af-index="${i}" data-af-type="${r.type}" data-af-id="${r.id}">
+              <div class="w-7 h-7 rounded-full ${r.type==='client'?'bg-gradient-to-br from-pink-400 to-rose-500':'bg-gradient-to-br from-blue-400 to-indigo-500'} flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">${(r.name||'?')[0].toUpperCase()}</div>
+              <div class="min-w-0 flex-1">
+                <div class="text-xs font-semibold text-slate-800 truncate">${highlightMatch(r.name, q)}</div>
+                ${subLine}
+              </div>
+              <div class="flex flex-col items-end gap-0.5">
+                <span class="af-badge ${badgeClass}">${badgeLabel}</span>
+                ${metaText ? `<span class="af-meta">${escapeHtml(metaText.split('|')[0].trim())}</span>` : ''}
+              </div>
+            </div>`;
+          }).join('');
+
+          dd.classList.add('show');
+          activeAfId = 'af-dd-' + inputName;
+
+          // Click handlers for items
+          dd.querySelectorAll('.af-item').forEach(item => {
+            item.addEventListener('mousedown', (e) => {
+              e.preventDefault(); // prevent blur
+              const idx = parseInt(item.dataset.afIndex);
+              selectAfResult(inputName, afItems[idx], options);
+            });
+          });
+        });
+
+        input.addEventListener('focus', () => {
+          if (input.value.length >= 1) {
+            input.dispatchEvent(new Event('input'));
+          }
+        });
+
+        input.addEventListener('blur', () => {
+          setTimeout(() => {
+            dd.classList.remove('show');
+            if (activeAfId === 'af-dd-' + inputName) activeAfId = null;
+          }, 200);
+        });
+
+        // Keyboard navigation
+        input.addEventListener('keydown', (e) => {
+          if (!dd.classList.contains('show')) return;
+          const items = dd.querySelectorAll('.af-item');
+
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            afActiveIndex = Math.min(afActiveIndex + 1, items.length - 1);
+            updateAfActive(items);
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            afActiveIndex = Math.max(afActiveIndex - 1, 0);
+            updateAfActive(items);
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (afActiveIndex >= 0 && afItems[afActiveIndex]) {
+              selectAfResult(inputName, afItems[afActiveIndex], options);
+            }
+          } else if (e.key === 'Escape') {
+            dd.classList.remove('show');
+          } else if (e.key === 'Tab') {
+            dd.classList.remove('show');
+          }
+        });
+
+        // Auto-focus if requested
+        if (options.autoFocus) setTimeout(() => input.focus(), 100);
+      }, 50);
+    }
+
+    function updateAfActive(items) {
+      items.forEach((it, i) => it.classList.toggle('active', i === afActiveIndex));
+      if (items[afActiveIndex]) items[afActiveIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    function selectAfResult(inputName, result, options = {}) {
+      const input = document.querySelector(`[name="${inputName}"]`);
+      const dd = document.getElementById('af-dd-' + inputName);
+      if (!input) return;
+
+      // Set the name field
+      input.value = result.name;
+      if (dd) dd.classList.remove('show');
+      activeAfId = null;
+
+      // Show matched chip
+      showAfChip(inputName, result);
+
+      // Auto-fill related fields based on context
+      autoFillFromResult(inputName, result);
+
+      // Call custom onSelect if provided
+      if (options.onSelect) options.onSelect(result);
+    }
+
+    function showAfChip(inputName, result) {
+      // Remove existing chip
+      const existing = document.getElementById('af-chip-' + inputName);
+      if (existing) existing.remove();
+
+      const input = document.querySelector(`[name="${inputName}"]`);
+      if (!input) return;
+
+      const badgeClass = result.type === 'client' ? 'af-badge-client' : 'af-badge-team';
+      const label = result.type === 'client' ? 'Client' : 'Team';
+      const detail = result.businessName || result.plan || result.email || '';
+
+      const chip = document.createElement('div');
+      chip.id = 'af-chip-' + inputName;
+      chip.className = 'af-chip';
+      chip.innerHTML = `<span class="af-badge ${badgeClass}" style="margin:0;font-size:8px;padding:1px 5px;">${label}</span> ${escapeHtml(result.name)}${detail ? ' — ' + escapeHtml(detail.split('|')[0].trim()) : ''} <svg onclick="clearAfChip('${inputName}')" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>`;
+      input.parentNode.appendChild(chip);
+    }
+
+    function clearAfChip(inputName) {
+      const chip = document.getElementById('af-chip-' + inputName);
+      if (chip) chip.remove();
+      const input = document.querySelector(`[name="${inputName}"]`);
+      if (input) { input.value = ''; input.focus(); }
+    }
+
+    function autoFillFromResult(triggerName, result) {
+      const form = document.querySelector(`[name="${triggerName}"]`)?.closest('form');
+      if (!form) return;
+
+      if (result.type === 'client') {
+        // Auto-fill email if empty
+        const emailField = form.querySelector('[name="email"], [name="clientEmail"]');
+        if (emailField && !emailField.value && result.email) emailField.value = result.email;
+
+        // Auto-fill phone if empty
+        const phoneField = form.querySelector('[name="phone"], [name="clientPhone"]');
+        if (phoneField && !phoneField.value && result.phone) phoneField.value = result.phone;
+
+        // Auto-fill plan if empty
+        const planField = form.querySelector('[name="plan"], [name="planName"]');
+        if (planField && !planField.value && result.plan) planField.value = result.plan;
+
+        // Auto-fill businessName if empty
+        const bizField = form.querySelector('[name="businessName"]');
+        if (bizField && !bizField.value && result.businessName) bizField.value = result.businessName;
+
+        // Auto-fill serviceName for subscription/invoice contexts
+        const serviceField = form.querySelector('[name="serviceName"]');
+        if (serviceField && !serviceField.value && result.plan) serviceField.value = result.plan + ' Subscription';
+      }
+
+      if (result.type === 'team') {
+        // Auto-fill email if empty
+        const emailField = form.querySelector('[name="email"], [name="clientEmail"]');
+        if (emailField && !emailField.value && result.email) emailField.value = result.email;
+
+        // Auto-fill phone if empty
+        const phoneField = form.querySelector('[name="phone"], [name="clientPhone"]');
+        if (phoneField && !phoneField.value && result.phone) phoneField.value = result.phone;
+
+        // Auto-fill role/position
+        const roleField = form.querySelector('[name="role"], [name="position"]');
+        if (roleField && !roleField.value && result.plan) roleField.value = result.plan;
+
+        // Auto-fill department
+        const deptField = form.querySelector('[name="department"]');
+        if (deptField && !deptField.value && result.businessType) deptField.value = result.businessType;
+      }
+    }
+
+    // Close all af dropdowns on outside click
+    document.addEventListener('mousedown', (e) => {
+      if (!e.target.closest('.af-container')) {
+        document.querySelectorAll('.af-dropdown.show').forEach(dd => dd.classList.remove('show'));
+        activeAfId = null;
+      }
+    });
 
     // ==========================================
     // DATE FORMATTING: dd/mm/yyyy
@@ -718,19 +1034,10 @@
       }
     }
     function handleNotifAction(notifId, action, dismiss) {
-      if (action.startsWith('sendReminder:')) {
-        const subId = action.replace('sendReminder:','');
-        sendCompanySubReminder(subId);
-      } else if (action.startsWith('sendSubRenewal:')) {
-        const subId = action.replace('sendSubRenewal:','');
-        sendClientSubRenewal(subId);
-      }
-      if (dismiss) {
-        notifications = notifications.filter(n => n.id !== notifId);
-        updateNotifUI();
-      } else {
-        markNotifRead(notifId);
-      }
+      if (action.startsWith('sendReminder:')) { sendCompanySubReminder(action.replace('sendReminder:','')); }
+      else if (action.startsWith('sendSubRenewal:')) { sendClientSubRenewal(action.replace('sendSubRenewal:','')); }
+      if (dismiss) { notifications = notifications.filter(n => n.id !== notifId); updateNotifUI(); }
+      else { markNotifRead(notifId); }
     }
     function markNotifRead(id) { const n = notifications.find(n=>n.id===id); if(n) n.read=true; updateNotifUI(); }
     function clearNotifications() { notifications=[]; updateNotifUI(); }
@@ -828,271 +1135,27 @@ Best regards,
     }
 
     // ==========================================
-    // CACHED LOOKUPS & SEARCHABLE ARRAYS
+    // CACHED LOOKUPS
     // ==========================================
-    let searchableClients = [];
-    let searchableTeam = [];
-
     async function loadCachedClients() {
-      try {
-        const snap = await db.collection('clients').get();
-        searchableClients = [];
-        snap.forEach(d => { 
-          const data = d.data();
-          cachedClients[d.id] = data;
-          searchableClients.push({
-            id: d.id,
-            name: data.name || '',
-            businessName: data.businessName || '',
-            email: data.email || '',
-            phone: data.phone || '',
-            businessType: data.businessType || '',
-            plan: data.plan || ''
-          });
-        });
-      } catch(e) { console.error('Cache clients error:', e); }
+      try { const snap = await db.collection('clients').get(); snap.forEach(d => { cachedClients[d.id] = d.data(); }); } catch(e) { console.error('Cache clients error:', e); }
     }
     async function loadCachedTeam() {
-      try {
-        const snap = await db.collection('team').get();
-        searchableTeam = [];
-        snap.forEach(d => { 
-          const data = d.data();
-          cachedTeam[d.id] = data;
-          searchableTeam.push({
-            id: d.id,
-            name: data.name || '',
-            role: data.role || '',
-            department: data.department || '',
-            email: data.email || '',
-            phone: data.phone || ''
-          });
-        });
-      } catch(e) { console.error('Cache team error:', e); }
+      try { const snap = await db.collection('team').get(); snap.forEach(d => { cachedTeam[d.id] = d.data(); }); } catch(e) { console.error('Cache team error:', e); }
     }
     function findClientByName(name) {
       if (!name) return null;
       const n = name.toLowerCase().trim();
-      return searchableClients.find(c => c.name.toLowerCase() === n) || null;
+      return Object.values(cachedClients).find(c => (c.name||'').toLowerCase() === n) || null;
     }
     function findTeamMemberByName(name) {
       if (!name) return null;
       const n = name.toLowerCase().trim();
-      return searchableTeam.find(t => t.name.toLowerCase() === n) || null;
+      return Object.values(cachedTeam).find(t => (t.name||'').toLowerCase() === n) || null;
     }
 
     // ==========================================
-    // ENHANCED SEARCH DROPDOWN SYSTEM FOR FORMS
-    // ==========================================
-    function initSearchDropdown(inputEl, type, options = {}) {
-      if (!inputEl) return;
-      
-      const wrapper = inputEl.closest('.search-wrapper');
-      if (!wrapper) {
-        // Wrap input if not already wrapped
-        const newWrapper = document.createElement('div');
-        newWrapper.className = 'search-wrapper';
-        inputEl.parentNode.insertBefore(newWrapper, inputEl);
-        newWrapper.appendChild(inputEl);
-        const dropdown = document.createElement('div');
-        dropdown.className = 'search-dropdown';
-        dropdown.id = `dd-${type}-${Math.random().toString(36).substr(2, 5)}`;
-        newWrapper.appendChild(dropdown);
-      }
-      
-      const dropdown = wrapper.querySelector('.search-dropdown');
-      let activeIndex = -1;
-      let currentResults = [];
-
-      inputEl.addEventListener('input', function(e) {
-        const query = this.value.trim().toLowerCase();
-        activeIndex = -1;
-        
-        if (query.length < 1) {
-          dropdown.classList.remove('show');
-          dropdown.innerHTML = '';
-          if (options.onClear) options.onClear(this);
-          return;
-        }
-
-        // Search based on type
-        const source = type === 'client' ? searchableClients : searchableTeam;
-        currentResults = source.filter(item => {
-          const searchStr = `${item.name} ${item.businessName || ''} ${item.email || ''}`.toLowerCase();
-          return searchStr.includes(query);
-        }).slice(0, 8);
-
-        if (currentResults.length > 0) {
-          dropdown.innerHTML = currentResults.map((item, idx) => {
-            const highlightedName = highlightText(item.name, query);
-            const subText = type === 'client' 
-              ? (item.businessName ? highlightText(item.businessName, query) : item.email)
-              : `${item.role || ''}${item.department ? ' • ' + item.department : ''}`;
-            
-            return `<div class="search-dropdown-item ${idx === 0 ? 'active' : ''}" 
-                         data-index="${idx}" 
-                         data-id="${item.id}" 
-                         data-name="${escapeHtml(item.name)}"
-                         onclick="selectSearchResult(this, '${type}', '${options.formId || ''}')">
-              <div class="dropdown-avatar">${(item.name || '?')[0].toUpperCase()}</div>
-              <div class="dropdown-info">
-                <div class="dropdown-name">${highlightedName}</div>
-                <div class="dropdown-sub">${subText}</div>
-                ${item.email ? `<div class="dropdown-meta">${item.email}</div>` : ''}
-              </div>
-            </div>`;
-          }).join('');
-          dropdown.classList.add('show');
-          activeIndex = 0;
-        } else {
-          dropdown.innerHTML = `<div class="search-no-results">No ${type}s found matching "${escapeHtml(query)}"</div>`;
-          dropdown.classList.add('show');
-        }
-
-        if (options.onSearch) options.onSearch(query, currentResults);
-      });
-
-      // Keyboard navigation
-      inputEl.addEventListener('keydown', function(e) {
-        const items = dropdown.querySelectorAll('.search-dropdown-item:not(.search-no-results)');
-        
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          if (items.length > 0) {
-            activeIndex = (activeIndex + 1) % items.length;
-            updateActiveItem(items);
-          }
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          if (items.length > 0) {
-            activeIndex = (activeIndex - 1 + items.length) % items.length;
-            updateActiveItem(items);
-          }
-        } else if (e.key === 'Enter') {
-          e.preventDefault();
-          if (activeIndex >= 0 && items[activeIndex]) {
-            items[activeIndex].click();
-          }
-        } else if (e.key === 'Escape') {
-          dropdown.classList.remove('show');
-          this.blur();
-        }
-      });
-
-      // Close on outside click
-      document.addEventListener('click', function handler(e) {
-        if (!wrapper.contains(e.target)) {
-          dropdown.classList.remove('show');
-        }
-      });
-
-      function updateActiveItem(items) {
-        items.forEach((item, idx) => {
-          item.classList.toggle('active', idx === activeIndex);
-        });
-        if (items[activeIndex]) {
-          items[activeIndex].scrollIntoView({ block: 'nearest' });
-        }
-      }
-    }
-
-    window.selectSearchResult = function(el, type, formId) {
-      const wrapper = el.closest('.search-wrapper');
-      const input = wrapper.querySelector('input');
-      const dropdown = wrapper.querySelector('.search-dropdown');
-      const id = el.dataset.id;
-      const name = el.dataset.name;
-      
-      input.value = name;
-      dropdown.classList.remove('show');
-      
-      // Find full data
-      const source = type === 'client' ? searchableClients : searchableTeam;
-      const selected = source.find(s => s.id === id);
-      
-      if (selected && formId) {
-        // Auto-fill related fields in the form
-        autoFillFormFields(formId, type, selected);
-      }
-      
-      // Trigger change event
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    };
-
-    function autoFillFormFields(formId, type, data) {
-      const form = document.getElementById(formId) || document.querySelector(`form[id*="${formId}"]`);
-      if (!form) return;
-
-      if (type === 'client') {
-        // Fill email field if exists
-        const emailField = form.querySelector('[name="clientEmail"]') || form.querySelector('[name="email"]');
-        if (emailField && data.email) {
-          emailField.value = data.email;
-          emailField.dispatchEvent(new Event('input'));
-        }
-        
-        // Fill phone field if exists
-        const phoneField = form.querySelector('[name="phone"]');
-        if (phoneField && data.phone) {
-          phoneField.value = data.phone;
-        }
-
-        // Show auto-fill hint
-        showAutoFillHint(form, data);
-      } else if (type === 'team') {
-        const emailField = form.querySelector('[name="ownerEmail"]') || form.querySelector('[name="email"]');
-        if (emailField && data.email) {
-          emailField.value = data.email;
-        }
-        showAutoFillHint(form, data);
-      }
-    }
-
-    function showAutoFillHint(form, data) {
-      // Remove existing hint
-      const existingHint = form.querySelector('.auto-fill-hint');
-      if (existingHint) existingHint.remove();
-
-      const firstInput = form.querySelector('input[name]');
-      if (!firstInput) return;
-
-      const hintDiv = document.createElement('div');
-      hintDiv.className = 'auto-fill-hint';
-      
-      let tags = '';
-      if (data.email) tags += `<span class="auto-fill-tag">✉ ${data.email}</span>`;
-      if (data.phone) tags += `<span class="auto-fill-tag">📱 ${data.phone}</span>`;
-      if (data.businessName) tags += `<span class="auto-fill-tag">🏢 ${data.businessName}</span>`;
-      if (data.role) tags += `<span class="auto-fill-tag">👤 ${data.role}</span>`;
-      
-      hintDiv.innerHTML = `<svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg><span>Auto-filled:</span>${tags}`;
-      
-      firstInput.parentNode.insertBefore(hintDiv, firstInput.nextSibling);
-      
-      // Remove after 5 seconds
-      setTimeout(() => {
-        if (hintDiv.parentNode) hintDiv.remove();
-      }, 5000);
-    }
-
-    function highlightText(text, query) {
-      if (!text || !query) return escapeHtml(text || '');
-      const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
-      return escapeHtml(text).replace(regex, '<span class="match-highlight">$1</span>');
-    }
-
-    function escapeRegex(string) {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // ==========================================
-    // CUSTOMER NOTIFICATION MODAL
+    // CUSTOMER NOTIFICATION MODAL (with af on recipientName)
     // ==========================================
     let pendingNotifContext = null;
 
@@ -1107,7 +1170,7 @@ Best regards,
           <div class="flex items-center justify-between">
             <div>
               <h3 class="font-semibold text-lg text-slate-800">Send Notification</h3>
-              <p class="text-xs text-slate-500 mt-0.5">To: ${ctx.clientName||''} (${ctx.clientEmail||'No email'})${ctx.clientPhone?' | Phone: '+ctx.clientPhone:''}</p>
+              <p class="text-xs text-slate-500 mt-0.5">Type a name to auto-fill details</p>
             </div>
             <button onclick="closeCustomerNotif()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -1121,20 +1184,20 @@ Best regards,
               ${MESSAGE_TEMPLATES.map(t => `<div class="template-card text-center py-3 ${t.id==='custom'?'selected':''}" onclick="selectMsgTemplate('${t.id}')" data-tpl-id="${t.id}"><div class="text-xl mb-1">${t.icon}</div><div class="text-[10px] font-semibold text-slate-700 leading-tight">${t.name}</div></div>`).join('')}
             </div>
           </div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Recipient Name</label><input name="cnRecipientName" class="input-field" value="${ctx.clientName||''}" placeholder="Type client or team name..."></div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Recipient Email</label><input id="cnToEmail" type="email" class="input-field" value="${ctx.clientEmail||''}" placeholder="client@example.com"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Phone (WhatsApp)</label><input id="cnToPhone" type="tel" class="input-field" value="${ctx.clientPhone||''}" placeholder="+60 12-345 6789"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Recipient Email</label><input name="cnToEmail" type="email" class="input-field" value="${ctx.clientEmail||''}" placeholder="client@example.com"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Phone (WhatsApp)</label><input name="cnToPhone" type="tel" class="input-field" value="${ctx.clientPhone||''}" placeholder="+60 12-345 6789"></div>
           </div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Recipient Name</label><input id="cnRecipientName" class="input-field" value="${ctx.clientName||''}" placeholder="John Doe"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Email Title</label><input id="cnTitle" class="input-field" value="${ctx.defaultTitle||''}" placeholder="Notification title"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Message</label><textarea id="cnMessage" rows="3" class="input-field resize-none" placeholder="Message body...">${ctx.defaultMessage||''}</textarea></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Email Title</label><input name="cnTitle" class="input-field" value="${ctx.defaultTitle||''}" placeholder="Notification title"></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Message</label><textarea name="cnMessage" rows="3" class="input-field resize-none" placeholder="Message body...">${ctx.defaultMessage||''}</textarea></div>
           <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Service Name</label><input id="cnService" class="input-field" value="${ctx.serviceName||'Luviio Subscription'}"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Relevant Date</label><input id="cnDate" class="input-field" value="${ctx.relevantDate||formatDate(new Date())}"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Service Name</label><input name="cnService" class="input-field" value="${ctx.serviceName||'Luviio Subscription'}"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Relevant Date</label><input name="cnDate" class="input-field" value="${ctx.relevantDate||formatDate(new Date())}"></div>
           </div>
           <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Action By</label><input id="cnRenewedBy" class="input-field" value="${ctx.renewedBy||'Luviio Team'}"></div>
-            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Requested By</label><input id="cnRequestedBy" class="input-field" value="${ctx.requestedBy||ctx.clientName||'-'}"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Action By</label><input name="cnRenewedBy" class="input-field" value="${ctx.renewedBy||'Luviio Team'}"></div>
+            <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Requested By</label><input name="cnRequestedBy" class="input-field" value="${ctx.requestedBy||ctx.clientName||'-'}"></div>
           </div>
           <div>
             <div class="flex gap-1 bg-slate-100 rounded-lg p-1 mb-3">
@@ -1156,6 +1219,23 @@ Best regards,
         </div>
       `;
       modal.classList.add('show');
+
+      // Initialize auto-fill on recipientName field
+      initAfInput('cnRecipientName', {
+        onSelect: (result) => {
+          // Auto-fill email, phone from selected result
+          const emailField = document.querySelector('[name="cnToEmail"]');
+          const phoneField = document.querySelector('[name="cnToPhone"]');
+          if (emailField && result.email) emailField.value = result.email;
+          if (phoneField && result.phone) phoneField.value = result.phone;
+          if (result.plan) {
+            const serviceField = document.querySelector('[name="cnService"]');
+            if (serviceField) serviceField.value = result.plan + ' Subscription';
+          }
+          updateNotifPreview();
+        }
+      });
+
       updateNotifPreview();
     }
 
@@ -1164,8 +1244,8 @@ Best regards,
       document.querySelector(`[data-tpl-id="${id}"]`).classList.add('selected');
       const tpl = MESSAGE_TEMPLATES.find(t => t.id === id);
       if (tpl && id !== 'custom') {
-        document.getElementById('cnTitle').value = tpl.emailTitle;
-        document.getElementById('cnMessage').value = pendingNotifContext?.defaultMessage || tpl.emailMessage;
+        document.querySelector('[name="cnTitle"]').value = tpl.emailTitle;
+        document.querySelector('[name="cnMessage"]').value = pendingNotifContext?.defaultMessage || tpl.emailMessage;
       }
       updateNotifPreview();
     }
@@ -1176,7 +1256,7 @@ Best regards,
       document.getElementById('waPreviewArea').classList.toggle('hidden', tab !== 'whatsapp');
     }
     function getNotifFields() {
-      return { email: document.getElementById('cnToEmail').value, phone: document.getElementById('cnToPhone').value, recipientName: document.getElementById('cnRecipientName').value, title: document.getElementById('cnTitle').value, message: document.getElementById('cnMessage').value, service: document.getElementById('cnService').value, date: document.getElementById('cnDate').value, renewedBy: document.getElementById('cnRenewedBy').value, requestedBy: document.getElementById('cnRequestedBy').value };
+      return { email: document.querySelector('[name="cnToEmail"]').value, phone: document.querySelector('[name="cnToPhone"]').value, recipientName: document.querySelector('[name="cnRecipientName"]').value, title: document.querySelector('[name="cnTitle"]').value, message: document.querySelector('[name="cnMessage"]').value, service: document.querySelector('[name="cnService"]').value, date: document.querySelector('[name="cnDate"]').value, renewedBy: document.querySelector('[name="cnRenewedBy"]').value, requestedBy: document.querySelector('[name="cnRequestedBy"]').value };
     }
     function updateNotifPreview() {
       setTimeout(() => {
@@ -1258,7 +1338,7 @@ Best regards,
           clientEmail: s.accountEmail || 'people@luviio.com',
           clientName: 'Luviio Internal',
           defaultTitle: `Reminder: ${s.serviceName} Expiring in ${days} Days`,
-          defaultMessage: `This is a reminder that your company subscription for "${s.serviceName}" will expire in ${days} day${days!==1?'s':''} on ${formatDate(s.renewalDate)}. Please take the necessary steps to renew to avoid any service interruption. Cost: RM${parseFloat(s.cost||0).toLocaleString()} per ${s.billingCycle||'year'}.`,
+          defaultMessage: `This is a reminder that your company subscription for "${s.serviceName}" will expire in ${days} day${days!==1?'s':''} on ${formatDate(s.renewalDate)}. Cost: RM${parseFloat(s.cost||0).toLocaleString()} per ${s.billingCycle||'year'}.`,
           serviceName: s.serviceName || 'Company Subscription',
           renewedBy: 'Luviio System',
           requestedBy: 'Auto-Reminder',
@@ -1308,8 +1388,7 @@ Best regards,
           document.getElementById('avatarInitial').textContent = (currentUser.email||'A')[0].toUpperCase();
           await Promise.all([loadCachedClients(), loadCachedTeam()]);
           setTimeout(() => checkCompanySubExpiryReminders(), 2000);
-          const path = window.location.pathname.replace('/admin/','') || 'dashboard';
-          showPage(path);
+          showPage(window.location.pathname.replace('/admin/','') || 'dashboard');
         } else {
           document.getElementById('mainApp').classList.add('hidden');
           document.getElementById('mainApp').classList.remove('flex');
@@ -1343,8 +1422,8 @@ Best regards,
     function navigateTo(page) {
       if (!hasPermission(page)) {
         const firstAvailable = Object.keys(ALL_PERMISSIONS).find(p => hasPermission(p) && ['dashboard','clients','subscriptions','requests','invoices','feedback','expenses','company-subs','team','crew','emails','templates','imgbb'].includes(p));
-        if (firstAvailable && firstAvailable !== page) { showToast('You do not have access to that page.', 'warning'); showPage(firstAvailable); }
-        else { showToast('You do not have permission to access this page.', 'error'); }
+        if (firstAvailable) { showToast('No access to that page.', 'warning'); showPage(firstAvailable); }
+        else showToast('No permission.', 'error');
         return;
       }
       currentPage = page;
@@ -1389,7 +1468,6 @@ Best regards,
       }, 300);
     }
     window.addEventListener('popstate', e => { if(currentUser && e.state?.page) showPage(e.state.page); else if(currentUser) showPage(window.location.pathname.replace('/admin/','')||'dashboard'); });
-    window.addEventListener('load', () => { if(currentUser) showPage(window.location.pathname.replace('/admin/','')||'dashboard'); });
     function toggleSidebar() {
       const sb = document.getElementById('sidebar');
       if (sb.classList.contains('hidden-sidebar')) return;
@@ -1413,56 +1491,23 @@ Best regards,
       const content = document.getElementById('pageContent');
       try {
         const [clientsSnap, subsSnap, expensesSnap, requestsSnap, invoicesSnap, compSubsSnap] = await Promise.all([
-          db.collection('clients').get(),
-          db.collection('subscriptions').where('status','==','active').get(),
-          db.collection('expenses').get(),
-          db.collection('client_requests').orderBy('createdAt','desc').limit(5).get(),
-          db.collection('invoices').orderBy('createdAt','desc').limit(5).get(),
-          db.collection('company_subscriptions').get()
+          db.collection('clients').get(), db.collection('subscriptions').where('status','==','active').get(),
+          db.collection('expenses').get(), db.collection('client_requests').orderBy('createdAt','desc').limit(5).get(),
+          db.collection('invoices').orderBy('createdAt','desc').limit(5).get(), db.collection('company_subscriptions').get()
         ]);
         let totalIncome=0, totalExpenses=0, totalCompSubs=0;
         invoicesSnap.forEach(d => { if(d.data().status==='paid') totalIncome+=parseFloat(d.data().amount||0); });
         expensesSnap.forEach(d => { totalExpenses+=parseFloat(d.data().amount||0); });
         compSubsSnap.forEach(d => { totalCompSubs+=parseFloat(d.data().cost||0); });
         const profit = totalIncome - totalExpenses;
-
         const expiringSubs = [];
-        compSubsSnap.forEach(doc => {
-          const s = doc.data();
-          const days = daysUntil(s.renewalDate);
-          if (days >= 0 && days <= 14) expiringSubs.push({ id: doc.id, ...s, days });
-        });
+        compSubsSnap.forEach(doc => { const s = doc.data(); const days = daysUntil(s.renewalDate); if (days >= 0 && days <= 14) expiringSubs.push({ id: doc.id, ...s, days }); });
         expiringSubs.sort((a,b) => a.days - b.days);
-
         let alertBarHTML = '';
         if (expiringSubs.length > 0) {
-          alertBarHTML = `<div class="expiry-alert-bar">
-            <div class="flex items-start gap-3">
-              <div class="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-              </div>
-              <div class="flex-1">
-                <h4 class="font-semibold text-sm text-yellow-800">Company Subscriptions Expiring Soon</h4>
-                <div class="mt-2 space-y-1.5">
-                  ${expiringSubs.map(s => `<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white/60 rounded-lg px-3 py-2">
-                    <div class="flex items-center gap-2">
-                      <span class="font-medium text-sm text-slate-800">${s.serviceName}</span>
-                      <span class="badge ${s.days<=0?'badge-danger':s.days<=3?'badge-danger':'badge-orange'}">${s.days<=0?'EXPIRED':s.days+'d left'}</span>
-                      <span class="text-xs text-slate-500">${formatDate(s.renewalDate)}</span>
-                    </div>
-                    <div class="flex gap-2">
-                      <button onclick="sendCompanySubReminder('${s.id}')" class="notif-action-btn notif-action-btn-primary">📧 Send Reminder</button>
-                      <button onclick="renewCompanySubWithNotif('${s.id}')" class="notif-action-btn notif-action-btn-secondary">🔄 Renew</button>
-                    </div>
-                  </div>`).join('')}
-                </div>
-              </div>
-            </div>
-          </div>`;
+          alertBarHTML = `<div class="expiry-alert-bar"><div class="flex items-start gap-3"><div class="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div><div class="flex-1"><h4 class="font-semibold text-sm text-yellow-800">Company Subscriptions Expiring Soon</h4><div class="mt-2 space-y-1.5">${expiringSubs.map(s => `<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white/60 rounded-lg px-3 py-2"><div class="flex items-center gap-2"><span class="font-medium text-sm text-slate-800">${s.serviceName}</span><span class="badge ${s.days<=0?'badge-danger':s.days<=3?'badge-danger':'badge-orange'}">${s.days<=0?'EXPIRED':s.days+'d left'}</span><span class="text-xs text-slate-500">${formatDate(s.renewalDate)}</span></div><div class="flex gap-2"><button onclick="sendCompanySubReminder('${s.id}')" class="notif-action-btn notif-action-btn-primary">📧 Send Reminder</button><button onclick="renewCompanySubWithNotif('${s.id}')" class="notif-action-btn notif-action-btn-secondary">🔄 Renew</button></div></div>`).join('')}</div></div></div></div>`;
         }
-
-        content.innerHTML = `<div class="animate-in space-y-6">
-          ${alertBarHTML}
+        content.innerHTML = `<div class="animate-in space-y-6">${alertBarHTML}
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             <div class="stat-card"><div class="flex items-center justify-between mb-3"><div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center"><svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></div></div><p class="text-2xl font-bold text-slate-800">${clientsSnap.size}</p><p class="text-xs text-slate-500 mt-1">Clients</p></div>
             <div class="stat-card"><div class="flex items-center justify-between mb-3"><div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center"><svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div><span class="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">Active</span></div><p class="text-2xl font-bold text-slate-800">${subsSnap.size}</p><p class="text-xs text-slate-500 mt-1">Subscriptions</p></div>
@@ -1491,73 +1536,37 @@ Best regards,
     }
 
     // ==========================================
-    // CLIENTS PAGE WITH ENHANCED SEARCH
+    // CLIENTS (with table search dropdown)
     // ==========================================
     async function renderClients() {
       const content = document.getElementById('pageContent');
       try {
         const snap = await db.collection('clients').orderBy('createdAt','desc').get();
-        
-        content.innerHTML = `<div class="animate-in space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 class="font-semibold text-slate-800 text-lg">All Clients (${snap.size})</h3>
-              <p class="text-xs text-slate-500 mt-0.5">Manage your client database</p>
-            </div>
-            <div class="flex gap-2">
-              <div class="search-container relative">
-                <input type="text" id="clientSearchInput" placeholder="Search by name or company..." class="input-field !w-72 !py-2 !pl-9 !pr-4 !text-xs" oninput="handleClientSearch(this.value)" autocomplete="off">
-                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <div id="clientSearchDropdown" class="search-dropdown"></div>
-              </div>
-              ${hasPermission('edit')?`<button onclick="openModal('addClient')" class="btn-primary whitespace-nowrap"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Add Client</button>`:''}
-            </div>
-          </div>
-          
-          <div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table" id="client-table"><thead><tr><th>Client Name</th><th>Business Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Plan</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="clientTableBody">${snap.docs.length===0?'<tr><td colspan="9" class="text-center text-slate-400 py-12">No clients found.</td></tr>':snap.docs.map(doc=>{const c=doc.data();return`<tr data-id="${doc.id}" data-search="${(c.name||''+' '+c.businessName||''+' '+c.email||''+' '+c.businessType||''+' '+c.plan||'').toLowerCase()}"><td><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-xs font-bold">${(c.name||'?')[0].toUpperCase()}</div><span class="font-medium text-sm">${c.name||'-'}</span></div></td><td class="text-sm text-slate-700 font-medium">${c.businessName||'<span class="text-slate-300 text-xs">-</span>'}</td><td class="text-slate-600 text-sm">${c.email||'-'}</td><td class="text-slate-600 text-sm">${c.phone||'-'}</td><td><span class="badge badge-neutral">${c.businessType||'-'}</span></td><td class="text-sm font-medium">${c.plan||'-'}</td><td>${getStatusBadge(c.status||'active')}</td><td class="text-xs text-slate-500">${formatDate(c.createdAt)}</td><td><div class="flex gap-1"><button onclick="viewClient('${doc.id}')" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="View"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>${editBtnHTML('editClient',doc.id)}${(hasPermission('sendEmail') || hasPermission('sendWhatsApp')) ? `<button onclick="sendToClient('${doc.id}')" class="p-1.5 rounded-lg hover:bg-green-50 text-slate-500 hover:text-green-600" title="Send Notification"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></button>` : ''}${deleteBtnHTML('clients',doc.id,'client')}</div></td></tr>`;}).join('')}</tbody></table></div></div>
-        </div>`;
+        const clientsList = [];
+        snap.docs.forEach(doc => { const c = doc.data(); cachedClients[doc.id] = c; clientsList.push({ id: doc.id, name: c.name || '', businessName: c.businessName || '', email: c.email || '', phone: c.phone || '', businessType: c.businessType || '', plan: c.plan || '' }); });
+        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">All Clients (${snap.size})</h3><p class="text-xs text-slate-500 mt-0.5">Manage your client database</p></div><div class="flex gap-2"><div class="search-container relative"><input type="text" id="clientSearchInput" placeholder="Search by name or company..." class="input-field !w-72 !py-2 !pl-9 !pr-4 !text-xs" oninput="handleClientSearch(this.value)" autocomplete="off"><svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><div id="clientSearchDropdown" class="search-dropdown"></div></div>${hasPermission('edit')?`<button onclick="openModal('addClient')" class="btn-primary whitespace-nowrap"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Add Client</button>`:''}</div></div>
+        <div id="clientsDataStore" style="display:none;" data-clients='${JSON.stringify(clientsList)}'></div>
+        <div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table" id="client-table"><thead><tr><th>Client Name</th><th>Business Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Plan</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody id="clientTableBody">${snap.docs.length===0?'<tr><td colspan="9" class="text-center text-slate-400 py-12">No clients found.</td></tr>':snap.docs.map(doc=>{const c=doc.data();return`<tr data-id="${doc.id}" data-search="${(c.name||''+' '+c.businessName||''+' '+c.email||''+' '+c.businessType||''+' '+c.plan||'').toLowerCase()}"><td><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-xs font-bold">${(c.name||'?')[0].toUpperCase()}</div><span class="font-medium text-sm">${c.name||'-'}</span></div></td><td class="text-sm text-slate-700 font-medium">${c.businessName||'<span class="text-slate-300 text-xs">-</span>'}</td><td class="text-slate-600 text-sm">${c.email||'-'}</td><td class="text-slate-600 text-sm">${c.phone||'-'}</td><td><span class="badge badge-neutral">${c.businessType||'-'}</span></td><td class="text-sm font-medium">${c.plan||'-'}</td><td>${getStatusBadge(c.status||'active')}</td><td class="text-xs text-slate-500">${formatDate(c.createdAt)}</td><td><div class="flex gap-1"><button onclick="viewClient('${doc.id}')" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" title="View"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>${editBtnHTML('editClient',doc.id)}${(hasPermission('sendEmail') || hasPermission('sendWhatsApp')) ? `<button onclick="sendToClient('${doc.id}')" class="p-1.5 rounded-lg hover:bg-green-50 text-slate-500 hover:text-green-600" title="Send Notification"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></button>` : ''}${deleteBtnHTML('clients',doc.id,'client')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
     function handleClientSearch(query) {
       const dropdown = document.getElementById('clientSearchDropdown');
       const input = document.getElementById('clientSearchInput');
-      
-      if (!query || query.length < 1) {
-        dropdown.classList.remove('show');
-        dropdown.innerHTML = '';
-        document.querySelectorAll('#clientTableBody tr').forEach(row => {
-          row.classList.remove('hidden-row');
-        });
-        return;
-      }
-
+      if (!query || query.length < 1) { dropdown.classList.remove('show'); dropdown.innerHTML = ''; document.querySelectorAll('#clientTableBody tr').forEach(row => row.classList.remove('hidden-row')); return; }
       const q = query.toLowerCase().trim();
-      const matches = searchableClients.filter(c => 
-        (c.name && c.name.toLowerCase().includes(q)) ||
-        (c.businessName && c.businessName.toLowerCase().includes(q))
-      );
-
+      const store = document.getElementById('clientsDataStore');
+      const clients = store ? JSON.parse(store.dataset.clients || '[]') : [];
+      const matches = clients.filter(c => (c.name && c.name.toLowerCase().includes(q)) || (c.businessName && c.businessName.toLowerCase().includes(q)));
       if (matches.length > 0) {
         dropdown.innerHTML = matches.slice(0, 8).map((c, idx) => {
-          const highlightName = highlightText(c.name, q);
-          const highlightBiz = c.businessName ? highlightText(c.businessName, q) : '';
+          const highlightName = highlightMatch(c.name, q);
+          const highlightBiz = c.businessName ? highlightMatch(c.businessName, q) : '';
           const bizLabel = c.businessName ? `<div class="text-[10px] text-slate-400">${highlightBiz}</div>` : '';
-          
-          return `<div class="search-dropdown-item ${idx===0?'active':''}" onclick="selectClientFromSearch('${c.id}', '${escapeHtml(c.name)}')" data-id="${c.id}">
-            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">${(c.name||'?')[0].toUpperCase()}</div>
-            <div class="min-w-0">
-              <div class="text-xs font-semibold text-slate-800 truncate">${highlightName}</div>
-              ${bizLabel}
-            </div>
-          </div>`;
+          return `<div class="search-dropdown-item ${idx===0?'active':''}" onclick="selectClientFromSearch('${c.id}', '${escapeHtml(c.name)}')" data-id="${c.id}"><div class="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">${(c.name||'?')[0].toUpperCase()}</div><div class="min-w-0"><div class="text-xs font-semibold text-slate-800 truncate">${highlightName}</div>${bizLabel}</div></div>`;
         }).join('');
         dropdown.classList.add('show');
-        
-        document.querySelectorAll('#clientTableBody tr').forEach(row => {
-          const searchText = row.dataset.search || '';
-          row.classList.toggle('hidden-row', !searchText.includes(q));
-        });
+        document.querySelectorAll('#clientTableBody tr').forEach(row => { row.classList.toggle('hidden-row', !(row.dataset.search || '').includes(q)); });
       } else {
         dropdown.innerHTML = '<div class="search-no-results">No clients found</div>';
         dropdown.classList.add('show');
@@ -1567,54 +1576,28 @@ Best regards,
     function selectClientFromSearch(id, name) {
       const dropdown = document.getElementById('clientSearchDropdown');
       const input = document.getElementById('clientSearchInput');
-      
-      input.value = name;
-      dropdown.classList.remove('show');
-      
+      input.value = name; dropdown.classList.remove('show');
       document.querySelectorAll('#clientTableBody tr').forEach(row => {
         row.classList.remove('hidden-row');
-        if (row.dataset.id === id) {
-          row.style.background = '#fef2f4';
-          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setTimeout(() => { row.style.background = ''; }, 1500);
-        }
+        if (row.dataset.id === id) { row.style.background = '#fef2f4'; row.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => { row.style.background = ''; }, 1500); }
       });
     }
 
     document.addEventListener('click', (e) => {
       const container = document.querySelector('.search-container');
-      if (container && !container.contains(e.target)) {
-        const dd = document.getElementById('clientSearchDropdown');
-        if (dd) dd.classList.remove('show');
-      }
+      if (container && !container.contains(e.target)) { const dd = document.getElementById('clientSearchDropdown'); if (dd) dd.classList.remove('show'); }
     });
 
     document.addEventListener('keydown', (e) => {
       const dropdown = document.getElementById('clientSearchDropdown');
       if (!dropdown || !dropdown.classList.contains('show')) return;
-      
       const items = dropdown.querySelectorAll('.search-dropdown-item');
       const active = dropdown.querySelector('.search-dropdown-item.active');
       let idx = Array.from(items).indexOf(active);
-      
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        idx = (idx + 1) % items.length;
-        items.forEach(i => i.classList.remove('active'));
-        items[idx].classList.add('active');
-        items[idx].scrollIntoView({ block: 'nearest' });
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        idx = (idx - 1 + items.length) % items.length;
-        items.forEach(i => i.classList.remove('active'));
-        items[idx].classList.add('active');
-        items[idx].scrollIntoView({ block: 'nearest' });
-      } else if (e.key === 'Enter' && active) {
-        e.preventDefault();
-        active.click();
-      } else if (e.key === 'Escape') {
-        dropdown.classList.remove('show');
-      }
+      if (e.key === 'ArrowDown') { e.preventDefault(); idx = (idx + 1) % items.length; items.forEach(i => i.classList.remove('active')); items[idx].classList.add('active'); items[idx].scrollIntoView({ block: 'nearest' }); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); idx = (idx - 1 + items.length) % items.length; items.forEach(i => i.classList.remove('active')); items[idx].classList.add('active'); items[idx].scrollIntoView({ block: 'nearest' }); }
+      else if (e.key === 'Enter' && active) { e.preventDefault(); active.click(); }
+      else if (e.key === 'Escape') { dropdown.classList.remove('show'); }
     });
 
     async function sendToClient(id) {
@@ -1623,18 +1606,20 @@ Best regards,
     }
 
     // ==========================================
-    // OTHER PAGES (abbreviated for brevity - same as original but with search dropdown integration)
+    // SUBSCRIPTIONS
     // ==========================================
-    
     async function renderSubscriptions() {
       const content = document.getElementById('pageContent');
       try {
-                const snap = await db.collection('subscriptions').orderBy('startDate','desc').get();
+        const snap = await db.collection('subscriptions').orderBy('startDate','desc').get();
         let mrr=0; snap.docs.forEach(d=>{if(d.data().status==='active') mrr+=parseFloat(d.data().price||0);});
-        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Subscriptions</h3><p class="text-xs text-slate-500 mt-0.5">Monthly Recurring Revenue: <strong class="text-pink-600">RM${mrr.toLocaleString()}</strong></p></div>${hasPermission('edit')?`<button onclick="openModal('addSubscription')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>New Subscription</button>`:''}</div><div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Client</th><th>Plan</th><th>Price/Mo</th><th>Cycle</th><th>Start</th><th>Next Billing</th><th>Status</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>${snap.docs.length===0?'<tr><td colspan="9" class="text-center text-slate-400 py-12">No subscriptions yet</td></tr>':snap.docs.map(doc=>{const s=doc.data();return`<tr><td class="font-medium text-sm">${s.clientName||'-'}</td><td><span class="badge badge-info">${s.planName||s.plan||'-'}</span></td><td class="font-semibold text-sm">RM${parseFloat(s.price||0).toLocaleString()}</td><td class="text-sm capitalize">${s.billingCycle||'Monthly'}</td><td class="text-xs text-slate-500">${formatDate(s.startDate)}</td><td class="text-xs font-medium">${formatDate(s.nextBillingDate)}</td><td>${getStatusBadge(s.status||'active')}</td><td>${remarksCell(s.remarks)}</td><td><div class="flex gap-1">${editBtnHTML('editSubscription',doc.id)}${(hasPermission('sendEmail')||hasPermission('sendWhatsApp'))?`<button onclick="sendClientSubRenewal('${doc.id}')" class="p-1.5 rounded-lg hover:bg-green-50 text-slate-500 hover:text-green-600" title="Send Renewal Notification"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></button>`:''}${deleteBtnHTML('subscriptions',doc.id,'subscription')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
+        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Subscriptions</h3><p class="text-xs text-slate-500 mt-0.5">Monthly Recurring Revenue: <strong class="text-pink-600">RM${mrr.toLocaleString()}</strong></p></div>${hasPermission('edit')?`<button onclick="openModal('addSubscription')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>New Subscription</button>`:''}</div><div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Client</th><th>Plan</th><th>Price/Mo</th><th>Cycle</th><th>Start</th><th>Next Billing</th><th>Status</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>${snap.docs.length===0?'<tr><td colspan="9" class="text-center text-slate-400 py-12">No subscriptions yet</td></tr>':snap.docs.map(doc=>{const s=doc.data();return`<tr><td class="font-medium text-sm">${s.clientName||'-'}</td><td><span class="badge badge-info">${s.planName||s.plan||'-'}</span></td><td class="font-semibold text-sm">RM${parseFloat(s.price||0).toLocaleString()}</td><td class="text-sm capitalize">${s.billingCycle||'Monthly'}</td><td class="text-xs text-slate-500">${formatDate(s.startDate)}</td><td class="text-xs font-medium">${formatDate(s.nextBillingDate)}</td><td>${getStatusBadge(s.status||'active')}</td><td>${remarksCell(s.remarks)}</td><td><div class="flex gap-1">${editBtnHTML('editSubscription',doc.id)}${(hasPermission('sendEmail')||hasPermission('sendWhatsApp'))?`<button onclick="sendClientSubRenewal('${doc.id}')" class="p-1.5 rounded-lg hover:bg-green-50 text-slate-500 hover:text-green-600" title="Send Renewal"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></button>`:''}${deleteBtnHTML('subscriptions',doc.id,'subscription')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
+    // ==========================================
+    // REQUESTS
+    // ==========================================
     async function renderRequests() {
       const content = document.getElementById('pageContent');
       try {
@@ -1644,9 +1629,7 @@ Best regards,
         <div id="requestsList" class="space-y-3">${snap.docs.length===0?'<div class="content-card p-12 text-center text-slate-400">No requests recorded</div>':snap.docs.map(doc=>{const r=doc.data();return`<div class="content-card p-5 request-item" data-status="${r.status||'pending'}"><div class="flex flex-col md:flex-row md:items-start justify-between gap-4"><div class="flex-1"><div class="flex items-center gap-3 mb-2"><span class="badge ${r.type==='Urgent'?'badge-danger':r.type==='Design Change'?'badge-info':'badge-neutral'}">${r.type||'Update'}</span>${getStatusBadge(r.status||'pending')}<span class="text-xs text-slate-400">#${doc.id.slice(0,6)}</span></div><h4 class="font-medium text-slate-800 text-sm mb-1">${r.title||r.details?.slice(0,60)||'No title'}</h4><p class="text-xs text-slate-500 line-clamp-2">${r.details||r.description||'-'}</p>${r.remarks?`<div class="mt-2 p-2 bg-slate-50 rounded-lg text-xs text-slate-600 flex items-start gap-1.5"><svg class="w-3 h-3 mt-0.5 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>${r.remarks}</div>`:''}<div class="flex flex-wrap gap-4 mt-3 text-xs text-slate-400"><span>${r.clientName||r.name||'-'}</span><span>${formatDate(r.createdAt)}</span>${r.price?`<span class="text-pink-600 font-medium">RM${r.price}</span>`:''}</div></div><div class="flex gap-2 flex-shrink-0"><button onclick="updateRequestStatus('${doc.id}','in-progress')" class="btn-secondary !py-2 !px-3 !text-xs" title="In Progress"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button><button onclick="completeRequestWithNotif('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs !text-green-600" title="Complete & Notify"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></button>${deleteRowBtnHTML('client_requests',doc.id,'request')}</div></div></div></div>`;}).join('')}</div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
-
     function filterRequests(s,btn) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); document.querySelectorAll('.request-item').forEach(i=>{i.style.display=(s==='all'||i.dataset.status===s)?'block':'none';}); }
-
     async function completeRequestWithNotif(id) {
       const doc=await db.collection('client_requests').doc(id).get(); const d=doc.data();
       const client = findClientByName(d.clientName||d.name);
@@ -1655,6 +1638,9 @@ Best regards,
       });
     }
 
+    // ==========================================
+    // INVOICES
+    // ==========================================
     async function renderInvoices() {
       const content = document.getElementById('pageContent');
       try {
@@ -1663,7 +1649,6 @@ Best regards,
         content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Invoices & Cashbills</h3><div class="flex gap-4 mt-1"><span class="text-xs text-green-600 font-medium">Paid: RM${tp.toLocaleString()}</span><span class="text-xs text-orange-600 font-medium">Pending: RM${tpe.toLocaleString()}</span></div></div>${hasPermission('edit')?`<button onclick="openModal('addInvoice')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Create Invoice</button>`:''}</div><div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Invoice #</th><th>Client</th><th>Description</th><th>Amount</th><th>Issue</th><th>Due</th><th>Status</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>${snap.docs.length===0?'<tr><td colspan="9" class="text-center text-slate-400 py-12">No invoices yet</td></tr>':snap.docs.map(doc=>{const inv=doc.data();return`<tr><td class="font-mono text-xs font-medium text-pink-600">INV-${doc.id.slice(0,8).toUpperCase()}</td><td class="font-medium text-sm">${inv.clientName||'-'}</td><td class="text-sm text-slate-600 max-w-[200px] truncate">${inv.description||'-'}</td><td class="font-semibold text-sm">RM${parseFloat(inv.amount||0).toLocaleString()}</td><td class="text-xs text-slate-500">${formatDate(inv.issueDate)}</td><td class="text-xs">${formatDate(inv.dueDate)}</td><td>${getStatusBadge(inv.status||'pending')}</td><td>${remarksCell(inv.remarks)}</td><td><div class="flex gap-1"><button onclick="markInvoicePaidWithNotif('${doc.id}')" class="p-1.5 rounded-lg hover:bg-green-50 text-slate-500 hover:text-green-600" title="Mark Paid & Notify"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button>${deleteBtnHTML('invoices',doc.id,'invoice')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
-
     async function markInvoicePaidWithNotif(id) {
       const doc=await db.collection('invoices').doc(id).get(); const inv=doc.data();
       const client = findClientByName(inv.clientName);
@@ -1672,6 +1657,9 @@ Best regards,
       });
     }
 
+    // ==========================================
+    // FEEDBACK
+    // ==========================================
     async function renderFeedback() {
       const content = document.getElementById('pageContent');
       try {
@@ -1679,7 +1667,6 @@ Best regards,
         content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Feedback & Complaints</h3></div>${hasPermission('edit')?`<button onclick="openModal('addFeedback')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Log Feedback</button>`:''}</div><div class="grid gap-4">${snap.docs.length===0?'<div class="content-card p-12 text-center text-slate-400">No feedback recorded</div>':snap.docs.map(doc=>{const f=doc.data();const ic=f.type==='complaint';return`<div class="content-card p-5 ${ic?'border-l-4 border-l-red-400':'border-l-4 border-l-blue-400'}"><div class="flex items-start justify-between gap-4"><div class="flex-1"><div class="flex items-center gap-2 mb-2"><span class="badge ${ic?'badge-danger':'badge-info'}">${ic?'Complaint':'Feedback'}</span>${getStatusBadge(f.status||'new')}<span class="text-xs text-slate-400">${formatDate(f.createdAt)}</span></div><p class="font-medium text-sm text-slate-800 mb-1">${f.subject||f.clientName||'No subject'}</p><p class="text-sm text-slate-600 leading-relaxed">${f.message||f.content||'-'}</p>${f.resolution?`<div class="mt-2 p-3 bg-green-50 rounded-lg text-xs text-green-700"><strong>Resolution:</strong> ${f.resolution}</div>`:''}</div><div class="flex gap-2">${f.status!=='resolved'?`<button onclick="resolveFeedbackWithNotif('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs !text-green-600">Resolve</button>`:''}${deleteBtnHTML('feedback',doc.id,'feedback')}</div></div></div>`;}).join('')}</div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
-
     async function resolveFeedbackWithNotif(id) {
       const doc=await db.collection('feedback').doc(id).get(); const f=doc.data();
       const client = findClientByName(f.clientName);
@@ -1689,6 +1676,9 @@ Best regards,
       });
     }
 
+    // ==========================================
+    // EXPENSES
+    // ==========================================
     async function renderExpenses() {
       const content = document.getElementById('pageContent');
       try {
@@ -1698,6 +1688,9 @@ Best regards,
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
+    // ==========================================
+    // COMPANY SUBSCRIPTIONS
+    // ==========================================
     async function renderCompanySubs() {
       const content = document.getElementById('pageContent');
       try {
@@ -1705,7 +1698,6 @@ Best regards,
         content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Company Subscriptions</h3><p class="text-xs text-slate-500 mt-0.5">Google Workspace, SSM, domains, software</p></div>${hasPermission('edit')?`<button onclick="openModal('addCompanySub')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Add Subscription</button>`:''}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${snap.docs.length===0?'<div class="col-span-full content-card p-12 text-center text-slate-400">No company subscriptions</div>':snap.docs.map(doc=>{const s=doc.data();const dl=daysUntil(s.renewalDate);const exp=dl<=0;const soon=dl>0&&dl<=30;return`<div class="content-card p-5 ${exp?'border-red-300 bg-red-50/30':soon?'border-yellow-300 bg-yellow-50/30':''}"><div class="flex items-start justify-between mb-3"><div class="w-10 h-10 rounded-xl ${exp?'bg-red-100':soon?'bg-yellow-100':'bg-slate-100'} flex items-center justify-center"><svg class="w-5 h-5 ${exp?'text-red-600':soon?'text-yellow-600':'text-slate-600'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>${exp?'<span class="badge badge-danger">EXPIRED</span>':soon?`<span class="badge badge-warning">${dl}d left</span>`:'<span class="badge badge-success">Active</span>'}</div><h4 class="font-semibold text-slate-800 text-sm mb-1">${s.serviceName||s.service||'-'}</h4><div class="space-y-1.5 text-xs"><div class="flex justify-between"><span class="text-slate-400">Cost:</span><span class="font-medium">RM${parseFloat(s.cost||0).toLocaleString()} / ${s.billingCycle||'year'}</span></div><div class="flex justify-between"><span class="text-slate-400">Renewal:</span><span class="${exp?'text-red-600 font-medium':''}">${formatDate(s.renewalDate)}</span></div><div class="flex justify-between"><span class="text-slate-400">Account:</span><span class="truncate max-w-[150px]">${s.accountEmail||'-'}</span></div></div>${s.remarks?`<div class="mt-2 p-2 bg-slate-50 rounded text-xs text-slate-500 truncate">${s.remarks}</div>`:''}<div class="mt-4 pt-3 border-t border-slate-100 flex gap-2">${editBtnHTML('editCompanySub',doc.id)}${!exp?`<button onclick="renewCompanySubWithNotif('${doc.id}')" class="btn-secondary !py-1.5 !px-3 !text-xs !text-green-600 flex-1">Renew</button>`:''}${(hasPermission('sendEmail')||hasPermission('sendWhatsApp'))?`<button onclick="sendCompanySubReminder('${doc.id}')" class="btn-secondary !py-1.5 !px-3 !text-xs flex-1" title="Send Reminder">📧</button>`:''}${deleteRowBtnHTML('company_subscriptions',doc.id,'subscription')}</div></div>`;}).join('')}</div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
-
     async function renewCompanySubWithNotif(id) {
       const doc=await db.collection('company_subscriptions').doc(id).get(); const s=doc.data();
       const cr=s.renewalDate.toDate(); const cy=s.billingCycle==='month'?30:365; const nd=new Date(cr); nd.setDate(nd.getDate()+cy);
@@ -1714,6 +1706,9 @@ Best regards,
       });
     }
 
+    // ==========================================
+    // TEAM
+    // ==========================================
     async function renderTeam() {
       const content = document.getElementById('pageContent');
       try {
@@ -1722,68 +1717,37 @@ Best regards,
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
+    // ==========================================
+    // CREW MANAGEMENT
+    // ==========================================
     async function renderCrew() {
       if (!isSuperAdmin()) { document.getElementById('pageContent').innerHTML='<div class="content-card p-12 text-center text-slate-400">Access denied. SuperAdmin only.</div>'; return; }
       const content = document.getElementById('pageContent');
       try {
         const snap = await db.collection('admins').orderBy('email','asc').get();
-        content.innerHTML = `<div class="animate-in space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div><h3 class="font-semibold text-slate-800 text-lg">Crew Management</h3><p class="text-xs text-slate-500 mt-0.5">Create, edit crew accounts and assign permissions</p></div>
-          <button onclick="openModal('addCrew')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Add Crew Account</button>
-        </div>
-        <div class="grid gap-4">
-          ${snap.docs.length === 0 ? '<div class="content-card p-12 text-center text-slate-400">No crew accounts found</div>' :
-          snap.docs.map(doc => {
-            const a = doc.data();
-            const isSelf = currentUser && doc.id === currentUser.uid;
-            const permCount = a.permissions ? Object.values(a.permissions).filter(v=>v).length : 0;
-            return `<div class="content-card p-5"><div class="flex flex-col md:flex-row md:items-start justify-between gap-4"><div class="flex items-start gap-4"><div class="w-12 h-12 rounded-full ${a.role==='superadmin'?'bg-gradient-to-br from-pink-500 to-rose-500':a.role==='crew'?'bg-gradient-to-br from-blue-500 to-cyan-500':'bg-gradient-to-br from-slate-400 to-slate-500'} flex items-center justify-center text-white text-lg font-bold flex-shrink-0">${(a.email||'A')[0].toUpperCase()}</div><div><div class="flex items-center gap-2 mb-1"><h4 class="font-semibold text-slate-800 text-sm">${a.email}</h4><span class="role-badge ${a.role==='superadmin'?'superadmin':a.role==='crew'?'crew':'standard'}">${a.role||'standard'}</span>${isSelf ? '<span class="badge badge-info">You</span>' : ''}</div><p class="text-xs text-slate-500">Last login: ${formatDate(a.lastLogin)}</p><p class="text-xs text-slate-500">Permissions: <strong class="text-slate-700">${permCount}</strong> granted</p>${a.role === 'crew' && a.permissions ? `<div class="flex flex-wrap gap-1 mt-2">${Object.entries(ALL_PERMISSIONS).filter(([k])=>a.permissions[k]).map(([k,v])=>`<span class="badge badge-neutral text-[9px]">${v.label}</span>`).join('')}</div>` : ''}</div></div><div class="flex gap-2 flex-shrink-0">${!isSelf ? `<button onclick="editCrewMember('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs">Edit Role / Permissions</button><button onclick="deleteDoc('admins','${doc.id}','crew account')" class="btn-danger-sm"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Delete</button>` : '<span class="text-xs text-slate-400 italic">Current account</span>'}</div></div></div>`;
-          }).join('')}
-        </div>
-      </div>`;
+        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Crew Management</h3><p class="text-xs text-slate-500 mt-0.5">Create, edit crew accounts and assign permissions</p></div><button onclick="openModal('addCrew')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Add Crew Account</button></div><div class="grid gap-4">${snap.docs.length === 0 ? '<div class="content-card p-12 text-center text-slate-400">No crew accounts found</div>' : snap.docs.map(doc => { const a = doc.data(); const isSelf = currentUser && doc.id === currentUser.uid; const permCount = a.permissions ? Object.values(a.permissions).filter(v=>v).length : 0; return `<div class="content-card p-5"><div class="flex flex-col md:flex-row md:items-start justify-between gap-4"><div class="flex items-start gap-4"><div class="w-12 h-12 rounded-full ${a.role==='superadmin'?'bg-gradient-to-br from-pink-500 to-rose-500':a.role==='crew'?'bg-gradient-to-br from-blue-500 to-cyan-500':'bg-gradient-to-br from-slate-400 to-slate-500'} flex items-center justify-center text-white text-lg font-bold flex-shrink-0">${(a.email||'A')[0].toUpperCase()}</div><div><div class="flex items-center gap-2 mb-1"><h4 class="font-semibold text-slate-800 text-sm">${a.email}</h4><span class="role-badge ${a.role==='superadmin'?'superadmin':a.role==='crew'?'crew':'standard'}">${a.role||'standard'}</span>${isSelf ? '<span class="badge badge-info">You</span>' : ''}</div><p class="text-xs text-slate-500">Last login: ${formatDate(a.lastLogin)}</p><p class="text-xs text-slate-500">Permissions: <strong class="text-slate-700">${permCount}</strong> granted</p>${a.role === 'crew' && a.permissions ? `<div class="flex flex-wrap gap-1 mt-2">${Object.entries(ALL_PERMISSIONS).filter(([k])=>a.permissions[k]).map(([k,v])=>`<span class="badge badge-neutral text-[9px]">${v.label}</span>`).join('')}</div>` : ''}</div></div><div class="flex gap-2 flex-shrink-0">${!isSelf ? `<button onclick="editCrewMember('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs">Edit Role / Permissions</button><button onclick="deleteDoc('admins','${doc.id}','crew account')" class="btn-danger-sm"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Delete</button>` : '<span class="text-xs text-slate-400 italic">Current account</span>'}</div></div></div>`; }).join('')}</div></div>`;
       } catch(e) { content.innerHTML = `<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
+    // ==========================================
+    // EMAILS
+    // ==========================================
     async function renderEmails() {
       const content = document.getElementById('pageContent');
       try {
         const snap = await db.collection('company_emails').orderBy('addedAt','desc').get();
-        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Active Email Accounts</h3></div>${hasPermission('edit')?`<button onclick="openModal('addEmail')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Add Email</button>`:''}</div><div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Email</th><th>Purpose</th><th>Password</th><th>Owner</th><th>Status</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>${snap.docs.length===0?'<tr><td colspan="7" class="text-center text-slate-400 py-12">No emails</td></tr>':snap.docs.map(doc=>{const em=doc.data();return`<tr><td class="font-mono text-sm font-medium">${em.email||'-'}</td><td class="text-sm">${em.purpose||'-'}</td><td><div class="flex items-center gap-2"><code class="text-xs bg-slate-100 px-2 py-1 rounded">${em.password?'********':'-'}</code>${em.password?`<button onclick="copyToClipboard('${em.password.replace(/'/g,"\'")}')" class="text-pink-600 hover:text-pink-700" title="Copy"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>`:''}</div></td><td class="text-sm">${em.owner||em.user||'-'}</td><td>${getStatusBadge(em.status||'active')}</td><td>${remarksCell(em.remarks)}</td><td><div class="flex gap-1">${editBtnHTML('editEmail',doc.id)}${deleteBtnHTML('company_emails',doc.id,'email')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
+        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">Active Email Accounts</h3></div>${hasPermission('edit')?`<button onclick="openModal('addEmail')" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Add Email</button>`:''}</div><div class="content-card overflow-hidden"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Email</th><th>Purpose</th><th>Password</th><th>Owner</th><th>Status</th><th>Remarks</th><th>Actions</th></tr></thead><tbody>${snap.docs.length===0?'<tr><td colspan="7" class="text-center text-slate-400 py-12">No emails</td></tr>':snap.docs.map(doc=>{const em=doc.data();return`<tr><td class="font-mono text-sm font-medium">${em.email||'-'}</td><td class="text-sm">${em.purpose||'-'}</td><td><div class="flex items-center gap-2"><code class="text-xs bg-slate-100 px-2 py-1 rounded">${em.password?'********':'-'}</code>${em.password?`<button onclick="copyToClipboard('${em.password.replace(/'/g,"\\'")}')" class="text-pink-600 hover:text-pink-700" title="Copy"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>`:''}</div></td><td class="text-sm">${em.owner||em.user||'-'}</td><td>${getStatusBadge(em.status||'active')}</td><td>${remarksCell(em.remarks)}</td><td><div class="flex gap-1">${editBtnHTML('editEmail',doc.id)}${deleteBtnHTML('company_emails',doc.id,'email')}</div></td></tr>`;}).join('')}</tbody></table></div></div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
+    // ==========================================
+    // TEMPLATES PAGE
+    // ==========================================
     function renderTemplates() {
       const content = document.getElementById('pageContent');
       const categories = [...new Set(MESSAGE_TEMPLATES.map(t => t.category))];
-      content.innerHTML = `<div class="animate-in space-y-6">
-        <div><h3 class="font-semibold text-slate-800 text-lg">Message Templates</h3><p class="text-xs text-slate-500 mt-0.5">Ready-to-use templates for Email and WhatsApp. Click to preview.</p></div>
-        ${categories.map(cat => `
-          <div>
-            <h4 class="font-semibold text-sm text-slate-600 mb-3 flex items-center gap-2">${cat} <span class="badge badge-neutral">${MESSAGE_TEMPLATES.filter(t=>t.category===cat).length}</span></h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              ${MESSAGE_TEMPLATES.filter(t=>t.category===cat).map(t => `
-                <div class="content-card p-5 cursor-pointer hover:shadow-lg transition-shadow" onclick="previewTemplate('${t.id}')">
-                  <div class="text-2xl mb-3">${t.icon}</div>
-                  <h5 class="font-semibold text-sm text-slate-800 mb-1">${t.name}</h5>
-                  <p class="text-xs text-slate-500 line-clamp-2">${t.emailMessage || 'Custom template'}</p>
-                  <div class="mt-3 flex gap-2"><span class="badge badge-info text-[9px]">Email</span><span class="badge badge-success text-[9px]">WhatsApp</span></div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `).join('')}
-        <div class="content-card p-6">
-          <h4 class="font-semibold text-slate-800 text-sm mb-3">How Templates Work</h4>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600">
-            <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0"><span class="text-pink-600 font-bold">1</span></div><div><strong class="text-slate-800 block">Select Template</strong>When sending a notification, click a template card to auto-fill the fields.</div></div>
-            <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0"><span class="text-pink-600 font-bold">2</span></div><div><strong class="text-slate-800 block">Edit Fields</strong>Customize title, message, and details to fit the specific context.</div></div>
-            <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0"><span class="text-pink-600 font-bold">3</span></div><div><strong class="text-slate-800 block">Preview & Send</strong>Review both Email and WhatsApp previews, then send via either channel.</div></div>
-          </div>
-        </div>
-      </div>`;
+      content.innerHTML = `<div class="animate-in space-y-6"><div><h3 class="font-semibold text-slate-800 text-lg">Message Templates</h3><p class="text-xs text-slate-500 mt-0.5">Ready-to-use templates for Email and WhatsApp. Click to preview.</p></div>${categories.map(cat => `<div><h4 class="font-semibold text-sm text-slate-600 mb-3 flex items-center gap-2">${cat} <span class="badge badge-neutral">${MESSAGE_TEMPLATES.filter(t=>t.category===cat).length}</span></h4><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${MESSAGE_TEMPLATES.filter(t=>t.category===cat).map(t => `<div class="content-card p-5 cursor-pointer hover:shadow-lg transition-shadow" onclick="previewTemplate('${t.id}')"><div class="text-2xl mb-3">${t.icon}</div><h5 class="font-semibold text-sm text-slate-800 mb-1">${t.name}</h5><p class="text-xs text-slate-500 line-clamp-2">${t.emailMessage || 'Custom template'}</p><div class="mt-3 flex gap-2"><span class="badge badge-info text-[9px]">Email</span><span class="badge badge-success text-[9px]">WhatsApp</span></div></div>`).join('')}</div></div>`).join('')}<div class="content-card p-6"><h4 class="font-semibold text-slate-800 text-sm mb-3">How Templates Work</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600"><div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0"><span class="text-pink-600 font-bold">1</span></div><div><strong class="text-slate-800 block">Select Template</strong>When sending a notification, click a template card to auto-fill the fields.</div></div><div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0"><span class="text-pink-600 font-bold">2</span></div><div><strong class="text-slate-800 block">Edit Fields</strong>Customize title, message, and details to fit the specific context.</div></div><div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center flex-shrink-0"><span class="text-pink-600 font-bold">3</span></div><div><strong class="text-slate-800 block">Preview & Send</strong>Review both Email and WhatsApp previews, then send via either channel.</div></div></div></div></div>`;
     }
-
     function previewTemplate(id) {
       const t = MESSAGE_TEMPLATES.find(tp => tp.id === id);
       if (!t || id === 'custom') return;
@@ -1791,16 +1755,16 @@ Best regards,
       setTimeout(() => selectMsgTemplate(id), 100);
     }
 
+    // ==========================================
+    // IMGBB
+    // ==========================================
     async function renderImgBB() {
       const content = document.getElementById('pageContent');
       try {
         const snap = await db.collection('imgbb_images').orderBy('uploadedAt','desc').limit(50).get();
-        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">IMGBB Image Manager</h3><p class="text-xs text-slate-500 mt-0.5">Upload, preview, copy, and manage images</p></div>${hasPermission('edit')?`<button onclick="uploadToImgBB()" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Upload Image</button>`:''}</div>
-        <input type="file" id="imgbbFileInput" accept="image/*" class="hidden" onchange="handleImgBBUpload(event)">
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">${snap.docs.length===0?'<div class="col-span-full content-card p-12 text-center text-slate-400">No images uploaded yet</div>':snap.docs.map(doc=>{const img=doc.data();return`<div class="content-card p-2 group relative"><div class="relative aspect-square overflow-hidden rounded-lg cursor-pointer" onclick="openImagePreview('${img.url}')"><img src="${img.thumbnail||img.url}" alt="${img.filename||''}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy"><div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-center justify-center gap-2"><button onclick="event.stopPropagation();openImagePreview('${img.url}')" class="p-2.5 bg-white rounded-xl hover:bg-gray-100 shadow-lg" title="Preview"><svg class="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button><button onclick="event.stopPropagation();copyToClipboard('${img.url}')" class="p-2.5 bg-white rounded-xl hover:bg-gray-100 shadow-lg" title="Copy URL"><svg class="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>${hasPermission('delete')?`<button onclick="event.stopPropagation();deleteDoc('imgbb_images','${doc.id}','image')" class="p-2.5 bg-white rounded-xl hover:bg-red-50 shadow-lg" title="Delete"><svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`:''}</div></div><div class="mt-2 px-1"><p class="text-[11px] text-slate-700 font-medium truncate">${img.filename||'unnamed'}</p><div class="flex items-center justify-between"><p class="text-[10px] text-slate-400">${formatFileSize(img.size)}</p><p class="text-[10px] text-slate-400">${formatDate(img.uploadedAt)}</p></div></div></div>`;}).join('')}</div></div>`;
+        content.innerHTML = `<div class="animate-in space-y-6"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"><div><h3 class="font-semibold text-slate-800 text-lg">IMGBB Image Manager</h3><p class="text-xs text-slate-500 mt-0.5">Upload, preview, copy, and manage images</p></div>${hasPermission('edit')?`<button onclick="uploadToImgBB()" class="btn-primary"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Upload Image</button>`:''}</div><input type="file" id="imgbbFileInput" accept="image/*" class="hidden" onchange="handleImgBBUpload(event)"><div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">${snap.docs.length===0?'<div class="col-span-full content-card p-12 text-center text-slate-400">No images uploaded yet</div>':snap.docs.map(doc=>{const img=doc.data();return`<div class="content-card p-2 group relative"><div class="relative aspect-square overflow-hidden rounded-lg cursor-pointer" onclick="openImagePreview('${img.url}')"><img src="${img.thumbnail||img.url}" alt="${img.filename||''}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy"><div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-center justify-center gap-2"><button onclick="event.stopPropagation();openImagePreview('${img.url}')" class="p-2.5 bg-white rounded-xl hover:bg-gray-100 shadow-lg" title="Preview"><svg class="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button><button onclick="event.stopPropagation();copyToClipboard('${img.url}')" class="p-2.5 bg-white rounded-xl hover:bg-gray-100 shadow-lg" title="Copy URL"><svg class="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>${hasPermission('delete')?`<button onclick="event.stopPropagation();deleteDoc('imgbb_images','${doc.id}','image')" class="p-2.5 bg-white rounded-xl hover:bg-red-50 shadow-lg" title="Delete"><svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`:''}</div></div><div class="mt-2 px-1"><p class="text-[11px] text-slate-700 font-medium truncate">${img.filename||'unnamed'}</p><div class="flex items-center justify-between"><p class="text-[10px] text-slate-400">${formatFileSize(img.size)}</p><p class="text-[10px] text-slate-400">${formatDate(img.uploadedAt)}</p></div></div></div>`;}).join('')}</div></div>`;
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
-
     function formatFileSize(b) { if(!b) return '?'; if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
     function uploadToImgBB() { document.getElementById('imgbbFileInput').click(); }
     async function handleImgBBUpload(event) {
@@ -1843,73 +1807,31 @@ Best regards,
       }
       content.innerHTML = html;
       document.getElementById('modalContainer').classList.add('show');
-      
-      // Initialize search dropdowns after modal is shown
-      setTimeout(() => initModalSearchDropdowns(), 100);
     }
-    
-    function initModalSearchDropdowns() {
-      // Initialize Client Name fields with searchable dropdown
-      const clientInputs = document.querySelectorAll('input[data-search-type="client"]');
-      clientInputs.forEach(input => {
-        initSearchDropdown(input, 'client', { formId: input.closest('form')?.id || 'modalForm' });
-      });
-
-      // Initialize Team Name fields with searchable dropdown  
-      const teamInputs = document.querySelectorAll('input[data-search-type="team"]');
-      teamInputs.forEach(input => {
-        initSearchDropdown(input, 'team', { formId: input.closest('form')?.id || 'modalForm' });
-      });
-    }
-    
     function closeModal() { document.getElementById('modalContainer').classList.remove('show'); }
 
     // ==========================================
-    // MODAL HTML GENERATORS WITH SEARCHABLE FIELDS
+    // MODAL HTML GENERATORS (all with af auto-fill)
     // ==========================================
     function getAddClientModal(data) {
       const ed = !!data;
       return `<div class="p-6 border-b border-slate-100"><div class="flex items-center justify-between"><h3 class="font-semibold text-lg text-slate-800">${ed?'Edit':'Add New'} Client</h3><button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
-      <form id="clientForm" onsubmit="saveClient(event,'${data?.id||''}')" class="p-6 space-y-4">
+      <form onsubmit="saveClient(event,'${data?.id||''}')" class="p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4">
-          <div class="search-wrapper">
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Full Name *</label>
-            <input name="name" required class="input-field" value="${data?.name||''}" data-search-type="client" placeholder="Type to search clients...">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Business Name *</label>
-            <input name="businessName" required class="input-field" value="${data?.businessName||''}" placeholder="e.g., Mory Enterprise">
-          </div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Full Name *</label><input name="name" required class="input-field" value="${data?.name||''}"></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Business Name *</label><input name="businessName" required class="input-field" value="${data?.businessName||''}" placeholder="e.g., Mory Enterprise"></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Email *</label>
-            <input name="email" type="email" required class="input-field" value="${data?.email||''}">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Phone</label>
-            <input name="phone" class="input-field" value="${data?.phone||''}" placeholder="+60 12-345 6789">
-          </div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Email *</label><input name="email" type="email" required class="input-field" value="${data?.email||''}"></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Phone</label><input name="phone" class="input-field" value="${data?.phone||''}" placeholder="+60 12-345 6789"></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Business Type</label>
-            <select name="businessType" class="input-field"><option value="" ${!data?.businessType?'selected':''}>Select...</option><option ${data?.businessType==='E-commerce'?'selected':''}>E-commerce</option><option ${data?.businessType==='Restaurant/F&B'?'selected':''}>Restaurant/F&B</option><option ${data?.businessType==='Clinic/Healthcare'?'selected':''}>Clinic/Healthcare</option><option ${data?.businessType==='Service Business'?'selected':''}>Service Business</option><option ${data?.businessType==='Startup'?'selected':''}>Startup</option><option ${data?.businessType==='Other'?'selected':''}>Other</option></select>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Plan</label>
-            <select name="plan" class="input-field"><option ${data?.plan==='Starter'?'selected':''}>Starter (RM150)</option><option ${data?.plan==='Growth'?'selected':''}>Growth (RM300)</option><option ${data?.plan==='Pro IT Services'?'selected':''}>Pro IT Services (RM1900)</option><option ${data?.plan==='Custom'?'selected':''}>Custom</option></select>
-          </div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Business Type</label><select name="businessType" class="input-field"><option value="" ${!data?.businessType?'selected':''}>Select...</option><option ${data?.businessType==='E-commerce'?'selected':''}>E-commerce</option><option ${data?.businessType==='Restaurant/F&B'?'selected':''}>Restaurant/F&B</option><option ${data?.businessType==='Clinic/Healthcare'?'selected':''}>Clinic/Healthcare</option><option ${data?.businessType==='Service Business'?'selected':''}>Service Business</option><option ${data?.businessType==='Startup'?'selected':''}>Startup</option><option ${data?.businessType==='Other'?'selected':''}>Other</option></select></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Plan</label><select name="plan" class="input-field"><option ${data?.plan==='Starter'?'selected':''}>Starter (RM150)</option><option ${data?.plan==='Growth'?'selected':''}>Growth (RM300)</option><option ${data?.plan==='Pro IT Services'?'selected':''}>Pro IT Services (RM1900)</option><option ${data?.plan==='Custom'?'selected':''}>Custom</option></select></div>
         </div>
         <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Status</label>
-            <select name="status" class="input-field"><option value="active" ${(!data||data?.status==='active')?'selected':''}>Active</option><option value="inactive" ${data?.status==='inactive'?'selected':''}>Inactive</option><option value="onboarding" ${data?.status==='onboarding'?'selected':''}>Onboarding</option></select>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Website URL</label>
-            <input name="website" class="input-field" value="${data?.website||''}" placeholder="https://...">
-          </div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Status</label><select name="status" class="input-field"><option value="active" ${(!data||data?.status==='active')?'selected':''}>Active</option><option value="inactive" ${data?.status==='inactive'?'selected':''}>Inactive</option><option value="onboarding" ${data?.status==='onboarding'?'selected':''}>Onboarding</option></select></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Website URL</label><input name="website" class="input-field" value="${data?.website||''}" placeholder="https://..."></div>
         </div>
         ${remarksFieldHTML(data?.remarks)}
         <div class="flex gap-3 pt-2"><button type="submit" class="btn-primary flex-1 justify-center">${ed?'Update':'Add'} Client</button><button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button></div>
@@ -1919,23 +1841,11 @@ Best regards,
     function getSubscriptionModal(data) {
       const ed = !!data;
       return `<div class="p-6 border-b border-slate-100"><div class="flex items-center justify-between"><h3 class="font-semibold text-lg text-slate-800">${ed?'Edit':'New'} Subscription</h3><button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
-      <form id="subForm" onsubmit="saveSubscription(event,'${data?.id||''}')" class="p-6 space-y-4">
-        <div class="search-wrapper">
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name *</label>
-          <input name="clientName" required class="input-field" value="${data?.clientName||''}" data-search-type="client" placeholder="Type to search clients...">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Plan Name</label><input name="planName" class="input-field" value="${data?.planName||''}"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Price (RM/mo) *</label><input name="price" type="number" step="0.01" required class="input-field" value="${data?.price||''}"></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Billing Cycle</label><select name="billingCycle" class="input-field"><option ${data?.billingCycle==='Monthly'?'selected':''}>Monthly</option><option ${data?.billingCycle==='Quarterly'?'selected':''}>Quarterly</option><option ${data?.billingCycle==='Yearly'?'selected':''}>Yearly</option></select></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Status</label><select name="status" class="input-field"><option value="active" ${(!data||data?.status==='active')?'selected':''}>Active</option><option value="paused" ${data?.status==='paused'?'selected':''}>Paused</option><option value="cancelled" ${data?.status==='cancelled'?'selected':''}>Cancelled</option></select></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Start Date</label><input name="startDate" type="date" class="input-field" value="${formatDateInput(data?.startDate)}"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Next Billing</label><input name="nextBillingDate" type="date" class="input-field" value="${formatDateInput(data?.nextBillingDate)}"></div>
-        </div>
+      <form onsubmit="saveSubscription(event,'${data?.id||''}')" class="p-6 space-y-4">
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name *</label><input name="clientName" required class="input-field" value="${data?.clientName||''}" placeholder="Type to search client..."></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Plan Name</label><input name="planName" class="input-field" value="${data?.planName||''}"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Price (RM/mo) *</label><input name="price" type="number" step="0.01" required class="input-field" value="${data?.price||''}"></div></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Billing Cycle</label><select name="billingCycle" class="input-field"><option ${data?.billingCycle==='Monthly'?'selected':''}>Monthly</option><option ${data?.billingCycle==='Quarterly'?'selected':''}>Quarterly</option><option ${data?.billingCycle==='Yearly'?'selected':''}>Yearly</option></select></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Status</label><select name="status" class="input-field"><option value="active" ${(!data||data?.status==='active')?'selected':''}>Active</option><option value="paused" ${data?.status==='paused'?'selected':''}>Paused</option><option value="cancelled" ${data?.status==='cancelled'?'selected':''}>Cancelled</option></select></div></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Start Date</label><input name="startDate" type="date" class="input-field" value="${formatDateInput(data?.startDate)}"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Next Billing</label><input name="nextBillingDate" type="date" class="input-field" value="${formatDateInput(data?.nextBillingDate)}"></div></div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Stripe Customer ID</label><input name="stripeCustomerId" class="input-field" value="${data?.stripeCustomerId||''}"></div>
         ${remarksFieldHTML(data?.remarks)}
         <div class="flex gap-3 pt-2"><button type="submit" class="btn-primary flex-1 justify-center">${ed?'Update':'Create'} Subscription</button><button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button></div>
@@ -1944,15 +1854,9 @@ Best regards,
 
     function getRequestModal() {
       return `<div class="p-6 border-b border-slate-100"><div class="flex items-center justify-between"><h3 class="font-semibold text-lg text-slate-800">Log Client Request</h3><button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
-      <form id="reqForm" onsubmit="saveRequest(event)" class="p-6 space-y-4">
-        <div class="search-wrapper">
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name *</label>
-          <input name="clientName" required class="input-field" data-search-type="client" placeholder="Type to search clients...">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Request Type</label><select name="type" class="input-field"><option>Content Update</option><option>Design Change</option><option>Bug Fix</option><option>New Feature</option><option>Urgent</option><option>Other</option></select></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Price</label><input name="price" type="number" step="0.01" class="input-field" placeholder="0.00"></div>
-        </div>
+      <form onsubmit="saveRequest(event)" class="p-6 space-y-4">
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name *</label><input name="clientName" required class="input-field" placeholder="Type to search client or team..."></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Request Type</label><select name="type" class="input-field"><option>Content Update</option><option>Design Change</option><option>Bug Fix</option><option>New Feature</option><option>Urgent</option><option>Other</option></select></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Price</label><input name="price" type="number" step="0.01" class="input-field" placeholder="0.00"></div></div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Details *</label><textarea name="details" required rows="4" class="input-field resize-none"></textarea></div>
         ${remarksFieldHTML()}
         <div class="flex gap-3 pt-2"><button type="submit" class="btn-primary flex-1 justify-center">Save Request</button><button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button></div>
@@ -1961,20 +1865,11 @@ Best regards,
 
     function getInvoiceModal() {
       return `<div class="p-6 border-b border-slate-100"><div class="flex items-center justify-between"><h3 class="font-semibold text-lg text-slate-800">Create Invoice</h3><button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
-      <form id="invForm" onsubmit="saveInvoice(event)" class="p-6 space-y-4">
-        <div class="search-wrapper">
-          <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name *</label>
-          <input name="clientName" required class="input-field" data-search-type="client" placeholder="Type to search clients...">
-        </div>
+      <form onsubmit="saveInvoice(event)" class="p-6 space-y-4">
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name *</label><input name="clientName" required class="input-field" placeholder="Type to search client or team..."></div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Description *</label><textarea name="description" required rows="2" class="input-field resize-none"></textarea></div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Amount (RM) *</label><input name="amount" type="number" step="0.01" required class="input-field"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Status</label><select name="status" class="input-field"><option value="pending">Pending</option><option value="sent">Sent</option><option value="paid">Paid</option><option value="overdue">Overdue</option></select></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Issue Date</label><input name="issueDate" type="date" class="input-field" value="${new Date().toISOString().split('T')[0]}"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Due Date</label><input name="dueDate" type="date" class="input-field"></div>
-        </div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Amount (RM) *</label><input name="amount" type="number" step="0.01" required class="input-field"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Status</label><select name="status" class="input-field"><option value="pending">Pending</option><option value="sent">Sent</option><option value="paid">Paid</option><option value="overdue">Overdue</option></select></div></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Issue Date</label><input name="issueDate" type="date" class="input-field" value="${new Date().toISOString().split('T')[0]}"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Due Date</label><input name="dueDate" type="date" class="input-field"></div></div>
         ${remarksFieldHTML()}
         <div class="flex gap-3 pt-2"><button type="submit" class="btn-primary flex-1 justify-center">Create Invoice</button><button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button></div>
       </form>`;
@@ -1982,14 +1877,9 @@ Best regards,
 
     function getFeedbackModal() {
       return `<div class="p-6 border-b border-slate-100"><div class="flex items-center justify-between"><h3 class="font-semibold text-lg text-slate-800">Log Feedback / Complaint</h3><button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
-      <form id="fbForm" onsubmit="saveFeedback(event)" class="p-6 space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="search-wrapper">
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name</label>
-            <input name="clientName" class="input-field" data-search-type="client" placeholder="Type to search clients...">
-          </div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Type</label><select name="type" class="input-field"><option value="feedback">Feedback</option><option value="complaint">Complaint</option><option value="suggestion">Suggestion</option></select></div>
-        </div>
+      <form onsubmit="saveFeedback(event)" class="p-6 space-y-4">
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name</label><input name="clientName" class="input-field" placeholder="Type to search client or team..."></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Type</label><select name="type" class="input-field"><option value="feedback">Feedback</option><option value="complaint">Complaint</option><option value="suggestion">Suggestion</option></select></div><div></div></div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Subject *</label><input name="subject" required class="input-field"></div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Message *</label><textarea name="message" required rows="4" class="input-field resize-none"></textarea></div>
         ${remarksFieldHTML()}
@@ -2000,16 +1890,10 @@ Best regards,
     function getExpenseModal(data) {
       const ed = !!data;
       return `<div class="p-6 border-b border-slate-100"><div class="flex items-center justify-between"><h3 class="font-semibold text-lg text-slate-800">${ed?'Edit':'Log'} Expense</h3><button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
-      <form id="expenseForm" onsubmit="saveExpense(event,'${data?.id||''}')" class="p-6 space-y-4">
+      <form onsubmit="saveExpense(event,'${data?.id||''}')" class="p-6 space-y-4">
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Description *</label><input name="description" required class="input-field" value="${data?.description||''}"></div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Category</label><select name="category" class="input-field"><option ${data?.category==='Software'?'selected':''}>Software</option><option ${data?.category==='Hardware'?'selected':''}>Hardware</option><option ${data?.category==='Marketing'?'selected':''}>Marketing</option><option ${data?.category==='Office Supplies'?'selected':''}>Office Supplies</option><option ${data?.category==='Utilities'?'selected':''}>Utilities</option><option ${data?.category==='Travel'?'selected':''}>Travel</option><option ${data?.category==='Professional Services'?'selected':''}>Professional Services</option><option ${data?.category==='Other'?'selected':''}>Other</option></select></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Amount (RM) *</label><input name="amount" type="number" step="0.01" required class="input-field" value="${data?.amount||''}"></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Date</label><input name="date" type="date" class="input-field" value="${formatDateInput(data?.date)||new Date().toISOString().split('T')[0]}"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Payment Method</label><select name="paymentMethod" class="input-field"><option ${data?.paymentMethod==='Bank Transfer'?'selected':''}>Bank Transfer</option><option ${data?.paymentMethod==='Credit Card'?'selected':''}>Credit Card</option><option ${data?.paymentMethod==='Debit Card'?'selected':''}>Debit Card</option><option ${data?.paymentMethod==='Cash'?'selected':''}>Cash</option><option ${data?.paymentMethod==='FPX'?'selected':''}>FPX</option><option ${data?.paymentMethod==='E-Wallet'?'selected':''}>E-Wallet</option></select></div>
-        </div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Category</label><select name="category" class="input-field"><option ${data?.category==='Software'?'selected':''}>Software</option><option ${data?.category==='Hardware'?'selected':''}>Hardware</option><option ${data?.category==='Marketing'?'selected':''}>Marketing</option><option ${data?.category==='Office Supplies'?'selected':''}>Office Supplies</option><option ${data?.category==='Utilities'?'selected':''}>Utilities</option><option ${data?.category==='Travel'?'selected':''}>Travel</option><option ${data?.category==='Professional Services'?'selected':''}>Professional Services</option><option ${data?.category==='Other'?'selected':''}>Other</option></select></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Amount (RM) *</label><input name="amount" type="number" step="0.01" required class="input-field" value="${data?.amount||''}"></div></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Date</label><input name="date" type="date" class="input-field" value="${formatDateInput(data?.date)||new Date().toISOString().split('T')[0]}"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Payment Method</label><select name="paymentMethod" class="input-field"><option ${data?.paymentMethod==='Bank Transfer'?'selected':''}>Bank Transfer</option><option ${data?.paymentMethod==='Credit Card'?'selected':''}>Credit Card</option><option ${data?.paymentMethod==='Debit Card'?'selected':''}>Debit Card</option><option ${data?.paymentMethod==='Cash'?'selected':''}>Cash</option><option ${data?.paymentMethod==='FPX'?'selected':''}>FPX</option><option ${data?.paymentMethod==='E-Wallet'?'selected':''}>E-Wallet</option></select></div></div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Receipt URL</label><input name="receiptUrl" class="input-field" value="${data?.receiptUrl||''}" placeholder="https://..."></div>
         ${remarksFieldHTML(data?.remarks)}
         <div class="flex gap-3 pt-2"><button type="submit" class="btn-primary flex-1 justify-center">${ed?'Update':'Save'} Expense</button><button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button></div>
@@ -2022,14 +1906,8 @@ Best regards,
       <form onsubmit="saveCompanySub(event,'${data?.id||''}')" class="p-6 space-y-4">
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Service Name *</label><input name="serviceName" required class="input-field" value="${data?.serviceName||''}"></div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Description</label><input name="description" class="input-field" value="${data?.description||''}"></div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Cost (RM)</label><input name="cost" type="number" step="0.01" class="input-field" value="${data?.cost||''}"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Billing Cycle</label><select name="billingCycle" class="input-field"><option value="month" ${data?.billingCycle==='month'?'selected':''}>Monthly</option><option value="year" ${(!data||data?.billingCycle==='year')?'selected':''}>Yearly</option></select></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Renewal Date</label><input name="renewalDate" type="date" class="input-field" value="${formatDateInput(data?.renewalDate)}"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Account Email</label><input name="accountEmail" type="email" class="input-field" value="${data?.accountEmail||''}"></div>
-        </div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Cost (RM)</label><input name="cost" type="number" step="0.01" class="input-field" value="${data?.cost||''}"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Billing Cycle</label><select name="billingCycle" class="input-field"><option value="month" ${data?.billingCycle==='month'?'selected':''}>Monthly</option><option value="year" ${(!data||data?.billingCycle==='year')?'selected':''}>Yearly</option></select></div></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Renewal Date</label><input name="renewalDate" type="date" class="input-field" value="${formatDateInput(data?.renewalDate)}"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Account Email</label><input name="accountEmail" type="email" class="input-field" value="${data?.accountEmail||''}"></div></div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Login URL</label><input name="loginUrl" class="input-field" value="${data?.loginUrl||''}"></div>
         ${remarksFieldHTML(data?.remarks)}
         <div class="flex gap-3 pt-2"><button type="submit" class="btn-primary flex-1 justify-center">${ed?'Update':'Add'}</button><button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button></div>
@@ -2040,18 +1918,9 @@ Best regards,
       const ed = !!data;
       return `<div class="p-6 border-b border-slate-100"><div class="flex items-center justify-between"><h3 class="font-semibold text-lg text-slate-800">${ed?'Edit':'Add'} Team Member</h3><button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
       <form onsubmit="saveTeamMember(event,'${data?.id||''}')" class="p-6 space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Full Name *</label><input name="name" required class="input-field" value="${data?.name||''}"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Role / Position *</label><input name="role" required class="input-field" value="${data?.role||''}"></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Department</label><input name="department" class="input-field" value="${data?.department||''}"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Status</label><select name="status" class="input-field"><option value="active" ${(!data||data?.status==='active')?'selected':''}>Active</option><option value="on-leave" ${data?.status==='on-leave'?'selected':''}>On Leave</option><option value="inactive" ${data?.status==='inactive'?'selected':''}>Inactive</option></select></div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Email</label><input name="email" type="email" class="input-field" value="${data?.email||''}"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Phone</label><input name="phone" class="input-field" value="${data?.phone||''}"></div>
-        </div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Full Name *</label><input name="name" required class="input-field" value="${data?.name||''}"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Role / Position *</label><input name="role" required class="input-field" value="${data?.role||''}"></div></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Department</label><input name="department" class="input-field" value="${data?.department||''}"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Status</label><select name="status" class="input-field"><option value="active" ${(!data||data?.status==='active')?'selected':''}>Active</option><option value="on-leave" ${data?.status==='on-leave'?'selected':''}>On Leave</option><option value="inactive" ${data?.status==='inactive'?'selected':''}>Inactive</option></select></div></div>
+        <div class="grid grid-cols-2 gap-4"><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Email</label><input name="email" type="email" class="input-field" value="${data?.email||''}"></div><div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Phone</label><input name="phone" class="input-field" value="${data?.phone||''}"></div></div>
         ${remarksFieldHTML(data?.remarks)}
         <div class="flex gap-3 pt-2"><button type="submit" class="btn-primary flex-1 justify-center">${ed?'Update':'Add'} Member</button><button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button></div>
       </form>`;
@@ -2065,10 +1934,7 @@ Best regards,
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Purpose *</label><input name="purpose" required class="input-field" value="${data?.purpose||''}"></div>
         <div class="grid grid-cols-2 gap-4">
           <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Password</label><input name="password" type="password" class="input-field" value="${data?.password||''}"></div>
-          <div class="search-wrapper">
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Owner / User</label>
-            <input name="owner" class="input-field" value="${data?.owner||''}" data-search-type="team" placeholder="Type to search team members...">
-          </div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Owner / User</label><input name="owner" class="input-field" value="${data?.owner||''}" placeholder="Type to search team..."></div>
         </div>
         <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Status</label><select name="status" class="input-field"><option value="active" ${(!data||data?.status==='active')?'selected':''}>Active</option><option value="inactive" ${data?.status==='inactive'?'selected':''}>Inactive</option></select></div>
         ${remarksFieldHTML(data?.remarks)}
@@ -2091,94 +1957,88 @@ Best regards,
       </form>`;
     }
 
-    function togglePermVisibility(role) {
-      const ps = document.getElementById('permSection');
-      if (role === 'crew') ps.classList.remove('hidden'); else ps.classList.add('hidden');
-    }
+    function togglePermVisibility(role) { const ps = document.getElementById('permSection'); if (role === 'crew') ps.classList.remove('hidden'); else ps.classList.add('hidden'); }
     function setAllPerms(state) { document.querySelectorAll('#permSection .perm-toggle').forEach(t => { if(state) t.classList.add('on'); else t.classList.remove('on'); }); }
-    function getPermValuesFromModal() {
-      const perms = {};
-      document.querySelectorAll('#permSection .perm-toggle').forEach(t => { perms[t.dataset.permKey] = t.classList.contains('on'); });
-      return perms;
-    }
+    function getPermValuesFromModal() { const perms = {}; document.querySelectorAll('#permSection .perm-toggle').forEach(t => { perms[t.dataset.permKey] = t.classList.contains('on'); }); return perms; }
+
+    // ==========================================
+    // Initialize auto-fill for modal fields after openModal
+    // ==========================================
+    const _origOpenModal = openModal;
+    openModal = function(type, data) {
+      _origOpenModal(type, data);
+      setTimeout(() => {
+        // Subscription: clientName — filter clients only
+        if (type === 'addSubscription' || type === 'editSubscription') {
+          initAfInput('clientName', { filter: 'client', autoFocus: !data });
+        }
+        // Request: clientName — both client and team
+        if (type === 'addRequest') {
+          initAfInput('clientName', { autoFocus: true });
+        }
+        // Invoice: clientName — both client and team
+        if (type === 'addInvoice') {
+          initAfInput('clientName', { autoFocus: true });
+        }
+        // Feedback: clientName — both client and team
+        if (type === 'addFeedback') {
+          initAfInput('clientName', { autoFocus: true });
+        }
+        // Email: owner — filter team only
+        if (type === 'addEmail' || type === 'editEmail') {
+          initAfInput('owner', { filter: 'team', autoFocus: !data });
+        }
+      }, 80);
+    };
 
     // ==========================================
     // SAVE FUNCTIONS
     // ==========================================
     async function saveClient(e, id) {
       e.preventDefault(); const f=e.target;
-      const data = { 
-        name:f.name.value, 
-        businessName:f.businessName.value,
-        email:f.email.value, 
-        phone:f.phone.value, 
-        businessType:f.businessType.value, 
-        plan:f.plan.value, 
-        status:f.status.value, 
-        website:f.website.value, 
-        remarks:f.remarks.value, 
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp() 
-      };
-      try { 
-        if(id){await db.collection('clients').doc(id).update(data);showToast('Client updated!');cachedClients[id]=data;}else{
-          data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
-          const ref=await db.collection('clients').add(data);cachedClients[ref.id]=data;showToast('Client added!');
-          addNotification('New Client',`${data.name} (${data.businessName})`,'info');
-          // Refresh searchable array
-          loadCachedClients();
-        } 
-        closeModal(); renderClients(); 
-      } catch(err){showToast('Error: '+err.message,'error');}
+      const data = { name:f.name.value, businessName:f.businessName.value, email:f.email.value, phone:f.phone.value, businessType:f.businessType.value, plan:f.plan.value, status:f.status.value, website:f.website.value, remarks:f.remarks.value, updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
+      try { if(id){await db.collection('clients').doc(id).update(data);showToast('Client updated!');cachedClients[id]=data;}else{ data.createdAt=firebase.firestore.FieldValue.serverTimestamp(); const ref=await db.collection('clients').add(data);cachedClients[ref.id]=data;showToast('Client added!');addNotification('New Client',`${data.name} (${data.businessName})`,'info'); } closeModal(); renderClients(); } catch(err){showToast('Error: '+err.message,'error');}
     }
-    
     async function saveSubscription(e, id) {
       e.preventDefault(); const f=e.target;
       const data = { clientName:f.clientName.value, planName:f.planName.value, price:parseFloat(f.price.value), billingCycle:f.billingCycle.value, status:f.status.value, startDate:f.startDate.value?new Date(f.startDate.value):null, nextBillingDate:f.nextBillingDate.value?new Date(f.nextBillingDate.value):null, stripeCustomerId:f.stripeCustomerId.value, remarks:f.remarks.value, updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
       try { if(id){await db.collection('subscriptions').doc(id).update(data);showToast('Updated!');}else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('subscriptions').add(data);showToast('Created!');addNotification('New Subscription',data.clientName,'info');} closeModal(); renderSubscriptions(); } catch(err){showToast('Error','error');}
     }
-    
     async function saveRequest(e) {
       e.preventDefault(); const f=e.target;
       const data = { clientName:f.clientName.value, type:f.type.value, price:parseFloat(f.price.value)||0, details:f.details.value, status:'pending', remarks:f.remarks.value, createdAt:firebase.firestore.FieldValue.serverTimestamp() };
       try { await db.collection('client_requests').add(data); closeModal(); renderRequests(); showToast('Request logged!'); addNotification('New Request',data.clientName,'info'); } catch(err){showToast('Error','error');}
     }
-    
     async function saveInvoice(e) {
       e.preventDefault(); const f=e.target;
       const data = { clientName:f.clientName.value, description:f.description.value, amount:parseFloat(f.amount.value), status:f.status.value, issueDate:f.issueDate.value?new Date(f.issueDate.value):null, dueDate:f.dueDate.value?new Date(f.dueDate.value):null, remarks:f.remarks.value, createdAt:firebase.firestore.FieldValue.serverTimestamp() };
       try { await db.collection('invoices').add(data); closeModal(); renderInvoices(); showToast('Invoice created!'); addNotification('New Invoice',data.clientName,'info'); } catch(err){showToast('Error','error');}
     }
-    
     async function saveFeedback(e) {
       e.preventDefault(); const f=e.target;
       const data = { clientName:f.clientName.value, type:f.type.value, subject:f.subject.value, message:f.message.value, status:'new', remarks:f.remarks.value, createdAt:firebase.firestore.FieldValue.serverTimestamp() };
       try { await db.collection('feedback').add(data); closeModal(); renderFeedback(); showToast('Saved!'); addNotification('New Feedback',data.subject,data.type==='complaint'?'warning':'info'); } catch(err){showToast('Error','error');}
     }
-    
     async function saveExpense(e, id) {
       e.preventDefault(); const f=e.target;
       const data = { description:f.description.value, category:f.category.value, amount:parseFloat(f.amount.value), date:f.date.value?new Date(f.date.value):null, paymentMethod:f.paymentMethod.value, receiptUrl:f.receiptUrl.value, remarks:f.remarks.value, updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
       try { if(id){await db.collection('expenses').doc(id).update(data);showToast('Expense updated!');}else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('expenses').add(data);showToast('Expense logged!');addNotification('New Expense',data.description,'warning');} closeModal(); renderExpenses(); } catch(err){showToast('Error','error');}
     }
-    
     async function saveCompanySub(e, id) {
       e.preventDefault(); const f=e.target;
       const data = { serviceName:f.serviceName.value, description:f.description.value, cost:parseFloat(f.cost.value), billingCycle:f.billingCycle.value, renewalDate:f.renewalDate.value?new Date(f.renewalDate.value):null, accountEmail:f.accountEmail.value, loginUrl:f.loginUrl.value, remarks:f.remarks.value, updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
       try { if(id){await db.collection('company_subscriptions').doc(id).update(data);showToast('Updated!');}else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('company_subscriptions').add(data);showToast('Added!');} closeModal(); renderCompanySubs(); } catch(err){showToast('Error','error');}
     }
-    
     async function saveTeamMember(e, id) {
       e.preventDefault(); const f=e.target;
       const data = { name:f.name.value, role:f.role.value, department:f.department.value, status:f.status.value, email:f.email.value, phone:f.phone.value, remarks:f.remarks.value, updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
-      try { if(id){await db.collection('team').doc(id).update(data);cachedTeam[id]=data;showToast('Updated!');}else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();const ref=await db.collection('team').add(data);cachedTeam[ref.id]=data;showToast('Added!');loadCachedTeam();} closeModal(); renderTeam(); } catch(err){showToast('Error','error');}
+      try { if(id){await db.collection('team').doc(id).update(data);cachedTeam[id]=data;showToast('Updated!');}else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();const ref=await db.collection('team').add(data);cachedTeam[ref.id]=data;showToast('Added!');} closeModal(); renderTeam(); } catch(err){showToast('Error','error');}
     }
-    
     async function saveEmail(e, id) {
       e.preventDefault(); const f=e.target;
       const data = { email:f.email.value, purpose:f.purpose.value, password:f.password.value, owner:f.owner.value, status:f.status.value, remarks:f.remarks.value, updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
       try { if(id){await db.collection('company_emails').doc(id).update(data);showToast('Updated!');}else{data.addedAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('company_emails').add(data);showToast('Added!');} closeModal(); renderEmails(); } catch(err){showToast('Error','error');}
     }
-
     async function saveCrewMember(e, id) {
       e.preventDefault(); const f = e.target;
       const role = f.role.value;
@@ -2209,11 +2069,9 @@ Best regards,
       if (!confirm(`Delete this ${label}? This cannot be undone.`)) return;
       try { await db.collection(collection).doc(id).delete(); showPage(currentPage); showToast(`${label} deleted!`); addNotification('Deleted',label,'warning'); } catch(err){showToast('Error','error');}
     }
-    
     async function updateRequestStatus(id, status) {
       try { await db.collection('client_requests').doc(id).update({status}); renderRequests(); showToast(`Marked as ${status}`); } catch(err){showToast('Error','error');}
     }
-    
     async function viewClient(id) { const d = await db.collection('clients').doc(id).get(); openModal('editClient',{id:d.id,...d.data()}); }
     async function editClient(id) { viewClient(id); }
     async function editSubscription(id) { const d = await db.collection('subscriptions').doc(id).get(); openModal('editSubscription',{id:d.id,...d.data()}); }
@@ -2230,8 +2088,6 @@ Best regards,
       const m = { 'active':'<span class="badge badge-success">Active</span>','inactive':'<span class="badge badge-neutral">Inactive</span>','pending':'<span class="badge badge-warning">Pending</span>','in-progress':'<span class="badge badge-info">In Progress</span>','completed':'<span class="badge badge-success">Completed</span>','paid':'<span class="badge badge-success">Paid</span>','overdue':'<span class="badge badge-danger">Overdue</span>','sent':'<span class="badge badge-info">Sent</span>','cancelled':'<span class="badge badge-danger">Cancelled</span>','paused':'<span class="badge badge-warning">Paused</span>','new':'<span class="badge badge-info">New</span>','resolved':'<span class="badge badge-success">Resolved</span>','onboarding':'<span class="badge badge-info">Onboarding</span>','on-leave':'<span class="badge badge-purple">On Leave</span>' };
       return m[status] || `<span class="badge badge-neutral">${status}</span>`;
     }
-    
-    function globalSearch(q) { if(q.length<2) return; }
     function copyToClipboard(t) { navigator.clipboard.writeText(t).then(()=>showToast('Copied!')); }
   </script>
 </body>
