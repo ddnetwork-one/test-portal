@@ -1937,13 +1937,15 @@ Best regards,
     }
 
 // ==========================================
-// CONTENT UPDATES (FIXED)
+// CONTENT UPDATES (FIXED - No inline scripts)
 // ==========================================
 async function renderContentUpdates() {
   const content = document.getElementById('pageContent');
   try {
     const snap = await db.collection('content_updates').orderBy('createdAt','desc').get();
-    content.innerHTML = `<div class="animate-in space-y-6">
+    
+    // Build HTML string first
+    let html = `<div class="animate-in space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h3 class="font-semibold text-slate-800 text-lg">Content Update Requests (${snap.size})</h3>
@@ -1962,110 +1964,87 @@ async function renderContentUpdates() {
           </div>
         </div>
       </div>
-      <div id="cuList" class="space-y-4">
-        ${snap.docs.length === 0 
-          ? '<div class="content-card p-12 text-center text-slate-400">No content update requests</div>'
-          : snap.docs.map((doc, docIdx) => {
-              const d = doc.data();
-              // Parse images safely
-              let images = [];
-              try {
-                if (d.imageUrls) {
-                  if (Array.isArray(d.imageUrls)) images = d.imageUrls;
-                  else images = String(d.imageUrls).split(',').map(s => s.trim()).filter(Boolean);
-                }
-              } catch(e) { images = []; }
-              
-              return `<div class="content-card p-5 cu-item" data-priority="${d.priority || 'Normal'}" data-search="${((d.name||'')+' '+(d.email||'')).toLowerCase()}">
-                <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2 mb-2 flex-wrap">
-                      <span class="font-medium text-sm text-slate-800">${d.name || '-'}</span>
-                      <span class="text-xs text-slate-500">${d.email || '-'}</span>
-                      <span class="badge ${d.priority === 'Critical' ? 'badge-danger' : d.priority === 'Urgent' ? 'badge-warning' : 'badge-info'}">${d.priority || 'Normal'}</span>
-                      <span class="text-xs text-slate-400">${formatDate(d.createdAt)}</span>
-                    </div>
-                    <div class="flex flex-wrap gap-1.5 mb-2">
-                      ${(d.types || []).map(t => `<span class="badge badge-neutral text-[10px]">${t}</span>`).join('')}
-                      ${d.section ? `<span class="badge badge-purple text-[10px]">${d.section}</span>` : ''}
-                    </div>
-                    <p class="text-sm text-slate-600 leading-relaxed mb-2">${d.details || '-'}</p>
-                    
-                    ${images.length > 0 ? `
-                      <div class="flex gap-2 flex-wrap mt-1" id="cu-images-${docIdx}">
-                        ${images.map((url, idx) => `
-                          <img src="${url}" 
-                               class="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity border border-slate-200" 
-                               onclick="event.stopPropagation(); openCUGallery(${docIdx}, ${idx})"
-                               alt="Attachment ${idx+1}" 
-                               loading="lazy" 
-                               onerror="this.style.display='none'">
-                        `).join('')}
-                        ${images.length > 4 ? `<span class="text-xs text-slate-400 self-center">+${images.length - 4} more</span>` : ''}
-                      </div>
-                      <!-- Store images array as data attribute for safe access -->
-                      <script>document.getElementById('cu-images-${docIdx}')?.setAttribute('data-images', '${JSON.stringify(images).replace(/'/g, "\\'")}');</script>
-                    ` : ''}
-                    
-                    <div class="text-xs text-slate-400 mt-2">
-                      Source: ${d.source ? `<a href="${d.source}" target="_blank" class="text-pink-600 hover:underline">${new URL(d.source).pathname}</a>` : '-'}
-                      ${d.whatsapp ? `· WA: ${d.whatsapp}` : ''}
-                      ${d.website ? `· Site: ${d.website}` : ''}
-                    </div>
-                  </div>
-                  <div class="flex gap-2 flex-shrink-0">
-                    ${(hasPermission('sendEmail') || hasPermission('sendWhatsApp')) ? `
-                      <button onclick="sendCUNotification('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs">Notify</button>
-                    ` : ''}
-                    ${deleteRowBtnHTML('content_updates', doc.id, 'request')}
-                  </div>
-                </div>
-              </div>`;
-            }).join('')
-        }
-      </div>
-      
-      <!-- Hidden storage for all image arrays -->
-      <div id="cuImageStore" style="display:none;">
-        ${snap.docs.map((doc, idx) => {
-          let imgs = [];
-          try {
-            if (doc.data().imageUrls) {
-              if (Array.isArray(doc.data().imageUrls)) imgs = doc.data().imageUrls;
-              else imgs = String(doc.data().imageUrls).split(',').map(s => s.trim()).filter(Boolean);
-            }
-          } catch(e) {}
-          return `<div id="cu-store-${idx}" data-images='${JSON.stringify(imgs)}'></div>`;
-        }).join('')}
-      </div>
-    </div>`;
+      <div id="cuList" class="space-y-4">`;
     
-    // Initialize click handlers after render
-    setTimeout(initCUImageHandlers, 100);
-  } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
-}
-
-// Global store for CU images
-window._cuImageData = {};
-
-function initCUImageHandlers() {
-  // Populate global store from hidden elements
-  document.querySelectorAll('[id^="cu-store-"]').forEach(el => {
-    const idx = el.id.replace('cu-store-', '');
-    try {
-      window._cuImageData[idx] = JSON.parse(el.dataset.images);
-    } catch(e) {
-      window._cuImageData[idx] = [];
+    if (snap.docs.length === 0) {
+      html += '<div class="content-card p-12 text-center text-slate-400">No content update requests</div>';
+    } else {
+      snap.docs.forEach((doc, docIdx) => {
+        const d = doc.data();
+        
+        // Parse images safely
+        let images = [];
+        try {
+          if (d.imageUrls) {
+            if (Array.isArray(d.imageUrls)) images = d.imageUrls;
+            else images = String(d.imageUrls).split(',').map(s => s.trim()).filter(Boolean);
+          }
+        } catch(e) { 
+          console.warn('Failed to parse images for doc:', docIdx, e);
+          images = []; 
+        }
+        
+        // Store in global variable immediately (not via inline script)
+        if (!window._cuImageData) window._cuImageData = {};
+        window._cuImageData[docIdx] = images;
+        
+        html += `
+          <div class="content-card p-5 cu-item" data-priority="${d.priority || 'Normal'}" data-search="${((d.name||'')+' '+(d.email||'')).toLowerCase()}">
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2 flex-wrap">
+                  <span class="font-medium text-sm text-slate-800">${d.name || '-'}</span>
+                  <span class="text-xs text-slate-500">${d.email || '-'}</span>
+                  <span class="badge ${d.priority === 'Critical' ? 'badge-danger' : d.priority === 'Urgent' ? 'badge-warning' : 'badge-info'}">${d.priority || 'Normal'}</span>
+                  <span class="text-xs text-slate-400">${formatDate(d.createdAt)}</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5 mb-2">
+                  ${(d.types || []).map(t => `<span class="badge badge-neutral text-[10px]">${t}</span>`).join('')}
+                  ${d.section ? `<span class="badge badge-purple text-[10px]">${d.section}</span>` : ''}
+                </div>
+                <p class="text-sm text-slate-600 leading-relaxed mb-2">${d.details || '-'}</p>
+                
+                ${images.length > 0 ? `
+                  <div class="flex gap-2 flex-wrap mt-1" id="cu-images-${docIdx}">
+                    ${images.map((url, idx) => `
+                      <img src="${url}" 
+                           class="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity border border-slate-200" 
+                           onclick="event.stopPropagation(); openCUGallery(${docIdx}, ${idx})"
+                           alt="Attachment ${idx+1}" 
+                           loading="lazy" 
+                           onerror="this.style.display='none'">
+                    `).join('')}
+                    ${images.length > 4 ? `<span class="text-xs text-slate-400 self-center">+${images.length - 4} more</span>` : ''}
+                  </div>
+                ` : ''}
+                
+                <div class="text-xs text-slate-400 mt-2">
+                  Source: ${d.source ? `<a href="${d.source}" target="_blank" class="text-pink-600 hover:underline">${new URL(d.source).pathname}</a>` : '-'}
+                  ${d.whatsapp ? `· WA: ${d.whatsapp}` : ''}
+                  ${d.website ? `· Site: ${d.website}` : ''}
+                </div>
+              </div>
+              <div class="flex gap-2 flex-shrink-0">
+                ${(hasPermission('sendEmail') || hasPermission('sendWhatsApp')) ? `
+                  <button onclick="sendCUNotification('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs">Notify</button>
+                ` : ''}
+                ${deleteRowBtnHTML('content_updates', doc.id, 'request')}
+              </div>
+            </div>
+          </div>`;
+      });
     }
-  });
-}
-
-function openCUGallery(docIndex, imageIndex) {
-  const images = window._cuImageData[docIndex] || [];
-  if (!images.length) return;
-  
-  // Use the existing gallery preview system
-  openGalleryPreview(images, imageIndex);
+    
+    html += `</div></div>`;
+    content.innerHTML = html;
+    
+    // Initialize handlers AFTER DOM is updated (no inline scripts needed)
+    // The data is already stored in window._cuImageData during the loop above
+    
+  } catch(e) { 
+    console.error('Content Updates Error:', e);
+    content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p><button onclick="renderContentUpdates()" class="btn-primary mt-4">Retry</button></div>`; 
+  }
 }
 
     function filterCU(priority, btn) {
