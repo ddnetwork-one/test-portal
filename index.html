@@ -1090,7 +1090,7 @@ function openGalleryPreview(images, activeIdx) {
     document.addEventListener('click', e => { const c=document.getElementById('notifContainer'); if(c&&!c.contains(e.target)) document.getElementById('notifDropdown').classList.remove('show'); });
 
     // ==========================================
-    // EMAIL TEMPLATES (Professional Design - Matches EmailJS)
+    // EMAIL TEMPLATES
     // ==========================================
     const EMAIL_HTML_TEMPLATE = `<!DOCTYPE html>
 <html>
@@ -1098,15 +1098,15 @@ function openGalleryPreview(images, activeIdx) {
   <meta charset="UTF-8" />
   <title>{{email_title}}</title>
 </head>
-<body style="margin:0; padding:0; background-color:#f5f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<body style="margin:0; padding:0; background-color:#f5f5f7; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
 
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f5f5f7; padding:20px 0;">
     <tr>
       <td align="center">
 
         <!-- Container -->
-        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; padding:40px; border-radius:8px;">
-          
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; padding:40px;">
+
           <!-- Logo -->
           <tr>
             <td style="padding-bottom:30px;">
@@ -1128,18 +1128,42 @@ function openGalleryPreview(images, activeIdx) {
             </td>
           </tr>
 
-          <!-- Details Section (Dynamic) -->
-          {{details_section}}
+          <!-- Details -->
+          <tr>
+            <td style="font-size:15px; line-height:1.7; color:#3a3a3c; padding-bottom:25px;">
 
-          <!-- CTA Section (Optional) -->
-          {{cta_section}}
+              <div style="margin-bottom:6px;">
+                <strong style="color:#1d1d1f;">Service:</strong> {{service_name}}
+              </div>
+
+              <div style="margin-bottom:6px;">
+                <strong style="color:#1d1d1f;">Action By:</strong> {{renewed_by}}
+              </div>
+
+              <div style="margin-bottom:6px;">
+                <strong style="color:#1d1d1f;">Requested By:</strong> {{requested_by}}
+              </div>
+
+              <div>
+                <strong style="color:#1d1d1f;">Date:</strong> {{renewal_date}}
+              </div>
+
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="font-size:16px; line-height:1.6; color:#3a3a3c; padding-bottom:30px;">
+              To learn more, visit our
+              <a href="https://luviio.com" style="color:#0071e3; text-decoration:none;">website page</a>.
+            </td>
+          </tr>
 
           <!-- Signature -->
           <tr>
-            <td style="font-size:16px; color:#1d1d1f; padding-top:20px; border-top:1px solid #e5e5ea;">
-              Regards,<br/>
-              <strong>{{signature_team}}</strong><br/>
-              <span style="color:#86868b;">{{signature_company}}</span>
+            <td style="font-size:16px; color:#1d1d1f;">
+              Take care,<br/>
+              <strong>We'luviio</strong>
             </td>
           </tr>
 
@@ -1149,9 +1173,9 @@ function openGalleryPreview(images, activeIdx) {
         <table width="600" cellpadding="0" cellspacing="0" border="0" style="padding:20px 40px; color:#86868b; font-size:12px;">
           <tr>
             <td style="line-height:1.5;">
-              This email was sent by <strong>{{sender_name}}</strong> on behalf of Luviio.<br/><br/>
-              Please do not reply to this message directly.<br/><br/>
-              © {{current_year}} Luviio Inc. All rights reserved.
+              This email was sent by {{renewed_by}} on behalf of Luviio.<br/><br/>
+              Please do not reply to this message; it was automatically generated.<br/><br/>
+              &copy; 2026 luviio. All rights reserved.
             </td>
           </tr>
         </table>
@@ -1162,7 +1186,6 @@ function openGalleryPreview(images, activeIdx) {
 
 </body>
 </html>`;
-
     const WA_TEXT_TEMPLATE = `*{{title}}*
 
 Dear {{recipient_name}},
@@ -1192,69 +1215,13 @@ Best regards,
       { id: 'custom', name: 'Custom Message', icon: '✏️', emailTitle: '', emailMessage: '', waMessage: '', category: 'Custom' }
     ];
 
-    // Helper: Generate Details Table (matches design)
-    function generateDetailsTable(details) {
-      if (!details || Object.keys(details).length === 0) return '';
-      
-      let rows = '';
-      for (const [key, value] of Object.entries(details)) {
-        rows += `
-          <tr>
-            <td style="padding:10px 16px; background:#f5f5f7; color:#86868b; font-weight:600; font-size:13px; width:35%; border-bottom:1px solid #e5e5ea;">${escapeHtml(key)}</td>
-            <td style="padding:10px 16px; color:#1d1d1f; font-size:14px; border-bottom:1px solid #e5e5ea;">${escapeHtml(String(value))}</td>
-          </tr>`;
-      }
-      
-      return `
-        <tr>
-          <td style="padding-bottom:24px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e5ea; border-radius:8px; overflow:hidden;">
-              ${rows}
-            </table>
-          </td>
-        </tr>`;
+    function renderEmailPreview(title, message, serviceName, renewedBy, requestedBy, renewalDate, recipientName) {
+      return EMAIL_HTML_TEMPLATE.replace(/\{\{recipient_name\}\}/g, recipientName||'Valued Customer').replace(/\{\{email_title\}\}/g, title||'Notification').replace(/\{\{title\}\}/g, title||'Notification').replace(/\{\{message\}\}/g, message||'-').replace(/\{\{service_name\}\}/g, serviceName||'-').replace(/\{\{renewed_by\}\}/g, renewedBy||'-').replace(/\{\{requested_by\}\}/g, requestedBy||'-').replace(/\{\{renewal_date\}\}/g, renewalDate||'-');
     }
-
-    // Helper: Generate CTA Button
-    function generateCTASection(ctaText, ctaLink) {
-      if (!ctaText || !ctaLink) return '';
-      
-      return `
-        <tr>
-          <td style="font-size:16px; line-height:1.6; color:#3a3a3c; padding-bottom:30px;">
-            To learn more, visit our 
-            <a href="${ctaLink}" style="color:#0071e3; text-decoration:none; font-weight:500;">${ctaText}</a>.
-          </td>
-        </tr>`;
-    }
-
-    function renderEmailPreview(title, message, serviceName, renewedBy, requestedBy, renewalDate, recipientName, options = {}) {
-      const details = {
-        ...(serviceName ? { 'Service Name' : serviceName } : {}),
-        ...(renewedBy ? { 'Action By' : renewedBy } : {}),
-        ...(requestedBy ? { 'Requested By' : requestedBy } : {}),
-        ...(renewalDate ? { 'Date' : renewalDate } : {}),
-        ...(options.extraDetails || {})
-      };
-      
-      let html = EMAIL_HTML_TEMPLATE
-        .replace(/\{\{email_title\}\}/g, escapeHtml(title || 'Notification from Luviio'))
-        .replace(/\{\{recipient_name\}\}/g, escapeHtml(recipientName || 'Valued Customer'))
-        .replace(/\{\{message\}\}/g, message ? message.replace(/\n/g, '<br/>') : '-')
-        .replace(/\{\{details_section\}\}/g, generateDetailsTable(details))
-        .replace(/\{\{cta_section\}\}/g, generateCTASection(options.ctaText, options.ctaLink))
-        .replace(/\{\{signature_team\}\}/g, options.signatureTeam || 'Luviio Team')
-        .replace(/\{\{signature_company\}\}/g, options.signatureCompany || '')
-        .replace(/\{\{sender_name\}\}/g, escapeHtml(renewedBy || 'Luviio System'))
-        .replace(/\{\{current_year\}\}/g, new Date().getFullYear());
-        
-      return html;
-    }
-    
     function renderWaPreview(title, message, serviceName, renewedBy, requestedBy, renewalDate, recipientName) {
       return WA_TEXT_TEMPLATE.replace(/\{\{recipient_name\}\}/g, recipientName||'Valued Customer').replace(/\{\{title\}\}/g, title||'Notification').replace(/\{\{message\}\}/g, message||'-').replace(/\{\{service_name\}\}/g, serviceName||'-').replace(/\{\{renewed_by\}\}/g, renewedBy||'-').replace(/\{\{requested_by\}\}/g, requestedBy||'-').replace(/\{\{renewal_date\}\}/g, renewalDate||'-');
     }
-
+    
     // ==========================================
     // EMAILJS SEND
     // ==========================================
