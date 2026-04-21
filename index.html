@@ -2315,17 +2315,16 @@ Thank you!`,
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
-    async function sendUniNotif(id) {
-      const doc = await db.collection('uni_student_applications').doc(id).get();
-      const d = doc.data();
-      openCustomerNotif({
-        clientEmail: d.studentEmail || '',
-        clientName: d.fullName || 'Student',
-        clientPhone: d.phone || '',
-        defaultTitle: 'University Student Program - Application Received',
-        defaultMessage: `Dear ${d.fullName},
-
-Thank you for applying to the Luviio University Student Program!
+async function sendUniNotif(id) {
+  const doc = await db.collection('uni_student_applications').doc(id).get();
+  const d = doc.data();
+  openCustomerNotif({
+    clientEmail: d.studentEmail || '',
+    clientName: d.fullName || 'Student',
+    clientPhone: d.phone || '',
+    defaultTitle: 'University Student Program - Application Received',
+    // REMOVED: "Dear ${d.fullName}," and "Best regards,\nLuviio Team"
+    defaultMessage: `Thank you for applying to the Luviio University Student Program!
 
 Application Details:
 • University: ${d.university || '-'}
@@ -2333,16 +2332,13 @@ Application Details:
 • IC: ${d.icNumber || '-'}
 • Business Type: ${d.businessType || '-'}
 
-Our team will review your application and get back to you soon.
-
-Best regards,
-Luviio Team`,
-        serviceName: 'Uni Student Program',
-        renewedBy: 'Luviio Uni Program',
-        requestedBy: d.fullName || 'Student',
-        relevantDate: formatDate(d.createdAt)
-      });
-    }
+Our team will review your application and get back to you soon.`,
+    serviceName: 'Uni Student Program',
+    renewedBy: 'Luviio Uni Program',
+    requestedBy: d.fullName || 'Student',
+    relevantDate: formatDate(d.createdAt)
+  });
+}
 
     // ==========================================
     // SPECIAL CLIENT APPLICATIONS (FIXED SEARCH)
@@ -2403,33 +2399,29 @@ Luviio Team`,
       } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
     }
 
-    async function sendSCNotif(id) {
-      const doc = await db.collection('special_client_applications').doc(id).get();
-      const d = doc.data();
-      openCustomerNotif({
-        clientEmail: d.email || '',
-        clientName: d.name || 'Special Client',
-        clientPhone: d.phone || '',
-        defaultTitle: 'Welcome to Luviio - Special Client Program',
-        defaultMessage: `Dear ${d.name},
-
-Thank you for your interest in Luviio's Special Client Program!
+async function sendSCNotif(id) {
+  const doc = await db.collection('special_client_applications').doc(id).get();
+  const d = doc.data();
+  openCustomerNotif({
+    clientEmail: d.email || '',
+    clientName: d.name || 'Special Client',
+    clientPhone: d.phone || '',
+    defaultTitle: 'Welcome to Luviio - Special Client Program',
+    // REMOVED: "Dear ${d.name}," and "Best regards,\n*Luviio Team*"
+    defaultMessage: `Thank you for your interest in Luviio's Special Client Program!
 
 We're excited to offer you a **30-day free trial** of our premium services.
 
 Your Message:
 "${d.message || '-'}"
 
-Our team will reach out shortly to get you started.
-
-Best regards,
-Luviio Team`,
-        serviceName: 'Special Client Program (30-Day Trial)',
-        renewedBy: 'Luviio Sales',
-        requestedBy: d.name || 'Special Client',
-        relevantDate: formatDate(d.createdAt)
-      });
-    }
+Our team will reach out shortly to get you started.`,
+    serviceName: 'Special Client Program (30-Day Trial)',
+    renewedBy: 'Luviio Sales',
+    requestedBy: d.name || 'Special Client',
+    relevantDate: formatDate(d.createdAt)
+  });
+}
 
     // ==========================================
     // TABLE SEARCH UTILITY (for new pages)
