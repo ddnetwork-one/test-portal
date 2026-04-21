@@ -743,25 +743,36 @@
     // ==========================================
     // GALLERY PREVIEW (multi-image from remarks)
     // ==========================================
-    function openGalleryPreview(images, activeIdx) {
-      if (!images || images.length === 0) return;
-      galleryImages = images;
-      galleryActiveIdx = activeIdx || 0;
-      const modal = document.getElementById('imagePreviewModal');
-      const strip = document.getElementById('galleryStrip');
-      document.getElementById('previewImage').src = galleryImages[galleryActiveIdx];
+function openGalleryPreview(images, activeIdx) {
+  if (!images || images.length === 0) return;
+  // Ensure images is always an array
+  if (typeof images === 'string') {
+    try { images = JSON.parse(images); } catch(e) { images = [images]; }
+  }
+  
+  galleryImages = images;
+  galleryActiveIdx = activeIdx || 0;
+  const modal = document.getElementById('imagePreviewModal');
+  const strip = document.getElementById('galleryStrip');
+  
+  document.getElementById('previewImage').src = galleryImages[galleryActiveIdx];
 
-      if (galleryImages.length > 1) {
-        strip.style.display = 'flex';
-        strip.innerHTML = galleryImages.map((url, i) =>
-          `<img src="${url}" class="${i === galleryActiveIdx ? 'active' : ''}" onclick="switchGalleryImage(${i})" alt="Gallery ${i + 1}" onerror="this.style.display='none'">`
-        ).join('');
-      } else {
-        strip.style.display = 'none';
-      }
-      modal.classList.add('show');
-      document.body.style.overflow = 'hidden';
-    }
+  if (galleryImages.length > 1) {
+    strip.style.display = 'flex';
+    strip.innerHTML = galleryImages.map((url, i) =>
+      `<img src="${url}" 
+            class="${i === galleryActiveIdx ? 'active' : ''}" 
+            onclick="switchGalleryImage(${i})" 
+            alt="Gallery ${i + 1}" 
+            onerror="this.style.display='none'">`
+    ).join('');
+  } else {
+    strip.style.display = 'none';
+  }
+  
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
 
     function switchGalleryImage(idx) {
       galleryActiveIdx = idx;
@@ -1925,80 +1936,137 @@ Best regards,
       });
     }
 
-    // ==========================================
-    // CONTENT UPDATES
-    // ==========================================
-    async function renderContentUpdates() {
-      const content = document.getElementById('pageContent');
-      try {
-        const snap = await db.collection('content_updates').orderBy('createdAt','desc').get();
-        content.innerHTML = `<div class="animate-in space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 class="font-semibold text-slate-800 text-lg">Content Update Requests (${snap.size})</h3>
-              <p class="text-xs text-slate-500 mt-0.5">Text, images, and branding change requests from the website</p>
-            </div>
-            <div class="flex gap-2">
-              <div class="search-container relative">
-                <input type="text" id="cuSearch" placeholder="Search by name or email..." class="input-field !w-64 !py-2 !pl-9 !pr-4 !text-xs" oninput="handleTableSearch(this.value, 'cuTableBody', ['name','email'])" autocomplete="off">
-                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-              </div>
-              <div class="flex gap-1 bg-white rounded-xl p-1 border border-slate-200">
-                <button class="tab-btn active" onclick="filterCU('all', this)">All</button>
-                <button class="tab-btn" onclick="filterCU('Normal', this)">Normal</button>
-                <button class="tab-btn" onclick="filterCU('Urgent', this)">Urgent</button>
-                <button class="tab-btn" onclick="filterCU('Critical', this)">Critical</button>
-              </div>
-            </div>
+// ==========================================
+// CONTENT UPDATES (FIXED)
+// ==========================================
+async function renderContentUpdates() {
+  const content = document.getElementById('pageContent');
+  try {
+    const snap = await db.collection('content_updates').orderBy('createdAt','desc').get();
+    content.innerHTML = `<div class="animate-in space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 class="font-semibold text-slate-800 text-lg">Content Update Requests (${snap.size})</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Text, images, and branding change requests from the website</p>
+        </div>
+        <div class="flex gap-2">
+          <div class="search-container relative">
+            <input type="text" id="cuSearch" placeholder="Search by name or email..." class="input-field !w-64 !py-2 !pl-9 !pr-4 !text-xs" oninput="handleTableSearch(this.value, 'cuTableBody', ['name','email'])" autocomplete="off">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           </div>
-          <div id="cuList" class="space-y-4">
-            ${snap.docs.length === 0 
-              ? '<div class="content-card p-12 text-center text-slate-400">No content update requests</div>'
-              : snap.docs.map(doc => {
-                  const d = doc.data();
-                  const images = (d.imageUrls || '').split(',').filter(u => u.trim());
-                  return `<div class="content-card p-5 cu-item" data-priority="${d.priority || 'Normal'}" data-search="${((d.name||'')+' '+(d.email||'')).toLowerCase()}">
-                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                      <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-2 flex-wrap">
-                          <span class="font-medium text-sm text-slate-800">${d.name || '-'}</span>
-                          <span class="text-xs text-slate-500">${d.email || '-'}</span>
-                          <span class="badge ${d.priority === 'Critical' ? 'badge-danger' : d.priority === 'Urgent' ? 'badge-warning' : 'badge-info'}">${d.priority || 'Normal'}</span>
-                          <span class="text-xs text-slate-400">${formatDate(d.createdAt)}</span>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5 mb-2">
-                          ${(d.types || []).map(t => `<span class="badge badge-neutral text-[10px]">${t}</span>`).join('')}
-                          ${d.section ? `<span class="badge badge-purple text-[10px]">${d.section}</span>` : ''}
-                        </div>
-                        <p class="text-sm text-slate-600 leading-relaxed mb-2">${d.details || '-'}</p>
-                        ${images.length > 0 ? `
-                          <div class="flex gap-2 flex-wrap mt-1">
-                            ${images.slice(0, 4).map(url => `
-                              <img src="${url}" class="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity border border-slate-200" onclick="openGalleryPreview([${JSON.stringify(images)}], ${images.indexOf(url)})" alt="Attachment" loading="lazy" onerror="this.style.display='none'">
-                            `).join('')}
-                            ${images.length > 4 ? `<span class="text-xs text-slate-400 self-center">+${images.length - 4} more</span>` : ''}
-                          </div>
-                        ` : ''}
-                        <div class="text-xs text-slate-400 mt-2">
-                          Source: ${d.source ? `<a href="${d.source}" target="_blank" class="text-pink-600 hover:underline">${new URL(d.source).pathname}</a>` : '-'}
-                          ${d.whatsapp ? `· WA: ${d.whatsapp}` : ''}
-                          ${d.website ? `· Site: ${d.website}` : ''}
-                        </div>
-                      </div>
-                      <div class="flex gap-2 flex-shrink-0">
-                        ${(hasPermission('sendEmail') || hasPermission('sendWhatsApp')) ? `
-                          <button onclick="sendCUNotification('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs">Notify</button>
-                        ` : ''}
-                        ${deleteRowBtnHTML('content_updates', doc.id, 'request')}
-                      </div>
+          <div class="flex gap-1 bg-white rounded-xl p-1 border border-slate-200">
+            <button class="tab-btn active" onclick="filterCU('all', this)">All</button>
+            <button class="tab-btn" onclick="filterCU('Normal', this)">Normal</button>
+            <button class="tab-btn" onclick="filterCU('Urgent', this)">Urgent</button>
+            <button class="tab-btn" onclick="filterCU('Critical', this)">Critical</button>
+          </div>
+        </div>
+      </div>
+      <div id="cuList" class="space-y-4">
+        ${snap.docs.length === 0 
+          ? '<div class="content-card p-12 text-center text-slate-400">No content update requests</div>'
+          : snap.docs.map((doc, docIdx) => {
+              const d = doc.data();
+              // Parse images safely
+              let images = [];
+              try {
+                if (d.imageUrls) {
+                  if (Array.isArray(d.imageUrls)) images = d.imageUrls;
+                  else images = String(d.imageUrls).split(',').map(s => s.trim()).filter(Boolean);
+                }
+              } catch(e) { images = []; }
+              
+              return `<div class="content-card p-5 cu-item" data-priority="${d.priority || 'Normal'}" data-search="${((d.name||'')+' '+(d.email||'')).toLowerCase()}">
+                <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2 flex-wrap">
+                      <span class="font-medium text-sm text-slate-800">${d.name || '-'}</span>
+                      <span class="text-xs text-slate-500">${d.email || '-'}</span>
+                      <span class="badge ${d.priority === 'Critical' ? 'badge-danger' : d.priority === 'Urgent' ? 'badge-warning' : 'badge-info'}">${d.priority || 'Normal'}</span>
+                      <span class="text-xs text-slate-400">${formatDate(d.createdAt)}</span>
                     </div>
-                  </div>`;
-                }).join('')
+                    <div class="flex flex-wrap gap-1.5 mb-2">
+                      ${(d.types || []).map(t => `<span class="badge badge-neutral text-[10px]">${t}</span>`).join('')}
+                      ${d.section ? `<span class="badge badge-purple text-[10px]">${d.section}</span>` : ''}
+                    </div>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-2">${d.details || '-'}</p>
+                    
+                    ${images.length > 0 ? `
+                      <div class="flex gap-2 flex-wrap mt-1" id="cu-images-${docIdx}">
+                        ${images.map((url, idx) => `
+                          <img src="${url}" 
+                               class="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity border border-slate-200" 
+                               onclick="event.stopPropagation(); openCUGallery(${docIdx}, ${idx})"
+                               alt="Attachment ${idx+1}" 
+                               loading="lazy" 
+                               onerror="this.style.display='none'">
+                        `).join('')}
+                        ${images.length > 4 ? `<span class="text-xs text-slate-400 self-center">+${images.length - 4} more</span>` : ''}
+                      </div>
+                      <!-- Store images array as data attribute for safe access -->
+                      <script>document.getElementById('cu-images-${docIdx}')?.setAttribute('data-images', '${JSON.stringify(images).replace(/'/g, "\\'")}');</script>
+                    ` : ''}
+                    
+                    <div class="text-xs text-slate-400 mt-2">
+                      Source: ${d.source ? `<a href="${d.source}" target="_blank" class="text-pink-600 hover:underline">${new URL(d.source).pathname}</a>` : '-'}
+                      ${d.whatsapp ? `· WA: ${d.whatsapp}` : ''}
+                      ${d.website ? `· Site: ${d.website}` : ''}
+                    </div>
+                  </div>
+                  <div class="flex gap-2 flex-shrink-0">
+                    ${(hasPermission('sendEmail') || hasPermission('sendWhatsApp')) ? `
+                      <button onclick="sendCUNotification('${doc.id}')" class="btn-secondary !py-2 !px-3 !text-xs">Notify</button>
+                    ` : ''}
+                    ${deleteRowBtnHTML('content_updates', doc.id, 'request')}
+                  </div>
+                </div>
+              </div>`;
+            }).join('')
+        }
+      </div>
+      
+      <!-- Hidden storage for all image arrays -->
+      <div id="cuImageStore" style="display:none;">
+        ${snap.docs.map((doc, idx) => {
+          let imgs = [];
+          try {
+            if (doc.data().imageUrls) {
+              if (Array.isArray(doc.data().imageUrls)) imgs = doc.data().imageUrls;
+              else imgs = String(doc.data().imageUrls).split(',').map(s => s.trim()).filter(Boolean);
             }
-          </div>
-        </div>`;
-      } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
+          } catch(e) {}
+          return `<div id="cu-store-${idx}" data-images='${JSON.stringify(imgs)}'></div>`;
+        }).join('')}
+      </div>
+    </div>`;
+    
+    // Initialize click handlers after render
+    setTimeout(initCUImageHandlers, 100);
+  } catch(e) { content.innerHTML=`<div class="content-card p-12 text-center"><p class="text-red-500">Error: ${e.message}</p></div>`; }
+}
+
+// Global store for CU images
+window._cuImageData = {};
+
+function initCUImageHandlers() {
+  // Populate global store from hidden elements
+  document.querySelectorAll('[id^="cu-store-"]').forEach(el => {
+    const idx = el.id.replace('cu-store-', '');
+    try {
+      window._cuImageData[idx] = JSON.parse(el.dataset.images);
+    } catch(e) {
+      window._cuImageData[idx] = [];
     }
+  });
+}
+
+function openCUGallery(docIndex, imageIndex) {
+  const images = window._cuImageData[docIndex] || [];
+  if (!images.length) return;
+  
+  // Use the existing gallery preview system
+  openGalleryPreview(images, imageIndex);
+}
 
     function filterCU(priority, btn) {
       document.querySelectorAll('.cu-item').forEach(item => {
