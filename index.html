@@ -2534,24 +2534,28 @@ Our team will reach out shortly to get you started.`,
     }
 function getSubscriptionModal(data) {
   const ed = !!data;
+  
+  // Determine if existing data is custom or preset for dropdown default
+  const isCustomPlan = data?.planName && !['Starter Plan','Growth Plan','Pro IT Services Plan'].includes(data.planName);
+  
   return `<div class="p-6 border-b border-slate-100"><div class="flex items-center justify-between"><h3 class="font-semibold text-lg text-slate-800">${ed?'Edit':'New'} Subscription</h3><button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
   <form onsubmit="saveSubscription(event,'${data?.id||''}')" class="p-6 space-y-4">
     <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name *</label><input name="clientName" required class="input-field" value="${data?.clientName||''}" placeholder="Type to search client..."></div>
     
-    <!-- NEW: Plan Dropdown with Pricing -->
+    <!-- Plan Dropdown -->
     <div>
       <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Plan Name *</label>
-      <select name="planName" id="subPlanSelect" class="input-field" onchange="updateSubPrice(this.value)" ${ed ? `data-custom="${data?.planName||''}"` : ''}>
+      <select name="planName" id="subPlanSelect" class="input-field" onchange="updateSubPrice(this.value)">
         <option value="">Select a plan...</option>
         <option value="Starter Plan|150" ${data?.planName==='Starter Plan'?'selected':''}>Starter Plan — RM150/month</option>
         <option value="Growth Plan|300" ${data?.planName==='Growth Plan'?'selected':''}>Growth Plan — RM300/month</option>
         <option value="Pro IT Services Plan|1900" ${data?.planName==='Pro IT Services Plan'?'selected':''}>Pro IT Services Plan — RM1900/month</option>
-        <option value="custom" ${(data?.planName && !['Starter Plan','Growth Plan','Pro IT Services Plan'].includes(data?.planName)) ? 'selected' : ''}>Custom Plan</option>
+        <option value="custom" ${isCustomPlan ? 'selected' : ''}>Custom Plan</option>
       </select>
       
-      <!-- Custom plan name input (hidden by default) -->
-      <div id="customPlanWrapper" style="${(data?.planName && !['Starter Plan','Growth Plan','Pro IT Services Plan'].includes(data?.planName)) ? '' : 'display:none;'} margin-top:8px;">
-        <input type="text" name="customPlanName" class="input-field !mt-1" value="${(data?.planName && !['Starter Plan','Growth Plan','Pro IT Services Plan'].includes(data?.planName)) ? data.planName : ''}" placeholder="Enter custom plan name...">
+      <!-- Custom plan name input (hidden by default unless editing custom) -->
+      <div id="customPlanWrapper" style="${isCustomPlan ? '' : 'display:none;'} margin-top:8px;">
+        <input type="text" name="customPlanName" class="input-field !mt-1" value="${isCustomPlan ? data?.planName : ''}" placeholder="Enter custom plan name...">
       </div>
     </div>
     
@@ -2561,43 +2565,80 @@ function getSubscriptionModal(data) {
         <input name="price" type="number" step="0.01" required class="input-field" id="subPriceInput" value="${data?.price||''}">
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Billing Cycle</label>
-        <select name="billingCycle" class="input-field">
-          <option ${data?.billingCycle==='Monthly'?'selected':''}>Monthly</option>
-          <option ${data?.billingCycle==='Quarterly'?'selected':''}>Quarterly</option>
-          <option ${data?.billingCycle==='Yearly'?'selected':''}>Yearly</option>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Billing Cycle *</label>
+        <select name="billingCycle" id="subBillingCycle" class="input-field" onchange="autoCalculateNextBilling()">
+          <option value="Monthly" ${(!data || data?.billingCycle==='Monthly') ? 'selected' : ''}>Monthly</option>
+          <option value="Quarterly" ${data?.billingCycle==='Quarterly'?'selected':''}>Quarterly</option>
+          <option value="Yearly" ${data?.billingCycle==='Yearly'?'selected':''}>Yearly</option>
         </select>
       </div>
     </div>
     
     <div class="grid grid-cols-2 gap-4">
-      <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Start Date</label><input name="startDate" type="date" class="input-field" value="${formatDateInput(data?.startDate)}"></div>
-      <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Next Billing</label><input name="nextBillingDate" type="date" class="input-field" value="${formatDateInput(data?.nextBillingDate)}"></div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Start Date *</label>
+        <input name="startDate" type="date" class="input-field" id="subStartDate" value="${formatDateInput(data?.startDate)}" onchange="autoCalculateNextBilling()">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Next Billing (Auto)</label>
+        <input name="nextBillingDate" type="date" class="input-field" id="subNextBilling" value="${formatDateInput(data?.nextBillingDate)}" readonly style="background:#f8fafc; cursor:not-allowed;">
+        <p class="text-[10px] text-slate-400 mt-1">Automatically calculated based on Start Date + Cycle</p>
+      </div>
     </div>
+    
     <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Stripe Customer ID</label><input name="stripeCustomerId" class="input-field" value="${data?.stripeCustomerId||''}"></div>
     ${remarksFieldHTML(data?.remarks)}
     <div class="flex gap-3 pt-2"><button type="submit" class="btn-primary flex-1 justify-center">${ed?'Update':'Create'}</button><button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button></div>
   </form>`;
 }
 
-// Helper function for subscription price auto-fill
+// Helper: Update price when plan selected
 function updateSubPrice(value) {
   const priceInput = document.getElementById('subPriceInput');
   const customWrapper = document.getElementById('customPlanWrapper');
   
   if (!value || value === 'custom') {
-    // Show custom input field
     if (customWrapper) customWrapper.style.display = '';
     priceInput.value = '';
     priceInput.focus();
   } else {
-    // Hide custom field, set price from selection
     if (customWrapper) customWrapper.style.display = 'none';
     const parts = value.split('|');
-    if (parts[1]) {
-      priceInput.value = parts[1];
-    }
+    if (parts[1]) priceInput.value = parts[1];
   }
+  
+  // Also recalculate billing date after price change (in case cycle was set)
+  autoCalculateNextBilling();
+}
+
+// NEW: Auto-calculate Next Billing Date based on Start Date + Billing Cycle
+function autoCalculateNextBilling() {
+  const startDateStr = document.getElementById('subStartDate')?.value;
+  const cycle = document.getElementById('subBillingCycle')?.value;
+  const nextBillingInput = document.getElementById('subNextBilling');
+  
+  if (!startDateStr || !cycle || !nextBillingInput) return;
+  
+  const startDate = new Date(startDateStr);
+  const nextDate = new Date(startDate);
+  
+  switch(cycle) {
+    case 'Monthly':
+      nextDate.setMonth(nextDate.getMonth() + 1); // +1 month
+      break;
+    case 'Quarterly':
+      nextDate.setMonth(nextDate.getMonth() + 3); // +3 months
+      break;
+    case 'Yearly':
+      nextDate.setFullYear(nextDate.getFullYear() + 1); // +1 year
+      break;
+    default:
+      return;
+  }
+  
+  // Format as YYYY-MM-DD for input field
+  const formatted = nextDate.toISOString().split('T')[0];
+  nextBillingInput.value = formatted;
 }
     function getRequestModal() {
       return `<div class="p-6 border-b border-slate-100"><div class="flex items-center justify-between"><h3 class="font-semibold text-lg text-slate-800">Log Client Request</h3><button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>
@@ -2614,19 +2655,25 @@ function getInvoiceModal() {
   <form onsubmit="saveInvoice(event)" class="p-6 space-y-4">
     <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Client Name *</label><input name="clientName" required class="input-field" placeholder="Type to search client or team..."></div>
     
-    <!-- NEW: Service/Plan Dropdown -->
+    <!-- Service/Plan Dropdown -->
     <div>
       <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Service / Plan *</label>
-      <select name="servicePlan" id="invoiceServicePlan" required class="input-field" onchange="updateInvoiceAmount(this.value)">
+      <select name="servicePlan" id="invoiceServicePlan" required class="input-field" onchange="updateInvoiceFromPlan(this.value)">
         <option value="">Select a plan...</option>
         <option value="Starter Plan|150">Starter Plan — RM150</option>
         <option value="Growth Plan|300">Growth Plan — RM300</option>
         <option value="Pro IT Services Plan|1900">Pro IT Services Plan — RM1900</option>
         <option value="custom">Custom Amount</option>
       </select>
+      
+      <!-- Custom service name (hidden by default) -->
+      <div id="invoiceCustomServiceWrapper" style="display:none; margin-top:8px;">
+        <input type="text" name="customServiceName" class="input-field" placeholder="Enter custom service name...">
+      </div>
     </div>
     
-    <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Description *</label><textarea name="description" required rows="2" class="input-field resize-none"></textarea></div>
+    <!-- Description now auto-fills from plan selection -->
+    <div><label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Description *</label><textarea name="description" required rows="2" class="input-field resize-none" id="invoiceDescInput"></textarea></div>
     
     <div class="grid grid-cols-2 gap-4">
       <div>
@@ -2654,18 +2701,42 @@ function getInvoiceModal() {
   </form>`;
 }
 
-// Helper function to auto-fill amount when plan is selected
-function updateInvoiceAmount(value) {
+// UPDATED: Now handles both Amount AND Description auto-fill
+function updateInvoiceFromPlan(value) {
   const amountInput = document.getElementById('invoiceAmount');
+  const descInput = document.getElementById('invoiceDescInput'); // NEW: Description field
+  const customWrapper = document.getElementById('invoiceCustomServiceWrapper'); // NEW: Custom wrapper
+  
   if (!value || value === 'custom') {
-    amountInput.value = '';
-    amountInput.focus();
-    amountInput.placeholder = 'Enter custom amount';
+    // Show custom input, clear auto-fills
+    if (customWrapper) customWrapper.style.display = '';
+    if (amountInput) {
+      amountInput.value = '';
+      amountInput.placeholder = 'Enter custom amount';
+    }
+    if (descInput) descInput.value = ''; // Clear description
+    // Focus on custom service name input if visible
+    setTimeout(() => {
+      const customInput = document.querySelector('[name="customServiceName"]');
+      if (customInput) customInput.focus();
+    }, 100);
   } else {
+    // Hide custom field, auto-fill both fields from selection
+    if (customWrapper) customWrapper.style.display = 'none';
+    
     const parts = value.split('|');
-    if (parts[1]) {
-      amountInput.value = parts[1];
-      amountInput.placeholder = parts[1];
+    const serviceName = parts[0]; // "Starter Plan"
+    const price = parts[1];       // "150"
+    
+    // Auto-fill Amount
+    if (amountInput) {
+      amountInput.value = price;
+      amountInput.placeholder = price;
+    }
+    
+    // NEW: Auto-fill Description with service name + price
+    if (descInput) {
+      descInput.value = `${serviceName} Subscription — RM${price}`;
     }
   }
 }
