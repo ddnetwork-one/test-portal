@@ -43,64 +43,66 @@
   </script>
 
   <style>
-    /* ===== FULL SCREEN & PULL-TO-REFRESH FIX ===== */
-    
-    /* 1. HTML must be normal flow for refresh to work */
-    html {
-      height: 100%;
-      width: 100%;
-      overflow-x: hidden !important;
-      max-width: 100vw !important;
-      /* Allow pull-to-refresh by default */
-      overscroll-behavior-y: auto;
-    }
+/* ===== FULL SCREEN & TOUCH FIX ===== */
 
-    /* 2. Body handles scrolling */
-    body {
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-      overflow-x: hidden !important;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      /* Prevent bounce only when NOT at top */
-      overscroll-behavior-y: contain;
-      background-color: #fafaf9;
-      transition: background-color 0.3s;
-    }
-    
-    .dark body {
-      background-color: #09090b;
-    }
+/* 1. HTML setup */
+html {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  touch-action: pan-y; /* Allow vertical scroll, disable horizontal gestures */
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain; /* Default: prevent rubber-banding */
+}
 
-    /* 3. CRITICAL: When at top, switch to 'auto' to allow refresh */
-    body.allow-refresh {
-      overscroll-behavior-y: auto;
-    }
+/* 2. Body handles scrolling properly */
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch; /* Smooth iOS scrolling */
+  touch-action: pan-y;
+  background-color: #fafaf9;
+  transition: background-color 0.3s;
+  position: relative; /* Important: don't use fixed unless menu is open */
+}
 
-    /* 4. Menu Open: Lock everything down */
-    html.menu-open {
-      overflow: hidden !important;
-      position: relative; 
-      height: 100vh; /* Prevent background scroll */
-      overscroll-behavior-y: none !important;
-    }
-    
-    html.menu-open body {
-      overflow: hidden !important;
-      position: fixed; /* Fix body in place behind menu */
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      overscroll-behavior-y: none !important;
-    }
+.dark body {
+  background-color: #09090b;
+}
 
-    .page.active {
-      display: flex;
-      flex-direction: column;
-      min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-      min-height: -webkit-fill-available;
-    }
+/* 3. When at very top, allow pull-to-refresh if needed */
+body.at-top {
+  overscroll-behavior-y: auto;
+}
+
+/* 4. Menu Open: Lock scroll properly without position fixed issues */
+html.menu-open {
+  overflow: hidden !important;
+  position: relative;
+  height: 100vh;
+  touch-action: none; /* Disable all touch actions when menu open */
+}
+
+html.menu-open body {
+  overflow: hidden !important;
+  /* Use overflow hidden instead of position:fixed to avoid scroll jumps */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  touch-action: none;
+}
+
+/* 5. Ensure pages don't interfere with scrolling */
+.page {
+  -webkit-transform: translateZ(0); /* Hardware acceleration for smooth scrolling */
+  transform: translateZ(0);
+}
 
     *, *::before, *::after { max-width: 100%; box-sizing: border-box; }
     img, svg, video, canvas { max-width: 100%; }
@@ -2370,45 +2372,60 @@ window.addEventListener('load', () => {
 });
 
 /* ============================================
-   MOBILE PULL-TO-REFRESH ENABLER
+   SCROLL & TOUCH STATE MANAGER
    ============================================ */
 
-function checkRefreshPermission() {
-  const isAtTop = (window.scrollY <= 5);
-  const isMenuOpen = document.documentElement.classList.contains('menu-open');
+let lastScrollTop = 0;
+let isMenuOpen = false;
+
+function updateScrollState() {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  const htmlEl = document.documentElement;
+  const bodyEl = document.body;
   
+  // Check if at top
+  const isAtTop = scrollTop <= 5;
+  
+  // Update body class for potential pull-to-refresh
   if (isAtTop && !isMenuOpen) {
-    // We are at the top -> Allow native refresh
-    document.body.classList.add('allow-refresh');
+    bodyEl.classList.add('at-top');
   } else {
-    // Scrolling or menu open -> Prevent rubber-banding
-    document.body.classList.remove('allow-refresh');
+    bodyEl.classList.remove('at-top');
+  }
+  
+  lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+}
+
+// Throttled scroll handler for performance
+let scrollTicking = false;
+function onScroll() {
+  if (!scrollTicking) {
+    window.requestAnimationFrame(() => {
+      updateScrollState();
+      scrollTicking = false;
+    });
+    scrollTicking = true;
   }
 }
 
-// Check on scroll
-window.addEventListener('scroll', checkRefreshPermission, { passive: true });
+// Passive scroll listener (critical for mobile performance)
+window.addEventListener('scroll', onScroll, { passive: true });
 
-// Check immediately when DOM loads
+// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-  checkRefreshPermission();
+  updateScrollState();
 });
 
-// Also run after page transitions
-const origHandlePage = handlePageSpecific;
+// Also update after page transitions
+const originalHandlePage = handlePageSpecific;
 handlePageSpecific = function(pageId) {
-  origHandlePage(pageId);
-  setTimeout(checkRefreshPermission, 150);
+  if (originalHandlePage) originalHandlePage(pageId);
+  // Small delay to ensure DOM has updated
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+    updateScrollState();
+  }, 50);
 };
-    
-(function() {      
-  const theme = localStorage.getItem('luviio-theme');
-  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark');
-  }
-})();
-
-let currentPage = 'home';
 
 /* ============================================
    TYPING EFFECT — NO LAYOUT SHIFT
@@ -2457,13 +2474,18 @@ function typeNextChar() {
 function navigateTo(pageId, hash = null) {
   if (currentPage === pageId && !hash) return;
   
-  // Reset scroll position for new page
-  window.scrollTo(0, 0);
-  document.body.scrollTop = 0;
-  document.documentElement.scrollTop = 0;
-  
-  // Update pull-refresh state immediately
-  updatePullRefreshState();
+  // Reset scroll position for new page smoothly
+  requestAnimationFrame(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    
+    // Force layout recalculation to prevent stuck scrolls
+    void document.body.offsetHeight;
+    
+    // Update state
+    updateScrollState();
+  });
 
   const currentEl = document.getElementById('page-' + currentPage);
   if (currentEl) { 
@@ -2601,7 +2623,6 @@ window.addEventListener('popstate', () => {
   const { pageId, hash } = parseInitialRoute();
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
-  updatePullRefreshState(); // <-- ADD THIS LINE
   
   const currentEl = document.getElementById('page-' + currentPage);
   if (currentEl) { 
@@ -2637,40 +2658,6 @@ function updateNavActive(pageId) {
     else { link.classList.remove('text-neutral-900','dark:text-white'); link.classList.add('text-neutral-600','dark:text-neutral-400'); }
   });
 }
-
-/* ============================================
-   PULL-TO-REFRESH CONTROL SYSTEM
-   ============================================ */
-
-// Track if we can allow pull-to-refresh (only at top)
-function updatePullRefreshState() {
-  const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
-  const isAtTop = scrollY <= 5;
-  const isMenuOpen = document.documentElement.classList.contains('menu-open');
-  
-  if (isAtTop && !isMenuOpen) {
-    // At top: Allow browser's native pull-to-refresh
-    document.body.classList.add('can-pull-refresh');
-    document.documentElement.style.overscrollBehaviorY = 'auto';
-  } else {
-    // Scrolling or menu open: Prevent bounce, smooth app-like feel
-    document.body.classList.remove('can-pull-refresh');
-    document.documentElement.style.overscrollBehaviorY = 'contain';
-  }
-}
-
-// Listen for scroll events to toggle state
-window.addEventListener('scroll', () => {
-  updatePullRefreshState();
-}, { passive: true });
-
-// Also check on touch start for instant response
-document.addEventListener('touchstart', () => {
-  requestAnimationFrame(updatePullRefreshState);
-}, { passive: true });
-
-// Initialize state on load
-updatePullRefreshState();
 
 window.addEventListener('DOMContentLoaded', () => {
   const { pageId, hash } = parseInitialRoute();
@@ -2720,30 +2707,51 @@ function closeMobileMenu() {
   mobileMenu.classList.remove('open');
   mobileOverlay.classList.remove('active');
   document.documentElement.classList.remove('menu-open');
-  document.body.style.overflow = '';
+  isMenuOpen = false;
   
-  // Restore body positioning
-  document.body.style.position = '';
+  // Reset body styles cleanly
+  document.body.style.overflow = '';
+  document.body.style.position = 'relative';
   document.body.style.top = '';
   document.body.style.left = '';
-  document.body.style.right = '';
-  document.body.style.bottom = '';
+  document.body.style.width = '';
   
-  // Re-check refresh permission after menu closes
-  setTimeout(checkRefreshPermission, 350);
+  // Re-enable touch action
+  document.body.style.touchAction = 'pan-y';
+  document.documentElement.style.touchAction = 'pan-y';
+  
+  // Update scroll state after animation completes
+  setTimeout(() => {
+    updateScrollState();
+    // Force a small scroll to "wake up" the scroll container if stuck
+    if (window.scrollY === 0) {
+      window.scrollTo(0, 1);
+      setTimeout(() => window.scrollTo(0, 0), 10);
+    }
+  }, 350);
 }
 
 document.getElementById('menuToggle').addEventListener('click', () => {
+  isMenuOpen = true;
   mobileMenu.classList.add('open');
   mobileOverlay.classList.add('active');
   document.documentElement.classList.add('menu-open');
-  document.body.style.overflow = 'hidden';
   
-  // Disable refresh while menu is open
-  document.body.classList.remove('allow-refresh');
-  document.documentElement.style.overscrollBehaviorY = 'none';
+  // Save current scroll position to prevent jump
+  const scrollY = window.scrollY;
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.position = 'absolute';
+  document.body.style.width = '100%';
   
+  // Disable all touch actions when menu is open
+  document.body.style.touchAction = 'none';
+  document.documentElement.style.touchAction = 'none';
+  
+  // Scroll menu to top
   mobileMenu.scrollTop = 0;
+  
+  // Remove at-top class since we're in menu now
+  document.body.classList.remove('at-top');
 });
 
 function toggleTheme() {
@@ -2755,6 +2763,34 @@ function toggleTheme() {
 document.getElementById('mobileThemeToggle').addEventListener('click', toggleTheme);
 document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
+/* ============================================
+   TOUCH EVENT HANDLERS FOR MOBILE
+   ============================================ */
+
+// Prevent zoom on double tap (iOS fix)
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) {
+    e.preventDefault();
+  }
+  lastTouchEnd = now;
+}, false);
+
+// Handle touch move for better scroll feel
+document.addEventListener('touchmove', (e) => {
+  // Only prevent default if we're in the menu or trying to scroll horizontally
+  if (isMenuOpen) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
+// Fix for iOS input zoom
+const metaViewport = document.querySelector('meta[name="viewport"]');
+if (metaViewport && navigator.userAgent.match(/iPhone/i)) {
+  metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover';
+}
+    
 const searchablePages = [
   { id:'home', name:'Home', desc:'Main page with hero, services, features, portfolio, reviews' },
   { id:'pricing', name:'Pricing', desc:'View all service packages from RM150/month' },
