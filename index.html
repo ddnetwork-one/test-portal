@@ -2,7 +2,7 @@
 <html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="google-site-verification" content="g8rDbfJ8Tv90TAUTOuB80dkwNJgnq-B4Yb2928VwTFQ" />
@@ -43,11 +43,52 @@
   </script>
 
   <style>
-    html, body { height: 100%; min-height: 100vh; min-height: -webkit-fill-available; overscroll-behavior: none; overflow-x: hidden !important; max-width: 100vw !important; }
-    html { overflow: hidden; height: 100%; }
-    body { overflow-y: auto; -webkit-overflow-scrolling: touch; height: 100%; }
-    html.menu-open { overflow: hidden; }
-    html.menu-open body { overflow: hidden; }
+    /* ===== FULL SCREEN & PULL-TO-REFRESH STYLES ===== */
+    html {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      overscroll-behavior-y: contain;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    body {
+      height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      /* Allow pull-to-refresh only at top */
+      overscroll-behavior-y: contain;
+    }
+
+    /* When at top of page, allow native pull-to-refresh */
+    body.can-pull-refresh {
+      overscroll-behavior-y: auto;
+    }
+
+    html.menu-open,
+    html.menu-open body {
+      overflow: hidden !important;
+      position: relative !important;
+      overscroll-behavior-y: none !important;
+      transform: none !important;
+    }
+
+    .page.active {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      min-height: -webkit-fill-available;
+    }
 
     *, *::before, *::after { max-width: 100%; box-sizing: border-box; }
     img, svg, video, canvas { max-width: 100%; }
@@ -719,62 +760,6 @@
     .cu-contact-email:hover {
       text-decoration: underline;
     }
-
-/* FIX: Prevent page movement/jump on navigation */
-.page {
-  scroll-behavior: auto !important;
-}
-
-.page.active {
-  animation: none !important; /* Remove entrance animation that causes layout shift */
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-/* Force immediate render without transition */
-#page-UniStudent, 
-#page-content-update,
-#page-special-client,
-#page-contact,
-#page-purchased-confirmed,
-#page-order-verify {
-  contain: layout style paint; /* Isolate layout calculations */
-  will-change: transform; /* GPU acceleration */
-  transform: translateZ(0); /* Force hardware layer */
-}
-
-/* Prevent form elements from causing layout shift */
-.cu-input, 
-.cu-textarea, 
-.cu-btn,
-input[type="text"],
-input[type="email"],
-input[type="tel"],
-select,
-textarea {
-  box-sizing: border-box !important;
-  max-width: 100% !important;
-  transition: border-color 0.2s, box-shadow 0.2s !important;
-  /* Prevent mobile zoom on focus */
-  font-size: 16px !important;
-}
-
-/* Fix for iOS Safari viewport issues */
-@supports (-webkit-touch-callout: none) {
-  .page.active {
-    min-height: -webkit-fill-available !important;
-    padding-bottom: env(safe-area-inset-bottom) !important;
-  }
-  
-  body {
-    position: fixed !important;
-    width: 100% !important;
-    height: 100% !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-}
-    
   </style>
 </head>
 
@@ -2428,43 +2413,36 @@ function typeNextChar() {
 function navigateTo(pageId, hash = null) {
   if (currentPage === pageId && !hash) return;
   
-  // CRITICAL: Reset scroll position immediately to prevent jump
+  // Reset scroll position for new page
   window.scrollTo(0, 0);
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
   
-  // Hide current page
+  // Update pull-refresh state immediately
+  updatePullRefreshState();
+
   const currentEl = document.getElementById('page-' + currentPage);
   if (currentEl) { 
     currentEl.classList.remove('active'); 
     currentEl.classList.remove('page-enter'); 
-    currentEl.style.display = 'none'; // Force hide immediately
   }
   
-  // Show new page
   const newEl = document.getElementById('page-' + pageId);
   if (newEl) { 
-    newEl.style.display = 'flex'; // Ensure display before adding active class
-    void newEl.offsetWidth; // Trigger reflow
     newEl.classList.add('active'); 
-    
-    // Delay animation slightly to ensure layout is stable
-    requestAnimationFrame(() => {
-      newEl.classList.add('page-enter');
-    });
+    void newEl.offsetWidth; 
+    newEl.classList.add('page-enter'); 
   }
   
   currentPage = pageId;
   
-  // Update URL without triggering scroll
   let urlPath = '/' + pageId;
   if (hash) urlPath += '/' + hash.replace('#', '');
   history.pushState(null, '', urlPath);
   
   updateNavActive(pageId);
   
-  // Handle page-specific logic after DOM is stable
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     lucide.createIcons(); 
     initScrollAnimations(); 
     updateNavState(); 
@@ -2475,19 +2453,16 @@ function navigateTo(pageId, hash = null) {
         const targetElement = document.querySelector(hash);
         if (targetElement) {
           targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          targetElement.style.transition = 'box-shadow 0.5s ease';
+          targetElement.style.boxShadow = '0 0 0 3px rgba(255, 0, 94, 0.3)';
+          setTimeout(() => { targetElement.style.boxShadow = ''; }, 2000);
         }
-      }, 100);
+      }, 300);
     }
-  });
+  }, 50);
 }
 
 function handlePageSpecific(pageId) {
-  // Force scroll reset for all pages to prevent movement
-  setTimeout(() => {
-    window.scrollTo(0, 0);
-    document.body.scrollTop = 0;
-  }, 0);
-
   if (pageId === 'purchased-confirmed') {
     generateOrderDetails();
     setTimeout(launchConfetti, 400);
@@ -2496,84 +2471,33 @@ function handlePageSpecific(pageId) {
     const container = document.getElementById('confettiContainer');
     if (container) container.innerHTML = '';
   }
-  
-  // Content Update Page - Fix form movement
   if (pageId === 'content-update') { 
-    const formView = document.getElementById('cuFormView');
-    const successView = document.getElementById('cuSuccessView');
-    
-    if (formView) {
-      formView.style.display = 'block';
-      formView.style.transform = 'translateZ(0)';
-    }
-    if (successView) successView.style.display = 'none';
-    
-    const cuForm = document.getElementById('cuForm');
-    if (cuForm) cuForm.reset();
-    
-    const previewGrid = document.getElementById('cuPreviewGrid');
-    if (previewGrid) previewGrid.innerHTML = '';
-    
+    document.getElementById('cuFormView').style.display = 'block';
+    document.getElementById('cuSuccessView').style.display = 'none';
+    document.getElementById('cuForm').reset();
+    document.getElementById('cuPreviewGrid').innerHTML = '';
     cuUploadQueue = [];
-    
-    // Prevent layout shift from form elements
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 50);
   }
-  
-  // Uni Student Page - Fix form movement
-  if (pageId === 'UniStudent') {
-    const uniFormView = document.getElementById('uniFormView');
-    const uniSuccessView = document.getElementById('uniSuccessView');
-    
-    if (uniFormView) {
-      uniFormView.style.display = 'block';
-      uniFormView.style.transform = 'translateZ(0)';
-    }
-    if (uniSuccessView) uniSuccessView.style.display = 'none';
-    
-    const uf = document.getElementById('uniForm');
-    if (uf) uf.reset();
-    
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 50);
-  }
-  
-  // Special Client Page
-  if (pageId === 'special-client') {
-    const scFormView = document.getElementById('scFormView');
-    const scSuccessView = document.getElementById('scSuccessView');
-    
-    if (scFormView) {
-      scFormView.style.display = 'block';
-      scFormView.style.transform = 'translateZ(0)';
-    }
-    if (scSuccessView) scSuccessView.style.display = 'none';
-    
-    const sf = document.getElementById('scForm');
-    if (sf) sf.reset();
-    
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 50);
-  }
-  
-  // Contact Page
   if (pageId === 'contact') {
     const formWrapper = document.getElementById('contactFormWrapper');
     const successWrapper = document.getElementById('contactSuccessWrapper');
-    if (formWrapper && successWrapper) { 
-      formWrapper.classList.remove('hidden'); 
-      successWrapper.classList.add('hidden'); 
-    }
+    if (formWrapper && successWrapper) { formWrapper.classList.remove('hidden'); successWrapper.classList.add('hidden'); }
   }
-  
-  // Home Page
   if (pageId === 'home') {
     initCodeEditor();
     startTypingEffect();
+  }
+  if (pageId === 'UniStudent') {
+    document.getElementById('uniFormView').style.display = 'block';
+    document.getElementById('uniSuccessView').style.display = 'none';
+    const uf = document.getElementById('uniForm');
+    if (uf) uf.reset();
+  }
+  if (pageId === 'special-client') {
+    document.getElementById('scFormView').style.display = 'block';
+    document.getElementById('scSuccessView').style.display = 'none';
+    const sf = document.getElementById('scForm');
+    if (sf) sf.reset();
   }
 }
 
@@ -2633,10 +2557,18 @@ window.addEventListener('popstate', () => {
   const { pageId, hash } = parseInitialRoute();
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
+  updatePullRefreshState(); // <-- ADD THIS LINE
+  
   const currentEl = document.getElementById('page-' + currentPage);
-  if (currentEl) { currentEl.classList.remove('active'); currentEl.classList.remove('page-enter'); }
+  if (currentEl) { 
+    currentEl.classList.remove('active'); 
+    currentEl.classList.remove('page-enter'); 
+  }
   const newEl = document.getElementById('page-' + pageId);
-  if (newEl) { newEl.classList.add('active'); newEl.classList.add('page-enter'); }
+  if (newEl) { 
+    newEl.classList.add('active'); 
+    newEl.classList.add('page-enter'); 
+  }
   currentPage = pageId;
   updateNavActive(pageId);
   updateNavState();
@@ -2644,7 +2576,14 @@ window.addEventListener('popstate', () => {
     lucide.createIcons(); 
     initScrollAnimations(); 
     handlePageSpecific(pageId);
-    if (hash) { const targetElement = document.querySelector(hash); if (targetElement) { setTimeout(() => { targetElement.scrollIntoView({ behavior: 'auto', block: 'start' }); }, 100); } }
+    if (hash) { 
+      const te = document.querySelector(hash); 
+      if (te) { 
+        setTimeout(() => { 
+          te.scrollIntoView({ behavior: 'auto', block: 'start' }); 
+        }, 100); 
+      } 
+    }
   }, 50);
 });
 
@@ -2654,6 +2593,40 @@ function updateNavActive(pageId) {
     else { link.classList.remove('text-neutral-900','dark:text-white'); link.classList.add('text-neutral-600','dark:text-neutral-400'); }
   });
 }
+
+/* ============================================
+   PULL-TO-REFRESH CONTROL SYSTEM
+   ============================================ */
+
+// Track if we can allow pull-to-refresh (only at top)
+function updatePullRefreshState() {
+  const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+  const isAtTop = scrollY <= 5;
+  const isMenuOpen = document.documentElement.classList.contains('menu-open');
+  
+  if (isAtTop && !isMenuOpen) {
+    // At top: Allow browser's native pull-to-refresh
+    document.body.classList.add('can-pull-refresh');
+    document.documentElement.style.overscrollBehaviorY = 'auto';
+  } else {
+    // Scrolling or menu open: Prevent bounce, smooth app-like feel
+    document.body.classList.remove('can-pull-refresh');
+    document.documentElement.style.overscrollBehaviorY = 'contain';
+  }
+}
+
+// Listen for scroll events to toggle state
+window.addEventListener('scroll', () => {
+  updatePullRefreshState();
+}, { passive: true });
+
+// Also check on touch start for instant response
+document.addEventListener('touchstart', () => {
+  requestAnimationFrame(updatePullRefreshState);
+}, { passive: true });
+
+// Initialize state on load
+updatePullRefreshState();
 
 window.addEventListener('DOMContentLoaded', () => {
   const { pageId, hash } = parseInitialRoute();
@@ -2704,13 +2677,23 @@ function closeMobileMenu() {
   mobileOverlay.classList.remove('active');
   document.documentElement.classList.remove('menu-open');
   document.body.style.overflow = '';
+  document.body.style.position = 'fixed';
+  document.body.style.top = '0';
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.bottom = '0';
+  
+  // Restore pull-refresh state after menu closes
+  setTimeout(updatePullRefreshState, 350);
 }
-
 document.getElementById('menuToggle').addEventListener('click', () => {
   mobileMenu.classList.add('open');
   mobileOverlay.classList.add('active');
   document.documentElement.classList.add('menu-open');
   document.body.style.overflow = 'hidden';
+  // Disable pull-refresh when menu is open
+  document.documentElement.style.overscrollBehaviorY = 'none';
+  document.body.classList.remove('can-pull-refresh');
   mobileMenu.scrollTop = 0;
 });
 document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
