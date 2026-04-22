@@ -3056,65 +3056,83 @@ function uniResetForm() {
   initScrollAnimations();
 }
 /* ============================================
-   DYNAMIC CAREERS PAGE - Load from Firestore
+   DYNAMIC CAREERS PAGE - Load from Firestore (FIXED)
    ============================================ */
 async function loadCareersFromFirestore() {
+  
+  // Get DOM elements
   const grid = document.getElementById('careersGrid');
   const loading = document.getElementById('careersLoading');
   const emptyState = document.getElementById('careersEmpty');
   const countEl = document.getElementById('careersCount');
-  const ctaSection = document('careersCTA');
+  const ctaSection = document.getElementById('careersCTA'); // FIXED: was document('careersCTA')
 
-  if (!grid || !loading || !firebaseReady || !db) {
-    console.warn('Careers: Firebase not ready or elements missing');
+  // Safety check - if elements don't exist yet, stop
+  if (!grid || !loading) {
+    console.warn('Careers: Page elements not found yet');
+    return;
+  }
+
+  // Check if Firebase is ready
+  if (!firebaseReady || !db) {
+    console.warn('Careers: Firebase not ready, will retry...');
+    loading.innerHTML = '<p class="text-neutral-400 text-sm">Connecting to database...</p>';
+    setTimeout(loadCareersFromFirestore, 2000); // Try again in 2 seconds
     return;
   }
 
   try {
-    // Query only ACTIVE positions, ordered by date created (newest first)
+    console.log('🔍 Fetching active jobs from Firestore...');
+    
+    // Query Firestore for active positions only
     const snapshot = await db.collection('careers_positions')
       .where('status', '==', 'active')
       .orderBy('createdAt', 'desc')
       .get();
 
+    // Hide loading spinner
     loading.style.display = 'none';
 
+    // CASE 1: No jobs found
     if (snapshot.empty) {
-      // Show empty state
+      console.log('📭 No active positions found in database');
       grid.style.display = 'none';
       emptyState.classList.remove('hidden');
       if (countEl) countEl.textContent = '0';
+      if (ctaSection) ctaSection.classList.remove('hidden');
       return;
     }
-          // ===== PLACE REAL-TIME LISTENER HERE =====
-      // This listens for changes to active positions in real-time
-      db.collection('careers_positions')
-        .where('status', '==', 'active')
-        .onSnapshot((realtimeSnap) => {
-          console.log('🔄 Careers data updated in real-time!');
-          loadCareersFromFirestore(); // Re-render the list
-        });
-      // ===== END LISTENER =====
 
-    // Hide empty state, show grid
-    emptyState.classList.add('hidden');
-    grid.style.display = '';
+    // CASE 2: Jobs found! Show them.
+    console.log(`✅ Found ${snapshot.size} active positions`);
     
-    // Update count
+    emptyState.classList.add('hidden'); // Hide "no jobs" message
+    grid.style.display = '';           // Show the grid
+    
+    // Update counter text
     if (countEl) {
       const count = snapshot.size;
       countEl.textContent = `${count} open position${count !== 1 ? 's' : ''}`;
     }
 
-    // Clear existing content
+    // Clear any existing content first
     grid.innerHTML = '';
 
-    // Render each position card
-    snapshot.forEach((doc, index) => {
+    // Loop through each job and create a card
+    let index = 0;
+    snapshot.forEach((doc) => {
       const pos = doc.data();
       const id = doc.id;
       
-      // Determine salary display text
+      // Get values safely (use fallbacks if field missing)
+      const title = pos.title || 'Position';
+      const description = pos.description || 'Join our team and help us build amazing digital products.';
+      const location = pos.location || '';
+      const department = pos.department || '';
+      const type = pos.type || 'Full-time';
+      const remote = pos.remote || false;
+      
+      // Format salary display
       let salaryText = 'Competitive Salary';
       if (pos.salaryMin || pos.salaryMax) {
         salaryText = `RM${(pos.salaryMin || 0).toLocaleString()} – RM${(pos.salaryMax || 0).toLocaleString()}`;
@@ -3122,26 +3140,19 @@ async function loadCareersFromFirestore() {
         salaryText = 'Monthly Basis';
       }
 
-      // Generate tags/badges from data
+      // Build tags/badges HTML
       let tagsHTML = '';
-      if (pos.location) {
-        tagsHTML += `<span class="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-[10px] font-medium">${pos.location}</span>`;
+      if (location) {
+        tagsHTML += `<span class="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-[10px] font-medium">${location}</span>`;
       }
-      if (pos.department) {
-        tagsHTML += `<span class="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 text-[10px] font-medium">${pos.department}</span>`;
+      if (department) {
+        tagsHTML += `<span class="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 text-[10px] font-medium">${department}</span>`;
       }
-      if (pos.salaryType) {
-        const typeLabel = pos.salaryType.charAt(0).toUpperCase() + pos.salaryType.slice(1);
-        tagsHTML += `<span class="px-2 py-0.5 rounded-full bg-green-50 dark:green-900/20 text-green-700 dark:text-green-300 text-[10px] font-medium">${typeLabel}</span>`;
-      }
-      if (pos.remote) {
-        tagsHTML += `<span class="px-2 py-0.5 rounded-full bg-amber-50 dark:amber-900/20 text-amber-700 dark:text-amber-300 text-[10px] font-medium flex items-center gap-1">
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13l-5 5m0 0-5-5m5 5H6"/></svg>
-          Remote OK
-        </span>`;
+      if (remote) {
+        tagsHTML += `<span class="px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 text-[10px] font-medium">Remote OK</span>`;
       }
 
-      // Create card HTML
+      // Create the card element
       const card = document.createElement('div');
       card.className = `bg-white dark:bg-white/[0.03] rounded-2xl p-6 md:p-7 border border-neutral-200 dark:border-white/10 
                         flex flex-col sm:flex-row sm:items-center justify-between gap-4 
@@ -3157,7 +3168,7 @@ async function loadCareersFromFirestore() {
               <i data-lucide="briefcase" class="w-5 h-5 text-accent"></i>
             </div>
             <div class="min-w-0">
-              <h3 class="text-base font-semibold text-neutral-800 dark:text-neutral-100 truncate">${pos.title || 'Position'}</h3>
+              <h3 class="text-base font-semibold text-neutral-800 dark:text-neutral-100 truncate">${title}</h3>
               <div class="flex flex-wrap items-center gap-2 mt-1.5">
                 ${tagsHTML}
               </div>
@@ -3165,25 +3176,13 @@ async function loadCareersFromFirestore() {
           </div>
           
           <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-2 line-clamp-2">
-            ${pos.description || 'Join our team and help us build amazing digital products.'}
+            ${description}
           </p>
           
           <div class="mt-3 flex items-center gap-4 text-xs text-neutral-500 dark:text-neutral-400">
-            ${pos.location ? `
-            <span class="flex items-center gap-1">
-              <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
-              ${pos.location}
-            </span>
-            ` : ''}
-            ${salaryText ? `
-            <span class="flex items-center gap-1">
-              <i data-lucide="banknote" class="w-3.5 h-3.5"></i>
-              ${salaryText}
-            </span>
-            ` : ''}
-            ${pos.type ? `
-            <span class="capitalize">${pos.type}</span>
-            ` : 'Full-time'}
+            ${location ? `<span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i>${location}</span>` : ''}
+            ${salaryText ? `<span class="flex items-center gap-1"><i data-lucide="banknote" class="w-3.5 h-3.5"></i>${salaryText}</span>` : ''}
+            <span class="capitalize">${type}</span>
           </div>
         </div>
         
@@ -3201,58 +3200,55 @@ async function loadCareersFromFirestore() {
       `;
 
       grid.appendChild(card);
+      index++;
     });
 
-    // Show CTA section if there are positions
-    if (!ctaSection.classList.contains('hidden')) {
-      ctaSection.classList.remove('hidden');
-    }
+    // Show "Don't see a fit?" CTA section safely
+    if (ctaSection) ctaSection.classList.remove('hidden');
 
-    // Re-initialize Lucide icons for new content
+    // Refresh icons for new content
     lucide.createIcons();
     
-    // Trigger scroll animations for new cards
-    setTimeout(() => {
-      initScrollAnimations();
-    }, 100);
+    // Trigger animations
+    setTimeout(() => initScrollAnimations(), 100);
 
-    console.log(`✅ Loaded ${snapshot.size} career positions`);
+    console.log(`✅ Successfully displayed ${snapshot.size} career positions`);
 
   } catch (error) {
-    console.error('Error loading careers:', error);
-    loading.innerHTML = '<p class="text-red-500 text-sm">Error loading positions.</p>';
+    // Show error message to user if something goes wrong
+    console.error('❌ Error loading careers:', error);
+    loading.innerHTML = `
+      <div class="text-center py-8">
+        <p class="text-red-500 text-sm mb-2">Failed to load positions</p>
+        <p class="text-neutral-400 text-xs mb-4">${error.message}</p>
+        <button onclick="loadCareersFromFirestore()" 
+                class="h-10 px-6 bg-neutral-100 dark:bg-white/5 rounded-xl text-sm hover:bg-neutral-200 transition-colors">
+          Try Again
+        </button>
+      </div>
+    `;
     grid.innerHTML = '';
     emptyState.classList.remove('hidden');
   }
 }
 
-// Modal function for applying (opens application form)
+// Function when user clicks "Apply Now"
 function openCareerModal(positionId) {
-  // Navigate to job applications page with pre-filled position or open modal
-  // Option 1: Navigate to Job Applications page
-  navigateTo('job-applications');
-  
-  // Or Option 2: Open a quick apply modal here
-  // For now, let's navigate to the UniStudent page structure as a temporary application form
-  // You can create a dedicated application modal later
-  
-  // Scroll to top smoothly
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  console.log('User applied for position:', positionId);
+  alert(`Application started for Position ID: ${positionId}\n\n(Connect this to your application form)`);
 }
 
-// Override handlePageSpecific to include careers loading
+// Make sure this runs when user visits careers page
 const originalHandlePageSpecific = handlePageSpecific;
 handlePageSpecific = function(pageId) {
   originalHandlePageSpecific(pageId);
   
   if (pageId === 'careers') {
-    // Small delay to ensure DOM is ready
     setTimeout(() => {
       loadCareersFromFirestore();
-    }, 200);
+    }, 300);
   }
 };
-
 /* ============================================
    SPECIAL CLIENT FORM - Save to Firestore
    ============================================ */
