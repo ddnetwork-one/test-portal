@@ -2373,11 +2373,11 @@
         </svg>
       </div>
       <h3 class="text-xl font-bold text-neutral-900 dark:text-white mb-2">Application Sent!</h3>
-      <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
-        Thank you for applying to <strong id="successJobTitle" class="text-accent">${selectedJobTitle || 'this position'}</strong>.<br><br>
-        We'll review your application and contact you within 48 hours.<br>
-        Check your email for a confirmation.
-      </p>
+      <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-6" id="careerSuccessMessage">
+      Thank you for applying to <strong id="successJobTitleDisplay" class="text-accent">this position</strong>.<br><br>
+      We'll review your application and contact you within 48 hours.<br>
+      Check your email for a confirmation.
+    </p>
       
       <div class="flex gap-3 justify-center">
         <button onclick="closeCareerModal()" 
@@ -3481,10 +3481,15 @@ function submitCareerApplication(e) {
     .then((docRef) => {
       console.log('✅ Application submitted with ID:', docRef.id);
       
-      // Show success state
-      document.getElementById('careerFormContent').classList.add('hidden');
-      document.getElementById('careerSuccessContent').classList.remove('hidden');
-      
+// Show success state
+document.getElementById('careerFormContent').classList.add('hidden');
+document.getElementById('careerSuccessContent').classList.remove('hidden');
+
+// ✅ FIXED: Dynamically update the job title in the success message
+const successTitleEl = document.getElementById('successJobTitleDisplay');
+if (successTitleEl && selectedJobTitle) {
+  successTitleEl.textContent = selectedJobTitle;
+}
       // Reset button
       btn.disabled = false;
       btn.innerHTML = originalText;
