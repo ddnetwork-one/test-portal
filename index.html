@@ -2285,15 +2285,33 @@ html.menu-open body {
     </div>
   </footer>
 
-  <!-- ===== JAVASCRIPT ===== -->
-  <script>
-// ===== FIREBASE INITIALIZATION =====
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// ===== GLOBAL STATE =====
+let currentPage = 'home';
 let db = null;
 let firebaseReady = false;
+let editorLine = 0;
+let editorChar = 0;
+let editorInitialized = false;
+let typingWordIndex = 0;
+let typingCharIndex = 0;
+let typingIsDeleting = false;
+let typingStarted = false;
+let lastScrollTop = 0;
+let isMenuOpen = false;
+let cuUploadQueue = [];
 
-// Initialize Firebase when SDK loads
+const typingWords = ['digital future.', 'brand.', 'startup.', 'website.', 'product.', 'idea.'];
+
+// ===== FIREBASE INITIALIZATION =====
 function initFirebase() {
   try {
+    if (typeof firebase === 'undefined') {
+      console.warn('Firebase SDK not loaded yet, will retry');
+      return false;
+    }
+    
     const firebaseConfig = {
       apiKey: "AIzaSyCVwJ1JbJbv-Wlon78Emgszc4MBcO434Yk",
       authDomain: "luviio.firebaseapp.com",
@@ -2304,12 +2322,9 @@ function initFirebase() {
       measurementId: "G-7KNGY1MSQ1"
     };
     
-    if (typeof firebase === 'undefined') {
-      console.error('Firebase SDK not loaded');
-      return false;
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
     }
-    
-    firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     firebaseReady = true;
     console.log('✅ Firebase initialized successfully');
@@ -2320,7 +2335,26 @@ function initFirebase() {
   }
 }
 
-// Image upload endpoint
+// Initialize Firebase when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  initFirebase();
+  
+  // Retry after 2 seconds if not ready (for slow networks)
+  setTimeout(() => {
+    if (!firebaseReady) {
+      console.log('Retrying Firebase initialization...');
+      initFirebase();
+    }
+  }, 2000);
+});
+
+// Also try on window load
+window.addEventListener('load', () => {
+  if (!firebaseReady) {
+    initFirebase();
+  }
+});
+
 const IMAGE_UPLOAD_URL = "https://green-credit-0bcf.people-luviio.workers.dev/";
 
 async function uploadImageToWorker(file) {
@@ -2344,7 +2378,8 @@ async function saveToFirestore(collection, docData) {
   
   try {
     docData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-    docData.source = window.location.href; // Track which form submitted it
+    docData.source = window.location.href;
+    docData.userAgent = navigator.userAgent;
     const docRef = await db.collection(collection).add(docData);
     console.log(`✅ Document written to ${collection} with ID:`, docRef.id);
     return docRef.id;
@@ -2354,39 +2389,14 @@ async function saveToFirestore(collection, docData) {
   }
 }
 
-// Initialize Firebase immediately if already loaded, otherwise wait for DOM
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    initFirebase();
-  });
-} else {
-  initFirebase();
-}
-
-// Also try again after window load in case scripts load late
-window.addEventListener('load', () => {
-  if (!firebaseReady) {
-    console.log('Retrying Firebase initialization...');
-    setTimeout(() => initFirebase(), 500);
-  }
-});
-
 /* ============================================
    SCROLL & TOUCH STATE MANAGER
    ============================================ */
-
-let lastScrollTop = 0;
-let isMenuOpen = false;
-
 function updateScrollState() {
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-  const htmlEl = document.documentElement;
   const bodyEl = document.body;
-  
-  // Check if at top
   const isAtTop = scrollTop <= 5;
   
-  // Update body class for potential pull-to-refresh
   if (isAtTop && !isMenuOpen) {
     bodyEl.classList.add('at-top');
   } else {
@@ -2396,7 +2406,6 @@ function updateScrollState() {
   lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
 }
 
-// Throttled scroll handler for performance
 let scrollTicking = false;
 function onScroll() {
   if (!scrollTicking) {
@@ -2408,34 +2417,15 @@ function onScroll() {
   }
 }
 
-// Passive scroll listener (critical for mobile performance)
 window.addEventListener('scroll', onScroll, { passive: true });
 
-// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   updateScrollState();
 });
 
-// Also update after page transitions
-const originalHandlePage = handlePageSpecific;
-handlePageSpecific = function(pageId) {
-  if (originalHandlePage) originalHandlePage(pageId);
-  // Small delay to ensure DOM has updated
-  setTimeout(() => {
-    window.scrollTo(0, 0);
-    updateScrollState();
-  }, 50);
-};
-
 /* ============================================
-   TYPING EFFECT — NO LAYOUT SHIFT
+   TYPING EFFECT
    ============================================ */
-const typingWords = ['digital future.', 'brand.', 'startup.', 'website.', 'product.', 'idea.'];
-let typingWordIndex = 0;
-let typingCharIndex = 0;
-let typingIsDeleting = false;
-let typingStarted = false;
-
 function startTypingEffect() {
   if (typingStarted) return;
   typingStarted = true;
@@ -2471,28 +2461,29 @@ function typeNextChar() {
   }
 }
 
+/* ============================================
+   NAVIGATION SYSTEM
+   ============================================ */
 function navigateTo(pageId, hash = null) {
   if (currentPage === pageId && !hash) return;
   
-  // Reset scroll position for new page smoothly
+  // Reset scroll
   requestAnimationFrame(() => {
     window.scrollTo(0, 0);
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
-    
-    // Force layout recalculation to prevent stuck scrolls
     void document.body.offsetHeight;
-    
-    // Update state
     updateScrollState();
   });
 
+  // Hide current page
   const currentEl = document.getElementById('page-' + currentPage);
   if (currentEl) { 
     currentEl.classList.remove('active'); 
     currentEl.classList.remove('page-enter'); 
   }
   
+  // Show new page
   const newEl = document.getElementById('page-' + pageId);
   if (newEl) { 
     newEl.classList.add('active'); 
@@ -2538,32 +2529,41 @@ function handlePageSpecific(pageId) {
     if (container) container.innerHTML = '';
   }
   if (pageId === 'content-update') { 
-    document.getElementById('cuFormView').style.display = 'block';
-    document.getElementById('cuSuccessView').style.display = 'none';
-    document.getElementById('cuForm').reset();
-    document.getElementById('cuPreviewGrid').innerHTML = '';
+    const formView = document.getElementById('cuFormView');
+    const successView = document.getElementById('cuSuccessView');
+    const cuForm = document.getElementById('cuForm');
+    const cuPreviewGrid = document.getElementById('cuPreviewGrid');
+    if (formView) formView.style.display = 'block';
+    if (successView) successView.style.display = 'none';
+    if (cuForm) cuForm.reset();
+    if (cuPreviewGrid) cuPreviewGrid.innerHTML = '';
     cuUploadQueue = [];
   }
   if (pageId === 'contact') {
     const formWrapper = document.getElementById('contactFormWrapper');
     const successWrapper = document.getElementById('contactSuccessWrapper');
-    if (formWrapper && successWrapper) { formWrapper.classList.remove('hidden'); successWrapper.classList.add('hidden'); }
+    if (formWrapper) formWrapper.classList.remove('hidden');
+    if (successWrapper) successWrapper.classList.add('hidden');
   }
   if (pageId === 'home') {
     initCodeEditor();
     startTypingEffect();
   }
   if (pageId === 'UniStudent') {
-    document.getElementById('uniFormView').style.display = 'block';
-    document.getElementById('uniSuccessView').style.display = 'none';
-    const uf = document.getElementById('uniForm');
-    if (uf) uf.reset();
+    const uniFormView = document.getElementById('uniFormView');
+    const uniSuccessView = document.getElementById('uniSuccessView');
+    const uniForm = document.getElementById('uniForm');
+    if (uniFormView) uniFormView.style.display = 'block';
+    if (uniSuccessView) uniSuccessView.style.display = 'none';
+    if (uniForm) uniForm.reset();
   }
   if (pageId === 'special-client') {
-    document.getElementById('scFormView').style.display = 'block';
-    document.getElementById('scSuccessView').style.display = 'none';
-    const sf = document.getElementById('scForm');
-    if (sf) sf.reset();
+    const scFormView = document.getElementById('scFormView');
+    const scSuccessView = document.getElementById('scSuccessView');
+    const scForm = document.getElementById('scForm');
+    if (scFormView) scFormView.style.display = 'block';
+    if (scSuccessView) scSuccessView.style.display = 'none';
+    if (scForm) scForm.reset();
   }
 }
 
@@ -2571,7 +2571,9 @@ function generateOrderDetails() {
   const dateEl = document.getElementById('orderDate');
   if (dateEl) {
     const now = new Date();
-    dateEl.textContent = now.toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    dateEl.textContent = now.toLocaleDateString('en-MY', { 
+      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
   }
 }
 
@@ -2614,7 +2616,10 @@ function parseInitialRoute() {
   const parts = path.split('/').filter(Boolean);
   let pageId = 'home';
   let hash = null;
-  if (parts.length > 0) { pageId = parts[0]; if (parts.length > 1) { hash = '#' + parts[1]; } }
+  if (parts.length > 0) { 
+    pageId = parts[0]; 
+    if (parts.length > 1) { hash = '#' + parts[1]; } 
+  }
   if (!document.getElementById('page-' + pageId)) { pageId = 'home'; hash = null; }
   return { pageId, hash };
 }
@@ -2654,76 +2659,115 @@ window.addEventListener('popstate', () => {
 
 function updateNavActive(pageId) {
   document.querySelectorAll('.nav-link').forEach(link => {
-    if (link.dataset.page === pageId) { link.classList.remove('text-neutral-600','dark:text-neutral-400'); link.classList.add('text-neutral-900','dark:text-white'); }
-    else { link.classList.remove('text-neutral-900','dark:text-white'); link.classList.add('text-neutral-600','dark:text-neutral-400'); }
+    if (link.dataset.page === pageId) { 
+      link.classList.remove('text-neutral-600','dark:text-neutral-400'); 
+      link.classList.add('text-neutral-900','dark:text-white'); 
+    } else { 
+      link.classList.remove('text-neutral-900','dark:text-white'); 
+      link.classList.add('text-neutral-600','dark:text-neutral-400'); 
+    }
   });
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+/* ============================================
+   INITIALIZATION ON DOM READY
+   ============================================ */
+document.addEventListener('DOMContentLoaded', () => {
   const { pageId, hash } = parseInitialRoute();
+  
+  // Set initial page
   if (pageId !== 'home') {
     document.getElementById('page-home').classList.remove('active');
     const targetEl = document.getElementById('page-' + pageId);
-    if (targetEl) { targetEl.classList.add('active'); currentPage = pageId; updateNavActive(pageId);
-      if (hash) { setTimeout(() => { const te = document.querySelector(hash); if (te) te.scrollIntoView({ behavior: 'auto', block: 'start' }); }, 150); }
+    if (targetEl) { 
+      targetEl.classList.add('active'); 
+      currentPage = pageId; 
+      updateNavActive(pageId);
+      if (hash) { 
+        setTimeout(() => { 
+          const te = document.querySelector(hash); 
+          if (te) te.scrollIntoView({ behavior: 'auto', block: 'start' }); 
+        }, 150); 
+      }
     }
-  } else { updateNavActive('home'); }
+  } else { 
+    updateNavActive('home'); 
+  }
+  
   updateNavState();
-  setTimeout(() => { handlePageSpecific(currentPage); initCodeEditor(); startTypingEffect(); }, 100);
+  
+  // Initialize page-specific features after small delay
+  setTimeout(() => { 
+    handlePageSpecific(currentPage); 
+    initCodeEditor(); 
+    startTypingEffect(); 
+  }, 100);
 });
 
+/* ============================================
+   NAVIGATION BAR SCROLL EFFECTS
+   ============================================ */
 const announcementBar = document.getElementById('announcementBar');
 const mainNav = document.getElementById('mainNav');
 
 function updateNavState() {
   const scrollY = window.scrollY || window.pageYOffset;
-  if (scrollY > 40) {
-    announcementBar.classList.add('hidden-bar');
-    mainNav.classList.remove('nav-top');
-    mainNav.classList.add('nav-scrolled');
-  } else {
-    announcementBar.classList.remove('hidden-bar');
-    mainNav.classList.remove('nav-scrolled');
-    mainNav.classList.add('nav-top');
+  if (announcementBar && mainNav) {
+    if (scrollY > 40) {
+      announcementBar.classList.add('hidden-bar');
+      mainNav.classList.remove('nav-top');
+      mainNav.classList.add('nav-scrolled');
+    } else {
+      announcementBar.classList.remove('hidden-bar');
+      mainNav.classList.remove('nav-scrolled');
+      mainNav.classList.add('nav-top');
+    }
   }
 }
 
 window.addEventListener('scroll', updateNavState, { passive: true });
 
+/* ============================================
+   FAQ ACCORDION
+   ============================================ */
 function toggleFaq(btn) {
   const item = btn.closest('.faq-item');
+  if (!item) return;
   const answer = item.querySelector('.faq-answer');
   const chevron = item.querySelector('.faq-chevron');
-  const isOpen = answer.classList.contains('open');
+  const isOpen = answer && answer.classList.contains('open');
   document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('open'));
   document.querySelectorAll('.faq-chevron').forEach(c => c.classList.remove('open'));
-  if (!isOpen) { answer.classList.add('open'); chevron.classList.add('open'); }
+  if (!isOpen) { 
+    if (answer) answer.classList.add('open'); 
+    if (chevron) chevron.classList.add('open'); 
+  }
 }
 
+/* ============================================
+   MOBILE MENU
+   ============================================ */
 const mobileMenu = document.getElementById('mobileMenu');
 const mobileOverlay = document.getElementById('mobileOverlay');
 
 function closeMobileMenu() {
-  mobileMenu.classList.remove('open');
-  mobileOverlay.classList.remove('active');
+  if (mobileMenu) mobileMenu.classList.remove('open');
+  if (mobileOverlay) mobileOverlay.classList.remove('active');
   document.documentElement.classList.remove('menu-open');
   isMenuOpen = false;
   
-  // Reset body styles cleanly
   document.body.style.overflow = '';
   document.body.style.position = 'relative';
   document.body.style.top = '';
   document.body.style.left = '';
   document.body.style.width = '';
-  
-  // Re-enable touch action
   document.body.style.touchAction = 'pan-y';
   document.documentElement.style.touchAction = 'pan-y';
   
-  // Update scroll state after animation completes
+  document.body.classList.remove('at-top');
+  
   setTimeout(() => {
     updateScrollState();
-    // Force a small scroll to "wake up" the scroll container if stuck
     if (window.scrollY === 0) {
       window.scrollTo(0, 1);
       setTimeout(() => window.scrollTo(0, 0), 10);
@@ -2731,43 +2775,52 @@ function closeMobileMenu() {
   }, 350);
 }
 
-document.getElementById('menuToggle').addEventListener('click', () => {
-  isMenuOpen = true;
-  mobileMenu.classList.add('open');
-  mobileOverlay.classList.add('active');
-  document.documentElement.classList.add('menu-open');
-  
-  // Save current scroll position to prevent jump
-  const scrollY = window.scrollY;
-  document.body.style.top = `-${scrollY}px`;
-  document.body.style.position = 'absolute';
-  document.body.style.width = '100%';
-  
-  // Disable all touch actions when menu is open
-  document.body.style.touchAction = 'none';
-  document.documentElement.style.touchAction = 'none';
-  
-  // Scroll menu to top
-  mobileMenu.scrollTop = 0;
-  
-  // Remove at-top class since we're in menu now
-  document.body.classList.remove('at-top');
-});
+if (document.getElementById('menuToggle')) {
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    isMenuOpen = true;
+    if (mobileMenu) mobileMenu.classList.add('open');
+    if (mobileOverlay) mobileOverlay.classList.add('active');
+    document.documentElement.classList.add('menu-open');
+    
+    const scrollY = window.scrollY;
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.position = 'absolute';
+    document.body.style.width = '100%';
+    document.body.style.touchAction = 'none';
+    document.documentElement.style.touchAction = 'none';
+    
+    if (mobileMenu) mobileMenu.scrollTop = 0;
+    document.body.classList.remove('at-top');
+  });
+}
 
+if (document.getElementById('menuClose')) {
+  document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
+}
+if (mobileOverlay) {
+  mobileOverlay.addEventListener('click', closeMobileMenu);
+}
+
+/* ============================================
+   THEME TOGGLE
+   ============================================ */
 function toggleTheme() {
   document.documentElement.classList.toggle('dark');
   const isDark = document.documentElement.classList.contains('dark');
   localStorage.setItem('luviio-theme', isDark ? 'dark' : 'light');
   lucide.createIcons();
 }
-document.getElementById('mobileThemeToggle').addEventListener('click', toggleTheme);
-document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+if (document.getElementById('mobileThemeToggle')) {
+  document.getElementById('mobileThemeToggle').addEventListener('click', toggleTheme);
+}
+if (document.getElementById('themeToggle')) {
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+}
 
 /* ============================================
-   TOUCH EVENT HANDLERS FOR MOBILE
+   TOUCH EVENT HANDLERS (iOS FIXES)
    ============================================ */
-
-// Prevent zoom on double tap (iOS fix)
 let lastTouchEnd = 0;
 document.addEventListener('touchend', (e) => {
   const now = Date.now();
@@ -2777,24 +2830,18 @@ document.addEventListener('touchend', (e) => {
   lastTouchEnd = now;
 }, false);
 
-// Handle touch move for better scroll feel
 document.addEventListener('touchmove', (e) => {
-  // Only prevent default if we're in the menu or trying to scroll horizontally
   if (isMenuOpen) {
     e.preventDefault();
   }
 }, { passive: false });
 
-// Fix for iOS input zoom
-const metaViewport = document.querySelector('meta[name="viewport"]');
-if (metaViewport && navigator.userAgent.match(/iPhone/i)) {
-  metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover';
-}
-    
+/* ============================================
+   SEARCH FUNCTIONALITY
+   ============================================ */
 const searchablePages = [
   { id:'home', name:'Home', desc:'Main page with hero, services, features, portfolio, reviews' },
   { id:'pricing', name:'Pricing', desc:'View all service packages from RM150/month' },
-  { id:'pricing/benefits', name:'Plan Benefits', desc:'Plan benefits comparison at a glance' },
   { id:'faq', name:'FAQ', desc:'Frequently asked questions about our services' },
   { id:'process', name:'Process', desc:'How we work — our 5-step process' },
   { id:'terms', name:'Terms of Service', desc:'Legal terms and conditions for subscriptions' },
@@ -2806,19 +2853,35 @@ const searchablePages = [
   { id:'special-client/promotions', name:'Special Client Promotions', desc:'Invited-only lowest price with 30-day free trial' },
 ];
 
-document.getElementById('searchToggle').addEventListener('click', () => {
-  const bar = document.getElementById('searchBar');
-  bar.classList.toggle('hidden');
-  if (!bar.classList.contains('hidden')) bar.querySelector('input').focus();
-  else document.getElementById('searchResults').classList.add('hidden');
-});
+if (document.getElementById('searchToggle')) {
+  document.getElementById('searchToggle').addEventListener('click', () => {
+    const bar = document.getElementById('searchBar');
+    if (bar) {
+      bar.classList.toggle('hidden');
+      if (!bar.classList.contains('hidden')) {
+        const input = bar.querySelector('input');
+        if (input) input.focus();
+      } else {
+        const results = document.getElementById('searchResults');
+        if (results) results.classList.add('hidden');
+      }
+    }
+  });
+}
 
 function handleSearch(query) {
   const resultsEl = document.getElementById('searchResults');
+  if (!resultsEl) return;
   if (!query.trim()) { resultsEl.classList.add('hidden'); return; }
-  const matches = searchablePages.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.desc.toLowerCase().includes(query.toLowerCase()));
-  if (matches.length === 0) { resultsEl.innerHTML = '<div class="p-4 text-sm text-neutral-400">No results found</div>'; }
-  else {
+  
+  const matches = searchablePages.filter(p => 
+    p.name.toLowerCase().includes(query.toLowerCase()) || 
+    p.desc.toLowerCase().includes(query.toLowerCase())
+  );
+  
+  if (matches.length === 0) { 
+    resultsEl.innerHTML = '<div class="p-4 text-sm text-neutral-400">No results found</div>'; 
+  } else {
     resultsEl.innerHTML = matches.map(p => {
       const navParts = p.id.split('/');
       const pagePart = navParts[0];
@@ -2833,15 +2896,25 @@ function handleSearch(query) {
 
 document.addEventListener('click', (e) => {
   const bar = document.getElementById('searchBar');
-  if (!bar.classList.contains('hidden') && !bar.contains(e.target) && !document.getElementById('searchToggle').contains(e.target)) {
-    bar.classList.add('hidden');
-    document.getElementById('searchResults').classList.add('hidden');
+  if (bar && !bar.classList.contains('hidden') && !bar.contains(e.target)) {
+    const searchToggle = document.getElementById('searchToggle');
+    if (searchToggle && !searchToggle.contains(e.target)) {
+      bar.classList.add('hidden');
+      const results = document.getElementById('searchResults');
+      if (results) results.classList.add('hidden');
+    }
   }
 });
 
+/* ============================================
+   SCROLL ANIMATIONS
+   ============================================ */
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
-    if (entry.isIntersecting) { entry.target.style.animationPlayState = 'running'; observer.unobserve(entry.target); }
+    if (entry.isIntersecting) { 
+      entry.target.style.animationPlayState = 'running'; 
+      observer.unobserve(entry.target); 
+    }
   });
 }, { threshold: 0.1 });
 
@@ -2857,65 +2930,81 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(initScrollAnimations, 100);
 });
 
-// NEWSLETTER FORM - Save to Firestore
-document.getElementById('newsletterForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const form = this;
-  const originalBtn = form.querySelector('button[type="submit"]');
-  originalBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Subscribing...';
-  originalBtn.disabled = true;
-  const emailInput = form.querySelector('input[name="email"]');
-  
-  saveToFirestore('newsletter_subscribers', { email: emailInput.value })
-  .then(() => { showNewsletterSuccess(); })
-  .catch(error => { 
-    console.error('Newsletter save error:', error);
-    alert('Error saving to database. Please try again or contact support.');
-  })
-  .finally(() => {
-    form.reset();
-    originalBtn.disabled = false;
-    originalBtn.innerHTML = 'Subscribe <i data-lucide="arrow-right" class="w-4 h-4"></i>';
-    lucide.createIcons();
+/* ============================================
+   NEWSLETTER FORM
+   ============================================ */
+if (document.getElementById('newsletterForm')) {
+  document.getElementById('newsletterForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = this;
+    const originalBtn = form.querySelector('button[type="submit"]');
+    originalBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Subscribing...';
+    originalBtn.disabled = true;
+    const emailInput = form.querySelector('input[name="email"]');
+    
+    saveToFirestore('newsletter_subscribers', { email: emailInput.value })
+    .then(() => { showNewsletterSuccess(); })
+    .catch(error => { 
+      console.error('Newsletter save error:', error);
+      alert('Error saving to database. Please try again or contact support.');
+    })
+    .finally(() => {
+      form.reset();
+      originalBtn.disabled = false;
+      originalBtn.innerHTML = 'Subscribe <i data-lucide="arrow-right" class="w-4 h-4"></i>';
+      lucide.createIcons();
+    });
   });
-});
+}
 
 function showNewsletterSuccess() {
-  document.querySelector('.nl-form-original').classList.add('hidden');
-  document.getElementById('newsletterSuccess').classList.add('show');
+  const original = document.querySelector('.nl-form-original');
+  const success = document.getElementById('newsletterSuccess');
+  if (original) original.classList.add('hidden');
+  if (success) success.classList.add('show');
 }
 
 function resetNewsletter() {
-  document.querySelector('.nl-form-original').classList.remove('hidden');
-  document.getElementById('newsletterSuccess').classList.remove('show');
+  const original = document.querySelector('.nl-form-original');
+  const success = document.getElementById('newsletterSuccess');
+  if (original) original.classList.remove('hidden');
+  if (success) success.classList.remove('show');
 }
 
-// CONTACT FORM - Keep Formsubmit for now (or change to Firestore like others)
-document.getElementById('contactForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const btn = document.getElementById('contactSubmitBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...';
-  
-  const formData = new FormData(this);
-  fetch(this.action, { method: 'POST', body: formData })
-  .then(() => { contactShowSuccess(); })
-  .catch(() => { contactShowSuccess(); })
-  .finally(() => {
-    btn.disabled = false;
-    btn.innerHTML = 'Send Message <svg class="w-4 h-4" data-lucide="send" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
-    lucide.createIcons();
+/* ============================================
+   CONTACT FORM
+   ============================================ */
+if (document.getElementById('contactForm')) {
+  document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('contactSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...';
+    
+    const formData = new FormData(this);
+    fetch(this.action, { method: 'POST', body: formData })
+    .then(() => { contactShowSuccess(); })
+    .catch(() => { contactShowSuccess(); })
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = 'Send Message <svg class="w-4 h-4" data-lucide="send" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+      lucide.createIcons();
+    });
   });
-});
+}
 
 function contactShowSuccess() {
-  document.getElementById('contactFormWrapper').classList.add('hidden');
-  document.getElementById('contactSuccessWrapper').classList.remove('hidden');
+  const formWrapper = document.getElementById('contactFormWrapper');
+  const successWrapper = document.getElementById('contactSuccessWrapper');
+  if (formWrapper) formWrapper.classList.add('hidden');
+  if (successWrapper) successWrapper.classList.remove('hidden');
+  
   const dateEl = document.getElementById('contactSentDate');
   if (dateEl) {
     const now = new Date();
     dateEl.textContent = now.toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
+  
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
   lucide.createIcons();
@@ -2923,19 +3012,20 @@ function contactShowSuccess() {
 }
 
 function contactResetForm() {
-  document.getElementById('contactForm').reset();
-  document.getElementById('contactFormWrapper').classList.remove('hidden');
-  document.getElementById('contactSuccessWrapper').classList.add('hidden');
+  const form = document.getElementById('contactForm');
+  const formWrapper = document.getElementById('contactFormWrapper');
+  const successWrapper = document.getElementById('contactSuccessWrapper');
+  if (form) form.reset();
+  if (formWrapper) formWrapper.classList.remove('hidden');
+  if (successWrapper) successWrapper.classList.add('hidden');
   document.body.scrollTop = 0;
   document.documentElement.scrollTop = 0;
   lucide.createIcons();
 }
 
 /* ============================================
-   CONTENT UPDATE FORM LOGIC (NEW VERSION)
+   CONTENT UPDATE FORM LOGIC
    ============================================ */
-let cuUploadQueue = [];
-
 const cuDropZone = document.getElementById('cuDropZone');
 const cuFileInput = document.getElementById('cuFileInput');
 const cuPreviewGrid = document.getElementById('cuPreviewGrid');
@@ -2943,7 +3033,7 @@ const cuForm = document.getElementById('cuForm');
 const cuSubmitBtn = document.getElementById('cuSubmitBtn');
 const cuImageUrlInput = document.getElementById('cuImageUrlInput');
 
-if(cuDropZone) {
+if(cuDropZone && cuFileInput) {
   cuDropZone.addEventListener("click", () => cuFileInput.click());
   cuDropZone.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -2985,6 +3075,7 @@ function cuHandleFiles(files) {
 }
 
 function cuRenderPreview(file, fileId) {
+  if (!cuPreviewGrid) return;
   const reader = new FileReader();
   reader.onload = (e) => {
     const div = document.createElement("div");
@@ -3004,7 +3095,6 @@ function cuRenderPreview(file, fileId) {
   reader.readAsDataURL(file);
 }
 
-// CONTENT UPDATE FORM SUBMISSION - Fixed
 if(cuForm) {
   cuForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -3014,51 +3104,50 @@ if(cuForm) {
       return;
     }
 
-    // Check Firebase readiness
     if (!firebaseReady) {
       alert('System not ready. Please wait a moment and try again.');
       return;
     }
 
-    cuSubmitBtn.disabled = true;
-    cuSubmitBtn.innerHTML = "Processing...";
+    if (cuSubmitBtn) {
+      cuSubmitBtn.disabled = true;
+      cuSubmitBtn.innerHTML = "Processing...";
+    }
 
     try {
-      // Upload images first if any
-      if (cuUploadQueue.length > 0) {
+      if (cuUploadQueue.length > 0 && cuSubmitBtn) {
         cuSubmitBtn.innerHTML = `Uploading images (0/${cuUploadQueue.length})...`;
         const uploadedUrls = [];
         
         for (let i = 0; i < cuUploadQueue.length; i++) {
-          cuSubmitBtn.innerHTML = `Uploading images (${i + 1}/${cuUploadQueue.length})...`;
+          if (cuSubmitBtn) cuSubmitBtn.innerHTML = `Uploading images (${i + 1}/${cuUploadQueue.length})...`;
           const url = await uploadImageToWorker(cuUploadQueue[i].file);
           uploadedUrls.push(url);
         }
-        cuImageUrlInput.value = uploadedUrls.join(", ");
+        if (cuImageUrlInput) cuImageUrlInput.value = uploadedUrls.join(", ");
       }
 
-      cuSubmitBtn.innerHTML = "Saving to database...";
+      if (cuSubmitBtn) cuSubmitBtn.innerHTML = "Saving to database...";
 
-      // Collect form data
       const formElements = cuForm.elements;
       const updateData = {
-        name: formElements.namedItem('Name').value,
-        email: formElements.namedItem('Email').value,
-        whatsapp: formElements.namedItem('WhatsApp').value,
-        website: formElements.namedItem('Website').value,
+        name: formElements.namedItem('Name') ? formElements.namedItem('Name').value : '',
+        email: formElements.namedItem('Email') ? formElements.namedItem('Email').value : '',
+        whatsapp: formElements.namedItem('WhatsApp') ? formElements.namedItem('WhatsApp').value : '',
+        website: formElements.namedItem('Website') ? formElements.namedItem('Website').value : '',
         types: Array.from(cuForm.querySelectorAll('input[name="Type"]:checked')).map(cb => cb.value),
-        section: formElements.namedItem('Section').value,
-        details: formElements.namedItem('Details').value,
-        imageUrls: cuImageUrlInput.value || '',
-        priority: formElements.namedItem('Priority').value,
+        section: formElements.namedItem('Section') ? formElements.namedItem('Section').value : '',
+        details: formElements.namedItem('Details') ? formElements.namedItem('Details').value : '',
+        imageUrls: cuImageUrlInput ? cuImageUrlInput.value : '',
+        priority: formElements.namedItem('Priority') ? formElements.namedItem('Priority').value : '',
       };
 
-      // Save to Firestore
       await saveToFirestore('content_updates', updateData);
 
-      // Show success
-      document.getElementById("cuFormView").style.display = "none";
-      document.getElementById("cuSuccessView").style.display = "block";
+      const formView = document.getElementById("cuFormView");
+      const successView = document.getElementById("cuSuccessView");
+      if (formView) formView.style.display = "none";
+      if (successView) successView.style.display = "block";
       window.scrollTo({ top: 0, behavior: 'smooth' });
       lucide.createIcons();
       initScrollAnimations();
@@ -3066,8 +3155,10 @@ if(cuForm) {
     } catch (error) {
       console.error("Content Update Error:", error);
       alert("Error: " + error.message + "\nPlease try again or contact support.");
-      cuSubmitBtn.disabled = false;
-      cuSubmitBtn.innerHTML = "Submit Request";
+      if (cuSubmitBtn) {
+        cuSubmitBtn.disabled = false;
+        cuSubmitBtn.innerHTML = "Submit Request";
+      }
     }
   });
 }
@@ -3095,11 +3186,11 @@ const codeLines=[
   {num:17,html:`console.log(<span class="string">'🚀 Live at luviio.com'</span>);`,delay:18},
 ];
 
-let editorLine = 0;
-let editorChar = 0;
-let editorInitialized = false;
-
-function strip(html){ const tmp=document.createElement("div"); tmp.innerHTML=html; return tmp.textContent; }
+function strip(html){ 
+  const tmp=document.createElement("div"); 
+  tmp.innerHTML=html; 
+  return tmp.textContent || ""; 
+}
 
 function buildEditor(){
   const editor=document.getElementById("editor");
@@ -3107,7 +3198,9 @@ function buildEditor(){
   editor.innerHTML=codeLines.map((l,i)=>`<div class="code-line ${l.highlight?'highlight':''}" id="line-${i}"><span class="linenum">${l.num}</span><span class="content"></span></div>`).join("");
 }
 
-function clearCursor(){ document.querySelectorAll(".cursor").forEach(c=>c.remove()); }
+function clearCursor(){ 
+  document.querySelectorAll(".cursor").forEach(c=>c.remove()); 
+}
 
 function type(){
   const editor=document.getElementById("editor");
@@ -3143,112 +3236,134 @@ function initCodeEditor() {
 }
 
 /* ============================================
-   UNI STUDENT FORM - Save to Firestore
+   UNI STUDENT FORM
    ============================================ */
-document.getElementById('uniForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  
-  if (!firebaseReady) {
-    alert('System not ready. Please wait a moment and try again.');
-    return;
-  }
+if (document.getElementById('uniForm')) {
+  document.getElementById('uniForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!firebaseReady) {
+      alert('System not ready. Please wait a moment and try again.');
+      return;
+    }
 
-  const btn = document.getElementById('uniSubmitBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Submitting...';
+    const btn = document.getElementById('uniSubmitBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Submitting...';
+    }
 
-  const formElements = this.elements;
-  const studentData = {
-    fullName: formElements.namedItem('Full Name').value,
-    icNumber: formElements.namedItem('IC Number').value,
-    phone: formElements.namedItem('Phone').value,
-    studentId: formElements.namedItem('Student ID').value,
-    studentEmail: formElements.namedItem('Student Email').value,
-    university: formElements.namedItem('University').value,
-    businessType: formElements.namedItem('Business Type').value,
-  };
-  
-  saveToFirestore('uni_student_applications', studentData)
-  .then(() => { uniShowSuccess(); })
-  .catch(error => { 
-    console.error('Uni Student save error:', error);
-    alert('Error submitting application: ' + error.message);
-  })
-  .finally(() => {
-    btn.disabled = false;
-    btn.innerHTML = 'Submit & Continue';
+    const formElements = this.elements;
+    const studentData = {
+      fullName: formElements.namedItem('Full Name') ? formElements.namedItem('Full Name').value : '',
+      icNumber: formElements.namedItem('IC Number') ? formElements.namedItem('IC Number').value : '',
+      phone: formElements.namedItem('Phone') ? formElements.namedItem('Phone').value : '',
+      studentId: formElements.namedItem('Student ID') ? formElements.namedItem('Student ID').value : '',
+      studentEmail: formElements.namedItem('Student Email') ? formElements.namedItem('Student Email').value : '',
+      university: formElements.namedItem('University') ? formElements.namedItem('University').value : '',
+      businessType: formElements.namedItem('Business Type') ? formElements.namedItem('Business Type').value : '',
+    };
+    
+    saveToFirestore('uni_student_applications', studentData)
+    .then(() => { uniShowSuccess(); })
+    .catch(error => { 
+      console.error('Uni Student save error:', error);
+      alert('Error submitting application: ' + error.message);
+    })
+    .finally(() => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = 'Submit & Continue';
+      }
+    });
   });
-});
+}
 
 function uniShowSuccess() {
-  document.getElementById('uniFormView').style.display = 'none';
-  document.getElementById('uniSuccessView').style.display = 'block';
+  const formView = document.getElementById('uniFormView');
+  const successView = document.getElementById('uniSuccessView');
+  if (formView) formView.style.display = 'none';
+  if (successView) successView.style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
   lucide.createIcons();
   initScrollAnimations();
 }
 
 function uniResetForm() {
-  document.getElementById('uniForm').reset();
-  document.getElementById('uniFormView').style.display = 'block';
-  document.getElementById('uniSuccessView').style.display = 'none';
+  const form = document.getElementById('uniForm');
+  const formView = document.getElementById('uniFormView');
+  const successView = document.getElementById('uniSuccessView');
+  if (form) form.reset();
+  if (formView) formView.style.display = 'block';
+  if (successView) successView.style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
   lucide.createIcons();
   initScrollAnimations();
 }
 
 /* ============================================
-   SPECIAL CLIENT FORM - Save to Firestore
+   SPECIAL CLIENT FORM
    ============================================ */
-document.getElementById('scForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  
-  if (!firebaseReady) {
-    alert('System not ready. Please wait a moment and try again.');
-    return;
-  }
+if (document.getElementById('scForm')) {
+  document.getElementById('scForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!firebaseReady) {
+      alert('System not ready. Please wait a moment and try again.');
+      return;
+    }
 
-  const btn = document.getElementById('scSubmitBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Submitting...';
+    const btn = document.getElementById('scSubmitBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Submitting...';
+    }
 
-  const formElements = this.elements;
-  const clientData = {
-    name: formElements.namedItem('name').value,
-    email: formElements.namedItem('email').value,
-    phone: formElements.namedItem('phone').value,
-    company: formElements.namedItem('company').value,
-    message: formElements.namedItem('message').value,
-  };
-  
-  saveToFirestore('special_client_applications', clientData)
-  .then(() => { scShowSuccess(); })
-  .catch(error => { 
-    console.error('Special Client save error:', error);
-    alert('Error submitting application: ' + error.message);
-  })
-  .finally(() => {
-    btn.disabled = false;
-    btn.innerHTML = 'Submit & Continue';
+    const formElements = this.elements;
+    const clientData = {
+      name: formElements.namedItem('name') ? formElements.namedItem('name').value : '',
+      email: formElements.namedItem('email') ? formElements.namedItem('email').value : '',
+      phone: formElements.namedItem('phone') ? formElements.namedItem('phone').value : '',
+      company: formElements.namedItem('company') ? formElements.namedItem('company').value : '',
+      message: formElements.namedItem('message') ? formElements.namedItem('message').value : '',
+    };
+    
+    saveToFirestore('special_client_applications', clientData)
+    .then(() => { scShowSuccess(); })
+    .catch(error => { 
+      console.error('Special Client save error:', error);
+      alert('Error submitting application: ' + error.message);
+    })
+    .finally(() => {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = 'Submit & Continue';
+      }
+    });
   });
-});
+}
 
 function scShowSuccess() {
-  document.getElementById('scFormView').style.display = 'none';
-  document.getElementById('scSuccessView').style.display = 'block';
+  const formView = document.getElementById('scFormView');
+  const successView = document.getElementById('scSuccessView');
+  if (formView) formView.style.display = 'none';
+  if (successView) successView.style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
   lucide.createIcons();
   initScrollAnimations();
 }
 
 function scResetForm() {
-  document.getElementById('scForm').reset();
-  document.getElementById('scFormView').style.display = 'block';
-  document.getElementById('scSuccessView').style.display = 'none';
+  const form = document.getElementById('scForm');
+  const formView = document.getElementById('scFormView');
+  const successView = document.getElementById('scSuccessView');
+  if (form) form.reset();
+  if (formView) formView.style.display = 'block';
+  if (successView) successView.style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
   lucide.createIcons();
   initScrollAnimations();
 }
-  </script>
+</script>
 </body>
 </html>
