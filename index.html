@@ -120,6 +120,23 @@
   .wa-bubble { background:#DCF8C6; border-radius:0 10px 10px 10px; padding:10px 14px; font-size:14px; line-height:1.5; position:relative; max-width:90%; word-wrap:break-word; }
   .wa-bubble-time { font-size:11px; color:#8B9DA5; text-align:right; margin-top:4px; }
   .wa-avatar { width:36px; height:36px; border-radius:50%; background:#25D366; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px; flex-shrink:0; }
+  .phone-input-wrap { display:flex; gap:0; }
+  .phone-input-wrap select { border:1.5px solid var(--border); border-right:none; border-radius:12px 0 0 12px; padding:10px 8px; font-size:14px; font-family:inherit; background:var(--bg); color:var(--text); outline:none; min-width:90px; cursor:pointer; appearance:auto; }
+  .phone-input-wrap select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(59,130,246,.1); border-right:none; }
+  .phone-input-wrap .input { border-radius:0 12px 12px 0; flex:1; }
+  .admin-search { position:relative; }
+  .admin-search input { padding-left:40px; }
+  .admin-search i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:14px; pointer-events:none; }
+  .admin-user-row { display:grid; grid-template-columns:2fr 2fr 1fr 1fr 1fr; gap:8px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border); font-size:13px; }
+  .admin-user-row:hover { background:var(--bg-secondary); }
+  .admin-user-row.header { font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); background:var(--bg-secondary); border-radius:10px 10px 0 0; }
+  @media(max-width:768px) { .admin-user-row { grid-template-columns:1fr 1fr; gap:6px; font-size:12px; } .admin-user-row.header { display:none; } }
+  .status-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .status-badge.verified { background:#ECFDF5; color:#166534; }
+  .status-badge.unverified { background:#FEF3C7; color:#92400E; }
+  .status-badge.pro { background:#EFF6FF; color:#1E40AF; }
+  .status-badge.free { background:#F1F5F9; color:#64748B; }
+  .status-badge.superadmin { background:#F5F3FF; color:#6D28D9; }
 </style>
 </head>
 <body>
@@ -128,8 +145,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile, sendEmailVerification, applyActionCode, checkActionCode } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, query, collection, where, getDocs, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile, sendEmailVerification, applyActionCode, checkActionCode, verifyBeforeUpdateEmail } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, query, collection, where, getDocs, serverTimestamp, increment, getAuth as getAdminAuth } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
 
 const firebaseConfig = {
@@ -165,10 +182,35 @@ const CURRENCIES = [
   {code:'PHP',symbol:'₱',name:'Philippine Peso'},
 ];
 
+const COUNTRY_CODES = [
+  {code:'+60',country:'MY',label:'+60 Malaysia'},
+  {code:'+62',country:'ID',label:'+62 Indonesia'},
+  {code:'+65',country:'SG',label:'+65 Singapore'},
+  {code:'+66',country:'TH',label:'+66 Thailand'},
+  {code:'+63',country:'PH',label:'+63 Philippines'},
+  {code:'+1',country:'US',label:'+1 USA/Canada'},
+  {code:'+44',country:'GB',label:'+44 UK'},
+  {code:'+91',country:'IN',label:'+91 India'},
+  {code:'+86',country:'CN',label:'+86 China'},
+  {code:'+81',country:'JP',label:'+81 Japan'},
+  {code:'+82',country:'KR',label:'+82 South Korea'},
+  {code:'+61',country:'AU',label:'+61 Australia'},
+  {code:'+49',country:'DE',label:'+49 Germany'},
+  {code:'+33',country:'FR',label:'+33 France'},
+  {code:'+971',country:'AE',label:'+971 UAE'},
+  {code:'+234',country:'NG',label:'+234 Nigeria'},
+  {code:'+55',country:'BR',label:'+55 Brazil'},
+  {code:'+20',country:'EG',label:'+20 Egypt'},
+  {code:'+27',country:'ZA',label:'+27 South Africa'},
+];
+
+const SUPERADMIN_EMAILS = ['admin@luviio.com','superadmin@appluviio.com'];
+
 let currentUser = null;
 let userData = null;
 let currentPage = 'landing';
 let emailVerifiedChecked = false;
+let publicBioRendered = false;
 
 const bioState = { name:'', bio:'', avatar:'', links:[
   {id:1,title:'WhatsApp',url:'https://wa.me/',icon:'fa-brands fa-whatsapp',color:'#25D366'},
@@ -192,7 +234,7 @@ const invoiceState = {
 };
 
 const waState = {
-  phone:'', message:'', prefill:'', templateId:0
+  phone:'', countryCode:'+60', message:'', prefill:'', templateId:0
 };
 
 const linkPresets = [
@@ -209,12 +251,19 @@ const linkPresets = [
 ];
 
 const waTemplates = [
-  {id:0,name:'Simple Link',desc:'Just the link, nothing else',free:true,generate:(phone,msg)=>`https://wa.me/${phone}`},
-  {id:1,name:'Custom Message',desc:'Pre-filled chat message',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`},
-  {id:2,name:'Business Greeting',desc:'Professional opening message',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(`Hi! 👋\n\nThank you for reaching out to us.\n\n${msg||'How can we help you today?'}`)}`},
-  {id:3,name:'Order Inquiry',desc:'Pre-filled order template',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(`Hi! I'm interested in your product/service.\n\nDetails: ${msg||'Please share more information.'}\n\nThank you!`)}`},
-  {id:4,name:'Support Request',desc:'Support ticket template',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(`Hello, I need help with the following:\n\n${msg||'Please describe your issue.'}\n\nThank you for your assistance.`)}`},
+  {id:0,name:'Simple Link',desc:'Just the link, nothing else',free:true,generate:(phone,cc,msg)=>`https://wa.me/${cc.slice(1)}${phone}`},
+  {id:1,name:'Custom Message',desc:'Pre-filled chat message',free:false,generate:(phone,cc,msg)=>`https://wa.me/${cc.slice(1)}${phone}?text=${encodeURIComponent(msg)}`},
+  {id:2,name:'Business Greeting',desc:'Professional opening message',free:false,generate:(phone,cc,msg)=>`https://wa.me/${cc.slice(1)}${phone}?text=${encodeURIComponent(`Hi! 👋\n\nThank you for reaching out to us.\n\n${msg||'How can we help you today?'}`)}`},
+  {id:3,name:'Order Inquiry',desc:'Pre-filled order template',free:false,generate:(phone,cc,msg)=>`https://wa.me/${cc.slice(1)}${phone}?text=${encodeURIComponent(`Hi! I'm interested in your product/service.\n\nDetails: ${msg||'Please share more information.'}\n\nThank you!`)}`},
+  {id:4,name:'Support Request',desc:'Support ticket template',free:false,generate:(phone,cc,msg)=>`https://wa.me/${cc.slice(1)}${phone}?text=${encodeURIComponent(`Hello, I need help with the following:\n\n${msg||'Please describe your issue.'}\n\nThank you for your assistance.`)}`},
 ];
+
+function isSuperAdmin(email) { return SUPERADMIN_EMAILS.includes(email?.toLowerCase()); }
+function getEffectivePlan() {
+  if(isSuperAdmin(userData?.email)) return 'superadmin';
+  return userData?.plan || 'free';
+}
+function isProPlan() { const p=getEffectivePlan(); return p==='pro'||p==='superadmin'; }
 
 function getCurSymbol() {
   const c = CURRENCIES.find(x=>x.code===invoiceState.currency);
@@ -236,15 +285,19 @@ function toast(msg, type='info') {
   setTimeout(()=>{ t.style.animation='slideOut .3s ease forwards'; setTimeout(()=>t.remove(),300); },3500);
 }
 
-function showModal(title, body, actions='') {
+function showModal(title, body, actionsHTML='') {
   return new Promise(resolve => {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-    overlay.innerHTML = `<div class="modal"><h3 style="font-size:18px;font-weight:700;margin-bottom:16px">${title}</h3><div style="color:var(--text-secondary);font-size:14px;line-height:1.6">${body}</div><div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end">${actions}</div></div>`;
+    overlay.innerHTML = `<div class="modal"><h3 style="font-size:18px;font-weight:700;margin-bottom:16px">${title}</h3><div style="color:var(--text-secondary);font-size:14px;line-height:1.6">${body}</div><div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end">${actionsHTML}</div></div>`;
     overlay.addEventListener('click', e => { if(e.target===overlay){ overlay.remove(); resolve(false); } });
     document.body.appendChild(overlay);
+    overlay._resolve = resolve;
+    return overlay;
   });
 }
+
+function closeModal(overlay) { if(overlay && overlay.parentNode) overlay.remove(); }
 
 async function registerEmail(name, email, password) {
   try {
@@ -252,10 +305,11 @@ async function registerEmail(name, email, password) {
     await updateProfile(cred.user, { displayName: name });
     await sendEmailVerification(cred.user);
     const username = email.split('@')[0].replace(/[^a-z0-9]/gi,'').toLowerCase() + Math.floor(Math.random()*1000);
+    const isAdmin = isSuperAdmin(email);
     await setDoc(doc(db,'users',cred.user.uid), {
       uid:cred.user.uid, name, email, emailVerified:false,
-      username, stats:{bioViews:0,qrScans:0,linkClicks:0},
-      plan:'free', createdAt:serverTimestamp()
+      username, phone:'', stats:{bioViews:0,qrScans:0,linkClicks:0},
+      plan: isAdmin ? 'pro' : 'free', createdAt:serverTimestamp()
     });
     track('sign_up',{method:'email'});
     emailVerifiedChecked = false;
@@ -283,10 +337,12 @@ async function loginGoogle() {
     const userSnap = await getDoc(userRef);
     if(!userSnap.exists()) {
       const username = result.user.email.split('@')[0].replace(/[^a-z0-9]/gi,'').toLowerCase() + Math.floor(Math.random()*1000);
+      const isAdmin = isSuperAdmin(result.user.email);
       await setDoc(userRef, {
         uid:result.user.uid, name:result.user.displayName||'', email:result.user.email,
-        emailVerified:result.user.emailVerified||false, username,
-        stats:{bioViews:0,qrScans:0,linkClicks:0}, plan:'free', createdAt:serverTimestamp()
+        emailVerified:result.user.emailVerified||false, username, phone:'',
+        stats:{bioViews:0,qrScans:0,linkClicks:0},
+        plan: isAdmin ? 'pro' : 'free', createdAt:serverTimestamp()
       });
       track('sign_up',{method:'google'});
       toast('Account created with Google!','success');
@@ -299,7 +355,7 @@ async function loginGoogle() {
   }
 }
 
-async function logoutUser() { await signOut(auth); toast('Signed out','info'); }
+async function logoutUser() { if(verifyInterval) clearInterval(verifyInterval); await signOut(auth); toast('Signed out','info'); }
 
 async function loadUser(uid) {
   const snap = await getDoc(doc(db,'users',uid));
@@ -312,7 +368,7 @@ async function loadResumeData(uid) { try { const s = await getDoc(doc(db,'users'
 async function saveInvoiceData(uid) { try { await setDoc(doc(db,'users',uid,'data','invoice'), invoiceState); } catch(e) {} }
 async function loadInvoiceData(uid) { try { const s = await getDoc(doc(db,'users',uid,'data','invoice')); if(s.exists()) Object.assign(invoiceState, s.data()); } catch(e) {} }
 async function saveWaData(uid) { try { await setDoc(doc(db,'users',uid,'data','walink'), waState); } catch(e) {} }
-async function loadWaData(uid) { try { const s = await getDoc(doc(db,'users',uid,'data','walink')); if(s.exists()) Object.assign(waState, s.data()); } catch(e) {} }
+async function loadWaData(uid) { try { const s = await getDoc(doc(db,'users',uid,'data','walink')); if(s.exists()) { const d=s.data(); Object.assign(waState, d); if(!waState.countryCode) waState.countryCode='+60'; } } catch(e) {} }
 
 async function updateUsername(uid, newUsername) {
   const clean = newUsername.toLowerCase().replace(/[^a-z0-9._-]/g,'');
@@ -336,22 +392,24 @@ async function loadPublicProfile(username) {
     const bioSnap = await getDoc(doc(db,'users',snap.docs[0].id,'data','bio'));
     const bio = bioSnap.exists() ? bioSnap.data() : null;
     await updateDoc(doc(db,'users',snap.docs[0].id), { 'stats.bioViews': increment(1) }).catch(()=>{});
-    return { ...user, bio };
+    return { ...user, bio, _id: snap.docs[0].id };
   }
   return null;
 }
 
 function navigate(page, params={}) {
+  if(publicBioRendered && page !== 'public-bio') publicBioRendered = false;
   currentPage = page;
   window.scrollTo({top:0,behavior:'smooth'});
-  const routes = {landing:'/',login:'/login',register:'/register',dashboard:'/dashboard',bio:'/bio',qr:'/qr',resume:'/resume',invoice:'/invoice',pricing:'/pricing',walink:'/walink',profile:'/profile','verify-email':'/verify-email'};
-  if(page==='profile') window.history.pushState({},'',`/${params.username}`);
-  else if(page==='public-bio') window.history.pushState({},'',`/${params.username}/bio`);
+  const routes = {landing:'/',login:'/login',register:'/register',dashboard:'/dashboard',bio:'/bio',qr:'/qr',resume:'/resume',invoice:'/invoice',pricing:'/pricing',walink:'/walink',profile:'/profile',admin:'/admin','verify-email':'/verify-email'};
+  if(page==='profile' && params.username) window.history.pushState({},'',`/${params.username}`);
+  else if(page==='public-bio' && params.username) window.history.pushState({},'',`/${params.username}/bio`);
   else window.history.pushState({},'', routes[page]||'/');
   render();
 }
 
 window.addEventListener('popstate', () => {
+  publicBioRendered = false;
   const path = window.location.pathname.replace(/\/$/,'');
   if(path==='') currentPage='landing';
   else if(path==='/login') currentPage='login';
@@ -363,8 +421,14 @@ window.addEventListener('popstate', () => {
   else if(path==='/invoice') currentPage='invoice';
   else if(path==='/pricing') currentPage='pricing';
   else if(path==='/walink') currentPage='walink';
+  else if(path==='/profile') currentPage='profile';
+  else if(path==='/admin') currentPage='admin';
   else if(path==='/verify-email') currentPage='verify-email';
-  else if(path.startsWith('/')) { currentPage='public-bio'; renderPublicBio(path.slice(1)); return; }
+  else if(path.startsWith('/')) {
+    const slug = path.slice(1);
+    if(slug.includes('/bio')) { currentPage='public-bio'; renderPublicBio(slug); return; }
+    else { currentPage='public-bio'; renderPublicBio(slug); return; }
+  }
   render();
 });
 
@@ -372,26 +436,38 @@ onAuthStateChanged(auth, async user => {
   currentUser = user;
   if(user) {
     await user.reload();
+    userData = await loadUser(user.uid);
+    if(!userData) {
+      const isAdmin = isSuperAdmin(user.email);
+      userData = { uid:user.uid, name:user.displayName||'', email:user.email, username:user.email.split('@')[0], phone:'', stats:{bioViews:0,qrScans:0,linkClicks:0}, plan: isAdmin?'pro':'free', emailVerified:user.emailVerified, createdAt:serverTimestamp() };
+    }
     if(!user.emailVerified && !emailVerifiedChecked) {
-      userData = await loadUser(user.uid);
       emailVerifiedChecked = true;
       if(currentPage!=='verify-email') { navigate('verify-email'); return; }
     }
-    userData = await loadUser(user.uid);
-    if(!userData) userData = { uid:user.uid, name:user.displayName||'', email:user.email, username:user.email.split('@')[0], stats:{bioViews:0,qrScans:0,linkClicks:0}, plan:'free', emailVerified:user.emailVerified };
-    if(['landing','login','register','verify-email','pricing'].includes(currentPage)) {
-      if(['bio','qr','resume','invoice','walink'].includes(currentPage)) render();
-      else navigate('dashboard');
-    } else render();
+    if(['landing','login','register'].includes(currentPage)) {
+      navigate('dashboard');
+    } else if(['bio','qr','resume','invoice','walink','profile','admin'].includes(currentPage)) {
+      render();
+    } else if(currentPage==='verify-email' && user.emailVerified) {
+      navigate('dashboard');
+    } else {
+      render();
+    }
   } else {
     userData = null;
     emailVerifiedChecked = false;
-    if(['dashboard','bio','qr','resume','invoice','walink','verify-email'].includes(currentPage)) navigate('landing');
-    else render();
+    const protectedPages = ['dashboard','bio','qr','resume','invoice','walink','profile','admin','verify-email'];
+    if(protectedPages.includes(currentPage)) {
+      navigate('landing');
+    } else {
+      render();
+    }
   }
 });
 
 function render() {
+  if(publicBioRendered) return;
   if(['landing','login','register','verify-email','pricing'].includes(currentPage)) renderPublic();
   else if(currentUser) renderApp();
   else renderPublic();
@@ -415,7 +491,7 @@ function publicNav() {
         ${currentUser
           ?`<a class="nav-link" onclick="window._nav('dashboard')">Dashboard</a>
             <div style="width:1px;height:20px;background:var(--border);margin:0 4px"></div>
-            <a class="nav-link" onclick="window._openProfile()" style="display:flex;align-items:center;gap:6px">
+            <a class="nav-link" onclick="window._nav('profile')" style="display:flex;align-items:center;gap:6px">
               <div style="width:28px;height:28px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700;font-size:12px">${(userData?.name||'U')[0].toUpperCase()}</div>
               <span class="hidden sm:inline" style="font-size:13px">${userData?.name?.split(' ')[0]||''}</span>
             </a>
@@ -436,6 +512,7 @@ function appNav() {
     {id:'invoice',icon:'fa-solid fa-file-invoice',label:'Invoice'},
     {id:'walink',icon:'fa-brands fa-whatsapp',label:'WA Link'},
   ];
+  if(isSuperAdmin(userData?.email)) tabs.push({id:'admin',icon:'fa-solid fa-shield-halved',label:'Admin'});
   const active = currentPage;
   return `<nav style="position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)">
     <div style="max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between">
@@ -446,7 +523,7 @@ function appNav() {
       <div style="display:flex;align-items:center;gap:4px;overflow-x:auto" class="no-print">
         ${tabs.map(t=>`<a class="nav-link ${active===t.id?'active':''}" onclick="window._nav('${t.id}')"><i class="${t.icon}" style="margin-right:4px;font-size:12px"></i><span class="hidden sm:inline">${t.label}</span></a>`).join('')}
       </div>
-      <a onclick="window._openProfile()" style="cursor:pointer;display:flex;align-items:center;gap:8px;text-decoration:none" title="View Profile">
+      <a onclick="window._nav('profile')" style="cursor:pointer;display:flex;align-items:center;gap:8px;text-decoration:none" title="Profile">
         <span style="font-size:13px;color:var(--text-muted)" class="hidden md:inline">${userData?.name||''}</span>
         <div style="width:32px;height:32px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:700;font-size:13px">${(userData?.name||'U')[0].toUpperCase()}</div>
       </a>
@@ -454,7 +531,7 @@ function appNav() {
   </nav>
   <nav style="position:fixed;bottom:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:6px 0 env(safe-area-inset-bottom,6px)" class="sm:hidden no-print">
     <div style="display:flex;justify-content:space-around;align-items:center">
-      ${tabs.map(t=>`<a onclick="window._nav('${t.id}')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;border-radius:10px;cursor:pointer;color:${active===t.id?'var(--accent)':'var(--text-muted)'};font-size:10px;font-weight:600;text-decoration:none"><i class="${t.icon}" style="font-size:18px"></i>${t.label}</a>`).join('')}
+      ${tabs.slice(0,6).map(t=>`<a onclick="window._nav('${t.id}')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;border-radius:10px;cursor:pointer;color:${active===t.id?'var(--accent)':'var(--text-muted)'};font-size:10px;font-weight:600;text-decoration:none"><i class="${t.icon}" style="font-size:18px"></i>${t.label}</a>`).join('')}
     </div>
   </nav>`;
 }
@@ -484,17 +561,16 @@ function renderLanding() {
     <section style="max-width:1100px;margin:0 auto;padding:40px 24px 80px">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
         ${[
-          {icon:'fa-solid fa-link',color:'#3B82F6',bg:'#EFF6FF',title:'Bio Link Builder',desc:'One link for everything. Beautiful, customizable, mobile-optimized.',demo:'bio'},
-          {icon:'fa-solid fa-qrcode',color:'#8B5CF6',bg:'#F5F3FF',title:'Smart QR Generator',desc:'Create QR codes instantly. Download, share, and track scans.',demo:'qr'},
-          {icon:'fa-solid fa-file-lines',color:'#10B981',bg:'#ECFDF5',title:'Resume Builder',desc:'Build professional resumes with template choices and PDF export.',demo:'resume'},
-          {icon:'fa-solid fa-file-invoice-dollar',color:'#F59E0B',bg:'#FFFBEB',title:'Invoice Generator',desc:'Create invoices in seconds. Multiple currencies, export, send via WhatsApp.',demo:'invoice'},
-          {icon:'fa-brands fa-whatsapp',color:'#25D366',bg:'#F0FDF4',title:'WhatsApp Link Generator',desc:'Generate WhatsApp links with custom messages and templates.',demo:'walink'}
+          {icon:'fa-solid fa-link',color:'#3B82F6',bg:'#EFF6FF',title:'Bio Link Builder',desc:'One link for everything. Beautiful, customizable, mobile-optimized.'},
+          {icon:'fa-solid fa-qrcode',color:'#8B5CF6',bg:'#F5F3FF',title:'Smart QR Generator',desc:'Create QR codes instantly. Download, share, and track scans.'},
+          {icon:'fa-solid fa-file-lines',color:'#10B981',bg:'#ECFDF5',title:'Resume Builder',desc:'Build professional resumes with template choices and PDF export.'},
+          {icon:'fa-solid fa-file-invoice-dollar',color:'#F59E0B',bg:'#FFFBEB',title:'Invoice Generator',desc:'Create invoices in seconds. Multiple currencies, export, send via WhatsApp.'},
+          {icon:'fa-brands fa-whatsapp',color:'#25D366',bg:'#F0FDF4',title:'WhatsApp Link Generator',desc:'Generate WhatsApp links with custom messages and templates.'}
         ].map((s,i)=>`
-          <div class="card card-hover fade-up fade-up-${Math.min(i+1,5)}" style="padding:28px;cursor:pointer" onclick="window._tryDemo('${s.demo}')">
+          <div class="card card-hover fade-up fade-up-${Math.min(i+1,5)}" style="padding:28px;cursor:pointer" onclick="window._nav('${currentUser?s.icon.includes('whatsapp')?'walink':s.icon.includes('qrcode')?'qr':s.icon.includes('file-lines')?'resume':s.icon.includes('file-invoice')?'invoice':'bio':'register'}')">
             <div class="tool-icon" style="background:${s.bg};color:${s.color};margin-bottom:16px"><i class="${s.icon}"></i></div>
             <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">${s.title}</h3>
             <p style="font-size:13px;color:var(--text-secondary);line-height:1.6">${s.desc}</p>
-            <span style="display:inline-flex;align-items:center;gap:4px;margin-top:14px;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer">Try Demo <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></span>
           </div>
         `).join('')}
       </div>
@@ -632,7 +708,6 @@ function renderPricing() {
         <button class="btn btn-primary" style="width:100%" onclick="toast('Pro plan coming soon! Stay tuned.','info')">Upgrade to Pro</button>
       </div>
     </div>
-    <!-- Compare Table -->
     <div style="margin-bottom:40px"><h2 style="font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:24px;text-align:center">Compare Plans</h2></div>
     <div class="card" style="padding:24px 28px;overflow-x:auto">
       <div class="compare-row compare-header"><span></span><span>Free</span><span style="color:var(--accent)">Pro</span></div>
@@ -666,18 +741,23 @@ function renderApp() {
   else if(currentPage==='resume') { loadResumeData(currentUser.uid).then(()=>renderResume()); }
   else if(currentPage==='invoice') { loadInvoiceData(currentUser.uid).then(()=>renderInvoice()); }
   else if(currentPage==='walink') { loadWaData(currentUser.uid).then(()=>renderWaLink()); }
+  else if(currentPage==='profile') renderProfile();
+  else if(currentPage==='admin') renderAdmin();
   else renderDashboard();
 }
 
 function renderDashboard() {
   const s = userData?.stats || {bioViews:0,qrScans:0,linkClicks:0};
   const verified = currentUser?.emailVerified || userData?.emailVerified;
+  const plan = getEffectivePlan();
   appEl.innerHTML = `${appNav()}
   <main style="padding-top:80px;padding-bottom:80px;max-width:1100px;margin:0 auto;padding-left:24px;padding-right:24px">
     <div style="padding:32px 0 8px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <h1 style="font-size:28px;font-weight:800;letter-spacing:-.5px">Welcome back, ${userData?.name||'User'}</h1>
         ${!verified?`<span class="badge" style="background:#FEF3C7;color:#92400E;cursor:pointer" onclick="window._nav('verify-email')"><i class="fa-solid fa-exclamation-triangle" style="margin-right:4px"></i>Unverified</span>`:`<span class="badge" style="background:#ECFDF5;color:#166534"><i class="fa-solid fa-check" style="margin-right:4px"></i>Verified</span>`}
+        ${plan==='superadmin'?`<span class="badge" style="background:#F5F3FF;color:#6D28D9"><i class="fa-solid fa-shield-halved" style="margin-right:4px"></i>SuperAdmin</span>`:''}
+        ${plan==='pro'?`<span class="badge" style="background:#EFF6FF;color:#1E40AF"><i class="fa-solid fa-crown" style="margin-right:4px"></i>Pro</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap">
         <span style="font-size:14px;color:var(--text-secondary)">Your bio link:</span>
@@ -690,13 +770,12 @@ function renderDashboard() {
         <span style="font-size:11px;color:var(--text-muted);background:var(--bg-secondary);padding:2px 8px;border-radius:6px"><i class="fa-solid fa-lock" style="font-size:9px;margin-right:2px"></i>Cannot be changed</span>
       </div>
     </div>
-
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:24px 0 32px">
       ${[
         {label:'Bio Views',value:s.bioViews,icon:'fa-solid fa-eye',color:'#3B82F6',bg:'#EFF6FF'},
         {label:'QR Scans',value:s.qrScans,icon:'fa-solid fa-qrcode',color:'#8B5CF6',bg:'#F5F3FF'},
         {label:'Link Clicks',value:s.linkClicks,icon:'fa-solid fa-mouse-pointer',color:'#10B981',bg:'#ECFDF5'},
-        {label:'Plan',value:userData?.plan==='pro'?'Pro':'Free',icon:'fa-solid fa-crown',color:'#F59E0B',bg:'#FFFBEB'}
+        {label:'Plan',value:plan==='superadmin'?'Admin':plan==='pro'?'Pro':'Free',icon:'fa-solid fa-crown',color:plan==='superadmin'?'#6D28D9':'#F59E0B',bg:plan==='superadmin'?'#F5F3FF':'#FFFBEB'}
       ].map(c=>`
         <div class="card stat-card card-hover" style="padding:20px">
           <div style="width:36px;height:36px;background:${c.bg};border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:${c.color};font-size:14px"><i class="${c.icon}"></i></div>
@@ -705,7 +784,6 @@ function renderDashboard() {
         </div>
       `).join('')}
     </div>
-
     <h2 style="font-size:18px;font-weight:700;margin-bottom:14px">Quick Tools</h2>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:32px">
       ${[
@@ -722,13 +800,266 @@ function renderDashboard() {
         </div>
       `).join('')}
     </div>
-
-    ${userData?.plan!=='pro'?`<div class="card" style="background:linear-gradient(135deg,#EFF6FF,#F5F3FF);border-color:var(--accent-subtle);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+    ${plan!=='pro'&&plan!=='superadmin'?`<div class="card" style="background:linear-gradient(135deg,#EFF6FF,#F5F3FF);border-color:var(--accent-subtle);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
       <div><div style="font-size:16px;font-weight:700">Upgrade to Pro — RM9/month</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px">Unlimited links, all templates, multi-currency invoices, no branding.</div></div>
       <button class="btn btn-primary btn-sm" onclick="window._nav('pricing')">View Plans</button>
     </div>`:''}
   </main>`;
 }
+
+/* ─── Profile Page ─── */
+function renderProfile() {
+  const verified = currentUser?.emailVerified || userData?.emailVerified;
+  const plan = getEffectivePlan();
+  const planLabel = plan==='superadmin'?'Premium (SuperAdmin)':plan==='pro'?'Pro':'Free';
+  const planClass = plan==='superadmin'?'superadmin':plan==='pro'?'pro':'free';
+  appEl.innerHTML = `${appNav()}
+  <main style="padding-top:80px;padding-bottom:100px;max-width:600px;margin:0 auto;padding-left:24px;padding-right:24px">
+    <div style="margin-bottom:24px"><h1 style="font-size:24px;font-weight:800;letter-spacing:-.5px">My Profile</h1><p style="font-size:14px;color:var(--text-secondary);margin-top:4px">Manage your account information</p></div>
+    <div class="card" style="padding:32px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:18px;margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid var(--border)">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#818CF8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:800;flex-shrink:0;box-shadow:0 4px 16px rgba(59,130,246,.25)">${(userData?.name||'U')[0].toUpperCase()}</div>
+        <div><div style="font-size:20px;font-weight:800;letter-spacing:-.3px">${esc(userData?.name||'User')}</div><div style="font-size:13px;color:var(--text-muted);margin-top:4px">@${esc(userData?.username||'...')}</div><span class="status-badge ${planClass}" style="margin-top:6px">${plan==='superadmin'?'<i class="fa-solid fa-shield-halved" style="font-size:9px"></i>':''} ${planLabel}</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div>
+          <label class="label"><i class="fa-solid fa-user" style="margin-right:4px;font-size:11px"></i>Name</label>
+          <div style="display:flex;gap:8px"><input class="input" id="profile-name" value="${esc(userData?.name||'')}" placeholder="Your name"><button class="btn btn-primary btn-sm" onclick="window._saveProfileName()">Save</button></div>
+        </div>
+        <div>
+          <label class="label"><i class="fa-solid fa-envelope" style="margin-right:4px;font-size:11px"></i>Email</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input class="input" value="${esc(userData?.email||'')}" disabled>
+            <span class="status-badge ${verified?'verified':'unverified'}" style="flex-shrink:0">${verified?'<i class="fa-solid fa-check-circle" style="font-size:9px"></i> Verified':'<i class="fa-solid fa-exclamation-circle" style="font-size:9px"></i> Not Verified'}</span>
+          </div>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:4px"><i class="fa-solid fa-lock" style="margin-right:3px;font-size:9px"></i>Email cannot be changed after registration</p>
+        </div>
+        <div>
+          <label class="label"><i class="fa-solid fa-phone" style="margin-right:4px;font-size:11px"></i>Phone Number <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <div style="display:flex;gap:8px"><input class="input" id="profile-phone" value="${esc(userData?.phone||'')}" placeholder="+60 12-345 6789"><button class="btn btn-primary btn-sm" onclick="window._saveProfilePhone()">Save</button></div>
+        </div>
+        <div>
+          <label class="label"><i class="fa-solid fa-crown" style="margin-right:4px;font-size:11px"></i>Plan</label>
+          <div style="padding:14px 16px;background:var(--bg-secondary);border-radius:12px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="status-badge ${planClass}" style="font-size:13px;padding:5px 14px">${plan==='superadmin'?'<i class="fa-solid fa-shield-halved" style="font-size:10px;margin-right:3px"></i>':''} ${planLabel}</span>
+            </div>
+            ${plan!=='pro'&&plan!=='superadmin'?`<button class="btn btn-primary btn-sm" onclick="window._nav('pricing')">Upgrade</button>`:''}
+          </div>
+        </div>
+        <div>
+          <label class="label"><i class="fa-solid fa-at" style="margin-right:4px;font-size:11px"></i>Username</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input class="input" value="@${esc(userData?.username||'')}" disabled style="flex:1">
+            <button class="btn btn-secondary btn-sm" onclick="window._editUsername()"><i class="fa-solid fa-pen" style="font-size:10px"></i> Edit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:20px;display:flex;align-items:center;justify-content:space-between">
+      <div><span style="font-size:14px;font-weight:600;color:var(--danger)">Sign Out</span><p style="font-size:12px;color:var(--text-muted);margin-top:2px">You'll need to sign in again</p></div>
+      <button class="btn btn-danger btn-sm" onclick="window._logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</button>
+    </div>
+  </main>`;
+}
+
+window._saveProfileName = async () => {
+  const name = $('profile-name')?.value?.trim();
+  if(!name) { toast('Name cannot be empty','error'); return; }
+  await updateDoc(doc(db,'users',currentUser.uid), { name });
+  userData.name = name;
+  await updateProfile(currentUser, { displayName: name });
+  toast('Name updated!','success');
+  track('update_name');
+};
+window._saveProfilePhone = async () => {
+  const phone = $('profile-phone')?.value?.trim();
+  await updateDoc(doc(db,'users',currentUser.uid), { phone });
+  userData.phone = phone;
+  toast('Phone number updated!','success');
+};
+
+/* ─── SuperAdmin Panel ─── */
+function renderAdmin() {
+  if(!isSuperAdmin(userData?.email)) { navigate('dashboard'); return; }
+  appEl.innerHTML = `${appNav()}
+  <main style="padding-top:80px;padding-bottom:100px;max-width:1200px;margin:0 auto;padding-left:24px;padding-right:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:24px;font-weight:800;letter-spacing:-.5px"><i class="fa-solid fa-shield-halved" style="color:#6D28D9;margin-right:8px"></i>SuperAdmin Panel</h1>
+        <p style="font-size:14px;color:var(--text-secondary);margin-top:4px">Manage all Appluviio users</p>
+      </div>
+      <div class="admin-search" style="min-width:280px;flex:1;max-width:400px">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input class="input" id="admin-search-input" placeholder="Search by name, email, or username..." oninput="window._adminSearch(this.value)">
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="admin-user-row header">
+        <span>User</span><span>Email</span><span>Status</span><span>Plan</span><span>Actions</span>
+      </div>
+      <div id="admin-users-list" style="min-height:200px;display:flex;align-items:center;justify-content:center">
+        <div style="text-align:center;padding:40px"><div class="spinner" style="width:28px;height:28px;border-width:3px"></div><p style="font-size:13px;color:var(--text-muted);margin-top:12px">Loading users...</p></div>
+      </div>
+    </div>
+  </main>`;
+  loadAdminUsers();
+}
+
+let allAdminUsers = [];
+async function loadAdminUsers(searchTerm='') {
+  try {
+    const snap = await getDocs(collection(db,'users'));
+    allAdminUsers = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(searchTerm) {
+      const term = searchTerm.toLowerCase();
+      allAdminUsers = allAdminUsers.filter(u =>
+        (u.name||'').toLowerCase().includes(term) ||
+        (u.email||'').toLowerCase().includes(term) ||
+        (u.username||'').toLowerCase().includes(term)
+      );
+    }
+    renderAdminUsersList();
+  } catch(e) {
+    $('admin-users-list').innerHTML = `<p style="color:var(--danger);padding:24px;text-align:center">Failed to load users: ${e.message}</p>`;
+  }
+}
+
+function renderAdminUsersList() {
+  const list = $('admin-users-list');
+  if(!allAdminUsers.length) { list.innerHTML = `<p style="color:var(--text-muted);padding:40px;text-align:center">No users found</p>`; return; }
+  list.innerHTML = allAdminUsers.map(u => {
+    const plan = isSuperAdmin(u.email) ? 'superadmin' : (u.plan||'free');
+    const planLabel = plan==='superadmin'?'Admin':plan==='pro'?'Pro':'Free';
+    return `<div class="admin-user-row">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div style="width:32px;height:32px;border-radius:50%;background:${plan==='superadmin'?'#F5F3FF':plan==='pro'?'#EFF6FF':'var(--bg-secondary)'};display:flex;align-items:center;justify-content:center;color:${plan==='superadmin'?'#6D28D9':plan==='pro'?'var(--accent)':'var(--text-secondary)'};font-weight:700;font-size:12px;flex-shrink:0">${(u.name||'U')[0].toUpperCase()}</div>
+        <div style="min-width:0"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(u.name||'Unknown')}</div><div style="font-size:11px;color:var(--text-muted)">@${esc(u.username||'?')}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(u.email)}">${esc(u.email)}</div>
+      <span class="status-badge ${u.emailVerified?'verified':'unverified'}">${u.emailVerified?'Verified':'Unverified'}</span>
+      <span class="status-badge ${plan}">${planLabel}</span>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:11px" onclick="window._adminViewUser('${u.id}')" title="View Details"><i class="fa-solid fa-eye"></i></button>
+        <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:11px" onclick="window._adminEditUser('${u.id}')" title="Edit Account"><i class="fa-solid fa-pen"></i></button>
+        ${!u.emailVerified?`<button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:11px;color:var(--accent)" onclick="window._adminSendVerify('${u.email}')" title="Send Verification"><i class="fa-solid fa-envelope-circle-check"></i></button>`:''}
+        ${!isSuperAdmin(u.email)?`<button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:11px;color:var(--danger)" onclick="window._adminResetPassword('${u.email}')" title="Reset Password"><i class="fa-solid fa-key"></i></button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window._adminSearch = (term) => loadAdminUsers(term);
+
+window._adminViewUser = async (uid) => {
+  const u = allAdminUsers.find(x=>x.id===uid);
+  if(!u) return;
+  const bioSnap = await getDoc(doc(db,'users',uid,'data','bio')).catch(()=>null);
+  const bio = bioSnap?.exists() ? bioSnap.data() : null;
+  const plan = isSuperAdmin(u.email)?'superadmin':(u.plan||'free');
+  const planLabel = plan==='superadmin'?'Premium (SuperAdmin)':plan==='pro'?'Pro':'Free';
+  const created = u.createdAt ? new Date(u.createdAt.seconds*1000).toLocaleDateString('en-MY',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Unknown';
+  showModal('User Details', `
+    <div style="display:grid;grid-template-columns:120px 1fr;gap:8px 16px;font-size:14px;line-height:1.8">
+      <span style="color:var(--text-muted);font-weight:600">Name</span><span>${esc(u.name||'Unknown')}</span>
+      <span style="color:var(--text-muted);font-weight:600">Email</span><span>${esc(u.email)} <span class="status-badge ${u.emailVerified?'verified':'unverified'}" style="font-size:10px;padding:2px 8px">${u.emailVerified?'Verified':'Unverified'}</span></span>
+      <span style="color:var(--text-muted);font-weight:600">Phone</span><span>${esc(u.phone||'Not set')}</span>
+      <span style="color:var(--text-muted);font-weight:600">Username</span><span>@${esc(u.username||'?')}</span>
+      <span style="color:var(--text-muted);font-weight:600">UID</span><span style="font-size:11px;font-family:monospace;color:var(--text-muted)">${u.id}</span>
+      <span style="color:var(--text-muted);font-weight:600">Plan</span><span class="status-badge ${plan==='superadmin'?'superadmin':plan==='pro'?'pro':'free'}">${planLabel}</span>
+      <span style="color:var(--text-muted);font-weight:600">Created</span><span style="font-size:13px">${created}</span>
+      <span style="color:var(--text-muted);font-weight:600">Bio Views</span><span>${u.stats?.bioViews||0}</span>
+      <span style="color:var(--text-muted);font-weight:600">QR Scans</span><span>${u.stats?.qrScans||0}</span>
+      <span style="color:var(--text-muted);font-weight:600">Link Clicks</span><span>${u.stats?.linkClicks||0}</span>
+      <span style="color:var(--text-muted);font-weight:600">Bio Links</span><span>${bio?.links?.length||0}</span>
+    </div>
+  `, `<button class="btn btn-secondary btn-sm" onclick="this.closest('.modal-overlay').remove()">Close</button>`);
+};
+
+window._adminEditUser = async (uid) => {
+  const u = allAdminUsers.find(x=>x.id===uid);
+  if(!u) return;
+  if(isSuperAdmin(u.email)) { toast('Cannot edit SuperAdmin account','error'); return; }
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal" style="max-width:440px">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:20px">Edit User</h3>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">${esc(u.email)}</p>
+    <div style="margin-bottom:14px"><label class="label">Name</label><input class="input" id="admin-edit-name" value="${esc(u.name||'')}"></div>
+    <div style="margin-bottom:14px"><label class="label">Phone</label><input class="input" id="admin-edit-phone" value="${esc(u.phone||'')}" placeholder="+60 12-345 6789"></div>
+    <div style="margin-bottom:14px"><label class="label">Username</label><input class="input" id="admin-edit-username" value="${esc(u.username||'')}"></div>
+    <div style="margin-bottom:20px"><label class="label">Plan</label><select class="input" id="admin-edit-plan">
+      <option value="free" ${(u.plan||'free')==='free'?'selected':''}>Free</option>
+      <option value="pro" ${u.plan==='pro'?'selected':''}>Pro</option>
+    </select></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary btn-sm" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="window._adminSaveUser('${uid}')">Save Changes</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+};
+
+window._adminSaveUser = async (uid) => {
+  const name = $('admin-edit-name')?.value?.trim();
+  const phone = $('admin-edit-phone')?.value?.trim();
+  const username = $('admin-edit-username')?.value?.trim().toLowerCase().replace(/[^a-z0-9._-]/g,'');
+  const plan = $('admin-edit-plan')?.value;
+  if(!name) { toast('Name is required','error'); return; }
+  if(username && username.length<3) { toast('Username must be at least 3 chars','error'); return; }
+  if(username) {
+    const q = query(collection(db,'users'), where('username','==',username));
+    const snap = await getDocs(q);
+    for(const d of snap.docs) { if(d.id!==uid) { toast('Username already taken','error'); return; } }
+  }
+  const updates = { name, phone, plan };
+  if(username) updates.username = username;
+  await updateDoc(doc(db,'users',uid), updates);
+  toast('User updated successfully!','success');
+  document.querySelector('.modal-overlay')?.remove();
+  loadAdminUsers($('admin-search-input')?.value||'');
+};
+
+window._adminSendVerify = async (email) => {
+  if(!email) return;
+  try {
+    toast('Note: Email verification must be triggered by the user logging in. You can manually mark as verified.','info');
+    const q = query(collection(db,'users'), where('email','==',email));
+    const snap = await getDocs(q);
+    if(!snap.empty) {
+      await updateDoc(doc(db,'users',snap.docs[0].id), { emailVerified: true });
+      toast('User marked as verified!','success');
+      loadAdminUsers($('admin-search-input')?.value||'');
+    }
+  } catch(e) { toast(e.message,'error'); }
+};
+
+window._adminResetPassword = async (email) => {
+  if(!email) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal" style="max-width:400px">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:12px">Reset Password</h3>
+    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px">Enter a new password for <strong>${esc(email)}</strong></p>
+    <div style="margin-bottom:20px"><label class="label">New Password</label><input class="input" type="password" id="admin-new-pass" placeholder="Min 6 characters"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary btn-sm" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="window._adminDoResetPass('${email}')">Reset Password</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+};
+
+window._adminDoResetPass = async (email) => {
+  const pass = $('admin-new-pass')?.value;
+  if(!pass || pass.length<6) { toast('Password must be at least 6 characters','error'); return; }
+  try {
+    toast('Password reset via admin requires Firebase Admin SDK. Please use Firebase Console to reset the password, or ask the user to use the "Forgot Password" flow.','info');
+    document.querySelector('.modal-overlay')?.remove();
+  } catch(e) { toast(e.message,'error'); }
+};
 
 /* ─── Bio Builder ─── */
 function renderBio() {
@@ -758,7 +1089,7 @@ function renderBio() {
         <div id="bio-links-list" style="display:flex;flex-direction:column;gap:8px">
           ${bioState.links.map((l,i)=>bioLinkItem(l,i)).join('')}
         </div>
-        ${userData?.plan!=='pro'&&bioState.links.length>=5?`<p style="font-size:12px;color:var(--warning);margin-top:12px"><i class="fa-solid fa-lock" style="margin-right:4px"></i>Upgrade to Pro for unlimited links</p>`:''}
+        ${!isProPlan()&&bioState.links.length>=5?`<p style="font-size:12px;color:var(--warning);margin-top:12px"><i class="fa-solid fa-lock" style="margin-right:4px"></i>Upgrade to Pro for unlimited links</p>`:''}
       </div>
       <div style="position:sticky;top:90px">
         <p style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Live Preview</p>
@@ -787,7 +1118,7 @@ function bioPreviewContent() {
   const name = bioState.name || 'Your Name';
   const avatar = bioState.avatar;
   const initial = (name||'U')[0].toUpperCase();
-  const isFree = userData?.plan !== 'pro';
+  const isFree = !isProPlan();
   const links = bioState.links;
   return `<div style="padding:60px 24px 32px;text-align:center;min-height:520px;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#f8fafc 0%,#fff 100%)">
     ${avatar?`<img src="${esc(avatar)}" style="width:76px;height:76px;border-radius:50%;object-fit:cover;margin-bottom:14px;border:3px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,.1)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#818CF8);display:none;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:800;margin-bottom:14px;box-shadow:0 4px 16px rgba(59,130,246,.3)">${initial}</div>`
@@ -904,7 +1235,7 @@ window._downloadQR = (fmt) => {
 /* ─── Resume Builder ─── */
 function renderResume() {
   const templates = [{id:'standard',name:'Standard',desc:'Classic professional layout'}];
-  if(userData?.plan==='pro') templates.push({id:'modern',name:'Modern',desc:'Clean modern design'});
+  if(isProPlan()) templates.push({id:'modern',name:'Modern',desc:'Clean modern design'});
   appEl.innerHTML = `${appNav()}
   <main style="padding-top:80px;padding-bottom:100px;max-width:1200px;margin:0 auto;padding-left:24px;padding-right:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
@@ -919,7 +1250,7 @@ function renderResume() {
         <div style="font-size:14px;font-weight:700">${t.name}</div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${t.desc}</div>
       </div>`).join('')}
-      ${userData?.plan!=='pro'?`<div class="template-card" style="min-width:140px;opacity:.5;cursor:not-allowed;position:relative">
+      ${!isProPlan()?`<div class="template-card" style="min-width:140px;opacity:.5;cursor:not-allowed;position:relative">
         <div style="font-size:14px;font-weight:700">Modern</div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Clean modern design</div>
         <span class="badge" style="position:absolute;top:8px;right:8px;background:#FEF3C7;color:#92400E;font-size:9px">PRO</span>
@@ -980,16 +1311,12 @@ function resumePreviewContent() {
 }
 
 function resumeStandardTemplate() {
-  const r=resumeState;
-  const isFree=userData?.plan!=='pro';
+  const r=resumeState; const isFree=!isProPlan();
   const exps=r.experiences.filter(e=>e.company||e.role);
   const edus=r.education.filter(e=>e.school||e.degree);
   return `<div style="background:#fff;padding:40px 36px;font-family:Arial,sans-serif;color:#222;font-size:12px;line-height:1.6;min-height:600px">
     <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #eee;padding-bottom:18px;margin-bottom:20px">
-      <div style="flex:1">
-        <div style="font-size:22px;font-weight:bold;letter-spacing:-.3px;color:#111">${esc(r.fullName)||'Your Name'}</div>
-        <div style="font-size:12px;color:#555;margin-top:6px">${[r.address,r.phone,r.email].filter(Boolean).join(' | ')}</div>
-      </div>
+      <div style="flex:1"><div style="font-size:22px;font-weight:bold;letter-spacing:-.3px;color:#111">${esc(r.fullName)||'Your Name'}</div><div style="font-size:12px;color:#555;margin-top:6px">${[r.address,r.phone,r.email].filter(Boolean).join(' | ')}</div></div>
       ${r.photo?`<img src="${esc(r.photo)}" style="width:100px;height:100px;border-radius:8px;object-fit:cover;border:1px solid #ccc;margin-left:20px" onerror="this.style.display='none'">`:''}
     </div>
     ${r.summary?`<div style="margin-bottom:22px"><div style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;letter-spacing:.5px">PROFESSIONAL SUMMARY</div><p style="font-size:12px;line-height:1.6">${esc(r.summary)}</p></div>`:''}
@@ -1001,8 +1328,7 @@ function resumeStandardTemplate() {
 }
 
 function resumeModernTemplate() {
-  const r=resumeState;
-  const isFree=userData?.plan!=='pro';
+  const r=resumeState; const isFree=!isProPlan();
   const exps=r.experiences.filter(e=>e.company||e.role);
   const edus=r.education.filter(e=>e.school||e.degree);
   return `<div style="background:#fff;min-height:600px;display:flex;font-family:Arial,sans-serif">
@@ -1030,7 +1356,6 @@ function refreshResumePreview() { const p=$('resume-preview'); if(p) p.innerHTML
 
 /* ─── Invoice Generator ─── */
 function renderInvoice() {
-  const isPro = userData?.plan==='pro';
   appEl.innerHTML = `${appNav()}
   <main style="padding-top:80px;padding-bottom:100px;max-width:1100px;margin:0 auto;padding-left:24px;padding-right:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
@@ -1046,8 +1371,8 @@ function renderInvoice() {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
           <div><label class="label">Invoice No</label><input class="input" value="${esc(invoiceState.invoiceNo)}" oninput="window._updateInv('invoiceNo',this.value)"></div>
           <div>
-            <label class="label">Currency ${!isPro?'<span style=\"color:var(--warning);font-size:10px\">(Pro)</span>':''}</label>
-            <select class="input" onchange="window._updateInv('currency',this.value)" ${!isPro?'disabled':''}>
+            <label class="label">Currency ${!isProPlan()?'<span style="color:var(--warning);font-size:10px">(Pro)</span>':''}</label>
+            <select class="input" onchange="window._updateInv('currency',this.value)" ${!isProPlan()?'disabled':''}>
               ${CURRENCIES.map(c=>`<option value="${c.code}" ${invoiceState.currency===c.code?'selected':''}>${c.code} — ${c.symbol} ${c.name}</option>`).join('')}
             </select>
           </div>
@@ -1107,7 +1432,7 @@ function invoicePreviewContent() {
       <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:2px solid var(--text);font-size:18px;font-weight:800"><span>Total</span><span>${sym}${subtotal.toFixed(2)}</span></div>
     </div></div>
     ${inv.notes?`<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:4px">Notes</div><p style="color:var(--text-secondary)">${esc(inv.notes)}</p></div>`:''}
-    ${userData?.plan!=='pro'?`<div style="text-align:center;margin-top:20px;padding-top:12px;border-top:1px solid var(--border)"><span style="font-size:10px;color:var(--text-muted)">Made with Appluviio</span></div>`:''}
+    ${!isProPlan()?`<div style="text-align:center;margin-top:20px;padding-top:12px;border-top:1px solid var(--border)"><span style="font-size:10px;color:var(--text-muted)">Made with Appluviio</span></div>`:''}
   </div>`;
 }
 
@@ -1115,10 +1440,15 @@ function refreshInvoicePreview() { const p=$('invoice-preview'); if(p) p.innerHT
 
 /* ─── WhatsApp Link Generator ─── */
 function renderWaLink() {
-  const isPro = userData?.plan==='pro';
+  const isPro = isProPlan();
   const selTemplate = waTemplates.find(t=>t.id===waState.templateId) || waTemplates[0];
-  const generatedLink = selTemplate.generate(waState.phone, waState.message);
   const isLocked = !isPro && !selTemplate.free;
+  const cc = waState.countryCode || '+60';
+  const phoneClean = (waState.phone||'').replace(/[^0-9]/g,'');
+  const fullPhone = cc.slice(1) + phoneClean;
+  const generatedLink = fullPhone ? selTemplate.generate(waState.phone, cc, waState.message) : '';
+  const displayPhone = phoneClean ? cc + ' ' + phoneClean : '';
+
   appEl.innerHTML = `${appNav()}
   <main style="padding-top:80px;padding-bottom:100px;max-width:900px;margin:0 auto;padding-left:24px;padding-right:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
@@ -1127,7 +1457,16 @@ function renderWaLink() {
     </div>
     <div style="display:grid;grid-template-columns:1fr;gap:24px;align-items:start" class="lg-grid-equal">
       <div class="card" style="padding:24px">
-        <div style="margin-bottom:20px"><label class="label">Phone Number (with country code)</label><input class="input" id="wa-phone" value="${esc(waState.phone)}" placeholder="e.g. 60123456789" oninput="window._updateWa('phone',this.value)"><p style="font-size:11px;color:var(--text-muted);margin-top:4px">Include country code without + (e.g. 60 for Malaysia)</p></div>
+        <div style="margin-bottom:20px">
+          <label class="label">Phone Number</label>
+          <div class="phone-input-wrap">
+            <select id="wa-country-code" onchange="window._updateWa('countryCode',this.value)">
+              ${COUNTRY_CODES.map(c=>`<option value="${c.code}" ${cc===c.code?'selected':''}>${c.label}</option>`).join('')}
+            </select>
+            <input class="input" id="wa-phone" value="${esc(waState.phone)}" placeholder="123456789" oninput="window._updateWaPhone(this.value)" autocomplete="off" inputmode="numeric">
+          </div>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:4px">Select country code, then enter phone number without the code</p>
+        </div>
         <div style="margin-bottom:20px">
           <label class="label">Choose Template</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -1151,7 +1490,7 @@ function renderWaLink() {
           </div>
         </div>
         <div style="display:flex;gap:10px">
-          <a href="${esc(generatedLink)}" target="_blank" class="btn btn-sm" style="background:#25D366;color:#fff;flex:1;text-decoration:none"><i class="fa-brands fa-whatsapp"></i> Test Link</a>
+          ${generatedLink?`<a href="${esc(generatedLink)}" target="_blank" class="btn btn-sm" style="background:#25D366;color:#fff;flex:1;text-decoration:none"><i class="fa-brands fa-whatsapp"></i> Test Link</a>`:`<button class="btn btn-sm" style="background:#25D366;color:#fff;flex:1;opacity:.5;cursor:not-allowed" disabled><i class="fa-brands fa-whatsapp"></i> Test Link</button>`}
           <button class="btn btn-secondary btn-sm" style="flex:1" onclick="window._shareWaLink()"><i class="fa-solid fa-share-nodes"></i> Share</button>
         </div>
       </div>
@@ -1159,12 +1498,12 @@ function renderWaLink() {
         <p style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Chat Preview</p>
         <div class="wa-preview-box">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #D4CCD3">
-            <div class="wa-avatar">${(waState.phone||'W')[0].toUpperCase()}</div>
-            <div><div style="font-weight:700;font-size:15px;color:#111">${waState.phone?'+('+waState.phone.slice(0,2)+') '+waState.phone.slice(2):'Phone number'}</div><div style="font-size:11px;color:#8B9DA5">online</div></div>
+            <div class="wa-avatar">${displayPhone?displayPhone[displayPhone.length-1]:'?'}</div>
+            <div><div style="font-weight:700;font-size:15px;color:#111">${displayPhone||'Phone number'}</div><div style="font-size:11px;color:#8B9DA5">online</div></div>
           </div>
           <div style="display:flex;justify-content:flex-end">
             <div style="max-width:90%">
-              <div class="wa-bubble">${waState.phone?selTemplate.generate(waState.phone,waState.message).split('?text=')[1]?decodeURIComponent(selTemplate.generate(waState.phone,waState.message).split('?text=')[1]):'Tap to start chat':'Enter a phone number'}</div>
+              ${phoneClean && !selTemplate.free ? `<div class="wa-bubble">${esc(waState.message || selTemplate.generate(waState.phone, cc, waState.message).split('?text=')[1] ? decodeURIComponent(selTemplate.generate(waState.phone, cc, waState.message).split('?text=')[1]) : 'Tap to start chat')}</div>` : phoneClean ? `<div class="wa-bubble" style="background:#DCF8C6;padding:14px 18px;font-size:13px;color:#222;text-align:center"><i class="fa-brands fa-whatsapp" style="font-size:20px;color:#25D366;display:block;margin-bottom:6px"></i>Tap to start a chat</div>` : `<div class="wa-bubble" style="background:#fff;color:#8B9DA5;text-align:center;font-style:italic">Enter a phone number to see preview</div>`}
               <div class="wa-bubble-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
             </div>
           </div>
@@ -1179,34 +1518,44 @@ function renderWaLink() {
   </main>`;
 }
 
-function refreshWaPreview() { /* Re-render WA link section */ renderWaLink(); }
-
 /* ─── Public Bio Page ─── */
 async function renderPublicBio(slug) {
   const parts = slug.split('/');
-  const username = parts[0];
+  let username = parts[0];
+  let isBioPath = parts.length > 1 && parts[1] === 'bio';
+
   if(!username) { navigate('landing'); return; }
-  const profile = await loadPublicProfile(username);
-  if(!profile) {
-    appEl.innerHTML = `<main style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 24px;text-align:center">
-      <div style="width:100%;max-width:420px">
-        <div style="text-align:center;margin-bottom:24px"><a onclick="window._nav('landing')" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--accent);text-decoration:none"><img src="${LOGO_URL}" style="width:20px;height:20px;border-radius:4px" onerror="this.style.display='none'">Appluviio</a></div>
-        <div style="background:#fff;border-radius:20px;padding:48px 28px;box-shadow:0 4px 30px rgba(0,0,0,.06);text-align:center">
-          <div style="width:72px;height:72px;background:var(--bg-secondary);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px"><i class="fa-solid fa-user-slash" style="font-size:28px;color:var(--text-muted)"></i></div>
-          <h1 style="font-size:20px;font-weight:800;margin-bottom:8px">User not found</h1>
-          <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px">This profile doesn't exist or has been removed.</p>
-          <a class="btn btn-primary" onclick="window._nav('landing')" style="cursor:pointer">Go to Appluviio</a>
-        </div>
-      </div>
-    </main>`;
+
+  /* If user is logged in and navigates to /bio (not /[username]/bio), go to bio builder */
+  if(!isBioPath && username === 'bio' && currentUser) {
+    navigate('bio');
     return;
   }
+  if(!isBioPath && username === 'bio' && !currentUser) {
+    navigate('landing');
+    return;
+  }
+
+  /* For /[username] without /bio, also try to load as public profile */
+  if(!isBioPath) {
+    username = parts[0];
+  }
+
+  const profile = await loadPublicProfile(username);
+  if(!profile || (!profile.bio || (!profile.bio.links || profile.bio.links.length === 0))) {
+    /* Not published / no bio data — redirect to main page */
+    navigate('landing');
+    return;
+  }
+
+  publicBioRendered = true;
   const bio = profile.bio || {};
   const name = bio.name || profile.name || 'User';
   const avatar = bio.avatar;
   const initial = name[0].toUpperCase();
   const links = bio.links || [];
-  const isFree = profile.plan !== 'pro';
+  const isFree = profile.plan !== 'pro' && !isSuperAdmin(profile.email);
+
   appEl.innerHTML = `<main style="min-height:100vh;background:linear-gradient(180deg,#f1f5f9 0%,#e2e8f0 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px">
     <div style="width:100%;max-width:440px">
       <div style="text-align:center;margin-bottom:24px"><a onclick="window._nav('landing')" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--accent);text-decoration:none"><img src="${LOGO_URL}" style="width:22px;height:22px;border-radius:5px" onerror="this.style.display='none'"><span>Appluviio</span></a></div>
@@ -1228,7 +1577,7 @@ async function renderPublicBio(slug) {
 
 /* ─── Global Handlers ─── */
 window._nav = page => navigate(page);
-window._logout = () => { if(verifyInterval) clearInterval(verifyInterval); logoutUser(); };
+window._logout = () => logoutUser();
 window._googleLogin = () => loginGoogle();
 window._emailLogin = () => {
   const email=$('login-email')?.value?.trim(); const pass=$('login-pass')?.value;
@@ -1240,15 +1589,6 @@ window._emailRegister = () => {
   if(!name||!email||!pass){toast('Please fill in all fields','error');return;}
   if(pass.length<6){toast('Password must be at least 6 characters','error');return;}
   registerEmail(name,email,pass);
-};
-window._tryDemo = tool => {
-  if(!currentUser) { navigate(tool); return; }
-  navigate(tool);
-};
-window._openProfile = () => {
-  if(userData?.username) {
-    window.open(`https://${BIO_DOMAIN}/${userData.username}/bio`,'_blank');
-  } else toast('Set up your username first','error');
 };
 window._copyText = text => {
   navigator.clipboard.writeText(text).then(()=>toast('Copied to clipboard!','success')).catch(()=>{
@@ -1279,7 +1619,7 @@ window._updateBio = (k,v) => { bioState[k]=v; refreshBioPreview(); };
 window._updateBioLink = (i,k,v) => { bioState.links[i][k]=v; refreshBioPreview(); };
 window._removeBioLink = i => { bioState.links.splice(i,1); renderBio(); };
 window._addBioLink = () => {
-  if(userData?.plan!=='pro'&&bioState.links.length>=5){toast('Upgrade to Pro for unlimited links','error');return;}
+  if(!isProPlan()&&bioState.links.length>=5){toast('Upgrade to Pro for unlimited links','error');return;}
   const overlay=document.createElement('div');overlay.className='modal-overlay';
   overlay.innerHTML=`<div class="modal" style="max-width:420px"><h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Add Link</h3><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:300px;overflow-y:auto">${linkPresets.map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--accent-subtle)';this.style.background='var(--accent-light)'" onmouseout="this.style.borderColor='var(--border)';this.style.background=''" onclick="window._selectLinkPreset(${i})"><i class="${p.icon}" style="color:${p.color};font-size:16px;width:20px;text-align:center"></i><span style="font-size:14px;font-weight:600;flex:1">${p.title}</span><i class="fa-solid fa-plus" style="color:var(--text-muted);font-size:12px"></i></div>`).join('')}</div><button class="btn btn-secondary btn-sm" style="width:100%" onclick="this.closest('.modal-overlay').remove()">Cancel</button></div>`;
   document.body.appendChild(overlay);
@@ -1298,7 +1638,7 @@ window._updateEdu = (i,k,v) => { resumeState.education[i][k]=v; refreshResumePre
 window._addEdu = () => { resumeState.education.push({school:'',degree:'',year:''}); renderResume(); };
 window._removeEdu = i => { resumeState.education.splice(i,1); renderResume(); };
 window._selectResumeTemplate = id => {
-  if(id!=='standard'&&userData?.plan!=='pro'){toast('Upgrade to Pro for more templates','error');return;}
+  if(id!=='standard'&&!isProPlan()){toast('Upgrade to Pro for more templates','error');return;}
   resumeState.template=id; renderResume();
 };
 window._saveResume = async () => { if(!currentUser){toast('Sign in to save','error');return;} await saveResumeData(currentUser.uid); toast('Resume saved!','success'); track('save_resume'); };
@@ -1335,14 +1675,23 @@ window._sendInvoiceWhatsApp = () => {
 
 // WhatsApp Link handlers
 window._updateWa = (k,v) => { waState[k]=v; renderWaLink(); };
+window._updateWaPhone = (v) => {
+  /* Only allow digits — ensures smooth typing */
+  waState.phone = v.replace(/[^0-9]/g, '');
+  renderWaLink();
+};
 window._selectWaTemplate = id => {
-  if(!waTemplates.find(t=>t.id===id)?.free && userData?.plan!=='pro'){toast('Upgrade to Pro for this template','error');return;}
+  const t = waTemplates.find(t=>t.id===id);
+  if(t && !t.free && !isProPlan()){toast('Upgrade to Pro for this template','error');return;}
   waState.templateId=id; renderWaLink();
 };
 window._saveWaLink = async () => { if(!currentUser){toast('Sign in to save','error');return;} await saveWaData(currentUser.uid); toast('WhatsApp link saved!','success'); track('save_wa_link'); };
 window._shareWaLink = () => {
+  const cc = waState.countryCode || '+60';
+  const phoneClean = (waState.phone||'').replace(/[^0-9]/g,'');
+  if(!phoneClean) { toast('Enter a phone number first','error'); return; }
   const selTemplate=waTemplates.find(t=>t.id===waState.templateId)||waTemplates[0];
-  const link=selTemplate.generate(waState.phone,waState.message);
+  const link=selTemplate.generate(waState.phone, cc, waState.message);
   if(navigator.share){navigator.share({title:'WhatsApp Link',url:link}).catch(()=>{});}
   else window._copyText(link);
 };
@@ -1352,15 +1701,16 @@ const style=document.createElement('style');
 style.textContent=`@media(min-width:1024px){.lg-grid{grid-template-columns:1fr 340px !important}.lg-grid-equal{grid-template-columns:1fr 1fr !important}}`;
 document.head.appendChild(style);
 
-/* ─── Handle /username/bio routes ─── */
-const path=window.location.pathname.replace(/\/$/,'');
-if(path.startsWith('/')&&path.length>1){
-  const slug=path.slice(1);
-  if(slug.includes('/bio')){
-    currentPage='public-bio';
+/* ─── Initial Route Detection ─── */
+const initPath = window.location.pathname.replace(/\/$/,'');
+if(initPath.startsWith('/') && initPath.length > 1) {
+  const slug = initPath.slice(1);
+  if(slug.includes('/bio')) {
+    currentPage = 'public-bio';
     renderPublicBio(slug);
   } else {
-    currentPage='public-bio';
+    /* /[username] without /bio — try as public profile */
+    currentPage = 'public-bio';
     renderPublicBio(slug);
   }
 } else {
