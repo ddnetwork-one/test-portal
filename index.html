@@ -169,7 +169,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile, sendEmailVerification, updatePassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, query, collection, where, getDocs, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, query, collection, where, getDocs, serverTimestamp, increment, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
 
 const firebaseConfig = {
@@ -276,9 +276,21 @@ const linkPresets = [
 const waTemplates = [
   {id:0,name:'Simple Link',desc:'Just the link, nothing else',free:true,generate:(phone,msg)=>`https://wa.me/${phone}`},
   {id:1,name:'Custom Message',desc:'Pre-filled chat message',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`},
-  {id:2,name:'Business Greeting',desc:'Professional opening message',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(`Hi! 👋\n\nThank you for reaching out to us.\n\n${msg||'How can we help you today?'}`)}`},
-  {id:3,name:'Order Inquiry',desc:'Pre-filled order template',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(`Hi! I'm interested in your product/service.\n\nDetails: ${msg||'Please share more information.'}\n\nThank you!`)}`},
-  {id:4,name:'Support Request',desc:'Support ticket template',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(`Hello, I need help with the following:\n\n${msg||'Please describe your issue.'}\n\nThank you for your assistance.`)}`},
+  {id:2,name:'Business Greeting',desc:'Professional opening message',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(`Hi! 👋
+
+Thank you for reaching out to us.
+
+ ${msg||'How can we help you today?'}`)}`},
+  {id:3,name:'Order Inquiry',desc:'Pre-filled order template',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(`Hi! I'm interested in your product/service.
+
+Details: ${msg||'Please share more information.'}
+
+Thank you!`)}`},
+  {id:4,name:'Support Request',desc:'Support ticket template',free:false,generate:(phone,msg)=>`https://wa.me/${phone}?text=${encodeURIComponent(`Hello, I need help with the following:
+
+ ${msg||'Please describe your issue.'}
+
+Thank you for your assistance.`)}`},
 ];
 
 function isSuperAdmin() { return currentUser && SUPER_ADMIN_UIDS.includes(currentUser.uid); }
@@ -353,6 +365,7 @@ async function loadInvoiceData(uid) { try { const s = await getDoc(doc(db,'users
 async function saveWaData(uid) { try { await setDoc(doc(db,'users',uid,'data','walink'), {...waState}); } catch(e) {} }
 async function loadWaData(uid) { try { const s = await getDoc(doc(db,'users',uid,'data','walink')); if(s.exists()) Object.assign(waState, s.data()); } catch(e) {} }
 
+// FIX #1: Improved username update - now properly saves and refreshes
 async function updateUsername(uid, newUsername) {
   const clean = newUsername.toLowerCase().replace(/[^a-z0-9._-]/g,'');
   if(!clean || clean.length<3) { toast('Username must be at least 3 characters','error'); return false; }
@@ -360,28 +373,104 @@ async function updateUsername(uid, newUsername) {
   const q = query(collection(db,'users'), where('username','==',clean));
   const snap = await getDocs(q);
   for(const d of snap.docs) { if(d.id!==uid) { toast('Username already taken','error'); return false; } }
+  // Save to Firestore
   await updateDoc(doc(db,'users',uid), { username:clean });
+  // Update local state immediately
   userData.username = clean;
   toast('Username updated!','success');
   track('update_username');
   return true;
 }
 
+// FIX #1: Name update - now works properly
+async function updateDisplayName(uid, newName) {
+  if(!newName || !newName.trim()) { toast('Name cannot be empty','error'); return false; }
+  try {
+    // Update Firebase Auth profile
+    await updateProfile(currentUser, { displayName: newName.trim() });
+    // Update Firestore document
+    await updateDoc(doc(db,'users',uid), { name: newName.trim() });
+    // Update local state
+    userData.name = newName.trim();
+    currentUser.displayName = newName.trim();
+    toast('Name updated!','success');
+    track('update_name');
+    return true;
+  } catch(e) {
+    toast(e.message || 'Failed to update name','error');
+    return false;
+  }
+}
+
+// NEW: Save bio to bio_link collection for public access
+async function saveBioToPublicCollection(username, uid) {
+  try {
+    const route = `/${username}/bio`;
+    const bioLinkRef = doc(db, 'bio_link', username);
+    
+    await setDoc(bioLinkRef, {
+      uid: uid,
+      username: username,
+      route: route,
+      displayName: bioState.name || userData?.name || '',
+      avatarUrl: bioState.avatar || '',
+      bioText: bioState.bio || '',
+      links: bioState.links || [],
+      published: true,
+      plan: userData?.plan || 'free',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    
+    console.log('Bio saved to bio_link collection:', username);
+    return true;
+  } catch(e) {
+    console.error('Error saving to bio_link:', e);
+    return false;
+  }
+}
+
 /* ═══════════════ PUBLIC BIO LOADER ═══════════════ */
 async function loadPublicProfile(username) {
+  // First check bio_link collection (new method)
+  const bioSnap = await getDoc(doc(db, 'bio_link', username));
+  if(bioSnap.exists()) {
+    const data = bioSnap.data();
+    if(!data.published) return null;
+    
+    // Increment views
+    if(data.uid && (!currentUser || currentUser.uid !== data.uid)) {
+      try {
+        await updateDoc(doc(db,'users',data.uid), { 'stats.bioViews': increment(1) }).catch(()=>{});
+      } catch(e) {}
+    }
+    
+    return {
+      ...data,
+      bio: {
+        name: data.displayName || '',
+        avatar: data.avatarUrl || '',
+        bio: data.bioText || '',
+        links: data.links || [],
+        published: data.published
+      },
+      uid: data.uid,
+      name: data.displayName || '',
+      plan: data.plan || 'free'
+    };
+  }
+  
+  // Fallback to old method
   const q = query(collection(db,'users'), where('username','==',username));
   const snap = await getDocs(q);
   if(!snap.empty) {
     const user = snap.docs[0].data();
     const uid = snap.docs[0].id;
-    const bioSnap = await getDoc(doc(db,'users',uid,'data','bio'));
-    const bio = bioSnap.exists() ? bioSnap.data() : null;
-    // FIXED: only require published=true for OTHER users viewing
-    // The owner can always see their own
+    const bioDataSnap = await getDoc(doc(db,'users',uid,'data','bio'));
+    const bio = bioDataSnap.exists() ? bioDataSnap.data() : null;
     const isOwner = currentUser && currentUser.uid === uid;
     if (!bio) return null;
     if (!isOwner && !bio.published) return null;
-    // Increment views only for non-owner visitors
     if (!isOwner) {
       await updateDoc(doc(db,'users',uid), { 'stats.bioViews': increment(1) }).catch(()=>{});
     }
@@ -999,36 +1088,119 @@ function renderResume() {
 function resumePreviewContent() { return resumeState.template==='modern'?resumeModernTemplate():resumeStandardTemplate(); }
 
 function resumeStandardTemplate() {
-  const r=resumeState;const isFree=userData?.plan!=='pro';
-  const exps=r.experiences.filter(e=>e.company||e.role);const edus=r.education.filter(e=>e.school||e.degree);
+  const r = resumeState;
+  const isFree = userData?.plan !== 'pro';
+  const exps = r.experiences.filter(e => e.company || e.role);
+  const edus = r.education.filter(e => e.school || e.degree);
+  
+  // Helper to safely split description lines
+  const splitLines = (text) => {
+    if (!text) return [];
+    return text.split(/\r?\n/).filter(l => l.trim());
+  };
+
   return `<div style="background:#fff;padding:40px 36px;font-family:Arial,sans-serif;color:#222;font-size:12px;line-height:1.6;min-height:600px">
-    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #eee;padding-bottom:18px;margin-bottom:20px"><div style="flex:1"><div style="font-size:22px;font-weight:bold;letter-spacing:-.3px;color:#111">${esc(r.fullName)||'Your Name'}</div><div style="font-size:12px;color:#555;margin-top:6px">${[r.address,r.phone,r.email].filter(Boolean).join(' | ')}</div></div>${r.photo?`<img src="${esc(r.photo)}" style="width:100px;height:100px;border-radius:8px;object-fit:cover;border:1px solid #ccc;margin-left:20px" onerror="this.style.display='none'">`:''}</div>
-    ${r.summary?`<div style="margin-bottom:22px"><div style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;letter-spacing:.5px">PROFESSIONAL SUMMARY</div><p style="font-size:12px;line-height:1.6">${esc(r.summary)}</p></div>`:''}
-    ${exps.length?`<div style="margin-bottom:22px"><div style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;letter-spacing:.5px">WORK EXPERIENCE</div>${exps.map(e=>`<div style="margin-bottom:16px"><div style="font-weight:bold;font-size:13px">${esc(e.role)}<span style="float:right;font-size:12px;color:#777;font-weight:normal">${esc(e.period)}</span></div><div style="color:#555;font-size:12px">${esc(e.company)}</div>${e.desc?`<ul style="margin:5px 0 0 18px;padding:0">${e.desc.split('\n').filter(l=>l.trim()).map(l=>`<li style="font-size:12px;margin-bottom:4px;line-height:1.4">${esc(l.trim())}</li>`).join('')}</ul>`:''}</div>`).join('')}</div>`:''}
-    ${edus.length?`<div style="margin-bottom:22px"><div style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;letter-spacing:.5px">EDUCATION</div>${edus.map(e=>`<div style="margin-bottom:12px"><p style="margin:0"><b style="font-size:13px">${esc(e.degree)}</b><span style="float:right;font-size:12px;color:#777">${esc(e.year)}</span></p><div style="color:#555;font-size:12px">${esc(e.school)}</div></div>`).join('')}</div>`:''}
-    ${r.skills.length?`<div style="margin-bottom:22px"><div style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;letter-spacing:.5px">KEY SKILLS</div><div style="columns:2;column-gap:20px;font-size:12px">${r.skills.map(s=>`${esc(s)}<br>`).join('')}</div></div>`:''}
-    ${isFree?`<div style="text-align:center;margin-top:20px;padding-top:12px;border-top:1px solid #eee"><span style="font-size:10px;color:#aaa">Made with Appluviio</span></div>`:''}</div>`;
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #eee;padding-bottom:18px;margin-bottom:20px">
+      <div style="flex:1">
+        <div style="font-size:22px;font-weight:bold;letter-spacing:-.3px;color:#111">${esc(r.fullName) || 'Your Name'}</div>
+        <div style="font-size:12px;color:#555;margin-top:6px">${[r.address, r.phone, r.email].filter(Boolean).join(' | ')}</div>
+      </div>
+      ${r.photo ? `<img src="${esc(r.photo)}" style="width:100px;height:100px;border-radius:8px;object-fit:cover;border:1px solid #ccc;margin-left:20px" onerror="this.style.display='none'">` : ''}
+    </div>
+    
+    ${r.summary ? `<div style="margin-bottom:22px">
+      <div style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;letter-spacing:.5px">PROFESSIONAL SUMMARY</div>
+      <p style="font-size:12px;line-height:1.6">${esc(r.summary)}</p>
+    </div>` : ''}
+    
+    ${exps.length ? `<div style="margin-bottom:22px">
+      <div style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;letter-spacing:.5px">WORK EXPERIENCE</div>
+      ${exps.map(e => `<div style="margin-bottom:16px">
+        <div style="font-weight:bold;font-size:13px">${esc(e.role)}<span style="float:right;font-size:12px;color:#777;font-weight:normal">${esc(e.period)}</span></div>
+        <div style="color:#555;font-size:12px">${esc(e.company)}</div>
+        ${e.desc ? `<ul style="margin:5px 0 0 18px;padding:0">${splitLines(e.desc).map(l => `<li style="font-size:12px;margin-bottom:4px;line-height:1.4">${esc(l.trim())}</li>`).join('')}</ul>` : ''}
+      </div>`).join('')}
+    </div>` : ''}
+    
+    ${edus.length ? `<div style="margin-bottom:22px">
+      <div style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;letter-spacing:.5px">EDUCATION</div>
+      ${edus.map(e => `<div style="margin-bottom:12px">
+        <p style="margin:0"><b style="font-size:13px">${esc(e.degree)}</b><span style="float:right;font-size:12px;color:#777">${esc(e.year)}</span></p>
+        <div style="color:#555;font-size:12px">${esc(e.school)}</div>
+      </div>`).join('')}
+    </div>` : ''}
+    
+    ${r.skills.length ? `<div style="margin-bottom:22px">
+      <div style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:10px;letter-spacing:.5px">KEY SKILLS</div>
+      <div style="columns:2;column-gap:20px;font-size:12px">${r.skills.map(s => `${esc(s)}<br>`).join('')}</div>
+    </div>` : ''}
+    
+    ${isFree ? `<div style="text-align:center;margin-top:20px;padding-top:12px;border-top:1px solid #eee"><span style="font-size:10px;color:#aaa">Made with Appluviio</span></div>` : ''}
+  </div>`;
 }
 
 function resumeModernTemplate() {
-  const r=resumeState;const isFree=userData?.plan!=='pro';
-  const exps=r.experiences.filter(e=>e.company||e.role);const edus=r.education.filter(e=>e.school||e.degree);
+  const r = resumeState;
+  const isFree = userData?.plan !== 'pro';
+  const exps = r.experiences.filter(e => e.company || e.role);
+  const edus = r.education.filter(e => e.school || e.degree);
+  
+  // Helper to safely split description lines
+  const splitLines = (text) => {
+    if (!text) return [];
+    return text.split(/\r?\n/).filter(l => l.trim());
+  };
+
   return `<div style="background:#fff;min-height:600px;display:flex;font-family:Arial,sans-serif">
     <div style="width:200px;background:linear-gradient(180deg,#0F172A,#1E293B);color:#fff;padding:36px 24px;flex-shrink:0">
-      ${r.photo?`<img src="${esc(r.photo)}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.2);margin:0 auto 16px;display:block" onerror="this.style.display='none'">`:`<div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;font-weight:bold">${(r.fullName||'U')[0]}</div>`}
+      ${r.photo ? `<img src="${esc(r.photo)}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.2);margin:0 auto 16px;display:block" onerror="this.style.display='none'">` : 
+        `<div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;font-weight:bold">${(r.fullName || 'U')[0]}</div>`
+      }
+      
       <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:8px;margin-top:20px">Contact</div>
-      <div style="font-size:11px;line-height:2;color:rgba(255,255,255,.8)">${r.phone?`<div><i class="fa-solid fa-phone" style="width:14px;margin-right:6px;font-size:10px;color:#3B82F6"></i>${esc(r.phone)}</div>`:''}${r.email?`<div><i class="fa-solid fa-envelope" style="width:14px;margin-right:6px;font-size:10px;color:#3B82F6"></i>${esc(r.email)}</div>`:''}${r.address?`<div><i class="fa-solid fa-location-dot" style="width:14px;margin-right:6px;font-size:10px;color:#3B82F6"></i>${esc(r.address)}</div>`:''}</div>
-      ${r.skills.length?`<div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:8px;margin-top:24px">Skills</div><div style="display:flex;flex-wrap:wrap;gap:4px">${r.skills.map(s=>`<span style="padding:3px 10px;background:rgba(59,130,246,.2);color:#93C5FD;border-radius:20px;font-size:10px;font-weight:600">${esc(s)}</span>`).join('')}</div>`:''}
+      <div style="font-size:11px;line-height:2;color:rgba(255,255,255,.8)">
+        ${r.phone ? `<div><i class="fa-solid fa-phone" style="width:14px;margin-right:6px;font-size:10px;color:#3B82F6"></i>${esc(r.phone)}</div>` : ''}
+        ${r.email ? `<div><i class="fa-solid fa-envelope" style="width:14px;margin-right:6px;font-size:10px;color:#3B82F6"></i>${esc(r.email)}</div>` : ''}
+        ${r.address ? `<div><i class="fa-solid fa-location-dot" style="width:14px;margin-right:6px;font-size:10px;color:#3B82F6"></i>${esc(r.address)}</div>` : ''}
+      </div>
+      
+      ${r.skills.length ? `
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,.5);margin-bottom:8px;margin-top:24px">Skills</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${r.skills.map(s => `<span style="padding:3px 10px;background:rgba(59,130,246,.2);color:#93C5FD;border-radius:20px;font-size:10px;font-weight:600">${esc(s)}</span>`).join('')}
+        </div>
+      ` : ''}
     </div>
+    
     <div style="flex:1;padding:36px 32px;color:#222;font-size:12px;line-height:1.6">
-      <div style="font-size:26px;font-weight:800;color:#0F172A;letter-spacing:-.5px;margin-bottom:4px">${esc(r.fullName)||'Your Name'}</div>
-      ${r.summary?`<div style="margin-bottom:24px;margin-top:20px"><div style="font-size:13px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">About Me</div><p>${esc(r.summary)}</p></div>`:''}
-      ${exps.length?`<div style="margin-bottom:24px"><div style="font-size:13px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Experience</div>${exps.map((e,i)=>`<div style="margin-bottom:16px;${i<exps.length-1?'padding-bottom:12px;border-left:2px solid #E2E8F0;padding-left:14px;':''}"><div style="font-weight:bold;font-size:13px;color:#0F172A">${esc(e.role)}</div><div style="font-size:11px;color:#3B82F6;font-weight:600">${esc(e.company)} <span style="color:#94A3B8;font-weight:normal;margin-left:6px">${esc(e.period)}</span></div>${e.desc?`<ul style="margin:6px 0 0 16px;padding:0">${e.desc.split('\n').filter(l=>l.trim()).map(l=>`<li style="font-size:11px;margin-bottom:3px;color:#555">${esc(l.trim())}</li>`).join('')}</ul>`:''}</div>`).join('')}</div>`:''}
-      ${edus.length?`<div><div style="font-size:13px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Education</div>${edus.map(e=>`<div style="margin-bottom:10px"><div style="font-weight:bold;font-size:13px">${esc(e.degree)} <span style="font-size:11px;color:#94A3B8;font-weight:normal">${esc(e.year)}</span></div><div style="font-size:11px;color:#555">${esc(e.school)}</div></div>`).join('')}</div>`:''}
-      ${isFree?`<div style="text-align:center;margin-top:30px;padding-top:12px;border-top:1px solid #eee"><span style="font-size:10px;color:#aaa">Made with Appluviio</span></div>`:''}
-    </div></div>`;
+      <div style="font-size:26px;font-weight:800;color:#0F172A;letter-spacing:-.5px;margin-bottom:4px">${esc(r.fullName) || 'Your Name'}</div>
+      
+      ${r.summary ? `<div style="margin-bottom:24px;margin-top:20px">
+        <div style="font-size:13px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">About Me</div>
+        <p>${esc(r.summary)}</p>
+      </div>` : ''}
+      
+      ${exps.length ? `<div style="margin-bottom:24px">
+        <div style="font-size:13px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Experience</div>
+        ${exps.map((e, i) => `<div style="margin-bottom:16px;${i < exps.length - 1 ? 'padding-bottom:12px;border-left:2px solid #E2E8F0;padding-left:14px;' : ''}">
+          <div style="font-weight:bold;font-size:13px;color:#0F172A">${esc(e.role)}</div>
+          <div style="font-size:11px;color:#3B82F6;font-weight:600">${esc(e.company)} <span style="color:#94A3B8;font-weight:normal;margin-left:6px">${esc(e.period)}</span></div>
+          ${e.desc ? `<ul style="margin:6px 0 0 16px;padding:0">${splitLines(e.desc).map(l => `<li style="font-size:11px;margin-bottom:3px;color:#555">${esc(l.trim())}</li>`).join('')}</ul>` : ''}
+        </div>`).join('')}
+      </div>` : ''}
+      
+      ${edus.length ? `<div>
+        <div style="font-size:13px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Education</div>
+        ${edus.map(e => `<div style="margin-bottom:10px">
+          <div style="font-weight:bold;font-size:13px">${esc(e.degree)} <span style="font-size:11px;color:#94A3B8;font-weight:normal">${esc(e.year)}</span></div>
+          <div style="font-size:11px;color:#555">${esc(e.school)}</div>
+        </div>`).join('')}
+      </div>` : ''}
+      
+      ${isFree ? `<div style="text-align:center;margin-top:30px;padding-top:12px;border-top:1px solid #eee"><span style="font-size:10px;color:#aaa">Made with Appluviio</span></div>` : ''}
+    </div>
+  </div>`;
 }
-
 function refreshResumePreview() { const p=$('resume-preview'); if(p) p.innerHTML=resumePreviewContent(); }
 
 /* ═══════════════ INVOICE BUILDER ═══════════════ */
@@ -1105,7 +1277,7 @@ function renderWaLink() {
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #D4CCD3"><div class="wa-avatar">${fullPhone?fullPhone.slice(-2):'W'}</div><div><div style="font-weight:700;font-size:15px;color:#111">${fullPhone?'+('+waState.countryCode+') '+waState.phone:'Phone number'}</div><div style="font-size:11px;color:#8B9DA5">online</div></div></div>
           <div style="display:flex;justify-content:flex-end"><div style="max-width:90%"><div class="wa-bubble">${fullPhone?(selTemplate.generate(fullPhone,waState.message).split('?text=')[1]?decodeURIComponent(selTemplate.generate(fullPhone,waState.message).split('?text=')[1]):'Tap to start chat'):'Enter a phone number'}</div><div class="wa-bubble-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div></div>
         </div>
-        ${!isPro?`<div class="card" style="margin-top:16px;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border-color:#BBF7D0;display:flex;align-items:center;gap:12px"><i class="fa-solid fa-crown" style="color:#F59E0B;font-size:18px"></i><div style="flex:1"><div style="font-size:14px;font-weight:700">Unlock all templates</div><div style="font-size:12px;color:var(--text-secondary)">Custom messages & more</div></div><button class="btn btn-primary btn-sm" onclick="window._nav('pricing')">Upgrade</button></div>`:''}
+        ${!isPro?`<div class="card" style="margin-top:16px;background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border-color:#BBF7D0;display:flex;align-items:center;gap:12px"><i class="fa-solid fa-crown" style="color:#F59E0B;font-size:18px"></i><div style="flex!"><div style="font-size:14px;font-weight:700">Unlock all templates</div><div style="font-size:12px;color:var(--text-secondary)">Custom messages & more</div></div><button class="btn btn-primary btn-sm" onclick="window._nav('pricing')">Upgrade</button></div>`:''}
       </div>
     </div>
   </main>`;
@@ -1145,7 +1317,7 @@ async function renderPublicBio(slug) {
       <!-- Avatar -->
       <div class="pub-avatar">
         ${avatar
-          ? `<img src="${esc(avatar)}" onerror="this.outerHTML='<span style=\\'font-size:34px;font-weight:700\\'>${initial}</span>'">`
+          ? `<img src="${esc(avatar)}" onerror="this.outerHTML='<span style=\'font-size:34px;font-weight:700\'>${initial}</span>'">`
           : `<span style="font-size:34px;font-weight:700">${initial}</span>`
         }
       </div>
@@ -1206,6 +1378,7 @@ window._checkVerify = async () => {
 };
 
 /* ═══════════════ USERNAME / NAME EDIT ═══════════════ */
+// FIX #1: Username edit - now properly saves and refreshes UI
 window._editUsername = async () => {
   if(!currentUser) return;
   const overlay=document.createElement('div');overlay.className='modal-overlay';
@@ -1215,21 +1388,42 @@ window._editUsername = async () => {
     <input class="input" id="un-input" value="${userData?.username||''}" placeholder="username (min 3 chars)" style="margin-bottom:6px">
     <p style="font-size:11px;color:var(--text-muted);margin-bottom:20px">Only lowercase letters, numbers, dots, underscores, and hyphens.</p>
     <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button class="btn btn-secondary btn-sm" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-secondary btn-sm" id="un-cancel">Cancel</button>
       <button class="btn btn-primary btn-sm" id="un-save">Save Username</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
-  const inp=$('un-input'); const preview=$('un-preview');
-  inp.addEventListener('input',()=>{ preview.textContent = inp.value.toLowerCase().replace(/[^a-z0-9._-]/g,''); });
-  $('un-save').onclick = async () => {
+  
+  const inp=$('un-input'); 
+  const preview=$('un-preview');
+  const saveBtn=$('un-save');
+  const cancelBtn=$('un-cancel');
+  
+  inp.addEventListener('input',()=>{ 
+    preview.textContent = inp.value.toLowerCase().replace(/[^a-z0-9._-]/g,''); 
+  });
+  
+  cancelBtn.onclick = () => { overlay.remove(); };
+  
+  saveBtn.onclick = async () => {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
+    
     const ok = await updateUsername(currentUser.uid, inp.value);
-    if(ok) { overlay.remove(); render(); }
+    if(ok) { 
+      overlay.remove(); 
+      render(); // Re-render entire app to show updated username everywhere
+    } else {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = 'Save Username';
+    }
   };
+  
   overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
   inp.focus();
 };
 
+// FIX #1: Name edit - now properly saves and refreshes UI
 window._editName = async () => {
   if(!currentUser) return;
   const overlay=document.createElement('div');overlay.className='modal-overlay';
@@ -1237,24 +1431,32 @@ window._editName = async () => {
     <h3 style="font-size:18px;font-weight:700;margin-bottom:16px">Edit Display Name</h3>
     <input class="input" id="name-input" value="${userData?.name||''}" placeholder="Your display name" style="margin-bottom:20px">
     <div style="display:flex;gap:10px;justify-content:flex-end">
-      <button class="btn btn-secondary btn-sm" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-secondary btn-sm" id="name-cancel">Cancel</button>
       <button class="btn btn-primary btn-sm" id="name-save">Save Name</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
+  
   const inp=$('name-input');
-  $('name-save').onclick = async () => {
-    const newName = inp.value.trim();
-    if(!newName){toast('Name cannot be empty','error');return;}
-    try {
-      await updateProfile(currentUser, { displayName: newName });
-      await updateDoc(doc(db,'users',currentUser.uid), { name: newName });
-      userData.name = newName;
-      toast('Name updated!','success');
-      overlay.remove();
-      render();
-    } catch(e) { toast(e.message,'error'); }
+  const saveBtn=$('name-save');
+  const cancelBtn=$('name-cancel');
+  
+  cancelBtn.onclick = () => { overlay.remove(); };
+  
+  saveBtn.onclick = async () => {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
+    
+    const ok = await updateDisplayName(currentUser.uid, inp.value);
+    if(ok) { 
+      overlay.remove(); 
+      render(); // Re-render entire app to show updated name everywhere
+    } else {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = 'Save Name';
+    }
   };
+  
   overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
   inp.focus();
 };
@@ -1309,13 +1511,30 @@ window._addBioLink = () => {
   overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
 };
 window._selectLinkPreset = i => { bioState.links.push({...linkPresets[i],id:Date.now()}); renderBio(); };
+
+// FIX #3: Save Bio - now saves to bio_link collection for public access
 window._saveBio = async () => {
   if(!currentUser){toast('Sign in to save','error');return;}
+  
+  const un = userData?.username;
+  if(!un || un === '...'){toast('Set a username first','error');return;}
+  
+  // Mark as published locally
   bioState.published = true;
+  
+  // Save to user's private data
   await saveBioData(currentUser.uid);
-  toast('Bio saved & published!','success');
-  track('save_bio');
-  renderBio(); // re-render to show "Published" badge
+  
+  // Save to public bio_link collection with route info
+  const success = await saveBioToPublicCollection(un, currentUser.uid);
+  
+  if(success) {
+    toast('Bio saved & published! Your link is now live.','success');
+    track('save_bio');
+    renderBio(); // re-render to show "Published" badge
+  } else {
+    toast('Bio saved but publish failed. Try again.','error');
+  }
 };
 
 /* ═══════════════ RESUME HANDLERS ═══════════════ */
@@ -1350,7 +1569,12 @@ window._exportInvoicePDF = () => {
 };
 window._sendInvoiceWhatsApp = () => {
   const sym=getCurSymbol();const total=invoiceState.items.reduce((s,i)=>s+(i.qty*i.price||0),0);
-  const text=`Invoice ${invoiceState.invoiceNo}\nDate: ${invoiceState.date}\nTo: ${invoiceState.to.name}\nTotal: ${sym}${total.toFixed(2)}\n\nPlease find the full invoice in the attached PDF.`;
+  const text=`Invoice ${invoiceState.invoiceNo}
+Date: ${invoiceState.date}
+To: ${invoiceState.to.name}
+Total: ${sym}${total.toFixed(2)}
+
+Please find the full invoice in the attached PDF.`;
   const phone=(invoiceState.to.phone||'').replace(/[^0-9]/g,'');
   if(!phone){toast('Add client phone number to send via WhatsApp','error');return;}
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`,'_blank');
