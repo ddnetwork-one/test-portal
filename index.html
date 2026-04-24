@@ -2639,3 +2639,149 @@
 
     window.scrollToTools = function() {
       document.getElementById('toolsSection').scrollIntoView({ behavior: 'smooth' });
+          }
+
+    // Initialize the app
+    initApp();
+    
+    // Set default date for invoice
+    const dateInput = document.getElementById('invDate');
+    if (dateInput) {
+      dateInput.valueAsDate = new Date();
+    }
+  </script>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-100 py-8 px-4 mt-auto">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-8 h-8 rounded-full">
+          <span class="font-semibold text-gray-700">LuvTools by Luviio</span>
+        </div>
+        <p class="text-sm text-gray-400">Simple tools for your digital identity and business</p>
+        <div class="flex items-center gap-6 text-sm text-gray-500">
+          <a href="#" class="hover:text-blue-600 transition-colors">Privacy</a>
+          <a href="#" class="hover:text-blue-600 transition-colors">Terms</a>
+          <a href="#" class="hover:text-blue-600 transition-colors">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Additional UI interactions and polish
+    
+    // Smooth scroll reveal for tool cards
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+    
+    document.querySelectorAll('.tool-card').forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      observer.observe(card);
+    });
+    
+    // Input focus animations
+    document.querySelectorAll('.input-field').forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.classList.add('focused');
+      });
+      input.addEventListener('blur', function() {
+        this.parentElement.classList.remove('focused');
+      });
+    });
+    
+    // Button ripple effect
+    document.querySelectorAll('.btn-primary, .btn-secondary').forEach(button => {
+      button.addEventListener('click', function(e) {
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const ripple = document.createElement('span');
+        ripple.style.cssText = `
+          position: absolute;
+          background: rgba(255,255,255,0.3);
+          border-radius: 50%;
+          transform: scale(0);
+          animation: ripple 0.6s linear;
+          left: ${x}px;
+          top: ${y}px;
+          width: 100px;
+          height: 100px;
+          margin-left: -50px;
+          margin-top: -50px;
+          pointer-events: none;
+        `;
+        
+        this.style.position = 'relative';
+        this.style.overflow = 'hidden';
+        this.appendChild(ripple);
+        
+        setTimeout(() => ripple.remove(), 600);
+      });
+    });
+    
+    // Add ripple keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes ripple {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+      
+      .input-field:focus {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+      }
+      
+      .card:hover .tool-icon {
+        transform: scale(1.05) rotate(-3deg);
+      }
+      
+      .tool-icon {
+        transition: transform 0.3s ease;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + K to focus search (if we add search)
+      // Escape to close modals
+      if (e.key === 'Escape') {
+        closeAuthModal();
+        closeLimitModal();
+        closeUpgradeModal();
+        document.getElementById('mobileMenu').classList.remove('active');
+      }
+    });
+    
+    // Prevent form submissions
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', (e) => e.preventDefault());
+    });
+    
+    // Console branding
+    console.log(
+      '%c LuvTools by Luviio ',
+      'background: linear-gradient(135deg, #3B82F6, #2563EB); color: white; font-size: 14px; padding: 8px 16px; border-radius: 4px; font-weight: bold;'
+    );
+    console.log('%c Simple tools for your digital identity ', 'color: #6B7280; font-size: 12px;');
+  </script>
+</body>
+</html>
