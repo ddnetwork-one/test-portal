@@ -3,1902 +3,2639 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LuvTools by Luviio</title>
+  <title>LuvTools by Luviio - Simple Tools for Digital Identity</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <!-- Firebase -->
+  <script type="module" src="https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js" id="firebase-app"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js" id="firebase-auth"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js" id="firebase-firestore"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
     :root {
-      --bg: #fafafa;
-      --bg-secondary: #ffffff;
-      --fg: #1a1a2e;
-      --fg-muted: #6b7280;
-      --accent: #3B82F6;
-      --accent-hover: #2563EB;
-      --accent-light: #EFF6FF;
-      --border: #e5e7eb;
+      --primary: #3B82F6;
+      --primary-dark: #2563EB;
+      --primary-light: #93C5FD;
+      --bg: #FAFBFC;
+      --bg-card: #FFFFFF;
+      --fg: #111827;
+      --muted: #6B7280;
+      --border: #E5E7EB;
       --success: #10B981;
       --warning: #F59E0B;
-      --error: #EF4444;
-      --card-shadow: 0 4px 24px rgba(0,0,0,0.06);
-      --card-shadow-hover: 0 12px 40px rgba(0,0,0,0.1);
+      --danger: #EF4444;
     }
-
+    
     * {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      box-sizing: border-box;
     }
-
+    
     body {
       background: var(--bg);
       color: var(--fg);
       min-height: 100vh;
+      overflow-x: hidden;
     }
-
-    .gradient-bg {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    
+    /* Background Pattern */
+    .bg-pattern {
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(147, 197, 253, 0.06) 0%, transparent 50%),
+        linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+      z-index: -1;
     }
-
-    .glass-card {
-      background: rgba(255,255,255,0.9);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.3);
+    
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: -1;
     }
-
-    .tool-card {
+    
+    /* Card Styles */
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
+      border: 1px solid rgba(229, 231, 235, 0.6);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
-    .tool-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--card-shadow-hover);
+    
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
     }
-
+    
+    /* Button Styles */
     .btn-primary {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-weight: 500;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
       transition: all 0.2s ease;
       border: none;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-
+    
     .btn-primary:hover {
-      background: var(--accent-hover);
       transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
     }
-
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
     .btn-secondary {
-      background: var(--bg-secondary);
+      background: white;
       color: var(--fg);
-      padding: 10px 20px;
-      border-radius: 10px;
+      padding: 12px 24px;
+      border-radius: 12px;
       font-weight: 500;
+      font-size: 14px;
       transition: all 0.2s ease;
       border: 1px solid var(--border);
       cursor: pointer;
     }
-
+    
     .btn-secondary:hover {
-      background: var(--bg);
-      border-color: var(--accent);
+      background: #F9FAFB;
+      border-color: var(--primary-light);
     }
-
+    
+    /* Input Styles */
     .input-field {
       width: 100%;
-      padding: 12px 16px;
+      padding: 14px 18px;
       border: 1.5px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 15px;
       transition: all 0.2s ease;
-      outline: none;
       background: white;
+      outline: none;
     }
-
+    
     .input-field:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     }
-
+    
+    .input-field::placeholder {
+      color: #9CA3AF;
+    }
+    
+    /* Navigation */
     .nav-link {
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 10px 16px;
+      border-radius: 10px;
       font-weight: 500;
-      color: var(--fg-muted);
+      font-size: 14px;
+      color: var(--muted);
       transition: all 0.2s ease;
       cursor: pointer;
-    }
-
-    .nav-link:hover, .nav-link.active {
-      background: var(--accent-light);
-      color: var(--accent);
-    }
-
-    .page { display: none; }
-    .page.active { display: block; animation: fadeIn 0.3s ease; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-
-    .animate-slide-up {
-      animation: slideUp 0.5s ease forwards;
-    }
-
-    .stagger-1 { animation-delay: 0.1s; opacity: 0; }
-    .stagger-2 { animation-delay: 0.2s; opacity: 0; }
-    .stagger-3 { animation-delay: 0.3s; opacity: 0; }
-    .stagger-4 { animation-delay: 0.4s; opacity: 0; }
-
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .modal-overlay.show {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 16px;
-      padding: 32px;
-      max-width: 420px;
-      width: 90%;
-      transform: scale(0.9);
-      transition: transform 0.3s ease;
-    }
-
-    .modal-overlay.show .modal-content {
-      transform: scale(1);
-    }
-
-    .watermark {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(59, 130, 246, 0.95);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-size: 13px;
-      font-weight: 500;
-      z-index: 100;
-      cursor: pointer;
-      transition: all 0.3s ease;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-
-    .watermark:hover {
-      transform: scale(1.05);
+    
+    .nav-link:hover {
+      background: rgba(59, 130, 246, 0.06);
+      color: var(--primary);
     }
-
+    
+    .nav-link.active {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    
+    /* Tool Card */
+    .tool-card {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .tool-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+    }
+    
+    .tool-card:hover::before {
+      opacity: 1;
+    }
+    
+    .tool-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 24px;
+      max-width: 480px;
+      width: 100%;
+      padding: 32px;
+      animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    /* Watermark */
+    .watermark {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255,255,255,0.95);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      z-index: 10;
+    }
+    
+    .watermark-close {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .watermark-close:hover {
+      background: var(--danger);
+      color: white;
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+    .stagger-3 { animation-delay: 0.3s; }
+    .stagger-4 { animation-delay: 0.4s; }
+    
+    /* Page transitions */
+    .page {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .page.active {
+      display: block;
+    }
+    
+    /* Counter Badge */
     .usage-counter {
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-      color: #92400e;
+      background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+      color: #92400E;
       padding: 6px 12px;
       border-radius: 20px;
       font-size: 12px;
       font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-
+    
+    /* Stats Card */
     .stat-card {
       background: white;
       border-radius: 16px;
       padding: 24px;
-      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border);
     }
-
-    .qr-preview-container {
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--fg);
+      line-height: 1;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    
+    /* QR Preview */
+    .qr-preview {
       background: white;
-      border: 2px dashed var(--border);
+      padding: 24px;
       border-radius: 16px;
-      min-height: 200px;
+      display: inline-block;
+      border: 2px solid var(--border);
+    }
+    
+    /* Resume Preview */
+    .resume-preview {
+      background: white;
+      padding: 40px;
+      border-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+    }
+    
+    /* Invoice Preview */
+    .invoice-preview {
+      background: white;
+      padding: 40px;
+      border-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 210mm;
+    }
+    
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--fg);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 2000;
+      transform: translateX(120%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 12px;
     }
-
-    .resume-preview, .invoice-preview {
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 40px;
-      min-height: 400px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    
+    .toast.show {
+      transform: translateX(0);
     }
-
+    
+    .toast.success {
+      background: var(--success);
+    }
+    
+    .toast.error {
+      background: var(--danger);
+    }
+    
+    /* Scrollbar */
     ::-webkit-scrollbar {
-      width: 6px;
+      width: 8px;
+      height: 8px;
     }
-
+    
     ::-webkit-scrollbar-track {
       background: transparent;
     }
-
+    
     ::-webkit-scrollbar-thumb {
       background: var(--border);
-      border-radius: 3px;
+      border-radius: 4px;
     }
-
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--muted);
+    }
+    
+    /* Reduced Motion */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
       }
     }
-
-    .floating-shapes {
+    
+    /* Mobile Menu */
+    .mobile-menu {
       position: fixed;
-      inset: 0;
-      overflow: hidden;
-      pointer-events: none;
-      z-index: -1;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      z-index: 999;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 24px;
     }
-
-    .shape {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.4;
-      animation: float 20s infinite ease-in-out;
+    
+    .mobile-menu.active {
+      transform: translateX(0);
     }
-
-    .shape-1 {
-      width: 400px;
-      height: 400px;
-      background: #93c5fd;
-      top: -100px;
-      right: -100px;
-      animation-delay: 0s;
-    }
-
-    .shape-2 {
-      width: 300px;
-      height: 300px;
-      background: #c4b5fd;
-      bottom: -50px;
-      left: -50px;
-      animation-delay: -5s;
-    }
-
-    .shape-3 {
-      width: 250px;
-      height: 250px;
-      background: #fde68a;
-      top: 50%;
-      left: 50%;
-      animation-delay: -10s;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0) rotate(0deg); }
-      25% { transform: translate(30px, -30px) rotate(5deg); }
-      50% { transform: translate(-20px, 20px) rotate(-5deg); }
-      75% { transform: translate(20px, 30px) rotate(3deg); }
+    
+    /* Pro Badge */
+    .pro-badge {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
   </style>
 </head>
 <body>
-  <!-- Floating Background Shapes -->
-  <div class="floating-shapes">
-    <div class="shape shape-1"></div>
-    <div class="shape shape-2"></div>
-    <div class="shape shape-3"></div>
+  <!-- Background -->
+  <div class="bg-pattern"></div>
+  <div class="bg-grid"></div>
+  
+  <!-- Navigation (Logged In) -->
+  <nav id="mainNav" class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-b border-gray-100 z-50 hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-9 h-9 rounded-full">
+          <span class="font-bold text-lg">LuvTools</span>
+        </div>
+        
+        <div class="hidden md:flex items-center gap-1">
+          <button onclick="showPage('dashboard')" class="nav-link active" data-page="dashboard">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+          </button>
+          <button onclick="showPage('qr')" class="nav-link" data-page="qr">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7h-7z"/><path d="M15 15h5v5h-5z"/></svg>
+            QR Generator
+          </button>
+          <button onclick="showPage('resume')" class="nav-link" data-page="resume">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Resume
+          </button>
+          <button onclick="showPage('invoice')" class="nav-link" data-page="invoice">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            Invoice
+          </button>
+          <button onclick="showPage('whatsapp')" class="nav-link" data-page="whatsapp">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            WhatsApp
+          </button>
+          <button onclick="showPage('account')" class="nav-link" data-page="account">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+            Account
+          </button>
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <div id="userPlanBadge" class="hidden md:block pro-badge">Free</div>
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm" id="userAvatar">U</div>
+          <button onclick="toggleMobileMenu()" class="md:hidden p-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="mobile-menu">
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-3">
+        <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-9 h-9 rounded-full">
+        <span class="font-bold text-lg">LuvTools</span>
+      </div>
+      <button onclick="toggleMobileMenu()" class="p-2">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="flex flex-col gap-2">
+      <button onclick="showPage('dashboard'); toggleMobileMenu();" class="nav-link active" data-page="dashboard">Dashboard</button>
+      <button onclick="showPage('qr'); toggleMobileMenu();" class="nav-link" data-page="qr">QR Generator</button>
+      <button onclick="showPage('resume'); toggleMobileMenu();" class="nav-link" data-page="resume">Resume Builder</button>
+      <button onclick="showPage('invoice'); toggleMobileMenu();" class="nav-link" data-page="invoice">Invoice Generator</button>
+      <button onclick="showPage('whatsapp'); toggleMobileMenu();" class="nav-link" data-page="whatsapp">WhatsApp Link</button>
+      <button onclick="showPage('account'); toggleMobileMenu();" class="nav-link" data-page="account">Account</button>
+      <hr class="my-4 border-gray-200">
+      <button onclick="logout()" class="nav-link text-red-500 hover:bg-red-50">Sign Out</button>
+    </div>
   </div>
 
-  <!-- Watermark (Free Users) -->
-  <div id="watermark" class="watermark hidden">
-    <span>LuvTools Free</span>
-    <svg id="closeWatermark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
+  <!-- Landing Page -->
+  <div id="landingPage" class="page active">
+    <!-- Hero Section -->
+    <header class="pt-8 pb-16 px-4">
+      <div class="max-w-5xl mx-auto text-center">
+        <div class="inline-flex items-center gap-3 mb-8 animate-float">
+          <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-16 h-16 rounded-full shadow-lg">
+        </div>
+        
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+          LuvTools by
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-blue-700">Luviio</span>
+        </h1>
+        
+        <p class="text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+          Simple tools for your digital identity and business. Generate QR codes, build resumes, create invoices, and more — all in one place.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+          <button onclick="showAuthModal('login')" class="btn-primary px-8 py-4 text-base">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10,17 15,12 10,7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            Get Started Free
+          </button>
+          <button onclick="scrollToTools()" class="btn-secondary px-8 py-4 text-base">
+            Try Tools Now
+          </button>
+        </div>
+        
+        <!-- Usage Counter for Non-logged Users -->
+        <div id="guestUsageCounter" class="usage-counter">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+          <span id="usesLeftText">3/3 uses left today</span>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Tools Grid -->
+    <section id="toolsSection" class="pb-20 px-4">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">Powerful Tools, Zero Complexity</h2>
+          <p class="text-gray-500">Start using instantly — no signup required</p>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- QR Generator Card -->
+          <div class="tool-card stagger-1" onclick="openToolAsGuest('qr')">
+            <div class="tool-icon bg-blue-50">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7h-7z"/><path d="M15 15h5v5h-5z"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">QR Generator</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">Create QR codes for URLs, WhatsApp, and custom text</p>
+            <div class="mt-4 flex items-center gap-2 text-xs text-green-600 font-medium">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              Free to use
+            </div>
+          </div>
+          
+          <!-- Resume Builder Card -->
+          <div class="tool-card stagger-2" onclick="openToolAsGuest('resume')">
+            <div class="tool-icon bg-emerald-50">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Resume Builder</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">Build professional resumes with clean templates</p>
+            <div class="mt-4 flex items-center gap-2 text-xs text-green-600 font-medium">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              PDF Export
+            </div>
+          </div>
+          
+          <!-- Invoice Generator Card -->
+          <div class="tool-card stagger-3" onclick="openToolAsGuest('invoice')">
+            <div class="tool-icon bg-amber-50">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Invoice Generator</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">Create professional invoices in multiple currencies</p>
+            <div class="mt-4 flex items-center gap-2 text-xs text-green-600 font-medium">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              Multi-currency
+            </div>
+          </div>
+          
+          <!-- WhatsApp Link Generator Card -->
+          <div class="tool-card stagger-4" onclick="openToolAsGuest('whatsapp')">
+            <div class="tool-icon bg-teal-50">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">WhatsApp Link</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">Generate clickable WhatsApp links with pre-filled messages</p>
+            <div class="mt-4 flex items-center gap-2 text-xs text-green-600 font-medium">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              Instant share
+            </div>
+          </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="mt-20 card p-8 sm:p-12">
+          <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <span class="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-sm font-medium rounded-full mb-4">Why Upgrade?</span>
+              <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Unlock Pro Features</h3>
+              <ul class="space-y-4">
+                <li class="flex items-start gap-3">
+                  <svg class="w-6 h-6 text-green-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <span class="text-gray-600">Dynamic QR codes with analytics tracking</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-6 h-6 text-green-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <span class="text-gray-600">Multiple premium resume templates</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-6 h-6 text-green-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <span class="text-gray-600">Save and reuse WhatsApp templates</span>
+                </li>
+                <li class="flex items-start gap-3">
+                  <svg class="w-6 h-6 text-green-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <span class="text-gray-600">No watermarks on exports</span>
+                </li>
+              </ul>
+              <button onclick="showAuthModal('register')" class="btn-primary mt-8">
+                Create Free Account
+              </button>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-0 bg-gradient-to-br from-blue-100 to-blue-50 rounded-3xl transform rotate-3"></div>
+              <div class="relative bg-white rounded-3xl p-8 shadow-xl">
+                <div class="flex items-center gap-4 mb-6">
+                  <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                  </div>
+                  <div>
+                    <div class="font-bold text-lg">Pro Plan</div>
+                    <div class="text-sm text-gray-500">Full access to all features</div>
+                  </div>
+                </div>
+                <div class="space-y-3">
+                  <div class="flex justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">QR Analytics</span>
+                    <span class="font-medium text-green-600">Unlimited</span>
+                  </div>
+                  <div class="flex justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">Resume Templates</span>
+                    <span class="font-medium text-green-600">10+</span>
+                  </div>
+                  <div class="flex justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">WhatsApp Templates</span>
+                    <span class="font-medium text-green-600">Unlimited</span>
+                  </div>
+                  <div class="flex justify-between py-2">
+                    <span class="text-gray-600">Watermark</span>
+                    <span class="font-medium text-green-600">None</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Dashboard Page -->
+  <div id="dashboardPage" class="page pt-24 pb-12 px-4">
+    <div class="max-w-7xl mx-auto">
+      <!-- Welcome Header -->
+      <div class="mb-10">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome back, <span id="userName">User</span></h1>
+        <p class="text-gray-500">Here's your activity overview</p>
+      </div>
+      
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7h-7z"/></svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statQr">0</div>
+          <div class="stat-label">QR Codes Created</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statResume">0</div>
+          <div class="stat-label">Resumes Built</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statInvoice">0</div>
+          <div class="stat-label">Invoices Created</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statWa">0</div>
+          <div class="stat-label">WA Links Generated</div>
+        </div>
+      </div>
+      
+      <!-- Quick Actions -->
+      <div class="mb-10">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <button onclick="showPage('qr')" class="card p-6 text-left group">
+            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7h-7z"/></svg>
+            </div>
+            <div class="font-semibold text-gray-900">Generate QR</div>
+            <div class="text-sm text-gray-500 mt-1">Create new code</div>
+          </button>
+          
+          <button onclick="showPage('resume')" class="card p-6 text-left group">
+            <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+            </div>
+            <div class="font-semibold text-gray-900">Create Resume</div>
+            <div class="text-sm text-gray-500 mt-1">Build CV</div>
+          </button>
+          
+          <button onclick="showPage('invoice')" class="card p-6 text-left group">
+            <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            </div>
+            <div class="font-semibold text-gray-900">Create Invoice</div>
+            <div class="text-sm text-gray-500 mt-1">New billing</div>
+          </button>
+          
+          <button onclick="showPage('whatsapp')" class="card p-6 text-left group">
+            <div class="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            </div>
+            <div class="font-semibold text-gray-900">WhatsApp Link</div>
+            <div class="text-sm text-gray-500 mt-1">Quick message</div>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Recent Activity -->
+      <div class="card p-6 sm:p-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
+        <div id="recentActivity" class="space-y-4">
+          <div class="text-center py-8 text-gray-400">
+            <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            No activity yet. Start creating!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Generator Page -->
+  <div id="qrPage" class="page pt-24 pb-12 px-4">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-8">
+        <button onclick="goBack()" class="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4 transition-colors">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <h1 class="text-3xl font-bold text-gray-900">QR Code Generator</h1>
+        <p class="text-gray-500 mt-2">Create QR codes for URLs, WhatsApp, or any text</p>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div class="card p-6 sm:p-8">
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">QR Type</label>
+              <select id="qrType" onchange="updateQrPlaceholder()" class="input-field">
+                <option value="url">Website URL</option>
+                <option value="whatsapp">WhatsApp Number</option>
+                <option value="text">Plain Text</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2" id="qrInputLabel">Enter URL</label>
+              <input type="text" id="qrInput" class="input-field" placeholder="https://example.com" oninput="generateQR()">
+              
+              <!-- WhatsApp specific fields -->
+              <div id="waFields" class="hidden mt-4 space-y-4">
+                <div class="flex gap-3">
+                  <select id="waCountryCode" class="input-field w-32">
+                    <option value="+60">+60 MY</option>
+                    <option value="+65">+65 SG</option>
+                    <option value="+1">+1 US</option>
+                    <option value="+44">+44 UK</option>
+                  </select>
+                  <input type="tel" id="waPhone" class="input-field flex-1" placeholder="Phone number" oninput="generateQR()">
+                </div>
+                <textarea id="waMessage" class="input-field" rows="2" placeholder="Pre-filled message (optional)" oninput="generateQR()"></textarea>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Color</label>
+              <div class="flex gap-3">
+                <button onclick="setQrColor('#000000')" class="w-10 h-10 rounded-lg bg-black border-2 border-transparent hover:border-blue-500 transition-colors qr-color-btn active" data-color="#000000"></button>
+                <button onclick="setQrColor('#3B82F6')" class="w-10 h-10 rounded-lg bg-blue-500 border-2 border-transparent hover:border-blue-300 transition-colors qr-color-btn" data-color="#3B82F6"></button>
+                <button onclick="setQrColor('#10B981')" class="w-10 h-10 rounded-lg bg-emerald-500 border-2 border-transparent hover:border-emerald-300 transition-colors qr-color-btn" data-color="#10B981"></button>
+                <button onclick="setQrColor('#EF4444')" class="w-10 h-10 rounded-lg bg-red-500 border-2 border-transparent hover:border-red-300 transition-colors qr-color-btn" data-color="#EF4444"></button>
+                <button onclick="setQrColor('#8B5CF6')" class="w-10 h-10 rounded-lg bg-purple-500 border-2 border-transparent hover:border-purple-300 transition-colors qr-color-btn" data-color="#8B5CF6"></button>
+              </div>
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+              <button onclick="downloadQR()" class="btn-primary flex-1">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download PNG
+              </button>
+              <button onclick="saveQR()" class="btn-secondary" id="saveQrBtn">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card p-6 sm:p-8 flex flex-col items-center justify-center relative">
+          <div class="qr-preview" id="qrPreviewContainer">
+            <canvas id="qrCanvas"></canvas>
+          </div>
+          <p class="text-sm text-gray-400 mt-6 text-center">Preview will appear here</p>
+          
+          <!-- Watermark for free users -->
+          <div id="qrWatermark" class="watermark hidden">
+            <span>Free Plan - LuvTools</span>
+            <div class="watermark-close" onclick="showUpgradeModal()">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resume Builder Page -->
+  <div id="resumePage" class="page pt-24 pb-12 px-4">
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-8">
+        <button onclick="goBack()" class="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4 transition-colors">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <h1 class="text-3xl font-bold text-gray-900">Resume Builder</h1>
+        <p class="text-gray-500 mt-2">Build a professional resume in minutes</p>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Form -->
+        <div class="card p-6 sm:p-8 max-h-[calc(100vh-180px)] overflow-y-auto">
+          <div class="space-y-6">
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm flex items-center justify-center">1</span>
+                Personal Information
+              </h3>
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                  <input type="text" id="resName" class="input-field" placeholder="John Doe" oninput="updateResumePreview()">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Job Title</label>
+                  <input type="text" id="resTitle" class="input-field" placeholder="Software Engineer" oninput="updateResumePreview()">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input type="email" id="resEmail" class="input-field" placeholder="john@example.com" oninput="updateResumePreview()">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                  <input type="tel" id="resPhone" class="input-field" placeholder="+60 12-345 6789" oninput="updateResumePreview()">
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <input type="text" id="resLocation" class="input-field" placeholder="Kuala Lumpur, Malaysia" oninput="updateResumePreview()">
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Summary</label>
+                  <textarea id="resSummary" class="input-field" rows="3" placeholder="Brief professional summary..." oninput="updateResumePreview()"></textarea>
+                </div>
+              </div>
+            </div>
+            
+            <hr class="border-gray-200">
+            
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 text-sm flex items-center justify-center">2</span>
+                Experience
+              </h3>
+              <div id="experienceFields" class="space-y-4">
+                <div class="p-4 bg-gray-50 rounded-xl space-y-3">
+                  <input type="text" class="input-field exp-company" placeholder="Company Name" oninput="updateResumePreview()">
+                  <input type="text" class="input-field exp-role" placeholder="Job Role" oninput="updateResumePreview()">
+                  <div class="flex gap-3">
+                    <input type="text" class="input-field exp-from" placeholder="From (e.g., Jan 2022)" oninput="updateResumePreview()">
+                    <input type="text" class="input-field exp-to" placeholder="To (e.g., Present)" oninput="updateResumePreview()">
+                  </div>
+                  <textarea class="input-field exp-desc" rows="2" placeholder="Key achievements..." oninput="updateResumePreview()"></textarea>
+                </div>
+              </div>
+              <button onclick="addExperienceField()" class="mt-4 text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Experience
+              </button>
+            </div>
+            
+            <hr class="border-gray-200">
+            
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-amber-100 text-amber-600 text-sm flex items-center justify-center">3</span>
+                Education
+              </h3>
+              <div id="educationFields" class="space-y-4">
+                <div class="p-4 bg-gray-50 rounded-xl space-y-3">
+                  <input type="text" class="input-field edu-school" placeholder="University/School" oninput="updateResumePreview()">
+                  <input type="text" class="input-field edu-degree" placeholder="Degree/Certificate" oninput="updateResumePreview()">
+                  <input type="text" class="input-field edu-year" placeholder="Year (e.g., 2020)" oninput="updateResumePreview()">
+                </div>
+              </div>
+              <button onclick="addEducationField()" class="mt-4 text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Education
+              </button>
+            </div>
+            
+            <hr class="border-gray-200">
+            
+            <div>
+              <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-sm flex items-center justify-center">4</span>
+                Skills
+              </h3>
+              <input type="text" id="resSkills" class="input-field" placeholder="JavaScript, React, Node.js, Python..." oninput="updateResumePreview()">
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+              <button onclick="exportResumePDF()" class="btn-primary flex-1">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export PDF
+              </button>
+              <button onclick="saveResume()" class="btn-secondary" id="saveResumeBtn">Save</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Preview -->
+        <div class="card p-6 sm:p-8 flex flex-col relative overflow-hidden">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-medium text-gray-500">Live Preview</span>
+            <span class="pro-badge" id="templateBadge">Basic Template</span>
+          </div>
+          <div class="flex-1 overflow-auto bg-gray-100 rounded-xl p-4">
+            <div id="resumePreviewContent" class="resume-preview bg-white">
+              <div class="text-center border-b-2 border-gray-800 pb-4 mb-4">
+                <h1 class="text-2xl font-bold text-gray-900" id="previewName">Your Name</h1>
+                <p class="text-blue-600 font-medium" id="previewTitle">Job Title</p>
+                <p class="text-sm text-gray-500 mt-2" id="previewContact">email | phone | location</p>
+              </div>
+              <div id="previewSummary" class="mb-4 hidden">
+                <h3 class="font-bold text-gray-800 uppercase text-sm tracking-wide mb-2">Summary</h3>
+                <p class="text-sm text-gray-600" id="previewSummaryText"></p>
+              </div>
+              <div id="previewExperience" class="mb-4 hidden">
+                <h3 class="font-bold text-gray-800 uppercase text-sm tracking-wide mb-2">Experience</h3>
+                <div id="previewExpList"></div>
+              </div>
+              <div id="previewEducation" class="mb-4 hidden">
+                <h3 class="font-bold text-gray-800 uppercase text-sm tracking-wide mb-2">Education</h3>
+                <div id="previewEduList"></div>
+              </div>
+              <div id="previewSkills" class="hidden">
+                <h3 class="font-bold text-gray-800 uppercase text-sm tracking-wide mb-2">Skills</h3>
+                <p class="text-sm text-gray-600" id="previewSkillsText"></p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Watermark -->
+          <div id="resumeWatermark" class="watermark hidden">
+            <span>Free Plan - LuvTools</span>
+            <div class="watermark-close" onclick="showUpgradeModal()">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invoice Generator Page -->
+  <div id="invoicePage" class="page pt-24 pb-12 px-4">
+    <div class="max-w-6xl mx-auto">
+      <div class="mb-8">
+        <button onclick="goBack()" class="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4 transition-colors">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <h1 class="text-3xl font-bold text-gray-900">Invoice Generator</h1>
+        <p class="text-gray-500 mt-2">Create professional invoices quickly</p>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Form -->
+        <div class="card p-6 sm:p-8 max-h-[calc(100vh-180px)] overflow-y-auto">
+          <div class="space-y-6">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold text-gray-900">Invoice Details</h3>
+              <select id="invCurrency" class="input-field w-28 py-2" onchange="updateInvoiceTotal()">
+                <option value="MYR">MYR (RM)</option>
+                <option value="USD">USD ($)</option>
+                <option value="SGD">SGD (S$)</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+            
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Invoice Number</label>
+                <input type="text" id="invNumber" class="input-field" placeholder="INV-001" value="INV-001" oninput="updateInvoicePreview()">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input type="date" id="invDate" class="input-field" oninput="updateInvoicePreview()">
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Bill To (Client Name)</label>
+              <input type="text" id="invClient" class="input-field" placeholder="Client Company Name" oninput="updateInvoicePreview()">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Client Email</label>
+              <input type="email" id="invClientEmail" class="input-field" placeholder="client@example.com" oninput="updateInvoicePreview()">
+            </div>
+            
+            <hr class="border-gray-200">
+            
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-gray-900">Items</h3>
+                <button onclick="addInvoiceItem()" class="text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Item
+                </button>
+              </div>
+              <div id="invoiceItems" class="space-y-3">
+                <div class="grid grid-cols-12 gap-2 items-start invoice-item">
+                  <input type="text" class="input-field col-span-5 inv-item-name" placeholder="Item name" oninput="updateInvoiceTotal()">
+                  <input type="number" class="input-field col-span-2 inv-item-qty" placeholder="Qty" value="1" min="1" oninput="updateInvoiceTotal()">
+                  <input type="number" class="input-field col-span-3 inv-item-price" placeholder="Price" step="0.01" oninput="updateInvoiceTotal()">
+                  <button onclick="removeInvoiceItem(this)" class="col-span-2 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <hr class="border-gray-200">
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+              <textarea id="invNotes" class="input-field" rows="2" placeholder="Payment terms, thank you note..." oninput="updateInvoicePreview()"></textarea>
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+              <button onclick="exportInvoicePDF()" class="btn-primary flex-1">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download PDF
+              </button>
+              <button onclick="saveInvoice()" class="btn-secondary" id="saveInvoiceBtn">Save</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Preview -->
+        <div class="card p-6 sm:p-8 flex flex-col relative overflow-hidden">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-medium text-gray-500">Invoice Preview</span>
+          </div>
+          <div class="flex-1 overflow-auto bg-gray-100 rounded-xl p-4">
+            <div id="invoicePreviewContent" class="invoice-preview bg-white p-8">
+              <div class="flex justify-between items-start mb-8">
+                <div>
+                  <h1 class="text-2xl font-bold text-gray-900">INVOICE</h1>
+                  <p class="text-gray-500 text-sm mt-1" id="previewInvNum">#INV-001</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm text-gray-500" id="previewInvDate">Date: --</p>
+                </div>
+              </div>
+              
+              <div class="mb-8">
+                <p class="text-sm font-medium text-gray-500 mb-1">Bill To:</p>
+                <p class="font-semibold text-gray-900" id="previewInvClient">Client Name</p>
+                <p class="text-sm text-gray-500" id="previewInvEmail">client@email.com</p>
+              </div>
+              
+              <table class="w-full mb-8">
+                <thead>
+                  <tr class="border-b-2 border-gray-200">
+                    <th class="text-left py-2 text-sm font-semibold text-gray-600">Description</th>
+                    <th class="text-center py-2 text-sm font-semibold text-gray-600 w-20">Qty</th>
+                    <th class="text-right py-2 text-sm font-semibold text-gray-600 w-28">Price</th>
+                    <th class="text-right py-2 text-sm font-semibold text-gray-600 w-28">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="previewInvItems">
+                  <tr class="border-b border-gray-100">
+                    <td class="py-3 text-gray-600" colspan="4">Add items to see preview</td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <div class="flex justify-end">
+                <div class="w-64">
+                  <div class="flex justify-between py-2 border-t border-gray-200">
+                    <span class="text-gray-600">Subtotal</span>
+                    <span class="font-medium" id="previewSubtotal">RM 0.00</span>
+                  </div>
+                  <div class="flex justify-between py-2 text-lg font-bold">
+                    <span>Total</span>
+                    <span id="previewTotal">RM 0.00</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div id="previewInvNotes" class="mt-8 pt-4 border-t border-gray-200 hidden">
+                <p class="text-sm text-gray-500" id="previewNotesText"></p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Watermark -->
+          <div id="invoiceWatermark" class="watermark hidden">
+            <span>Free Plan - LuvTools</span>
+            <div class="watermark-close" onclick="showUpgradeModal()">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Link Generator Page -->
+  <div id="whatsappPage" class="page pt-24 pb-12 px-4">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-8">
+        <button onclick="goBack()" class="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4 transition-colors">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <h1 class="text-3xl font-bold text-gray-900">WhatsApp Link Generator</h1>
+        <p class="text-gray-500 mt-2">Create clickable WhatsApp links with pre-filled messages</p>
+      </div>
+      
+      <div class="grid lg:grid-cols-2 gap-8">
+        <div class="card p-6 sm:p-8">
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Country Code</label>
+              <select id="waLinkCountry" class="input-field">
+                <option value="+60">+60 Malaysia</option>
+                <option value="+65">+65 Singapore</option>
+                <option value="+1">+1 United States</option>
+                <option value="+44">+44 United Kingdom</option>
+                <option value="+91">+91 India</option>
+                <option value="+86">+86 China</option>
+                <option value="+81">+81 Japan</option>
+                <option value="+61">+61 Australia</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+              <input type="tel" id="waLinkPhone" class="input-field" placeholder="1234567890" oninput="generateWaLink()">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Pre-filled Message (Optional)</label>
+              <textarea id="waLinkMessage" class="input-field" rows="3" placeholder="Hi! I'd like to inquire about..." oninput="generateWaLink()"></textarea>
+            </div>
+            
+            <div id="generatedWaLink" class="hidden">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Generated Link</label>
+              <div class="flex gap-2">
+                <input type="text" id="waLinkOutput" class="input-field flex-1 text-sm" readonly>
+                <button onclick="copyWaLink()" class="btn-primary px-4">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+              <button onclick="testWaLink()" class="btn-primary flex-1">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Open Link
+              </button>
+              <button onclick="saveWaTemplate()" class="btn-secondary" id="saveWaBtn">Save Template</button>
+            </div>
+            
+            <!-- Saved Templates (Pro feature) -->
+            <div id="savedTemplates" class="hidden mt-6 pt-6 border-t border-gray-200">
+              <h3 class="font-semibold text-gray-900 mb-4">Saved Templates</h3>
+              <div id="templatesList" class="space-y-2"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card p-6 sm:p-8 flex flex-col items-center justify-center">
+          <div class="text-center mb-6">
+            <div class="w-20 h-20 rounded-2xl bg-green-100 flex items-center justify-center mx-auto mb-4">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Share via WhatsApp</h3>
+            <p class="text-sm text-gray-500">Enter a phone number above to generate a direct link</p>
+          </div>
+          
+          <div id="waQrSection" class="hidden w-full">
+            <hr class="border-gray-200 my-6">
+            <h4 class="font-medium text-gray-700 mb-4 text-center">QR Code for this link</h4>
+            <div class="qr-preview mx-auto" id="waQrPreview">
+              <canvas id="waQrCanvas"></canvas>
+            </div>
+            <button onclick="downloadWaQR()" class="btn-secondary w-full mt-4">Download QR</button>
+          </div>
+          
+          <!-- Watermark -->
+          <div id="waWatermark" class="watermark hidden">
+            <span>Free Plan - LuvTools</span>
+            <div class="watermark-close" onclick="showUpgradeModal()">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Page -->
+  <div id="accountPage" class="page pt-24 pb-12 px-4">
+    <div class="max-w-3xl mx-auto">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Account Settings</h1>
+        <p class="text-gray-500 mt-2">Manage your account and subscription</p>
+      </div>
+      
+      <div class="space-y-6">
+        <!-- Profile Card -->
+        <div class="card p-6 sm:p-8">
+          <h2 class="text-lg font-semibold text-gray-900 mb-6">Profile Information</h2>
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xl font-bold" id="accountAvatar">U</div>
+            <div>
+              <h3 class="font-semibold text-gray-900" id="accountName">User Name</h3>
+              <p class="text-sm text-gray-500" id="accountEmail">user@example.com</p>
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+              <input type="text" id="editName" class="input-field">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <input type="email" id="editEmail" class="input-field" disabled>
+            </div>
+          </div>
+          <button onclick="updateProfile()" class="btn-primary mt-6">Save Changes</button>
+        </div>
+        
+        <!-- Plan Card -->
+        <div class="card p-6 sm:p-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-semibold text-gray-900">Current Plan</h2>
+            <span class="pro-badge" id="currentPlanBadge">Free</span>
+          </div>
+          
+          <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-xl font-bold text-gray-900" id="planTitle">Free Plan</h3>
+                <p class="text-gray-500" id="planDesc">Perfect for getting started</p>
+              </div>
+              <div class="text-3xl font-bold text-gray-900" id="planPrice">$0<span class="text-sm font-normal text-gray-500">/mo</span></div>
+            </div>
+            <ul class="space-y-2 mb-6" id="planFeatures">
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                Unlimited tool usage
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                Basic templates
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-400">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                Dynamic QR & Analytics
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-400">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                Premium templates
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-400">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                No watermark
+              </li>
+            </ul>
+          </div>
+          
+          <button onclick="upgradeToPro()" class="btn-primary w-full py-4" id="upgradeBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+            Upgrade to Pro
+          </button>
+        </div>
+        
+        <!-- Danger Zone -->
+        <div class="card p-6 sm:p-8 border-red-200">
+          <h2 class="text-lg font-semibold text-red-600 mb-4">Danger Zone</h2>
+          <p class="text-sm text-gray-500 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+          <button onclick="deleteAccount()" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors">Delete Account</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Auth Modal -->
   <div id="authModal" class="modal-overlay">
     <div class="modal-content">
-      <div id="authContent"></div>
-    </div>
-  </div>
-
-  <!-- Limit Modal -->
-  <div id="limitModal" class="modal-overlay">
-    <div class="modal-content text-center">
-      <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12,6 12,12 16,14"></polyline>
-        </svg>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900" id="authModalTitle">Sign In</h2>
+        <button onclick="closeAuthModal()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-      <h3 class="text-xl font-semibold mb-2">Daily Limit Reached</h3>
-      <p class="text-gray-500 mb-6">You've reached your free limit for today. Come back tomorrow or create a free account to continue.</p>
-      <div class="flex gap-3 justify-center">
-        <button onclick="showAuthModal('register')" class="btn-primary">Create Account</button>
-        <button onclick="showAuthModal('login')" class="btn-secondary">Sign In</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- App Container -->
-  <div id="app">
-    <!-- Landing Page (Non-Logged) -->
-    <div id="landingPage" class="page active">
-      <!-- Landing Nav -->
-      <nav class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-b border-gray-100 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-10 h-10 rounded-full">
-            <span class="font-semibold text-lg">LuvTools</span>
+      
+      <!-- Login Form -->
+      <div id="loginForm">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input type="email" id="loginEmail" class="input-field" placeholder="you@example.com">
           </div>
-          <div class="flex items-center gap-3">
-            <button onclick="showAuthModal('login')" class="btn-secondary text-sm">Sign In</button>
-            <button onclick="showAuthModal('register')" class="btn-primary text-sm">Get Started</button>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <input type="password" id="loginPassword" class="input-field" placeholder="Enter password">
           </div>
-        </div>
-      </nav>
-
-      <!-- Hero Section -->
-      <section class="pt-32 pb-20 px-4">
-        <div class="max-w-4xl mx-auto text-center">
-          <div class="animate-slide-up stagger-1">
-            <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-20 h-20 mx-auto mb-6 rounded-full shadow-lg">
-          </div>
-          <h1 class="text-4xl md:text-6xl font-bold mb-4 animate-slide-up stagger-2">
-            LuvTools by Luviio
-          </h1>
-          <p class="text-xl text-gray-500 mb-8 animate-slide-up stagger-3">
-            Simple tools for your digital identity and business
-          </p>
-          
-          <!-- Usage Counter for Non-Logged -->
-          <div id="guestUsageCounter" class="mb-8 animate-slide-up stagger-4"></div>
-
-          <!-- Tool Cards Grid -->
-          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-12 animate-slide-up stagger-4">
-            <div onclick="openTool('qr')" class="tool-card bg-white rounded-2xl p-6 cursor-pointer shadow-sm">
-              <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2">
-                  <rect x="3" y="3" width="7" height="7"></rect>
-                  <rect x="14" y="3" width="7" height="7"></rect>
-                  <rect x="3" y="14" width="7" height="7"></rect>
-                  <rect x="14" y="14" width="3" height="3"></rect>
-                </svg>
-              </div>
-              <h3 class="font-semibold mb-1">QR Generator</h3>
-              <p class="text-sm text-gray-500">Create QR codes instantly</p>
-            </div>
-
-            <div onclick="openTool('resume')" class="tool-card bg-white rounded-2xl p-6 cursor-pointer shadow-sm">
-              <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14,2 14,8 20,8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                </svg>
-              </div>
-              <h3 class="font-semibold mb-1">Resume Builder</h3>
-              <p class="text-sm text-gray-500">Professional resumes in minutes</p>
-            </div>
-
-            <div onclick="openTool('invoice')" class="tool-card bg-white rounded-2xl p-6 cursor-pointer shadow-sm">
-              <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14,2 14,8 20,8"></polyline>
-                  <line x1="12" y1="18" x2="12" y2="12"></line>
-                  <line x1="9" y1="15" x2="15" y2="15"></line>
-                </svg>
-              </div>
-              <h3 class="font-semibold mb-1">Invoice Generator</h3>
-              <p class="text-sm text-gray-500">Create invoices easily</p>
-            </div>
-
-            <div onclick="openTool('whatsapp')" class="tool-card bg-white rounded-2xl p-6 cursor-pointer shadow-sm">
-              <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                </svg>
-              </div>
-              <h3 class="font-semibold mb-1">WhatsApp Link</h3>
-              <p class="text-sm text-gray-500">Generate WA chat links</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- Dashboard (Logged-in) -->
-    <div id="dashboardPage" class="page">
-      <!-- Dashboard Nav -->
-      <nav class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-b border-gray-100 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-9 h-9 rounded-full">
-            <span class="font-semibold">LuvTools</span>
-          </div>
-          <div class="hidden md:flex items-center gap-1">
-            <button onclick="navigateTo('dashboard')" class="nav-link active" data-nav="dashboard">Dashboard</button>
-            <button onclick="navigateTo('qr')" class="nav-link" data-nav="qr">QR Code</button>
-            <button onclick="navigateTo('resume')" class="nav-link" data-nav="resume">Resume</button>
-            <button onclick="navigateTo('invoice')" class="nav-link" data-nav="invoice">Invoice</button>
-            <button onclick="navigateTo('whatsapp')" class="nav-link" data-nav="whatsapp">WhatsApp</button>
-            <button onclick="navigateTo('account')" class="nav-link" data-nav="account">Account</button>
-          </div>
-          <div class="flex items-center gap-3">
-            <span id="userPlanBadge" class="text-xs font-medium px-3 py-1 rounded-full bg-blue-100 text-blue-700">Free</span>
-            <button onclick="logout()" class="btn-secondary text-sm">Logout</button>
-          </div>
+          <button onclick="handleLogin()" class="btn-primary w-full py-3">Sign In</button>
         </div>
         
-        <!-- Mobile Nav -->
-        <div class="md:hidden flex overflow-x-auto gap-1 px-4 pb-2 scrollbar-hide">
-          <button onclick="navigateTo('dashboard')" class="nav-link whitespace-nowrap text-xs active" data-nav="dashboard">Dashboard</button>
-          <button onclick="navigateTo('qr')" class="nav-link whitespace-nowrap text-xs" data-nav="qr">QR</button>
-          <button onclick="navigateTo('resume')" class="nav-link whitespace-nowrap text-xs" data-nav="resume">Resume</button>
-          <button onclick="navigateTo('invoice')" class="nav-link whitespace-nowrap text-xs" data-nav="invoice">Invoice</button>
-          <button onclick="navigateTo('whatsapp')" class="nav-link whitespace-nowrap text-xs" data-nav="whatsapp">WhatsApp</button>
-          <button onclick="navigateTo('account')" class="nav-link whitespace-nowrap text-xs" data-nav="account">Account</button>
+        <div class="my-6 flex items-center gap-4">
+          <div class="flex-1 h-px bg-gray-200"></div>
+          <span class="text-sm text-gray-400">or</span>
+          <div class="flex-1 h-px bg-gray-200"></div>
         </div>
-      </nav>
-
-      <!-- Dashboard Content Sections -->
-      <main class="pt-28 md:pt-20 pb-12 px-4">
-        <div class="max-w-6xl mx-auto">
-          
-          <!-- Dashboard Home -->
-          <section id="dashboardSection" class="dashboard-section">
-            <div class="mb-8">
-              <h1 class="text-3xl font-bold mb-2">Welcome back, <span id="userName">User</span></h1>
-              <p class="text-gray-500">Here's your activity overview</p>
-            </div>
-
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div class="stat-card">
-                <div class="flex items-center gap-3 mb-3">
-                  <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2">
-                      <rect x="3" y="3" width="7" height="7"></rect>
-                      <rect x="14" y="3" width="7" height="7"></rect>
-                      <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                  </div>
-                </div>
-                <p class="text-2xl font-bold" id="statQr">0</p>
-                <p class="text-sm text-gray-500">QR Codes Created</p>
-              </div>
-
-              <div class="stat-card">
-                <div class="flex items-center gap-3 mb-3">
-                  <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14,2 14,8 20,8"></polyline>
-                    </svg>
-                  </div>
-                </div>
-                <p class="text-2xl font-bold" id="statResume">0</p>
-                <p class="text-sm text-gray-500">Resumes Created</p>
-              </div>
-
-              <div class="stat-card">
-                <div class="flex items-center gap-3 mb-3">
-                  <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14,2 14,8 20,8"></polyline>
-                    </svg>
-                  </div>
-                </div>
-                <p class="text-2xl font-bold" id="statInvoice">0</p>
-                <p class="text-sm text-gray-500">Invoices Created</p>
-              </div>
-
-              <div class="stat-card">
-                <div class="flex items-center gap-3 mb-3">
-                  <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2">
-                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                    </svg>
-                  </div>
-                </div>
-                <p class="text-2xl font-bold" id="statWa">0</p>
-                <p class="text-sm text-gray-500">WA Links Generated</p>
-              </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <button onclick="navigateTo('qr')" class="tool-card bg-white rounded-2xl p-6 text-left shadow-sm hover:border-blue-200 border border-transparent">
-                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="3" width="7" height="7"></rect>
-                    <rect x="3" y="14" width="7" height="7"></rect>
-                  </svg>
-                </div>
-                <h3 class="font-semibold mb-1">Generate QR</h3>
-                <p class="text-sm text-gray-500">Create a new QR code</p>
-              </button>
-
-              <button onclick="navigateTo('resume')" class="tool-card bg-white rounded-2xl p-6 text-left shadow-sm hover:border-emerald-200 border border-transparent">
-                <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14,2 14,8 20,8"></polyline>
-                  </svg>
-                </div>
-                <h3 class="font-semibold mb-1">Create Resume</h3>
-                <p class="text-sm text-gray-500">Build professional resume</p>
-              </button>
-
-              <button onclick="navigateTo('invoice')" class="tool-card bg-white rounded-2xl p-6 text-left shadow-sm hover:border-purple-200 border border-transparent">
-                <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14,2 14,8 20,8"></polyline>
-                  </svg>
-                </div>
-                <h3 class="font-semibold mb-1">Create Invoice</h3>
-                <p class="text-sm text-gray-500">Generate invoice PDF</p>
-              </button>
-
-              <button onclick="navigateTo('whatsapp')" class="tool-card bg-white rounded-2xl p-6 text-left shadow-sm hover:border-green-200 border border-transparent">
-                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                  </svg>
-                </div>
-                <h3 class="font-semibold mb-1">WA Link</h3>
-                <p class="text-sm text-gray-500">Create WhatsApp link</p>
-              </button>
-            </div>
-          </section>
-
-          <!-- QR Generator Section -->
-          <section id="qrSection" class="dashboard-section hidden">
-            <div class="mb-6">
-              <h1 class="text-2xl font-bold mb-2">QR Code Generator</h1>
-              <p class="text-gray-500">Create QR codes for URLs, text, or WhatsApp</p>
-            </div>
-
-            <div class="grid lg:grid-cols-2 gap-6">
-              <div class="bg-white rounded-2xl p-6 shadow-sm">
-                <label class="block text-sm font-medium mb-2">Content Type</label>
-                <select id="qrType" onchange="updateQrType()" class="input-field mb-4">
-                  <option value="url">URL / Website</option>
-                  <option value="text">Plain Text</option>
-                  <option value="whatsapp">WhatsApp Number</option>
-                </select>
-
-                <div id="qrUrlInput">
-                  <label class="block text-sm font-medium mb-2">URL</label>
-                  <input type="url" id="qrInput" placeholder="https://example.com" class="input-field mb-4" oninput="generateQR()">
-                </div>
-
-                <div id="qrTextInput" class="hidden">
-                  <label class="block text-sm font-medium mb-2">Text Content</label>
-                  <textarea id="qrTextInputField" placeholder="Enter your text here..." class="input-field mb-4 h-32 resize-none" oninput="generateQR()"></textarea>
-                </div>
-
-                <div id="qrWaInput" class="hidden">
-                  <label class="block text-sm font-medium mb-2">Phone Number</label>
-                  <div class="flex gap-2 mb-4">
-                    <select id="qrWaCode" class="input-field w-24">
-                      <option value="+60">+60</option>
-                      <option value="+65">+65</option>
-                      <option value="+1">+1</option>
-                      <option value="+44">+44</option>
-                    </select>
-                    <input type="tel" id="qrWaPhone" placeholder="123456789" class="input-field flex-1" oninput="generateQR()">
-                  </div>
-                </div>
-
-                <div class="flex gap-3 mt-6">
-                  <button onclick="downloadQR()" class="btn-primary flex-1">Download PNG</button>
-                  <button onclick="saveQR()" class="btn-secondary flex-1">Save to Account</button>
-                </div>
-              </div>
-
-              <div class="bg-white rounded-2xl p-6 shadow-sm">
-                <label class="block text-sm font-medium mb-4">Preview</label>
-                <div class="qr-preview-container p-8">
-                  <canvas id="qrCanvas"></canvas>
-                </div>
-                <p id="qrProBadge" class="text-center text-sm text-gray-400 mt-4 hidden">
-                  Upgrade to Pro for Dynamic QR with Analytics
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <!-- Resume Builder Section -->
-          <section id="resumeSection" class="dashboard-section hidden">
-            <div class="mb-6">
-              <h1 class="text-2xl font-bold mb-2">Resume Builder</h1>
-              <p class="text-gray-500">Create a professional resume in minutes</p>
-            </div>
-
-            <div class="grid lg:grid-cols-2 gap-6">
-              <div class="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium mb-2">First Name</label>
-                    <input type="text" id="resFirstName" class="input-field" oninput="updateResumePreview()">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium mb-2">Last Name</label>
-                    <input type="text" id="resLastName" class="input-field" oninput="updateResumePreview()">
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Job Title</label>
-                  <input type="text" id="resJobTitle" placeholder="Software Engineer" class="input-field" oninput="updateResumePreview()">
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Email</label>
-                  <input type="email" id="resEmail" class="input-field" oninput="updateResumePreview()">
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Phone</label>
-                  <input type="tel" id="resPhone" class="input-field" oninput="updateResumePreview()">
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Summary</label>
-                  <textarea id="resSummary" class="input-field h-24 resize-none" oninput="updateResumePreview()"></textarea>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Experience</label>
-                  <textarea id="resExperience" class="input-field h-32 resize-none" placeholder="Company | Role | Description" oninput="updateResumePreview()"></textarea>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Education</label>
-                  <textarea id="resEducation" class="input-field h-24 resize-none" placeholder="Degree | School | Year" oninput="updateResumePreview()"></textarea>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Skills</label>
-                  <input type="text" id="resSkills" placeholder="JavaScript, React, Node.js" class="input-field" oninput="updateResumePreview()">
-                </div>
-
-                <div class="flex gap-3 pt-4">
-                  <button onclick="exportResumePDF()" class="btn-primary flex-1">Export PDF</button>
-                  <button onclick="saveResume()" class="btn-secondary flex-1">Save Resume</button>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-4">Live Preview</label>
-                <div id="resumePreview" class="resume-preview overflow-auto"></div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Invoice Generator Section -->
-          <section id="invoiceSection" class="dashboard-section hidden">
-            <div class="mb-6">
-              <h1 class="text-2xl font-bold mb-2">Invoice Generator</h1>
-              <p class="text-gray-500">Create professional invoices for your business</p>
-            </div>
-
-            <div class="grid lg:grid-cols-2 gap-6">
-              <div class="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium mb-2">Your Company</label>
-                    <input type="text" id="invFromName" placeholder="Your Company Name" class="input-field" oninput="updateInvoicePreview()">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium mb-2">Client Name</label>
-                    <input type="text" id="invToName" placeholder="Client Name" class="input-field" oninput="updateInvoicePreview()">
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium mb-2">Invoice Number</label>
-                    <input type="text" id="invNumber" placeholder="INV-001" class="input-field" oninput="updateInvoicePreview()">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium mb-2">Date</label>
-                    <input type="date" id="invDate" class="input-field" oninput="updateInvoicePreview()">
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Currency</label>
-                  <select id="invCurrency" class="input-field" onchange="updateInvoicePreview()">
-                    <option value="MYR">MYR (RM)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="SGD">SGD (S$)</option>
-                    <option value="EUR">EUR</option>
-                  </select>
-                </div>
-
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <label class="text-sm font-medium">Items</label>
-                    <button onclick="addInvoiceItem()" class="text-sm text-blue-600 font-medium hover:text-blue-700">+ Add Item</button>
-                  </div>
-                  <div id="invoiceItems" class="space-y-3"></div>
-                </div>
-
-                <div class="pt-4 border-t">
-                  <div class="flex justify-between text-lg font-semibold">
-                    <span>Total:</span>
-                    <span id="invTotal">RM 0.00</span>
-                  </div>
-                </div>
-
-                <div class="flex gap-3 pt-4">
-                  <button onclick="exportInvoicePDF()" class="btn-primary flex-1">Download PDF</button>
-                  <button onclick="saveInvoice()" class="btn-secondary flex-1">Save Invoice</button>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-4">Preview</label>
-                <div id="invoicePreview" class="invoice-preview overflow-auto"></div>
-              </div>
-            </div>
-          </section>
-
-          <!-- WhatsApp Link Generator Section -->
-          <section id="whatsappSection" class="dashboard-section hidden">
-            <div class="mb-6">
-              <h1 class="text-2xl font-bold mb-2">WhatsApp Link Generator</h1>
-              <p class="text-gray-500">Create clickable WhatsApp chat links</p>
-            </div>
-
-            <div class="grid lg:grid-cols-2 gap-6">
-              <div class="bg-white rounded-2xl p-6 shadow-sm space-y-4">
-                <div>
-                  <label class="block text-sm font-medium mb-2">Country Code</label>
-                  <select id="waCountryCode" class="input-field">
-                    <option value="+60">+60 (Malaysia)</option>
-                    <option value="+65">+65 (Singapore)</option>
-                    <option value="+1">+1 (USA)</option>
-                    <option value="+44">+44 (UK)</option>
-                    <option value="+91">+91 (India)</option>
-                    <option value="+86">+86 (China)</option>
-                    <option value="+81">+81 (Japan)</option>
-                    <option value="+61">+61 (Australia)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Phone Number</label>
-                  <input type="tel" id="waPhone" placeholder="1234567890" class="input-field" oninput="generateWALink()">
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Pre-filled Message (Optional)</label>
-                  <textarea id="waMessage" class="input-field h-24 resize-none" placeholder="Hello! I'd like to inquire about..." oninput="generateWALink()"></textarea>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium mb-2">Generated Link</label>
-                  <div class="flex gap-2">
-                    <input type="text" id="waLinkOutput" readonly class="input-field flex-1 bg-gray-50">
-                    <button onclick="copyWALink()" class="btn-primary px-4">Copy</button>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-3 pt-2">
-                  <input type="checkbox" id="waGenQR" class="w-5 h-5 rounded accent-blue-600" onchange="toggleWAQR()">
-                  <label for="waGenQR" class="text-sm">Also generate QR code</label>
-                </div>
-
-                <div id="waQRContainer" class="hidden">
-                  <label class="block text-sm font-medium mb-2">QR Code</label>
-                  <div class="qr-preview-container p-6">
-                    <canvas id="waQrCanvas"></canvas>
-                  </div>
-                </div>
-
-                <div class="flex gap-3 pt-4">
-                  <button onclick="saveWATemplate()" class="btn-primary flex-1">Save Template</button>
-                  <button onclick="downloadWAQR()" id="downloadWAQRBtn" class="btn-secondary flex-1 hidden">Download QR</button>
-                </div>
-
-                <!-- Saved Templates -->
-                <div id="savedTemplates" class="mt-6 pt-6 border-t hidden">
-                  <h3 class="font-semibold mb-3">Saved Templates</h3>
-                  <div id="templatesList" class="space-y-2"></div>
-                </div>
-              </div>
-
-              <div class="bg-white rounded-2xl p-6 shadow-sm">
-                <h3 class="font-semibold mb-4">How it works</h3>
-                <div class="space-y-4">
-                  <div class="flex gap-4">
-                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 text-blue-600 font-semibold text-sm">1</div>
-                    <div>
-                      <p class="font-medium">Enter phone number</p>
-                      <p class="text-sm text-gray-500">Include country code for accuracy</p>
-                    </div>
-                  </div>
-                  <div class="flex gap-4">
-                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 text-blue-600 font-semibold text-sm">2</div>
-                    <div>
-                      <p class="font-medium">Add optional message</p>
-                      <p class="text-sm text-gray-500">Pre-fill the chat with your message</p>
-                    </div>
-                  </div>
-                  <div class="flex gap-4">
-                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 text-blue-600 font-semibold text-sm">3</div>
-                    <div>
-                      <p class="font-medium">Copy & share link</p>
-                      <p class="text-sm text-gray-500">Anyone can click to start chatting</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div id="waProFeatures" class="mt-6 pt-6 border-t hidden">
-                  <h3 class="font-semibold mb-3 text-purple-600">Pro Features</h3>
-                  <ul class="space-y-2 text-sm text-gray-600">
-                    <li class="flex items-center gap-2">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><polyline points="20,6 9,17 4,12"></polyline></svg>
-                      Save unlimited templates
-                    </li>
-                    <li class="flex items-center gap-2">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><polyline points="20,6 9,17 4,12"></polyline></svg>
-                      Create custom templates
-                    </li>
-                    <li class="flex items-center gap-2">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><polyline points="20,6 9,17 4,12"></polyline></svg>
-                      Track link clicks
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Account Page -->
-          <section id="accountSection" class="dashboard-section hidden">
-            <div class="mb-6">
-              <h1 class="text-2xl font-bold mb-2">Account Settings</h1>
-              <p class="text-gray-500">Manage your account and subscription</p>
-            </div>
-
-            <div class="max-w-2xl">
-              <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
-                <h2 class="text-lg font-semibold mb-4">Profile Information</h2>
-                <div class="space-y-4">
-                  <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold" id="avatarInitial">U</div>
-                    <div>
-                      <p class="font-semibold" id="accName">User Name</p>
-                      <p class="text-sm text-gray-500" id="accEmail">user@email.com</p>
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium mb-2">Full Name</label>
-                    <input type="text" id="editName" class="input-field">
-                  </div>
-                  <button onclick="updateProfile()" class="btn-primary">Save Changes</button>
-                </div>
-              </div>
-
-              <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
-                <h2 class="text-lg font-semibold mb-4">Current Plan</h2>
-                <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
-                  <div>
-                    <p class="font-semibold text-lg" id="currentPlan">Free Plan</p>
-                    <p class="text-sm text-gray-500" id="planDescription">Basic features with watermark</p>
-                  </div>
-                  <button onclick="upgradePlan()" id="upgradeBtn" class="btn-primary">Upgrade to Pro</button>
-                </div>
-              </div>
-
-              <div class="bg-white rounded-2xl p-6 shadow-sm">
-                <h2 class="text-lg font-semibold mb-4">Usage Statistics</h2>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="p-4 bg-gray-50 rounded-xl">
-                    <p class="text-2xl font-bold" id="accStatQr">0</p>
-                    <p class="text-sm text-gray-500">QR Codes</p>
-                  </div>
-                  <div class="p-4 bg-gray-50 rounded-xl">
-                    <p class="text-2xl font-bold" id="accStatResume">0</p>
-                    <p class="text-sm text-gray-500">Resumes</p>
-                  </div>
-                  <div class="p-4 bg-gray-50 rounded-xl">
-                    <p class="text-2xl font-bold" id="accStatInvoice">0</p>
-                    <p class="text-sm text-gray-500">Invoices</p>
-                  </div>
-                  <div class="p-4 bg-gray-50 rounded-xl">
-                    <p class="text-2xl font-bold" id="accStatWa">0</p>
-                    <p class="text-sm text-gray-500">WA Links</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
+        
+        <button onclick="handleGoogleLogin()" class="btn-secondary w-full py-3 flex items-center justify-center gap-3">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </button>
+        
+        <p class="text-center mt-6 text-sm text-gray-500">
+          Don't have an account? 
+          <button onclick="switchAuthMode('register')" class="text-blue-600 font-medium hover:underline">Create one</button>
+        </p>
+      </div>
+      
+      <!-- Register Form -->
+      <div id="registerForm" class="hidden">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+            <input type="text" id="regName" class="input-field" placeholder="John Doe">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input type="email" id="regEmail" class="input-field" placeholder="you@example.com">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <input type="password" id="regPassword" class="input-field" placeholder="Min 6 characters">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+            <input type="password" id="regConfirmPassword" class="input-field" placeholder="Re-enter password">
+          </div>
+          <button onclick="handleRegister()" class="btn-primary w-full py-3">Create Account</button>
         </div>
-      </main>
+        
+        <div class="my-6 flex items-center gap-4">
+          <div class="flex-1 h-px bg-gray-200"></div>
+          <span class="text-sm text-gray-400">or</span>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+        
+        <button onclick="handleGoogleLogin()" class="btn-secondary w-full py-3 flex items-center justify-center gap-3">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </button>
+        
+        <p class="text-center mt-6 text-sm text-gray-500">
+          Already have an account? 
+          <button onclick="switchAuthMode('login')" class="text-blue-600 font-medium hover:underline">Sign in</button>
+        </p>
+      </div>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Limit Reached Modal -->
+  <div id="limitModal" class="modal-overlay">
+    <div class="modal-content text-center">
+      <div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-3">Daily Limit Reached</h2>
+      <p class="text-gray-500 mb-8">You've reached your free limit for today. Come back tomorrow or create a free account to continue.</p>
+      <div class="flex gap-3 justify-center">
+        <button onclick="closeLimitModal()" class="btn-secondary">Maybe Later</button>
+        <button onclick="showAuthModal('register')" class="btn-primary">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgrade Modal -->
+  <div id="upgradeModal" class="modal-overlay">
+    <div class="modal-content text-center">
+      <div class="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-6">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-3">Upgrade to Pro</h2>
+      <p class="text-gray-500 mb-8">Remove watermarks and unlock all premium features including dynamic QR codes, analytics, and premium templates.</p>
+      <button onclick="upgradeToPro(); closeUpgradeModal();" class="btn-primary w-full py-4">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        Go Pro - $9.99/month
+      </button>
+      <button onclick="closeUpgradeModal()" class="mt-4 text-sm text-gray-500 hover:text-gray-700">Not now</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <span id="toastMessage">Success!</span>
+  </div>
+
   <script type="module">
+    // Import Firebase modules
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
-    import { 
-      getAuth, 
-      createUserWithEmailAndPassword, 
-      signInWithEmailAndPassword, 
-      GoogleAuthProvider, 
-      signInWithPopup,
-      signOut,
-      onAuthStateChanged,
-      updateProfile
-    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-    import { 
-      getFirestore, 
-      doc, 
-      setDoc, 
-      getDoc, 
-      updateDoc,
-      collection,
-      query,
-      where,
-      getDocs,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, sendEmailVerification, updateProfile as firebaseUpdateProfile } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, query, where, orderBy, limit, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
+    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDSp-HX00hZaJwTFaZ4X06pU7pARGjhl1M",
       authDomain: "appluviio.firebaseapp.com",
       projectId: "appluviio",
       storageBucket: "appluviio.firebasestorage.app",
       messagingSenderId: "598571208819",
-      appId: "1:5a91c501b49b3e604d5a06",
+      appId: "1:598571208819:web:1a91c501b49b3e604d5a06",
       measurementId: "G-MZ96FCCJ1K"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
 
-    // Expose to window
-    window.firebaseApp = app;
-    window.firebaseAuth = auth;
-    window.firebaseDb = db;
+    // Global State
+    window.appState = {
+      user: null,
+      userData: null,
+      isLoggedIn: false,
+      isPro: false,
+      currentTool: null,
+      guestUsage: JSON.parse(localStorage.getItem('luvtools_guest_usage') || '{}'),
+      stats: {
+        qr: 0,
+        resume: 0,
+        invoice: 0,
+        whatsapp: 0
+      },
+      savedTemplates: []
+    };
 
-    // Auth state observer
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        window.currentUser = user;
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          window.userData = userDoc.data();
+    // Initialize App
+    async function initApp() {
+      auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          window.appState.isLoggedIn = true;
+          window.appState.user = user;
+          
+          // Fetch user data from Firestore
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            window.appState.userData = userDoc.data();
+            window.appState.isPro = userDoc.data().plan === 'pro';
+            loadUserData(userDoc.data());
+          }
+          
+          showDashboard();
         } else {
-          // Create user document if not exists
+          window.appState.isLoggedIn = false;
+          showLanding();
+        }
+        
+        updateGuestUsageCounter();
+      });
+    }
+
+    // Load User Data into UI
+    function loadUserData(data) {
+      document.getElementById('userName').textContent = data.name || 'User';
+      document.getElementById('userAvatar').textContent = (data.name || 'U')[0].toUpperCase();
+      document.getElementById('accountName').textContent = data.name || 'User';
+      document.getElementById('accountEmail').textContent = data.email || '';
+      document.getElementById('editName').value = data.name || '';
+      document.getElementById('editEmail').value = data.email || '';
+      document.getElementById('accountAvatar').textContent = (data.name || 'U')[0].toUpperCase();
+      
+      if (window.appState.isPro) {
+        document.getElementById('userPlanBadge').textContent = 'PRO';
+        document.getElementById('userPlanBadge').classList.remove('bg-gradient-to-r', 'from-amber-400', 'to-orange-500');
+        document.getElementById('userPlanBadge').classList.add('bg-gradient-to-r', 'from-emerald-400', 'to-emerald-600');
+        hideAllWatermarks();
+        updatePlanUI(true);
+      } else {
+        document.getElementById('userPlanBadge').textContent = 'Free';
+        showWatermarks();
+        updatePlanUI(false);
+      }
+      
+      // Load stats
+      if (data.stats) {
+        window.appState.stats = data.stats;
+        updateStatsDisplay();
+      }
+      
+      // Load saved templates
+      if (data.templates && data.templates.length > 0) {
+        window.appState.savedTemplates = data.templates;
+        renderSavedTemplates();
+      }
+    }
+
+    // Update Stats Display
+    function updateStatsDisplay() {
+      document.getElementById('statQr').textContent = window.appState.stats.qr || 0;
+      document.getElementById('statResume').textContent = window.appState.stats.resume || 0;
+      document.getElementById('statInvoice').textContent = window.appState.stats.invoice || 0;
+      document.getElementById('statWa').textContent = window.appState.stats.whatsapp || 0;
+    }
+
+    // Update Plan UI
+    function updatePlanUI(isPro) {
+      const badge = document.getElementById('currentPlanBadge');
+      const title = document.getElementById('planTitle');
+      const desc = document.getElementById('planDesc');
+      const price = document.getElementById('planPrice');
+      const features = document.getElementById('planFeatures');
+      const btn = document.getElementById('upgradeBtn');
+      
+      if (isPro) {
+        badge.textContent = 'PRO';
+        title.textContent = 'Pro Plan';
+        desc.textContent = 'Full access to all features';
+        price.innerHTML = '$9.99<span class="text-sm font-normal text-gray-500">/mo</span>';
+        features.innerHTML = `
+          <li class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Unlimited tool usage
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            All templates included
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Dynamic QR & Analytics
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Premium templates
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            No watermark
+          </li>
+        `;
+        btn.textContent = 'Manage Subscription';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+      } else {
+        badge.textContent = 'FREE';
+        title.textContent = 'Free Plan';
+        desc.textContent = 'Perfect for getting started';
+        price.innerHTML = '$0<span class="text-sm font-normal text-gray-500">/mo</span>';
+        features.innerHTML = `
+          <li class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Unlimited tool usage
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Basic templates
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-400">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            Dynamic QR & Analytics
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-400">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            Premium templates
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-400">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            No watermark
+          </li>
+        `;
+        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg> Upgrade to Pro';
+        btn.classList.add('btn-primary');
+        btn.classList.remove('btn-secondary');
+      }
+    }
+
+    // Show Landing Page
+    function showLanding() {
+      document.getElementById('landingPage').classList.add('active');
+      document.getElementById('mainNav').classList.add('hidden');
+      hideAllPagesExcept('landingPage');
+    }
+
+    // Show Dashboard
+    function showDashboard() {
+      document.getElementById('landingPage').classList.remove('active');
+      document.getElementById('mainNav').classList.remove('hidden');
+      showPage('dashboard');
+    }
+
+    // Hide all pages except specified
+    function hideAllPagesExcept(pageId) {
+      const pages = ['landingPage', 'dashboardPage', 'qrPage', 'resumePage', 'invoicePage', 'whatsappPage', 'accountPage'];
+      pages.forEach(p => {
+        if (p !== pageId) {
+          document.getElementById(p).classList.remove('active');
+        }
+      });
+    }
+
+    // Show Page
+    window.showPage = function(pageId) {
+      hideAllPagesExcept(pageId + 'Page');
+      document.getElementById(pageId + 'Page').classList.add('active');
+      
+      // Update nav
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.dataset.page === pageId) {
+          link.classList.add('active');
+        }
+      });
+      
+      // Initialize page-specific functionality
+      if (pageId === 'qr') initQRGenerator();
+      if (pageId === 'resume') initResumeBuilder();
+      if (pageId === 'invoice') initInvoiceGenerator();
+      if (pageId === 'whatsapp') initWhatsAppGenerator();
+    }
+
+    // Go Back
+    window.goBack = function() {
+      if (window.appState.isLoggedIn) {
+        showPage('dashboard');
+      } else {
+        showLanding();
+      }
+    }
+
+    // Toggle Mobile Menu
+    window.toggleMobileMenu = function() {
+      document.getElementById('mobileMenu').classList.toggle('active');
+    }
+
+    // Auth Functions
+    window.showAuthModal = function(mode) {
+      document.getElementById('authModal').classList.add('active');
+      switchAuthMode(mode);
+    }
+
+    window.closeAuthModal = function() {
+      document.getElementById('authModal').classList.remove('active');
+    }
+
+    window.switchAuthMode = function(mode) {
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const title = document.getElementById('authModalTitle');
+      
+      if (mode === 'login') {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        title.textContent = 'Sign In';
+      } else {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        title.textContent = 'Create Account';
+      }
+    }
+
+    window.handleRegister = async function() {
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const confirmPassword = document.getElementById('regConfirmPassword').value;
+      
+      if (!name || !email || !password) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+      }
+      
+      if (password.length < 6) {
+        showToast('Password must be at least 6 characters', 'error');
+        return;
+      }
+      
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(auth.currentUser);
+        await firebaseUpdateProfile(auth.currentUser, { displayName: name });
+        
+        // Create user document in Firestore
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          uid: userCredential.user.uid,
+          name: name,
+          email: email,
+          plan: 'free',
+          createdAt: serverTimestamp(),
+          stats: { qr: 0, resume: 0, invoice: 0, whatsapp: 0 },
+          templates: []
+        });
+        
+        showToast('Account created! Please verify your email.', 'success');
+        closeAuthModal();
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    window.handleLogin = async function() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      
+      if (!email || !password) {
+        showToast('Please enter email and password', 'error');
+        return;
+      }
+      
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        closeAuthModal();
+        showToast('Welcome back!', 'success');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    window.handleGoogleLogin = async function() {
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        
+        // Check if user exists in Firestore
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists()) {
+          // Create new user document
           await setDoc(doc(db, 'users', user.uid), {
             uid: user.uid,
             name: user.displayName || 'User',
             email: user.email,
             plan: 'free',
             createdAt: serverTimestamp(),
-            stats: { qr: 0, resume: 0, invoice: 0, whatsapp: 0 }
-          });
-          window.userData = {
-            uid: user.uid,
-            name: user.displayName || 'User',
-            email: user.email,
-            plan: 'free',
-            stats: { qr: 0, resume: 0, invoice: 0, whatsapp: 0 }
-          };
-        }
-        showDashboard();
-      } else {
-        window.currentUser = null;
-        window.userData = null;
-        showLanding();
-      }
-    });
-
-    // Make functions globally available
-    window.registerUser = async (name, email, password) => {
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(cred.user, { displayName: name });
-        await setDoc(doc(db, 'users', cred.user.uid), {
-          uid: cred.user.uid,
-          name: name,
-          email: email,
-          plan: 'free',
-          createdAt: serverTimestamp(),
-          stats: { qr: 0, resume: 0, invoice: 0, whatsapp: 0 }
-        });
-        closeModal('authModal');
-        return true;
-      } catch (error) {
-        alert(error.message);
-        return false;
-      }
-    };
-
-    window.loginUser = async (email, password) => {
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        closeModal('authModal');
-        return true;
-      } catch (error) {
-        alert(error.message);
-        return false;
-      }
-    };
-
-    window.loginWithGoogle = async () => {
-      try {
-        const provider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, provider);
-        const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-        if (!userDoc.exists()) {
-          await setDoc(doc(db, 'users', result.user.uid), {
-            uid: result.user.uid,
-            name: result.user.displayName || 'User',
-            email: result.user.email,
-            plan: 'free',
-            createdAt: serverTimestamp(),
-            stats: { qr: 0, resume: 0, invoice: 0, whatsapp: 0 }
+            stats: { qr: 0, resume: 0, invoice: 0, whatsapp: 0 },
+            templates: []
           });
         }
-        closeModal('authModal');
-        return true;
+        
+        closeAuthModal();
+        showToast('Welcome!', 'success');
       } catch (error) {
-        alert(error.message);
-        return false;
+        showToast(error.message, 'error');
       }
-    };
+    }
 
-    window.logoutUser = async () => {
+    window.logout = async function() {
       try {
         await signOut(auth);
-        return true;
+        showLanding();
+        showToast('Signed out successfully', 'success');
       } catch (error) {
-        console.error(error);
-        return false;
+        showToast(error.message, 'error');
       }
-    };
+    }
 
-    // Firestore helpers
-    window.saveToFirestore = async (collectionName, data) => {
-      if (!window.currentUser) return null;
-      try {
-        const docRef = doc(collection(window.firebaseDb, collectionName));
-        await setDoc(docRef, {
-          ...data,
-          userId: window.currentUser.uid,
-          createdAt: serverTimestamp()
+    // Guest Usage System
+    function getTodayKey() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function checkGuestUsage(tool) {
+      if (window.appState.isLoggedIn) return true;
+      
+      const today = getTodayKey();
+      if (!window.appState.guestUsage[today]) {
+        window.appState.guestUsage[today] = {};
+      }
+      
+      if (!window.appState.guestUsage[today][tool]) {
+        window.appState.guestUsage[today][tool] = 0;
+      }
+      
+      return window.appState.guestUsage[today][tool] < 3;
+    }
+
+    function incrementGuestUsage(tool) {
+      if (window.appState.isLoggedIn) return;
+      
+      const today = getTodayKey();
+      if (!window.appState.guestUsage[today]) {
+        window.appState.guestUsage[today] = {};
+      }
+      if (!window.appState.guestUsage[today][tool]) {
+        window.appState.guestUsage[today][tool] = 0;
+      }
+      
+      window.appState.guestUsage[today][tool]++;
+      localStorage.setItem('luvtools_guest_usage', JSON.stringify(window.appState.guestUsage));
+      updateGuestUsageCounter();
+    }
+
+    function updateGuestUsageCounter() {
+      const counterEl = document.getElementById('usesLeftText');
+      if (!counterEl) return;
+      
+      const today = getTodayKey();
+      let totalUsed = 0;
+      
+      if (window.appState.guestUsage[today]) {
+        Object.values(window.appState.guestUsage[today]).forEach(count => {
+          totalUsed += count;
         });
-        return docRef.id;
-      } catch (error) {
-        console.error(error);
-        return null;
       }
-    };
-
-    window.getUserData = async () => {
-      if (!window.currentUser) return null;
-      try {
-        const docSnap = await getDoc(doc(window.firebaseDb, 'users', window.currentUser.uid));
-        return docSnap.exists() ? docSnap.data() : null;
-      } catch (error) {
-        console.error(error);
-        return null;
-      }
-    };
-
-    window.updateUserStats = async (field) => {
-      if (!window.currentUser) return;
-      try {
-        const userRef = doc(window.firebaseDb, 'users', window.currentUser.uid);
-        const currentStats = window.userData?.stats || { qr: 0, resume: 0, invoice: 0, whatsapp: 0 };
-        currentStats[field] = (currentStats[field] || 0) + 1;
-        await updateDoc(userRef, { stats: currentStats });
-        window.userData.stats = currentStats;
-      } catch (error) {
-        console.error(error);
-      }
-    };
-  </script>
-
-  <script>
-    // State Management
-    let currentPage = 'landing';
-    let guestUsage = JSON.parse(localStorage.getItem('luvtools_guest_usage')) || {
-      date: new Date().toDateString(),
-      qr: 0,
-      resume: 0,
-      invoice: 0,
-      whatsapp: 0
-    };
-    let invoiceItems = [];
-    let savedTemplates = [];
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      checkDailyReset();
-      updateGuestCounter();
-      initInvoiceItems();
       
-      // Set today's date for invoice
-      document.getElementById('invDate').valueAsDate = new Date();
-      
-      // Watermark close handler
-      document.getElementById('closeWatermark').addEventListener('click', showUpgradePrompt);
-    });
-
-    // Daily limit reset check
-    function checkDailyReset() {
-      const today = new Date().toDateString();
-      if (guestUsage.date !== today) {
-        guestUsage = {
-          date: today,
-          qr: 0,
-          resume: 0,
-          invoice: 0,
-          whatsapp: 0
-        };
-        localStorage.setItem('luvtools_guest_usage', JSON.stringify(guestUsage));
-      }
-    }
-
-    function updateGuestCounter() {
-      const counterEl = document.getElementById('guestUsageCounter');
-      const totalUsed = guestUsage.qr + guestUsage.resume + guestUsage.invoice + guestUsage.whatsapp;
       const remaining = Math.max(0, 3 - totalUsed);
-      counterEl.innerHTML = `
-        <div class="inline-flex items-center gap-2 usage-counter">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12,6 12,12 16,14"></polyline>
-          </svg>
-          ${remaining}/3 uses remaining today
-        </div>
-      `;
+      counterEl.textContent = `${remaining}/3 uses left today`;
     }
 
-    // Check if guest can use tool
-    function canUseTool(tool) {
-      if (window.currentUser) return true;
-      checkDailyReset();
-      const totalUsed = guestUsage.qr + guestUsage.resume + guestUsage.invoice + guestUsage.whatsapp;
-      return totalUsed < 3;
-    }
-
-    function incrementToolUsage(tool) {
-      if (window.currentUser) return true;
-      guestUsage[tool]++;
-      localStorage.setItem('luvtools_guest_usage', JSON.stringify(guestUsage));
-      updateGuestCounter();
-      return true;
-    }
-
-    // Navigation
-    function openTool(tool) {
-      if (!canUseTool(tool)) {
-        showModal('limitModal');
+    window.openToolAsGuest = function(tool) {
+      if (!checkGuestUsage(tool)) {
+        document.getElementById('limitModal').classList.add('active');
         return;
       }
-      incrementToolUsage(tool);
       
-      // Show landing page but scroll to tool section
-      showLanding();
-      // For demo, we'll navigate to dashboard version
-      if (window.currentUser) {
-        navigateTo(tool);
-      }
-    }
-
-    function navigateTo(page) {
-      // Update nav links
-      document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.toggle('active', link.dataset.nav === page);
-      });
+      incrementGuestUsage(tool);
+      window.appState.currentTool = tool;
       
-      // Hide all sections
-      document.querySelectorAll('.dashboard-section').forEach(section => {
-        section.classList.add('hidden');
-      });
-      
-      // Show target section
-      const targetSection = document.getElementById(page + 'Section') || document.getElementById('dashboardSection');
-      if (targetSection) {
-        targetSection.classList.remove('hidden');
-      }
-      
-      // Special handling
-      if (page === 'dashboard') {
-        loadDashboardData();
-      } else if (page === 'account') {
-        loadAccountData();
-      }
-    }
-
-    function showLanding() {
-      document.getElementById('landingPage').classList.add('active');
-      document.getElementById('dashboardPage').classList.remove('active');
-      hideWatermark();
-      currentPage = 'landing';
-    }
-
-    function showDashboard() {
+      // Show the tool page without dashboard
       document.getElementById('landingPage').classList.remove('active');
-      document.getElementById('dashboardPage').classList.add('active');
-      currentPage = 'dashboard';
+      document.getElementById(tool + 'Page').classList.add('active');
       
-      // Update user info
-      if (window.userData) {
-        document.getElementById('userName').textContent = window.userData.name || 'User';
-        document.getElementById('userPlanBadge').textContent = window.userData.plan === 'pro' ? 'Pro' : 'Free';
-        document.getElementById('userPlanBadge').className = `text-xs font-medium px-3 py-1 rounded-full ${window.userData.plan === 'pro' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`;
-        
-        // Show/hide watermark based on plan
-        if (window.userData.plan !== 'pro') {
-          showWatermark();
-        } else {
-          hideWatermark();
-        }
-      }
+      // Hide main nav for guests
+      document.getElementById('mainNav').classList.add('hidden');
       
-      loadDashboardData();
+      // Initialize tool
+      if (tool === 'qr') initQRGenerator();
+      if (tool === 'resume') initResumeBuilder();
+      if (tool === 'invoice') initInvoiceGenerator();
+      if (tool === 'whatsapp') initWhatsAppGenerator();
     }
 
-    function logout() {
-      if (window.logoutUser) {
-        window.logoutUser();
-      }
+    window.closeLimitModal = function() {
+      document.getElementById('limitModal').classList.remove('active');
     }
 
-    // Modal handlers
-    function showModal(id) {
-      document.getElementById(id).classList.add('show');
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('show');
-    }
-
-    function showAuthModal(type) {
-      closeModal('limitModal');
-      const content = document.getElementById('authContent');
+    // Toast Notification
+    window.showToast = function(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
       
-      if (type === 'register') {
-        content.innerHTML = `
-          <h2 class="text-2xl font-bold mb-6 text-center">Create Account</h2>
-          <form onsubmit="handleRegister(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Full Name</label>
-              <input type="text" id="regName" required class="input-field" placeholder="John Doe">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">Email</label>
-              <input type="email" id="regEmail" required class="input-field" placeholder="john@example.com">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">Password</label>
-              <input type="password" id="regPassword" required minlength="6" class="input-field" placeholder="Min 6 characters">
-            </div>
-            <button type="submit" class="btn-primary w-full">Create Account</button>
-          </form>
-          <div class="mt-4">
-            <div class="relative my-4">
-              <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
-              <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-500">or continue with</span></div>
-            </div>
-            <button onclick="window.loginWithGoogle()" class="btn-secondary w-full flex items-center justify-center gap-2">
-              <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-              Google
-            </button>
-          </div>
-          <p class="text-center text-sm text-gray-500 mt-4">Already have an account? <button onclick="showAuthModal('login')" class="text-blue-600 font-medium">Sign In</button></p>
-        `;
-      } else {
-        content.innerHTML = `
-          <h2 class="text-2xl font-bold mb-6 text-center">Sign In</h2>
-          <form onsubmit="handleLogin(event)" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-2">Email</label>
-              <input type="email" id="logEmail" required class="input-field" placeholder="john@example.com">
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-2">Password</label>
-              <input type="password" id="logPassword" required class="input-field" placeholder="Your password">
-            </div>
-            <button type="submit" class="btn-primary w-full">Sign In</button>
-          </form>
-          <div class="mt-4">
-            <div class="relative my-4">
-              <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
-              <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-500">or continue with</span></div>
-            </div>
-            <button onclick="window.loginWithGoogle()" class="btn-secondary w-full flex items-center justify-center gap-2">
-              <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-              Google
-            </button>
-          </div>
-          <p class="text-center text-sm text-gray-500 mt-4">Don't have an account? <button onclick="showAuthModal('register')" class="text-blue-600 font-medium">Create one</button></p>
-        `;
-      }
+      toast.className = 'toast ' + type;
+      toastMsg.textContent = message;
+      toast.classList.add('show');
       
-      showModal('authModal');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
     }
 
-    function handleRegister(e) {
-      e.preventDefault();
-      const name = document.getElementById('regName').value;
-      const email = document.getElementById('regEmail').value;
-      const password = document.getElementById('regPassword').value;
-      window.registerUser(name, email, password);
-    }
-
-    function handleLogin(e) {
-      e.preventDefault();
-      const email = document.getElementById('logEmail').value;
-      const password = document.getElementById('logPassword').value;
-      window.loginUser(email, password);
-    }
-
-    // Watermark functions
-    function showWatermark() {
-      document.getElementById('watermark').classList.remove('hidden');
-    }
-
-    function hideWatermark() {
-      document.getElementById('watermark').classList.add('hidden');
-    }
-
-    function showUpgradePrompt() {
-      alert('Upgrade to Pro Plan to remove this watermark and unlock all premium features!');
-    }
-
-    // Dashboard Data Loading
-    async function loadDashboardData() {
-      if (!window.userData) return;
-      const stats = window.userData.stats || { qr: 0, resume: 0, invoice: 0, whatsapp: 0 };
-      
-      document.getElementById('statQr').textContent = stats.qr || 0;
-      document.getElementById('statResume').textContent = stats.resume || 0;
-      document.getElementById('statInvoice').textContent = stats.invoice || 0;
-      document.getElementById('statWa').textContent = stats.whatsapp || 0;
-    }
-
-    function loadAccountData() {
-      if (!window.userData) return;
-      
-      document.getElementById('accName').textContent = window.userData.name || 'User';
-      document.getElementById('accEmail').textContent = window.userData.email || '';
-      document.getElementById('editName').value = window.userData.name || '';
-      document.getElementById('avatarInitial').textContent = (window.userData.name || 'U')[0].toUpperCase();
-      
-      const isPro = window.userData.plan === 'pro';
-      document.getElementById('currentPlan').textContent = isPro ? 'Pro Plan' : 'Free Plan';
-      document.getElementById('planDescription').textContent = isPro ? 'All features unlocked, no watermark' : 'Basic features with watermark';
-      document.getElementById('upgradeBtn').style.display = isPro ? 'none' : 'block';
-      
-      const stats = window.userData.stats || { qr: 0, resume: 0, invoice: 0, whatsapp: 0 };
-      document.getElementById('accStatQr').textContent = stats.qr || 0;
-      document.getElementById('accStatResume').textContent = stats.resume || 0;
-      document.getElementById('accStatInvoice').textContent = stats.invoice || 0;
-      document.getElementById('accStatWa').textContent = stats.whatsapp || 0;
-    }
-
-    async function updateProfile() {
-      const newName = document.getElementById('editName').value;
-      if (window.currentUser && newName) {
-        try {
-          await window.firebaseAuth.updateProfile({ displayName: newName });
-          const userRef = doc(window.firebaseDb, 'users', window.currentUser.uid);
-          await updateDoc(userRef, { name: newName });
-          window.userData.name = newName;
-          loadAccountData();
-          document.getElementById('userName').textContent = newName;
-          document.getElementById('avatarInitial').textContent = newName[0].toUpperCase();
-          alert('Profile updated successfully!');
-        } catch (e) {
-          alert(e.message);
-        }
+    // Watermark Functions
+    function showWatermarks() {
+      if (!window.appState.isPro) {
+        document.querySelectorAll('[id$="Watermark"]').forEach(el => el.classList.remove('hidden'));
       }
     }
 
-    function upgradePlan() {
-      alert('This would redirect to Stripe/Payment page in production.\n\nFor demo purposes, we\'ll upgrade you now!');
-      // Demo upgrade
-      if (window.currentUser && window.firebaseDb) {
-        const userRef = doc(window.firebaseDb, 'users', window.currentUser.uid);
-        updateDoc(userRef, { plan: 'pro' }).then(() => {
-          window.userData.plan = 'pro';
-          loadAccountData();
-          document.getElementById('userPlanBadge').textContent = 'Pro';
-          document.getElementById('userPlanBadge').className = 'text-xs font-medium px-3 py-1 rounded-full bg-purple-100 text-purple-700';
-          hideWatermark();
-        });
-      }
+    function hideAllWatermarks() {
+      document.querySelectorAll('[id$="Watermark"]').forEach(el => el.classList.add('hidden'));
     }
 
-    // QR Generator Functions
-    function updateQrType() {
-      const type = document.getElementById('qrType').value;
-      document.getElementById('qrUrlInput').classList.toggle('hidden', type !== 'url');
-      document.getElementById('qrTextInput').classList.toggle('hidden', type !== 'text');
-      document.getElementById('qrWaInput').classList.toggle('hidden', type !== 'whatsapp');
+    window.showUpgradeModal = function() {
+      document.getElementById('upgradeModal').classList.add('active');
+    }
+
+    window.closeUpgradeModal = function() {
+      document.getElementById('upgradeModal').classList.remove('active');
+    }
+
+    // QR Generator
+    let qrColor = '#000000';
+
+    function initQRGenerator() {
       generateQR();
     }
 
-    function generateQR() {
+    window.setQrColor = function(color) {
+      qrColor = color;
+      document.querySelectorAll('.qr-color-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.color === color);
+        if (btn.dataset.color === color) {
+          btn.style.borderColor = '#3B82F6';
+        } else {
+          btn.style.borderColor = 'transparent';
+        }
+      });
+      generateQR();
+    }
+
+    window.updateQrPlaceholder = function() {
       const type = document.getElementById('qrType').value;
-      let content = '';
+      const inputLabel = document.getElementById('qrInputLabel');
+      const input = document.getElementById('qrInput');
+      const waFields = document.getElementById('waFields');
       
       switch(type) {
         case 'url':
-          content = document.getElementById('qrInput').value;
-          break;
-        case 'text':
-          content = document.getElementById('qrTextInputField').value;
+          inputLabel.textContent = 'Enter URL';
+          input.placeholder = 'https://example.com';
+          input.type = 'url';
+          waFields.classList.add('hidden');
           break;
         case 'whatsapp':
-          const code = document.getElementById('qrWaCode').value;
-          const phone = document.getElementById('qrWaPhone').value;
-          content = `https://wa.me/${code}${phone}`;
+          inputLabel.textContent = 'WhatsApp Link';
+          input.type = 'hidden';
+          waFields.classList.remove('hidden');
+          break;
+        case 'text':
+          inputLabel.textContent = 'Enter Text';
+          input.placeholder = 'Enter any text...';
+          input.type = 'text';
+          waFields.classList.add('hidden');
           break;
       }
-      
+      generateQR();
+    }
+
+    window.generateQR = function() {
+      const type = document.getElementById('qrType').value;
       const canvas = document.getElementById('qrCanvas');
-      if (content.trim()) {
-        QRCode.toCanvas(canvas, content, {
+      let data = '';
+      
+      if (type === 'url' || type === 'text') {
+        data = document.getElementById('qrInput').value;
+      } else if (type === 'whatsapp') {
+        const countryCode = document.getElementById('waCountryCode').value;
+        const phone = document.getElementById('waPhone').value.replace(/\D/g, '');
+        const message = encodeURIComponent(document.getElementById('waMessage').value || '');
+        data = `https://wa.me/${countryCode}${phone}${message ? '?text=' + message : ''}`;
+      }
+      
+      if (data) {
+        QRCode.toCanvas(canvas, data, {
           width: 200,
           margin: 2,
-          color: { dark: '#1a1a2e', light: '#ffffff' }
+          color: {
+            dark: qrColor,
+            light: '#FFFFFF'
+          }
         }, function(error) {
           if (error) console.error(error);
         });
-      } else {
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
       }
     }
 
-    function downloadQR() {
+    window.downloadQR = function() {
       const canvas = document.getElementById('qrCanvas');
       const link = document.createElement('a');
       link.download = 'qrcode.png';
       link.href = canvas.toDataURL();
       link.click();
-      
-      if (window.currentUser && window.updateUserStats) {
-        window.updateUserStats('qr');
-        loadDashboardData();
-      }
+      saveActivity('qr');
+      showToast('QR Code downloaded!');
     }
 
-    async function saveQR() {
-      if (!window.currentUser) {
+    window.saveQR = async function() {
+      if (!window.appState.isLoggedIn) {
         showAuthModal('register');
         return;
       }
       
-      const type = document.getElementById('qrType').value;
-      let content = '';
-      switch(type) {
-        case 'url': content = document.getElementById('qrInput').value; break;
-        case 'text': content = document.getElementById('qrTextInputField').value; break;
-        case 'whatsapp': 
-          content = `https://wa.me/${document.getElementById('qrWaCode').value}${document.getElementById('qrWaPhone').value}`; 
-          break;
-      }
+      const canvas = document.getElementById('qrCanvas');
+      const qrData = canvas.toDataURL();
       
-      if (content) {
-        await window.saveToFirestore('qrcodes', { type, content });
-        if (window.updateUserStats) {
-          window.updateUserStats('qr');
-          loadDashboardData();
-        }
-        alert('QR Code saved to your account!');
+      try {
+        await addDoc(collection(db, 'users', window.appState.user.uid, 'qrcodes'), {
+          data: qrData,
+          createdAt: serverTimestamp()
+        });
+        
+        // Update stats
+        window.appState.stats.qr++;
+        await updateStatsInFirestore();
+        updateStatsDisplay();
+        
+        showToast('QR Code saved!');
+      } catch (error) {
+        showToast('Error saving QR', 'error');
       }
     }
 
-    // Resume Builder Functions
-    function updateResumePreview() {
-      const firstName = document.getElementById('resFirstName').value || 'John';
-      const lastName = document.getElementById('resLastName').value || 'Doe';
-      const jobTitle = document.getElementById('resJobTitle').value || 'Job Title';
-      const email = document.getElementById('resEmail').value || 'email@example.com';
-      const phone = document.getElementById('resPhone').value || '+60 12 345 6789';
-      const summary = document.getElementById('resSummary').value || 'Professional summary goes here...';
-      const experience = document.getElementById('resExperience').value || '';
-      const education = document.getElementById('resEducation').value || '';
-      const skills = document.getElementById('resSkills').value || '';
+    // Resume Builder
+    function initResumeBuilder() {
+      updateResumePreview();
+    }
 
-      const preview = document.getElementById('resumePreview');
-      preview.innerHTML = `
-        <div style="font-family: 'Inter', sans-serif;">
-          <header style="border-bottom: 3px solid #3B82F6; padding-bottom: 16px; margin-bottom: 24px;">
-            <h1 style="font-size: 28px; font-weight: 800; color: #1a1a2e; margin: 0;">${firstName} ${lastName}</h1>
-            <p style="color: #3B82F6; font-size: 16px; font-weight: 500; margin: 4px 0;">${jobTitle}</p>
-            <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; color: #6b7280; margin-top: 8px;">
-              <span>${email}</span>
-              <span>${phone}</span>
-            </div>
-          </header>
+    window.updateResumePreview = function() {
+      const name = document.getElementById('resName').value || 'Your Name';
+      const title = document.getElementById('resTitle').value || 'Job Title';
+      const email = document.getElementById('resEmail').value;
+      const phone = document.getElementById('resPhone').value;
+      const location = document.getElementById('resLocation').value;
+      const summary = document.getElementById('resSummary').value;
+      const skills = document.getElementById('resSkills').value;
+      
+      document.getElementById('previewName').textContent = name;
+      document.getElementById('previewTitle').textContent = title;
+      
+      let contact = [email, phone, location].filter(Boolean).join(' | ');
+      document.getElementById('previewContact').textContent = contact || 'contact info';
+      
+      // Summary
+      const summarySec = document.getElementById('previewSummary');
+      if (summary) {
+        summarySec.classList.remove('hidden');
+        document.getElementById('previewSummaryText').textContent = summary;
+      } else {
+        summarySec.classList.add('hidden');
+      }
+      
+      // Experience
+      const expItems = document.querySelectorAll('#experienceFields > div');
+      const expList = document.getElementById('previewExpList');
+      const expSec = document.getElementById('previewExperience');
+      
+      if (expItems.length > 0) {
+        let hasContent = false;
+        expList.innerHTML = '';
+        expItems.forEach(item => {
+          const company = item.querySelector('.exp-company')?.value;
+          const role = item.querySelector('.exp-role')?.value;
+          const from = item.querySelector('.exp-from')?.value;
+          const to = item.querySelector('.exp-to')?.value;
+          const desc = item.querySelector('.exp-desc')?.value;
           
-          <section style="margin-bottom: 24px;">
-            <h2 style="font-size: 16px; font-weight: 700; color: #3B82F6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">Professional Summary</h2>
-            <p style="color: #374151; line-height: 1.6; font-size: 14px;">${summary}</p>
-          </section>
+          if (company || role) {
+            hasContent = true;
+            expList.innerHTML += `
+              <div class="mb-3">
+                <div class="font-semibold text-gray-800">${role || 'Role'}${company ? ' at ' + company : ''}</div>
+                <div class="text-sm text-gray-500">${from || ''} ${from && to ? '-' : ''} ${to || ''}</div>
+                ${desc ? `<p class="text-sm text-gray-600 mt-1">${desc}</p>` : ''}
+              </div>
+            `;
+          }
+        });
+        expSec.classList.toggle('hidden', !hasContent);
+      }
+      
+      // Education
+      const eduItems = document.querySelectorAll('#educationFields > div');
+      const eduList = document.getElementById('previewEduList');
+      const eduSec = document.getElementById('previewEducation');
+      
+      if (eduItems.length > 0) {
+        let hasContent = false;
+        eduList.innerHTML = '';
+        eduItems.forEach(item => {
+          const school = item.querySelector('.edu-school')?.value;
+          const degree = item.querySelector('.edu-degree')?.value;
+          const year = item.querySelector('.edu-year')?.value;
           
-          ${experience ? `
-          <section style="margin-bottom: 24px;">
-            <h2 style="font-size: 16px; font-weight: 700; color: #3B82F6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">Experience</h2>
-            <div style="white-space: pre-line; color: #374151; line-height: 1.6; font-size: 14px;">${experience}</div>
-          </section>` : ''}
-          
-          ${education ? `
-          <section style="margin-bottom: 24px;">
-            <h2 style="font-size: 16px; font-weight: 700; color: #3B82F6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">Education</h2>
-            <div style="white-space: pre-line; color: #374151; line-height: 1.6; font-size: 14px;">${education}</div>
-          </section>` : ''}
-          
-          ${skills ? `
-          <section>
-            <h2 style="font-size: 16px; font-weight: 700; color: #3B82F6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">Skills</h2>
-            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-              ${skills.split(',').map(s => `<span style="background: #eff6ff; color: #3B82F6; padding: 4px 12px; border-radius: 20px; font-size: 13px;">${s.trim()}</span>`).join('')}
-            </div>
-          </section>` : ''}
+          if (school || degree) {
+            hasContent = true;
+            eduList.innerHTML += `
+              <div class="mb-2">
+                <div class="font-semibold text-gray-800">${degree || 'Degree'}</div>
+                <div class="text-sm text-gray-600">${school || ''} ${year ? '(' + year + ')' : ''}</div>
+              </div>
+            `;
+          }
+        });
+        eduSec.classList.toggle('hidden', !hasContent);
+      }
+      
+      // Skills
+      const skillsSec = document.getElementById('previewSkills');
+      if (skills) {
+        skillsSec.classList.remove('hidden');
+        document.getElementById('previewSkillsText').textContent = skills;
+      } else {
+        skillsSec.classList.add('hidden');
+      }
+    }
+
+    window.addExperienceField = function() {
+      const container = document.getElementById('experienceFields');
+      const div = document.createElement('div');
+      div.className = 'p-4 bg-gray-50 rounded-xl space-y-3';
+      div.innerHTML = `
+        <input type="text" class="input-field exp-company" placeholder="Company Name" oninput="updateResumePreview()">
+        <input type="text" class="input-field exp-role" placeholder="Job Role" oninput="updateResumePreview()">
+        <div class="flex gap-3">
+          <input type="text" class="input-field exp-from" placeholder="From (e.g., Jan 2022)" oninput="updateResumePreview()">
+          <input type="text" class="input-field exp-to" placeholder="To (e.g., Present)" oninput="updateResumePreview()">
         </div>
+        <textarea class="input-field exp-desc" rows="2" placeholder="Key achievements..." oninput="updateResumePreview()"></textarea>
+        <button onclick="this.parentElement.remove(); updateResumePreview();" class="text-sm text-red-500 hover:text-red-700">Remove</button>
       `;
+      container.appendChild(div);
     }
 
-    function exportResumePDF() {
-      alert('In production, this would use jsPDF or similar library to export as PDF.');
-      if (window.currentUser && window.updateUserStats) {
-        window.updateUserStats('resume');
-        loadDashboardData();
-      }
+    window.addEducationField = function() {
+      const container = document.getElementById('educationFields');
+      const div = document.createElement('div');
+      div.className = 'p-4 bg-gray-50 rounded-xl space-y-3';
+      div.innerHTML = `
+        <input type="text" class="input-field edu-school" placeholder="University/School" oninput="updateResumePreview()">
+        <input type="text" class="input-field edu-degree" placeholder="Degree/Certificate" oninput="updateResumePreview()">
+        <input type="text" class="input-field edu-year" placeholder="Year (e.g., 2020)" oninput="updateResumePreview()">
+        <button onclick="this.parentElement.remove(); updateResumePreview();" class="text-sm text-red-500 hover:text-red-700">Remove</button>
+      `;
+      container.appendChild(div);
     }
 
-    async function saveResume() {
-      if (!window.currentUser) {
-        showAuthModal('register');
-        return;
-      }
-      
-      const data = {
-        firstName: document.getElementById('resFirstName').value,
-        lastName: document.getElementById('resLastName').value,
-        jobTitle: document.getElementById('resJobTitle').value,
-        email: document.getElementById('resEmail').value,
-        phone: document.getElementById('resPhone').value,
-        summary: document.getElementById('resSummary').value,
-        experience: document.getElementById('resExperience').value,
-        education: document.getElementById('resEducation').value,
-        skills: document.getElementById('resSkills').value
+    window.exportResumePDF = function() {
+      const element = document.getElementById('resumePreviewContent');
+      const opt = {
+        margin: 0,
+        filename: 'resume.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       
-      await window.saveToFirestore('resumes', data);
-      if (window.updateUserStats) {
-        window.updateUserStats('resume');
-        loadDashboardData();
+      html2pdf().set(opt).from(element).save().then(() => {
+        saveActivity('resume');
+        showToast('Resume exported!');
+      });
+    }
+
+    window.saveResume = async function() {
+      if (!window.appState.isLoggedIn) {
+        showAuthModal('register');
+        return;
       }
-      alert('Resume saved to your account!');
+      
+      const resumeData = {
+        name: document.getElementById('resName').value,
+        title: document.getElementById('resTitle').value,
+        email: document.getElementById('resEmail').value,
+        phone: document.getElementById('resPhone').value,
+        location: document.getElementById('resLocation').value,
+        summary: document.getElementById('resSummary').value,
+        skills: document.getElementById('resSkills').value,
+        createdAt: serverTimestamp()
+      };
+      
+      try {
+        await addDoc(collection(db, 'users', window.appState.user.uid, 'resumes'), resumeData);
+        
+        window.appState.stats.resume++;
+        await updateStatsInFirestore();
+        updateStatsDisplay();
+        
+        showToast('Resume saved!');
+      } catch (error) {
+        showToast('Error saving resume', 'error');
+      }
     }
 
-    // Invoice Generator Functions
-    function initInvoiceItems() {
-      addInvoiceItem(); // Add first item by default
-    }
-
-    function addInvoiceItem() {
-      const id = Date.now();
-      invoiceItems.push({ id, name: '', qty: 1, price: 0 });
-      renderInvoiceItems();
-    }
-
-    function removeInvoiceItem(id) {
-      invoiceItems = invoiceItems.filter(item => item.id !== id);
-      renderInvoiceItems();
+    // Invoice Generator
+    function initInvoiceGenerator() {
+      // Set today's date
+      document.getElementById('invDate').valueAsDate = new Date();
+      updateInvoicePreview();
       updateInvoiceTotal();
     }
 
-    function updateInvoiceItem(id, field, value) {
-      const item = invoiceItems.find(i => i.id === id);
-      if (item) {
-        item[field] = field === 'name' ? value : parseFloat(value) || 0;
-        updateInvoiceTotal();
+    window.updateInvoicePreview = function() {
+      const number = document.getElementById('invNumber').value || 'INV-001';
+      const date = document.getElementById('invDate').value;
+      const client = document.getElementById('invClient').value || 'Client Name';
+      const clientEmail = document.getElementById('invClientEmail').value;
+      const notes = document.getElementById('invNotes').value;
+      
+      document.getElementById('previewInvNum').textContent = '#' + number;
+      document.getElementById('previewInvDate').textContent = 'Date: ' + (date ? new Date(date).toLocaleDateString() : '--');
+      document.getElementById('previewInvClient').textContent = client;
+      document.getElementById('previewInvEmail').textContent = clientEmail || '';
+      
+      const notesSec = document.getElementById('previewInvNotes');
+      if (notes) {
+        notesSec.classList.remove('hidden');
+        document.getElementById('previewNotesText').textContent = notes;
+      } else {
+        notesSec.classList.add('hidden');
       }
     }
 
-    function renderInvoiceItems() {
+    window.updateInvoiceTotal = function() {
+      const currency = document.getElementById('invCurrency').value;
+      const symbols = { MYR: 'RM', USD: '$', SGD: 'S$', EUR: '€' };
+      const symbol = symbols[currency];
+      
+      const items = document.querySelectorAll('.invoice-item');
+      let subtotal = 0;
+      const tbody = document.getElementById('previewInvItems');
+      tbody.innerHTML = '';
+      
+      items.forEach(item => {
+        const name = item.querySelector('.inv-item-name')?.value;
+        const qty = parseFloat(item.querySelector('.inv-item-qty')?.value) || 0;
+        const price = parseFloat(item.querySelector('.inv-item-price')?.value) || 0;
+        const total = qty * price;
+        subtotal += total;
+        
+        if (name) {
+          tbody.innerHTML += `
+            <tr class="border-b border-gray-100">
+              <td class="py-3 text-gray-600">${name}</td>
+              <td class="py-3 text-center text-gray-600">${qty}</td>
+              <td class="py-3 text-right text-gray-600">${symbol}${price.toFixed(2)}</td>
+              <td class="py-3 text-right font-medium">${symbol}${total.toFixed(2)}</td>
+            </tr>
+          `;
+        }
+      });
+      
+      if (items.length === 0 || tbody.innerHTML === '') {
+        tbody.innerHTML = '<tr class="border-b border-gray-100"><td class="py-3 text-gray-600" colspan="4">Add items to see preview</td></tr>';
+      }
+      
+      document.getElementById('previewSubtotal').textContent = symbol + subtotal.toFixed(2);
+      document.getElementById('previewTotal').textContent = symbol + subtotal.toFixed(2);
+    }
+
+    window.addInvoiceItem = function() {
       const container = document.getElementById('invoiceItems');
-      container.innerHTML = invoiceItems.map((item, index) => `
-        <div class="flex gap-2 items-start p-3 bg-gray-50 rounded-lg">
-          <input type="text" placeholder="Item name" value="${item.name}" 
-            onchange="updateInvoiceItem(${item.id}, 'name', this.value)"
-            class="input-field flex-1 text-sm">
-          <input type="number" placeholder="Qty" value="${item.qty}" min="1"
-            onchange="updateInvoiceItem(${item.id}, 'qty', this.value)"
-            class="input-field w-16 text-sm">
-          <input type="number" placeholder="Price" value="${item.price}" min="0" step="0.01"
-            onchange="updateInvoiceItem(${item.id}, 'price', this.value)"
-            class="input-field w-24 text-sm">
-          ${invoiceItems.length > 1 ? `
-            <button onclick="removeInvoiceItem(${item.id})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          ` : ''}
-        </div>
-      `).join('');
-    }
-
-    function updateInvoiceTotal() {
-      const currency = document.getElementById('invCurrency').value;
-      const symbols = { MYR: 'RM', USD: '$', SGD: 'S$', EUR: '€' };
-      const total = invoiceItems.reduce((sum, item) => sum + (item.qty * item.price), 0);
-      document.getElementById('invTotal').textContent = `${symbols[currency]} ${total.toFixed(2)}`;
-      updateInvoicePreview();
-    }
-
-    function updateInvoicePreview() {
-      const fromName = document.getElementById('invFromName').value || 'Your Company';
-      const toName = document.getElementById('invToName').value || 'Client Name';
-      const invNumber = document.getElementById('invNumber').value || 'INV-001';
-      const invDate = document.getElementById('invDate').value || new Date().toISOString().split('T')[0];
-      const currency = document.getElementById('invCurrency').value;
-      const symbols = { MYR: 'RM', USD: '$', SGD: 'S$', EUR: '€' };
-      
-      const preview = document.getElementById('invoicePreview');
-      preview.innerHTML = `
-        <div style="font-family: 'Inter', sans-serif;">
-          <header style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
-            <div>
-              <h1 style="font-size: 28px; font-weight: 800; color: #3B82F6; margin: 0;">INVOICE</h1>
-              <p style="color: #6b7280; margin-top: 4px;">${fromName}</p>
-            </div>
-            <div style="text-align: right;">
-              <p style="font-weight: 600; color: #1a1a2e;">${invNumber}</p>
-              <p style="color: #6b7280; font-size: 14px;">Date: ${new Date(invDate).toLocaleDateString()}</p>
-            </div>
-          </header>
-          
-          <div style="margin-bottom: 32px;">
-            <p style="font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing: 1px; margin-bottom: 4px;">Bill To</p>
-            <p style="font-weight: 600; color: #1a1a2e;">${toName}</p>
-          </div>
-          
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-            <thead>
-              <tr style="border-bottom: 2px solid #e5e7eb;">
-                <th style="text-align: left; padding: 12px 8px; font-size: 12px; text-transform: uppercase; color: #6b7280;">Item</th>
-                <th style="text-align: center; padding: 12px 8px; font-size: 12px; text-transform: uppercase; color: #6b7280;">Qty</th>
-                <th style="text-align: right; padding: 12px 8px; font-size: 12px; text-transform: uppercase; color: #6b7280;">Price</th>
-                <th style="text-align: right; padding: 12px 8px; font-size: 12px; text-transform: uppercase; color: #6b7280;">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${invoiceItems.filter(item => item.name).map(item => `
-                <tr style="border-bottom: 1px solid #f3f4f6;">
-                  <td style="padding: 12px 8px; color: #374151;">${item.name}</td>
-                  <td style="padding: 12px 8px; text-align: center; color: #374151;">${item.qty}</td>
-                  <td style="padding: 12px 8px; text-align: right; color: #374151;">${symbols[currency]} ${item.price.toFixed(2)}</td>
-                  <td style="padding: 12px 8px; text-align: right; font-weight: 600; color: #1a1a2e;">${symbols[currency]} ${(item.qty * item.price).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          
-          <div style="display: flex; justify-content: flex-end;">
-            <div style="background: #f9fafb; padding: 16px 24px; border-radius: 8px; min-width: 200px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span style="color: #6b7280;">Total:</span>
-                <span style="font-weight: 700; font-size: 18px; color: #1a1a2e;" id="previewTotal">${symbols[currency]} ${invoiceItems.reduce((sum, item) => sum + (item.qty * item.price), 0).toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-12 gap-2 items-start invoice-item';
+      div.innerHTML = `
+        <input type="text" class="input-field col-span-5 inv-item-name" placeholder="Item name" oninput="updateInvoiceTotal()">
+        <input type="number" class="input-field col-span-2 inv-item-qty" placeholder="Qty" value="1" min="1" oninput="updateInvoiceTotal()">
+        <input type="number" class="input-field col-span-3 inv-item-price" placeholder="Price" step="0.01" oninput="updateInvoiceTotal()">
+        <button onclick="removeInvoiceItem(this)" class="col-span-2 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
       `;
+      container.appendChild(div);
     }
 
-    function exportInvoicePDF() {
-      alert('In production, this would use jsPDF/html2canvas to export as PDF.');
-      if (window.currentUser && window.updateUserStats) {
-        window.updateUserStats('invoice');
-        loadDashboardData();
-      }
+    window.removeInvoiceItem = function(btn) {
+      btn.closest('.invoice-item').remove();
+      updateInvoiceTotal();
     }
 
-    async function saveInvoice() {
-      if (!window.currentUser) {
-        showAuthModal('register');
-        return;
-      }
-      
-      const data = {
-        fromName: document.getElementById('invFromName').value,
-        toName: document.getElementById('invToName').value,
-        number: document.getElementById('invNumber').value,
-        date: document.getElementById('invDate').value,
-        currency: document.getElementById('invCurrency').value,
-        items: invoiceItems
+    window.exportInvoicePDF = function() {
+      const element = document.getElementById('invoicePreviewContent');
+      const opt = {
+        margin: 0,
+        filename: `invoice-${document.getElementById('invNumber').value}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       
-      await window.saveToFirestore('invoices', data);
-      if (window.updateUserStats) {
-        window.updateUserStats('invoice');
-        loadDashboardData();
-      }
-      alert('Invoice saved to your account!');
+      html2pdf().set(opt).from(element).save().then(() => {
+        saveActivity('invoice');
+        showToast('Invoice exported!');
+      });
     }
 
-    // WhatsApp Link Generator Functions
-    function generateWALink() {
-      const countryCode = document.getElementById('waCountryCode').value;
-      const phone = document.getElementById('waPhone').value.replace(/\D/g, '');
-      const message = encodeURIComponent(document.getElementById('waMessage').value || '');
-      
-      let link = `https://wa.me/${countryCode}${phone}`;
-      if (message) link += `?text=${message}`;
-      
-      document.getElementById('waLinkOutput').value = link;
-      
-      // Generate QR if enabled
-      if (document.getElementById('waGenQR').checked && phone) {
-        const canvas = document.getElementById('waQrCanvas');
-        QRCode.toCanvas(canvas, link, {
-          width: 180,
-          margin: 2,
-          color: { dark: '#22C55E', light: '#ffffff' }
-        });
-      }
-    }
-
-    function copyWALink() {
-      const input = document.getElementById('waLinkOutput');
-      input.select();
-      navigator.clipboard.writeText(input.value);
-      
-      // Visual feedback
-      const btn = event.target.closest('button');
-      const originalText = btn.textContent;
-      btn.textContent = 'Copied!';
-      setTimeout(() => btn.textContent = originalText, 1500);
-      
-      if (window.currentUser && window.updateUserStats) {
-        window.updateUserStats('whatsapp');
-        loadDashboardData();
-      }
-    }
-
-    function toggleWAQR() {
-      const container = document.getElementById('waQRContainer');
-      const downloadBtn = document.getElementById('downloadWAQRBtn');
-      const checked = document.getElementById('waGenQR').checked;
-      
-      container.classList.toggle('hidden', !checked);
-      downloadBtn.classList.toggle('hidden', !checked);
-      
-      if (checked) generateWALink();
-    }
-
-    function downloadWAQR() {
-      const canvas = document.getElementById('waQrCanvas');
-      const link = document.createElement('a');
-      link.download = 'whatsapp-qrcode.png';
-      link.href = canvas.toDataURL();
-      link.click();
-    }
-
-    async function saveWATemplate() {
-      if (!window.currentUser) {
+    window.saveInvoice = async function() {
+      if (!window.appState.isLoggedIn) {
         showAuthModal('register');
         return;
       }
       
-      const isPro = window.userData?.plan === 'pro';
-      if (!isPro && savedTemplates.length >= 3) {
-        alert('Free users can save up to 3 templates. Upgrade to Pro for unlimited templates.');
+      const invoiceData = {
+        number: document.getElementById('invNumber').value,
+        date: document.getElementById('invDate').value,
+        client: document.getElementById('invClient').value,
+        clientEmail: document.getElementById('invClientEmail').value,
+        currency: document.getElementById('invCurrency').value,
+        notes: document.getElementById('invNotes').value,
+        items: [],
+        createdAt: serverTimestamp()
+      };
+      
+      document.querySelectorAll('.invoice-item').forEach(item => {
+        invoiceData.items.push({
+          name: item.querySelector('.inv-item-name')?.value,
+          qty: item.querySelector('.inv-item-qty')?.value,
+          price: item.querySelector('.inv-item-price')?.value
+        });
+      });
+      
+      try {
+        await addDoc(collection(db, 'users', window.appState.user.uid, 'invoices'), invoiceData);
+        
+        window.appState.stats.invoice++;
+        await updateStatsInFirestore();
+        updateStatsDisplay();
+        
+        showToast('Invoice saved!');
+      } catch (error) {
+        showToast('Error saving invoice', 'error');
+      }
+    }
+
+    // WhatsApp Link Generator
+    function initWhatsAppGenerator() {
+      renderSavedTemplates();
+    }
+
+    window.generateWaLink = function() {
+      const countryCode = document.getElementById('waLinkCountry').value;
+      const phone = document.getElementById('waLinkPhone').value.replace(/\D/g, '');
+      const message = encodeURIComponent(document.getElementById('waLinkMessage').value || '');
+      
+      if (phone) {
+        const link = `https://wa.me/${countryCode}${phone}${message ? '?text=' + message : ''}`;
+        document.getElementById('waLinkOutput').value = link;
+        document.getElementById('generatedWaLink').classList.remove('hidden');
+        
+        // Generate QR
+        const canvas = document.getElementById('waQrCanvas');
+        QRCode.toCanvas(canvas, link, {
+          width: 150,
+          margin: 2,
+          color: { dark: '#25D366', light: '#FFFFFF' }
+        }, function(error) {
+          if (error) console.error(error);
+        });
+        
+        document.getElementById('waQrSection').classList.remove('hidden');
+      } else {
+        document.getElementById('generatedWaLink').classList.add('hidden');
+        document.getElementById('waQrSection').classList.add('hidden');
+      }
+    }
+
+    window.copyWaLink = function() {
+      const link = document.getElementById('waLinkOutput').value;
+      navigator.clipboard.writeText(link).then(() => {
+        showToast('Link copied to clipboard!');
+      });
+    }
+
+    window.testWaLink = function() {
+      const link = document.getElementById('waLinkOutput').value;
+      if (link) {
+        window.open(link, '_blank');
+        saveActivity('whatsapp');
+      }
+    }
+
+    window.downloadWaQR = function() {
+      const canvas = document.getElementById('waQrCanvas');
+      const link = document.createElement('a');
+      link.download = 'whatsapp-qr.png';
+      link.href = canvas.toDataURL();
+      link.click();
+      showToast('QR downloaded!');
+    }
+
+    window.saveWaTemplate = async function() {
+      if (!window.appState.isLoggedIn) {
+        showAuthModal('register');
+        return;
+      }
+      
+      if (!window.appState.isPro) {
+        showUpgradeModal();
         return;
       }
       
       const template = {
-        countryCode: document.getElementById('waCountryCode').value,
-        phone: document.getElementById('waPhone').value,
-        message: document.getElementById('waMessage').value,
-        savedAt: new Date().toISOString()
+        id: Date.now(),
+        countryCode: document.getElementById('waLinkCountry').value,
+        phone: document.getElementById('waLinkPhone').value,
+        message: document.getElementById('waLinkMessage').value,
+        name: `Template ${window.appState.savedTemplates.length + 1}`,
+        createdAt: serverTimestamp()
       };
       
-      savedTemplates.push(template);
-      renderSavedTemplates();
+      window.appState.savedTemplates.push(template);
       
-      await window.saveToFirestore('wa_templates', template);
-      alert('Template saved!');
+      try {
+        await setDoc(doc(db, 'users', window.appState.user.uid), {
+          ...window.appState.userData,
+          templates: window.appState.savedTemplates
+        }, { merge: true });
+        
+        renderSavedTemplates();
+        showToast('Template saved!');
+      } catch (error) {
+        showToast('Error saving template', 'error');
+      }
     }
 
     function renderSavedTemplates() {
-      const container = document.getElementById('savedTemplates');
-      const list = document.getElementById('templatesList');
+      const container = document.getElementById('templatesList');
+      const section = document.getElementById('savedTemplates');
       
-      if (savedTemplates.length === 0) {
-        container.classList.add('hidden');
+      if (window.appState.savedTemplates.length === 0) {
+        section.classList.add('hidden');
         return;
       }
       
-      container.classList.remove('hidden');
-      list.innerHTML = savedTemplates.map((t, i) => `
-        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+      section.classList.remove('hidden');
+      container.innerHTML = '';
+      
+      window.appState.savedTemplates.forEach((template, index) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+        div.innerHTML = `
           <div>
-            <p class="font-medium text-sm">${t.countryCode} ${t.phone}</p>
-            <p class="text-xs text-gray-500">${t.message ? t.message.substring(0, 30) + '...' : 'No message'}</p>
+            <div class="font-medium text-gray-900">${template.name}</div>
+            <div class="text-sm text-gray-500">${template.countryCode} ${template.phone}</div>
           </div>
-          <button onclick="loadTemplate(${i})" class="text-sm text-blue-600 font-medium">Load</button>
-        </div>
-      `).join('');
-    }
-
-    function loadTemplate(index) {
-      const t = savedTemplates[index];
-      document.getElementById('waCountryCode').value = t.countryCode;
-      document.getElementById('waPhone').value = t.phone;
-      document.getElementById('waMessage').value = t.message;
-      generateWALink();
-    }
-
-    // Close modals on outside click
-    document.querySelectorAll('.modal-overlay').forEach(modal => {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('show');
+          <div class="flex gap-2">
+            <button onclick="loadTemplate(${index})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            </button>
+            <button onclick="deleteTemplate(${index})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
       });
-    });
+    }
 
-    // Keyboard accessibility
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+    window.loadTemplate = function(index) {
+      const template = window.appState.savedTemplates[index];
+      document.getElementById('waLinkCountry').value = template.countryCode;
+      document.getElementById('waLinkPhone').value = template.phone;
+      document.getElementById('waLinkMessage').value = template.message || '';
+      generateWaLink();
+    }
+
+    window.deleteTemplate = async function(index) {
+      window.appState.savedTemplates.splice(index, 1);
+      
+      try {
+        await setDoc(doc(db, 'users', window.appState.user.uid), {
+          ...window.appState.userData,
+          templates: window.appState.savedTemplates
+        }, { merge: true });
+        
+        renderSavedTemplates();
+        showToast('Template deleted');
+      } catch (error) {
+        showToast('Error deleting template', 'error');
       }
-    });
-  </script>
-</body>
-</html>
+    }
+
+    // Account Functions
+    window.updateProfile = async function() {
+      const name = document.getElementById('editName').value.trim();
+      
+      if (!name) {
+        showToast('Please enter your name', 'error');
+        return;
+      }
+      
+      try {
+        await firebaseUpdateProfile(auth.currentUser, { displayName: name });
+        await setDoc(doc(db, 'users', window.appState.user.uid), {
+          name: name
+        }, { merge: true });
+        
+        window.appState.userData.name = name;
+        loadUserData(window.appState.userData);
+        showToast('Profile updated!');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    window.upgradeToPro = function() {
+      // In production, this would integrate with Stripe/PayPal
+      showToast('Redirecting to payment...', 'success');
+      setTimeout(() => {
+        alert('This would redirect to Stripe checkout in production.\n\nFor demo purposes, you are now PRO!');
+        simulateProUpgrade();
+      }, 1500);
+    }
+
+    async function simulateProUpgrade() {
+      window.appState.isPro = true;
+      
+      try {
+        await setDoc(doc(db, 'users', window.appState.user.uid), {
+          plan: 'pro'
+        }, { merge: true });
+        
+        window.appState.userData.plan = 'pro';
+        loadUserData(window.appState.userData);
+        showToast('You are now a PRO member!');
+      } catch (error) {
+        showToast('Error updating plan', 'error');
+      }
+    }
+
+    window.deleteAccount = async function() {
+      if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+        try {
+          await auth.currentUser.delete();
+          showToast('Account deleted');
+          showLanding();
+        } catch (error) {
+          showToast(error.message, 'error');
+        }
+      }
+    }
+
+    // Helper Functions
+    async function saveActivity(type) {
+      if (!window.appState.isLoggedIn) return;
+      
+      window.appState.stats[type]++;
+      await updateStatsInFirestore();
+      updateStatsDisplay();
+    }
+
+    async function updateStatsInFirestore() {
+      if (!window.appState.user) return;
+      
+      try {
+        await setDoc(doc(db, 'users', window.appState.user.uid), {
+          stats: window.appState.stats
+        }, { merge: true });
+      } catch (error) {
+        console.error('Error updating stats:', error);
+      }
+    }
+
+    window.scrollToTools = function() {
+      document.getElementById('toolsSection').scrollIntoView({ behavior: 'smooth' });
