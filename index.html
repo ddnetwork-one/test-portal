@@ -44,7 +44,7 @@
         /* Modal */
         .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.4); backdrop-filter:blur(6px); z-index:100; display:none; align-items:center; justify-content:center; opacity:0; transition:opacity .25s ease; }
         .modal-overlay.show{ display:flex; opacity:1; }
-        .modal-box{ background:#fff; border-radius:18px; padding:32px; max-width:420px; width:90%; box-shadow:0 25px 60px rgba(0,0,0,.15); transform:scale(.95); transition:transform .25s ease; }
+        .modal-box{ background:#fff; border-radius:18px; padding:32px; max-width:420px; width:90%; box-shadow:0 25px 60px rgba(0,0,0,.15); transform:scale(.95); transition:transform .25s ease; max-height:90vh; overflow-y:auto;}
         .modal-overlay.show .modal-box{ transform:scale(1); }
 
         /* Toast */
@@ -65,6 +65,8 @@
         .btn-secondary:hover{ background:#E2E8F0; }
         .btn-ghost{ padding:10px 18px; background:transparent; color:#3B82F6; border:none; border-radius:10px; font-size:14px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .2s; }
         .btn-ghost:hover{ background:#DBEAFE; }
+        .btn-danger{ padding:10px 18px; background:transparent; color:#EF4444; border:none; border-radius:10px; font-size:14px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .2s; }
+        .btn-danger:hover{ background:#FEF2F2; }
 
         /* Cards */
         .card{ background:#fff; border:1px solid #F1F5F9; border-radius:16px; padding:24px; transition:all .25s; }
@@ -104,10 +106,22 @@
         /* Counter badge */
         .counter-badge{ font-size:11px; font-weight:600; background:#DBEAFE; color:#3B82F6; padding:3px 8px; border-radius:20px; }
 
+        /* Watermark banner */
+        .watermark-banner{ background:#FFF7ED; border:1px solid #FED7AA; border-radius:10px; padding:12px 16px; margin-top:16px; display:flex; align-items:center; justify-content-between; gap:12px; }
+        .watermark-banner p{ font-size:13px; color:#C2410C; margin:0; flex:1; }
+
         /* Scrollbar */
         ::-webkit-scrollbar{ width:6px; }
         ::-webkit-scrollbar-track{ background:transparent; }
         ::-webkit-scrollbar-thumb{ background:#E2E8F0; border-radius:3px; }
+
+        /* Admin Table */
+        .admin-table{ width:100%; border-collapse:collapse; font-size:14px; }
+        .admin-table th{ background:#F8FAFC; padding:12px; text-align:left; font-weight:600; color:#64748B; border-bottom:1px solid #E2E8F0; }
+        .admin-table td{ padding:12px; border-bottom:1px solid #F1F5F9; vertical-align:middle; }
+        .status-badge{ padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+        .status-active{ background:#DCFCE7; color:#166534; }
+        .status-suspended{ background:#FEE2E2; color:#991B1B; }
 
         @media print{
             .no-print{ display:none !important; }
@@ -205,6 +219,52 @@
     </div>
 </div>
 
+<!-- User Detail Modal (Admin) -->
+<div class="modal-overlay" id="user-detail-modal">
+    <div class="modal-box" style="max-width:520px;">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-display font-bold">User Details</h3>
+            <button onclick="closeModal('user-detail-modal')" class="text-ink-lighter hover:text-ink"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="user-detail-content"></div>
+    </div>
+</div>
+
+<!-- Template Editor Modal -->
+<div class="modal-overlay" id="template-modal">
+    <div class="modal-box" style="max-width:800px;">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-display font-bold" id="template-modal-title">Create Template</h3>
+            <button onclick="closeModal('template-modal')" class="text-ink-lighter hover:text-ink"><i class="fas fa-times"></i></button>
+        </div>
+        <form onsubmit="saveTemplate(event)" class="space-y-4">
+            <input type="hidden" id="tmpl-id">
+            <input type="hidden" id="tmpl-type">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Template Name</label>
+                    <input type="text" id="tmpl-name" class="input-field" required placeholder="e.g., Modern Resume">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Status</label>
+                    <select id="tmpl-status" class="input-field">
+                        <option value="active">Active</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">HTML Content</label>
+                <textarea id="tmpl-html" class="input-field" rows="12" required placeholder="Paste HTML template here... Use {{name}}, {{email}} etc as placeholders"></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="btn-primary flex-1 justify-center"><i class="fas fa-save"></i> Save Template</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('template-modal')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Sidebar Backdrop (mobile) -->
 <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
 
@@ -222,7 +282,7 @@
                 </div>
             </div>
         </div>
-        <nav class="flex-1 px-3 space-y-1">
+        <nav class="flex-1 px-3 space-y-1" id="main-nav">
             <div class="nav-link" data-page="dashboard" onclick="navigate('dashboard')"><i class="fas fa-th-large w-5 text-center"></i>Dashboard</div>
             <div class="nav-link" data-page="qr" onclick="navigate('qr')"><i class="fas fa-qrcode w-5 text-center"></i>QR Generator</div>
             <div class="nav-link" data-page="resume" onclick="navigate('resume')"><i class="fas fa-file-alt w-5 text-center"></i>Resume Builder</div>
@@ -230,6 +290,12 @@
             <div class="nav-link" data-page="wa" onclick="navigate('wa')"><i class="fab fa-whatsapp w-5 text-center"></i>WhatsApp Link</div>
             <div class="mt-4 pt-4 border-t border-gray-50">
                 <div class="nav-link" data-page="account" onclick="navigate('account')"><i class="fas fa-user-circle w-5 text-center"></i>Account</div>
+            </div>
+            <!-- Admin Nav (Hidden by default) -->
+            <div id="admin-nav-section" class="mt-4 pt-4 border-t border-gray-50 hidden">
+                <div class="text-[10px] uppercase tracking-wider text-ink-lighter font-semibold px-3 mb-2">Admin Panel</div>
+                <div class="nav-link" data-page="admin-users" onclick="navigate('admin-users')"><i class="fas fa-users-cog w-5 text-center"></i>Manage Users</div>
+                <div class="nav-link" data-page="admin-templates" onclick="navigate('admin-templates')"><i class="fas fa-palette w-5 text-center"></i>Templates</div>
             </div>
         </nav>
         <div class="p-4 border-t border-gray-50">
@@ -438,7 +504,7 @@
                             <div>
                                 <label class="block text-sm font-medium mb-2">Currency</label>
                                 <select id="inv-currency" class="input-field" onchange="updateInvoicePreview()">
-                                    <option value="MYR">MYR (RM)</option>
+                                    <option value="MYR" selected>MYR (RM)</option>
                                     <option value="USD">USD ($)</option>
                                     <option value="SGD">SGD ($)</option>
                                     <option value="EUR">EUR (€)</option>
@@ -586,6 +652,67 @@
                     <i class="fas fa-crown"></i> Upgrade to Pro
                 </button>
                 <button class="btn-ghost ml-3 text-red-500 hover:bg-red-50" onclick="signOutUser()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+            </section>
+
+            <!-- ADMIN USERS PAGE -->
+            <section class="page" id="page-admin-users">
+                <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h1 class="text-2xl font-display font-bold mb-1">Manage Users</h1>
+                        <p class="text-ink-light text-sm">View all registered users, their activity, and manage accounts.</p>
+                    </div>
+                    <button class="btn-secondary" onclick="loadAdminUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                </div>
+                <div class="card overflow-x-auto">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Plan</th>
+                                <th>Status</th>
+                                <th>Activity</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-tbody">
+                            <tr><td colspan="7" class="text-center text-ink-lighter py-8">Loading users...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ADMIN TEMPLATES PAGE -->
+            <section class="page" id="page-admin-templates">
+                <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h1 class="text-2xl font-display font-bold mb-1">Template Manager</h1>
+                        <p class="text-ink-light text-sm">Create and manage WhatsApp & Resume templates.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn-secondary" onclick="openTemplateModal('whatsapp')"><i class="fab fa-whatsapp"></i> WA Template</button>
+                        <button class="btn-primary" onclick="openTemplateModal('resume')"><i class="fas fa-file-alt"></i> Resume Template</button>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- WA Templates -->
+                    <div class="card">
+                        <h3 class="font-display font-semibold mb-4 flex items-center gap-2"><i class="fab fa-whatsapp text-green-500"></i> WhatsApp Templates</h3>
+                        <div id="admin-wa-templates-list" class="space-y-3">
+                            <p class="text-sm text-ink-lighter text-center py-4">No templates yet</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Resume Templates -->
+                    <div class="card">
+                        <h3 class="font-display font-semibold mb-4 flex items-center gap-2"><i class="fas fa-file-alt text-emerald-500"></i> Resume Templates</h3>
+                        <div id="admin-resume-templates-list" class="space-y-3">
+                            <p class="text-sm text-ink-lighter text-center py-4">No templates yet</p>
+                        </div>
+                    </div>
+                </div>
             </section>
 
         </div>
@@ -760,8 +887,8 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut as fbSignOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, serverTimestamp, collection, query, orderBy, addDoc, where } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDSp-HX00hZaJwTFaZ4X06pU7pARGjhl1M",
@@ -789,36 +916,52 @@ window.GoogleAuthProvider = GoogleAuthProvider;
 window.googleProvider = googleProvider;
 window.onAuthStateChanged = onAuthStateChanged;
 window.fbSignOut = fbSignOut;
+window.sendPasswordResetEmail = sendPasswordResetEmail;
 window.setDoc = setDoc;
 window.getDoc = getDoc;
+window.getDocs = getDocs;
 window.updateDoc = updateDoc;
+window.deleteDoc = deleteDoc;
 window.serverTimestamp = serverTimestamp;
 window.doc = doc;
+window.collection = collection;
+window.query = query;
+window.orderBy = orderBy;
+window.addDoc = addDoc;
+window.where = where;
 
 // Listen for auth state
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
         window.currentUser = user;
-        getDoc(doc(db, "users", user.uid)).then((snap) => {
-            if (snap.exists()) {
-                window.userData = snap.data();
-                enterApp();
-            } else {
-                // Create doc if missing
-                const data = {
-                    uid: user.uid,
-                    name: user.displayName || user.email.split('@')[0],
-                    email: user.email,
-                    plan: 'free',
-                    createdAt: serverTimestamp(),
-                    stats: { qr: 0, resume: 0, invoice: 0, wa: 0 }
-                };
-                setDoc(doc(db, "users", user.uid), data).then(() => {
-                    window.userData = data;
-                    enterApp();
-                });
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+            window.userData = snap.data();
+            // Check if suspended
+            if (window.userData.status === 'suspended') {
+                showToast('Your account has been suspended. Contact support.', 'error');
+                await fbSignOut(auth);
+                window.currentUser = null;
+                window.userData = null;
+                showLanding();
+                return;
             }
-        });
+        } else {
+            // Create doc if missing
+            const data = {
+                uid: user.uid,
+                name: user.displayName || user.email.split('@')[0],
+                email: user.email,
+                plan: 'free',
+                status: 'active',
+                role: 'user',
+                createdAt: serverTimestamp(),
+                stats: { qr: 0, resume: 0, invoice: 0, wa: 0 }
+            };
+            await setDoc(doc(db, "users", user.uid), data);
+            window.userData = data;
+        }
+        enterApp();
     } else {
         window.currentUser = null;
         window.userData = null;
@@ -834,6 +977,14 @@ function showLanding() {
 function enterApp() {
     document.getElementById('landing-page').style.display = 'none';
     document.getElementById('app-shell').classList.remove('hidden');
+    
+    // Show admin nav if superadmin
+    if (window.userData && window.userData.role === 'superadmin') {
+        document.getElementById('admin-nav-section').classList.remove('hidden');
+    } else {
+        document.getElementById('admin-nav-section').classList.add('hidden');
+    }
+    
     updateSidebar();
     updateAccount();
     loadStats();
@@ -883,12 +1034,25 @@ async function incrementStat(tool) {
     loadStats();
 }
 
+async function saveGenerationRecord(tool, data) {
+    if (!window.currentUser) return;
+    try {
+        await addDoc(collection(db, "generations"), {
+            uid: window.currentUser.uid,
+            tool: tool,
+            data: data,
+            createdAt: serverTimestamp()
+        });
+    } catch(e) { console.error('Error saving generation:', e); }
+}
+
 // Expose functions
 window.enterApp = enterApp;
 window.updateSidebar = updateSidebar;
 window.updateAccount = updateAccount;
 window.loadStats = loadStats;
 window.incrementStat = incrementStat;
+window.saveGenerationRecord = saveGenerationRecord;
 window.showLanding = showLanding;
 </script>
 
@@ -900,6 +1064,7 @@ let currentPage = 'landing';
 let authMode = 'login';
 let qrInstance = null;
 let waTemplates = [];
+let isGuestMode = false;
 
 // ========== NAVIGATION ==========
 function navigate(page) {
@@ -907,7 +1072,6 @@ function navigate(page) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const target = document.getElementById('page-' + page);
     if (target) {
-        // Small delay for transition effect
         setTimeout(() => target.classList.add('active'), 30);
     }
     // Update nav links
@@ -915,10 +1079,9 @@ function navigate(page) {
         l.classList.toggle('active', l.dataset.page === page);
     });
     // Update counters
-    if (!window.currentUser) {
+    if (!window.currentUser || isGuestMode) {
         updateCounters();
     }
-    // Close sidebar on mobile
     closeSidebar();
     // Tool-specific init
     if (page === 'invoice') {
@@ -929,16 +1092,22 @@ function navigate(page) {
         if (!document.getElementById('inv-due').value) document.getElementById('inv-due').value = due.toISOString().split('T')[0];
         if (!document.getElementById('inv-number').value) document.getElementById('inv-number').value = 'INV-' + String(Math.floor(Math.random()*9000)+1000);
     }
+    if (page === 'admin-users') {
+        loadAdminUsers();
+    }
+    if (page === 'admin-templates') {
+        loadAdminTemplates();
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function tryTool(tool) {
-    // Guest trying a tool
+    isGuestMode = true;
     if (checkLimit(tool)) {
-        // Show app shell with that tool
         document.getElementById('landing-page').style.display = 'none';
         document.getElementById('app-shell').classList.remove('hidden');
-        // Hide sidebar on mobile for guests, show it on desktop
+        // Hide admin section for guests
+        document.getElementById('admin-nav-section').classList.add('hidden');
         updateGuestUI();
         navigate(tool);
     }
@@ -973,7 +1142,7 @@ function getLimits() {
 }
 
 function checkLimit(tool) {
-    if (window.currentUser) return true; // Logged in = unlimited
+    if (window.currentUser && !isGuestMode) return true;
     const limits = getLimits();
     const used = limits[tool] || 0;
     if (used >= 3) {
@@ -984,7 +1153,7 @@ function checkLimit(tool) {
 }
 
 function useLimit(tool) {
-    if (window.currentUser) return true;
+    if (window.currentUser && !isGuestMode) return true;
     const limits = getLimits();
     limits[tool] = (limits[tool] || 0) + 1;
     localStorage.setItem(getTodayKey(), JSON.stringify(limits));
@@ -993,7 +1162,7 @@ function useLimit(tool) {
 }
 
 function getRemaining(tool) {
-    if (window.currentUser) return Infinity;
+    if (window.currentUser && !isGuestMode) return Infinity;
     const limits = getLimits();
     return 3 - (limits[tool] || 0);
 }
@@ -1003,7 +1172,7 @@ function updateCounters() {
     tools.forEach(t => {
         const el = document.getElementById(t + '-counter');
         if (!el) return;
-        if (window.currentUser) {
+        if (window.currentUser && !isGuestMode) {
             el.innerHTML = '<i class="fas fa-infinity mr-1"></i>Unlimited';
             el.className = 'counter-badge no-print bg-green-50 text-green-600';
         } else {
@@ -1012,9 +1181,8 @@ function updateCounters() {
             el.className = 'counter-badge no-print ' + (rem <= 1 ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-accent');
         }
     });
-    // Mobile counter
     const mc = document.getElementById('mobile-counter');
-    if (mc && !window.currentUser) {
+    if (mc && (!window.currentUser || isGuestMode)) {
         const currentTool = currentPage;
         if (['qr','resume','invoice','wa'].includes(currentTool)) {
             const rem = getRemaining(currentTool);
@@ -1075,17 +1243,19 @@ async function handleAuthSubmit(e) {
                 name: name || email.split('@')[0],
                 email: email,
                 plan: 'free',
+                status: 'active',
+                role: 'user',
                 createdAt: window.serverTimestamp(),
                 stats: { qr:0, resume:0, invoice:0, wa:0 }
             });
-            window.userData = { name: name || email.split('@')[0], email, plan:'free', stats:{qr:0,resume:0,invoice:0,wa:0} };
+            window.userData = { name: name || email.split('@')[0], email, plan:'free', status:'active', role:'user', stats:{qr:0,resume:0,invoice:0,wa:0} };
             window.showToast('Account created successfully!', 'success');
         } else {
             await window.signInWithEmailAndPassword(window.firebaseAuth, email, password);
             window.showToast('Signed in successfully!', 'success');
         }
         closeModal('auth-modal');
-        // Clear form
+        isGuestMode = false;
         document.getElementById('auth-form').reset();
     } catch(err) {
         let msg = 'Something went wrong. Please try again.';
@@ -1108,6 +1278,8 @@ async function googleSignIn() {
                 name: user.displayName || 'User',
                 email: user.email,
                 plan: 'free',
+                status: 'active',
+                role: 'user',
                 createdAt: window.serverTimestamp(),
                 stats: { qr:0, resume:0, invoice:0, wa:0 }
             };
@@ -1116,6 +1288,7 @@ async function googleSignIn() {
         }
         window.showToast('Signed in with Google!', 'success');
         closeModal('auth-modal');
+        isGuestMode = false;
     } catch(err) {
         if (err.code !== 'auth/popup-closed-by-user') {
             window.showToast('Google sign-in failed. Please try again.', 'error');
@@ -1128,6 +1301,7 @@ async function signOutUser() {
         await window.fbSignOut(window.firebaseAuth);
         window.currentUser = null;
         window.userData = null;
+        isGuestMode = false;
         window.showToast('Signed out', 'success');
     } catch(e) {
         window.showToast('Sign out failed', 'error');
@@ -1190,7 +1364,10 @@ function generateQR() {
     });
 
     useLimit('qr');
-    if (window.currentUser) window.incrementStat('qr');
+    if (window.currentUser && !isGuestMode) {
+        window.incrementStat('qr');
+        window.saveGenerationRecord('qr', { type, content: content.substring(0,200) });
+    }
     showToast('QR code generated!', 'success');
 }
 
@@ -1205,7 +1382,7 @@ function downloadQR() {
 }
 
 function saveQR() {
-    if (!window.currentUser) { showAuth('login'); return; }
+    if (!window.currentUser || isGuestMode) { showAuth('login'); return; }
     showToast('QR code saved to your account!', 'success');
 }
 
@@ -1250,7 +1427,6 @@ function updateResumePreview() {
     const summary = document.getElementById('res-summary').value;
     const skills = document.getElementById('res-skills').value;
 
-    // Collect experiences
     const expItems = [];
     document.querySelectorAll('.res-exp-item').forEach(item => {
         expItems.push({
@@ -1262,7 +1438,6 @@ function updateResumePreview() {
         });
     });
 
-    // Collect education
     const eduItems = [];
     document.querySelectorAll('.res-edu-item').forEach(item => {
         eduItems.push({
@@ -1278,7 +1453,6 @@ function updateResumePreview() {
     }
 
     let html = '';
-    // Header
     html += `<div class="text-center mb-6 pb-6 border-b-2 border-gray-800">`;
     html += `<h1 class="text-3xl font-display font-bold tracking-tight text-gray-900">${name || 'Your Name'}</h1>`;
     if (title) html += `<p class="text-accent font-medium mt-1">${title}</p>`;
@@ -1290,12 +1464,10 @@ function updateResumePreview() {
     }
     html += `</div>`;
 
-    // Summary
     if (summary) {
         html += `<div class="mb-6"><h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-2">Summary</h2><p class="text-sm text-ink leading-relaxed">${summary}</p></div>`;
     }
 
-    // Experience
     const validExp = expItems.filter(e => e.company || e.role);
     if (validExp.length) {
         html += `<div class="mb-6"><h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">Experience</h2>`;
@@ -1309,7 +1481,6 @@ function updateResumePreview() {
         html += `</div>`;
     }
 
-    // Education
     const validEdu = eduItems.filter(e => e.school || e.degree);
     if (validEdu.length) {
         html += `<div class="mb-6"><h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">Education</h2>`;
@@ -1321,7 +1492,6 @@ function updateResumePreview() {
         html += `</div>`;
     }
 
-    // Skills
     if (skills) {
         const skillList = skills.split(',').map(s => s.trim()).filter(Boolean);
         html += `<div><h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-2">Skills</h2><div class="flex flex-wrap gap-2">`;
@@ -1329,9 +1499,12 @@ function updateResumePreview() {
         html += `</div></div>`;
     }
 
-    // Watermark for free users
+    // Watermark with X button for non-pro users
     if (!window.userData || window.userData.plan !== 'pro') {
-        html += `<div class="text-center mt-8 pt-4 border-t border-gray-100"><span class="text-[10px] text-ink-lighter">Made with LuvTools by luviio</span></div>`;
+        html += `<div class="watermark-banner" id="resume-watermark">
+            <p><i class="fas fa-crown mr-1"></i> Made with LuvTools by luviio — Upgrade to Pro Plan to remove watermark</p>
+            <button onclick="this.parentElement.style.display='none'" class="text-amber-600 hover:text-amber-800 font-bold text-lg leading-none">&times;</button>
+        </div>`;
     }
 
     document.getElementById('resume-preview-content').innerHTML = html;
@@ -1351,13 +1524,16 @@ function exportResumePDF() {
     };
     html2pdf().set(opt).from(el).save().then(() => {
         useLimit('resume');
-        if (window.currentUser) window.incrementStat('resume');
+        if (window.currentUser && !isGuestMode) {
+            window.incrementStat('resume');
+            window.saveGenerationRecord('resume', { name: document.getElementById('res-name').value });
+        }
         showToast('Resume PDF downloaded!', 'success');
     });
 }
 
 function saveResume() {
-    if (!window.currentUser) { showAuth('login'); return; }
+    if (!window.currentUser || isGuestMode) { showAuth('login'); return; }
     window.incrementStat('resume');
     showToast('Resume saved!', 'success');
 }
@@ -1393,7 +1569,6 @@ function updateInvoicePreview() {
     const client = document.getElementById('inv-client').value;
     const clientEmail = document.getElementById('inv-client-email').value;
 
-    // Collect items
     const items = [];
     document.querySelectorAll('.inv-item').forEach(item => {
         const name = item.querySelector('.item-name').value;
@@ -1411,7 +1586,6 @@ function updateInvoicePreview() {
     }
 
     let html = '';
-    // Header
     html += `<div class="flex justify-between items-start mb-8">`;
     html += `<div><h1 class="text-2xl font-display font-bold text-gray-900">INVOICE</h1>`;
     if (number) html += `<p class="text-sm text-ink-light mt-1">${number}</p>`;
@@ -1421,14 +1595,12 @@ function updateInvoicePreview() {
     if (due) html += `<p>Due: ${formatDate(due)}</p>`;
     html += `</div></div>`;
 
-    // From / To
     html += `<div class="grid grid-cols-2 gap-8 mb-8">`;
     html += `<div><p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">From</p><p class="text-sm font-semibold">${from || 'Your Company'}</p></div>`;
     html += `<div><p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Bill To</p><p class="text-sm font-semibold">${client || 'Client'}</p>`;
     if (clientEmail) html += `<p class="text-xs text-ink-light mt-0.5">${clientEmail}</p>`;
     html += `</div></div>`;
 
-    // Items table
     if (items.length) {
         html += `<table class="inv-table mb-6"><thead><tr><th>Item</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Total</th></tr></thead><tbody>`;
         items.forEach(i => {
@@ -1436,14 +1608,16 @@ function updateInvoicePreview() {
         });
         html += `</tbody></table>`;
 
-        // Total
         html += `<div class="flex justify-end"><div class="w-56"><div class="flex justify-between py-2 border-t border-gray-200"><span class="text-sm text-ink-light">Subtotal</span><span class="font-semibold">${sym}${subtotal.toFixed(2)}</span></div>`;
         html += `<div class="flex justify-between py-2 border-t-2 border-gray-800"><span class="font-bold">Total</span><span class="font-bold text-lg">${sym}${subtotal.toFixed(2)}</span></div></div></div>`;
     }
 
-    // Watermark
+    // Watermark with X button
     if (!window.userData || window.userData.plan !== 'pro') {
-        html += `<div class="text-center mt-10 pt-4 border-t border-gray-100"><span class="text-[10px] text-ink-lighter">Made with LuvTools by luviio</span></div>`;
+        html += `<div class="watermark-banner" id="invoice-watermark">
+            <p><i class="fas fa-crown mr-1"></i> Made with LuvTools by luviio — Upgrade to Pro Plan to remove watermark</p>
+            <button onclick="this.parentElement.style.display='none'" class="text-amber-600 hover:text-amber-800 font-bold text-lg leading-none">&times;</button>
+        </div>`;
     }
 
     document.getElementById('invoice-preview-content').innerHTML = html;
@@ -1469,13 +1643,16 @@ function exportInvoicePDF() {
     };
     html2pdf().set(opt).from(el).save().then(() => {
         useLimit('invoice');
-        if (window.currentUser) window.incrementStat('invoice');
+        if (window.currentUser && !isGuestMode) {
+            window.incrementStat('invoice');
+            window.saveGenerationRecord('invoice', { number: document.getElementById('inv-number').value, client: document.getElementById('inv-client').value });
+        }
         showToast('Invoice PDF downloaded!', 'success');
     });
 }
 
 function saveInvoice() {
-    if (!window.currentUser) { showAuth('login'); return; }
+    if (!window.currentUser || isGuestMode) { showAuth('login'); return; }
     window.incrementStat('invoice');
     showToast('Invoice saved!', 'success');
 }
@@ -1503,7 +1680,6 @@ function generateWALink() {
     openLink.href = link;
     linkBox.classList.remove('hidden');
 
-    // Generate QR for the link
     qrOutput.innerHTML = '';
     new QRCode(qrOutput, {
         text: link,
@@ -1521,10 +1697,12 @@ function copyWALink() {
     if (!checkLimit('wa')) return;
     navigator.clipboard.writeText(linkText).then(() => {
         useLimit('wa');
-        if (window.currentUser) window.incrementStat('wa');
+        if (window.currentUser && !isGuestMode) {
+            window.incrementStat('wa');
+            window.saveGenerationRecord('wa', { link: linkText.substring(0,200) });
+        }
         showToast('WhatsApp link copied!', 'success');
     }).catch(() => {
-        // Fallback
         const ta = document.createElement('textarea');
         ta.value = linkText;
         document.body.appendChild(ta);
@@ -1532,9 +1710,298 @@ function copyWALink() {
         document.execCommand('copy');
         ta.remove();
         useLimit('wa');
-        if (window.currentUser) window.incrementStat('wa');
+        if (window.currentUser && !isGuestMode) {
+            window.incrementStat('wa');
+            window.saveGenerationRecord('wa', { link: linkText.substring(0,200) });
+        }
         showToast('WhatsApp link copied!', 'success');
     });
+}
+
+// ========== ADMIN FUNCTIONS ==========
+async function loadAdminUsers() {
+    const tbody = document.getElementById('admin-users-tbody');
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-ink-lighter py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>';
+    
+    try {
+        const q = window.query(
+            window.collection(window.firebaseDb, "users"),
+            window.where("role", "!=", "superadmin"),
+            window.orderBy("createdAt", "desc")
+        );
+        const snapshot = await window.getDocs(q);
+        
+        if (snapshot.empty) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-ink-lighter py-8">No users found</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        snapshot.forEach(doc => {
+            const u = doc.data();
+            const stats = u.stats || {};
+            const totalGen = (stats.qr||0) + (stats.resume||0) + (stats.invoice||0) + (stats.wa||0);
+            const joined = u.createdAt ? (u.createdAt.toDate ? u.createdAt.toDate().toLocaleDateString() : new Date(u.createdAt).toLocaleDateString()) : '—';
+            const statusClass = u.status === 'suspended' ? 'status-suspended' : 'status-active';
+            
+            html += `<tr>
+                <td>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-accent-light flex items-center justify-center text-accent font-bold text-xs">${(u.name||'U').charAt(0).toUpperCase()}</div>
+                        <span class="font-medium text-sm">${u.name || 'Unknown'}</span>
+                    </div>
+                </td>
+                <td class="text-sm">${u.email || '—'}</td>
+                <td><span class="text-xs font-semibold uppercase ${u.plan==='pro'?'text-amber-600':'text-ink-light'}">${u.plan||'free'}</span></td>
+                <td><span class="status-badge ${statusClass}">${u.status||'active'}</span></td>
+                <td class="text-sm text-center">${totalGen}</td>
+                <td class="text-sm text-ink-light">${joined}</td>
+                <td>
+                    <div class="flex gap-1">
+                        <button class="btn-ghost text-xs !py-1.5 !px-2" onclick="viewUserDetail('${doc.id}','${u.email}')"><i class="fas fa-eye"></i></button>
+                        <button class="btn-ghost text-xs !py-1.5 !px-2 text-red-500" onclick="${u.status==='suspended'?`unsuspendUser('${doc.id}')`:`suspendUser('${doc.id}')`}"><i class="fas fa-${u.status==='suspended'?'check':'ban'}"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        
+        tbody.innerHTML = html;
+    } catch(e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-red-500 py-8">Error loading users</td></tr>';
+    }
+}
+
+async function viewUserDetail(uid, email) {
+    const content = document.getElementById('user-detail-content');
+    content.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin"></i></div>';
+    openModal('user-detail-modal');
+    
+    try {
+        const snap = await window.getDoc(window.doc(window.firebaseDb, "users", uid));
+        if (!snap.exists()) { content.innerHTML = '<p class="text-red-500">User not found</p>'; return; }
+        
+        const u = snap.data();
+        const stats = u.stats || {};
+        const joined = u.createdAt ? (u.createdAt.toDate ? u.createdAt.toDate().toLocaleString() : new Date(u.createdAt).toLocaleString()) : '—';
+        
+        content.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-center gap-4 pb-4 border-b">
+                    <div class="w-14 h-14 rounded-2xl bg-accent-light flex items-center justify-center text-accent font-display font-bold text-xl">${(u.name||'U').charAt(0).toUpperCase()}</div>
+                    <div>
+                        <div class="font-display font-bold text-lg">${u.name || 'Unknown'}</div>
+                        <div class="text-sm text-ink-light">${u.email}</div>
+                        <span class="status-badge ${u.status==='suspended'?'status-suspended':'status-active'} mt-1 inline-block">${u.status||'active'}</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div><span class="text-ink-lighter block text-xs mb-1">Plan</span><span class="font-semibold">${u.plan||'free'}</span></div>
+                    <div><span class="text-ink-lighter block text-xs mb-1">Role</span><span class="font-semibold capitalize">${u.role||'user'}</span></div>
+                    <div><span class="text-ink-lighter block text-xs mb-1">Member Since</span>${joined}</div>
+                    <div><span class="text-ink-lighter block text-xs mb-1">UID</span><span class="font-mono text-xs">${uid}</span></div>
+                </div>
+                
+                <div class="pt-4 border-t">
+                    <h4 class="font-semibold text-sm mb-3">Generation Stats</h4>
+                    <div class="grid grid-cols-4 gap-3 text-center">
+                        <div class="bg-surface rounded-lg p-3">
+                            <div class="text-lg font-bold text-blue-600">${stats.qr||0}</div>
+                            <div class="text-[10px] text-ink-lighter">QR Codes</div>
+                        </div>
+                        <div class="bg-surface rounded-lg p-3">
+                            <div class="text-lg font-bold text-emerald-600">${stats.resume||0}</div>
+                            <div class="text-[10px] text-ink-lighter">Resumes</div>
+                        </div>
+                        <div class="bg-surface rounded-lg p-3">
+                            <div class="text-lg font-bold text-violet-600">${stats.invoice||0}</div>
+                            <div class="text-[10px] text-ink-lighter">Invoices</div>
+                        </div>
+                        <div class="bg-surface rounded-lg p-3">
+                            <div class="text-lg font-bold text-green-600">${stats.wa||0}</div>
+                            <div class="text-[10px] text-ink-lighter">WA Links</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pt-4 border-t space-y-2">
+                    <button class="btn-secondary w-full justify-center" onclick="resetUserPassword('${email}')"><i class="fas fa-key"></i> Send Password Reset Email</button>
+                    <button class="btn-secondary w-full justify-center" onclick="sendVerificationEmail('${email}')"><i class="fas fa-envelope"></i> Send Verification Email</button>
+                    ${u.status === 'suspended' 
+                        ? `<button class="btn-primary w-full justify-center" onclick="unsuspendUser('${uid}');closeModal('user-detail-modal');"><i class="fas fa-check"></i> Unsuspend Account</button>`
+                        : `<button class="btn-danger w-full justify-center" onclick="suspendUser('${uid}');closeModal('user-detail-modal');"><i class="fas fa-ban"></i> Suspend Account</button>`
+                    }
+                </div>
+            </div>
+        `;
+    } catch(e) {
+        content.innerHTML = '<p class="text-red-500">Error loading user details</p>';
+    }
+}
+
+async function suspendUser(uid) {
+    if(!confirm('Are you sure you want to suspend this user? They will not be able to access their account.')) return;
+    try {
+        await window.updateDoc(window.doc(window.firebaseDb, "users", uid), { status: 'suspended' });
+        showToast('User suspended successfully', 'success');
+        loadAdminUsers();
+    } catch(e) { showToast('Error suspending user', 'error'); }
+}
+
+async function unsuspendUser(uid) {
+    try {
+        await window.updateDoc(window.doc(window.firebaseDb, "users", uid), { status: 'active' });
+        showToast('User unsuspended successfully', 'success');
+        loadAdminUsers();
+    } catch(e) { showToast('Error unsuspending user', 'error'); }
+}
+
+async function resetUserPassword(email) {
+    try {
+        await window.sendPasswordResetEmail(window.firebaseAuth, email);
+        showToast('Password reset email sent to ' + email, 'success');
+    } catch(e) { showToast('Error sending reset email: ' + e.message, 'error'); }
+}
+
+async function sendVerificationEmail(email) {
+    // Firebase Auth doesn't have a simple sendVerificationEmail from admin SDK in client-side
+    // This would typically be done via Cloud Functions
+    showToast('Verification email feature requires backend setup', 'info');
+}
+
+// ========== TEMPLATE MANAGEMENT ==========
+async function loadAdminTemplates() {
+    // Load WA templates
+    const waList = document.getElementById('admin-wa-templates-list');
+    const resList = document.getElementById('admin-resume-templates-list');
+    
+    try {
+        const waSnap = await window.getDocs(window.query(
+            window.collection(window.firebaseDb, "templates"),
+            window.where("type", "==", "whatsapp"),
+            window.orderBy("createdAt", "desc")
+        ));
+        
+        if (waSnap.empty) {
+            waList.innerHTML = '<p class="text-sm text-ink-lighter text-center py-4">No WhatsApp templates yet</p>';
+        } else {
+            let html = '';
+            waSnap.forEach(d => {
+                const t = d.data();
+                html += `<div class="border border-gray-100 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                        <div class="font-semibold text-sm">${t.name}</div>
+                        <div class="text-xs text-ink-lighter mt-1">${t.status || 'active'} • Created ${(t.createdAt?t.createdAt.toDate():new Date()).toLocaleDateString()}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn-ghost text-xs" onclick="editTemplate('${d.id}','${t.type}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-ghost text-xs text-red-500" onclick="deleteTemplate('${d.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            });
+            waList.innerHTML = html;
+        }
+        
+        // Load Resume templates
+        const resSnap = await window.getDocs(window.query(
+            window.collection(window.firebaseDb, "templates"),
+            window.where("type", "==", "resume"),
+            window.orderBy("createdAt", "desc")
+        ));
+        
+        if (resSnap.empty) {
+            resList.innerHTML = '<p class="text-sm text-ink-lighter text-center py-4">No Resume templates yet</p>';
+        } else {
+            let html = '';
+            resSnap.forEach(d => {
+                const t = d.data();
+                html += `<div class="border border-gray-100 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                        <div class="font-semibold text-sm">${t.name}</div>
+                        <div class="text-xs text-ink-lighter mt-1">${t.status || 'active'} • Created ${(t.createdAt?t.createdAt.toDate():new Date()).toLocaleDateString()}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn-ghost text-xs" onclick="editTemplate('${d.id}','${t.type}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-ghost text-xs text-red-500" onclick="deleteTemplate('${d.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            });
+            resList.innerHTML = html;
+        }
+    } catch(e) {
+        console.error(e);
+        waList.innerHTML = '<p class="text-sm text-red-500 text-center py-4">Error loading templates</p>';
+        resList.innerHTML = '<p class="text-sm text-red-500 text-center py-4">Error loading templates</p>';
+    }
+}
+
+function openTemplateModal(type, editId = null) {
+    document.getElementById('tmpl-id').value = editId || '';
+    document.getElementById('tmpl-type').value = type;
+    document.getElementById('tmpl-name').value = '';
+    document.getElementById('tmpl-status').value = 'active';
+    document.getElementById('tmpl-html').value = '';
+    document.getElementById('template-modal-title').textContent = (editId ? 'Edit' : 'Create') + ' ' + (type === 'whatsapp' ? 'WhatsApp' : 'Resume') + ' Template';
+    openModal('template-modal');
+    
+    if (editId) {
+        // Load existing template
+        window.getDoc(window.doc(window.firebaseDb, "templates", editId)).then(snap => {
+            if (snap.exists()) {
+                const t = snap.data();
+                document.getElementById('tmpl-name').value = t.name || '';
+                document.getElementById('tmpl-status').value = t.status || 'active';
+                document.getElementById('tmpl-html').value = t.html || '';
+            }
+        });
+    }
+}
+
+function editTemplate(id, type) {
+    openTemplateModal(type, id);
+}
+
+async function saveTemplate(e) {
+    e.preventDefault();
+    const id = document.getElementById('tmpl-id').value;
+    const type = document.getElementById('tmpl-type').value;
+    const name = document.getElementById('tmpl-name').value;
+    const status = document.getElementById('tmpl-status').value;
+    const html = document.getElementById('tmpl-html').value;
+    
+    try {
+        const data = {
+            type,
+            name,
+            status,
+            html,
+            updatedAt: window.serverTimestamp()
+        };
+        
+        if (id) {
+            await window.updateDoc(window.doc(window.firebaseDb, "templates", id), data);
+            showToast('Template updated!', 'success');
+        } else {
+            data.createdAt = window.serverTimestamp();
+            await window.addDoc(window.collection(window.firebaseDb, "templates"), data);
+            showToast('Template created!', 'success');
+        }
+        
+        closeModal('template-modal');
+        loadAdminTemplates();
+    } catch(e) {
+        showToast('Error saving template', 'error');
+    }
+}
+
+async function deleteTemplate(id) {
+    if(!confirm('Delete this template?')) return;
+    try {
+        await window.deleteDoc(window.doc(window.firebaseDb, "templates", id));
+        showToast('Template deleted', 'success');
+        loadAdminTemplates();
+    } catch(e) { showToast('Error deleting template', 'error'); }
 }
 
 // ========== LANDING HELPERS ==========
