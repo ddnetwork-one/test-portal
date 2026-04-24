@@ -25,7 +25,7 @@ tailwind.config = {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.7.1/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.7.1/firebase-auth-compat.js"></script>
@@ -962,6 +962,20 @@ function selectSize(btn) {
 async function generateQR() {
   const input = document.getElementById('qrInput').value.trim();
   if (!input) { showToast('Please enter a URL or text', 'error'); return; }
+
+  // Make sure QRCode library is loaded
+  if (typeof QRCode === 'undefined') {
+    showToast('QR library is still loading. Please try again.', 'error');
+    return;
+  }
+
+  // Show the section FIRST so the canvas has proper dimensions
+  const section = document.getElementById('qrPreviewSection');
+  section.style.display = 'block';
+
+  // Small delay to let the browser layout the canvas
+  await new Promise(r => setTimeout(r, 50));
+
   const canvas = document.getElementById('qrCanvas');
   try {
     await QRCode.toCanvas(canvas, input, {
@@ -970,9 +984,7 @@ async function generateQR() {
       color: { dark: '#1e1b3a', light: '#ffffff' },
       errorCorrectionLevel: 'H'
     });
-    document.getElementById('qrPreviewSection').style.display = 'block';
-    // Scroll to preview
-    setTimeout(() => document.getElementById('qrPreviewSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
     showToast('QR code generated!', 'success');
   } catch (err) {
     showToast('Failed to generate QR code', 'error');
