@@ -261,14 +261,25 @@ tailwind.config = {
   @keyframes toastIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
   @keyframes toastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-15px) scale(0.96); } }
 
+  /* View Transitions - GLITCH FREE */
   .view { 
     display: none; 
-    animation: fadeSlideIn 0.4s ease-out; 
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
   }
-  .view.active { display: block; }
-  @keyframes fadeSlideIn { 
-    from { opacity: 0; transform: translateY(15px); } 
-    to { opacity: 1; transform: translateY(0); } 
+  .view.active { 
+    display: block; 
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .view.initializing {
+    display: none !important;
+    opacity: 0 !important;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .view { transition: none !important; transform: none !important; }
   }
 
   .modal-overlay {
@@ -476,11 +487,127 @@ tailwind.config = {
     transform: translateY(-1px);
   }
 
+  /* ===== LOADING SPLASH SCREEN ===== */
+  .loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+  }
+  .loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .loading-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 20px 40px rgba(99,102,241,0.3);
+    animation: pulse-glow 2s ease-in-out infinite;
+    margin-bottom: 24px;
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 20px 40px rgba(99,102,241,0.3); transform: scale(1); }
+    50% { box-shadow: 0 25px 50px rgba(99,102,241,0.45); transform: scale(1.05); }
+  }
+  .loading-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e1b3a;
+    letter-spacing: -0.02em;
+  }
+  .loading-subtext {
+    font-size: 13px;
+    color: #6b6580;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+
+  /* ===== HISTORY STYLES ===== */
+  .history-item {
+    background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.3) 100%);
+    border: 1px solid rgba(200,195,220,0.2);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .history-item:hover {
+    background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.5) 100%);
+    border-color: rgba(99,102,241,0.2);
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(99,102,241,0.06);
+  }
+  .history-item.deleted {
+    opacity: 0.7;
+    border-left: 3px solid #ef4444;
+  }
+  .history-type-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .history-type-qr { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1)); color: #4338ca; }
+  .history-type-wa { background: linear-gradient(135deg, rgba(37,211,102,0.15), rgba(18,140,126,0.1)); color: #065f46; }
+  .history-type-pdf { background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(220,38,38,0.1)); color: #991b1b; }
+  
+  .history-meta {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .history-preview {
+    max-width: 60px;
+    max-height: 60px;
+    border-radius: 8px;
+    object-fit: contain;
+    border: 1px solid rgba(200,195,220,0.3);
+  }
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #9ca3af;
+  }
+  .empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
   @media (max-width: 480px) {
     .tab-btn { font-size: 11px; padding: 10px 6px; gap: 5px; }
-    .glass-card { border-radius: 20px; }
+    .glass-card { border-radius: 20px; padding: 20px !important; }
     .modal-content { padding: 24px; border-radius: 24px; }
     .stat-number { font-size: 2rem; }
+    .glass-btn { min-height: 44px; padding: 12px 20px; font-size: 14px; }
+    .glass-input { padding: 14px 16px; font-size: 14px; }
+    body { font-size: 14px; }
+    h1 { font-size: 1.75rem !important; }
+    h2 { font-size: 1.35rem !important; }
+    h3 { font-size: 1.15rem !important; }
+    .feature-card { padding: 24px; }
+    .stat-card { padding: 18px; }
+    .stat-number { font-size: 1.75rem; }
+    .history-item { padding: 12px; }
   }
   @media (min-width: 768px) {
     .glass-card { border-radius: 28px; }
@@ -607,6 +734,15 @@ tailwind.config = {
 </head>
 <body>
 
+<!-- Loading Screen - Prevents FOUC -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-logo">
+    <i class="fa-solid fa-wand-magic-sparkles text-white text-2xl"></i>
+  </div>
+  <div class="loading-text">LuvTools</div>
+  <div class="loading-subtext">Loading your workspace...</div>
+</div>
+
 <div class="bg-blobs" aria-hidden="true">
   <div class="blob blob-1"></div>
   <div class="blob blob-2"></div>
@@ -616,7 +752,7 @@ tailwind.config = {
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- ===== LANDING PAGE VIEW ===== -->
-<div class="view active" id="landingView">
+<div class="view initializing" id="landingView">
   <div class="relative z-10">
     <!-- Navigation -->
     <nav class="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
@@ -852,7 +988,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== AUTH VIEW ===== -->
-<div class="view" id="authView">
+<div class="view initializing" id="authView">
   <div class="min-h-[100dvh] flex flex-col items-center justify-center px-5 py-10 relative z-10">
     <div class="glass-card w-full max-w-md p-10">
       <div class="text-center mb-10">
@@ -927,7 +1063,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== DASHBOARD VIEW ===== -->
-<div class="view" id="dashboardView">
+<div class="view initializing" id="dashboardView">
   <div class="relative z-10 max-w-4xl mx-auto px-4 pt-6 pb-24">
     <header class="flex items-center justify-between mb-8">
       <div class="flex items-center gap-4">
@@ -1023,6 +1159,23 @@ tailwind.config = {
       </div>
     </div>
 
+    <!-- Recent History Section -->
+    <div class="glass-card p-6 mb-8">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left text-primary-500"></i> Recent History
+        </h2>
+        <button onclick="navigateTo('/history')" class="text-sm font-bold text-primary-600 hover:underline">View All</button>
+      </div>
+      <div id="dashboardHistoryList" class="space-y-3">
+        <div class="empty-state">
+          <i class="fa-solid fa-folder-open"></i>
+          <p class="font-semibold text-gray-400">No history yet</p>
+          <p class="text-sm">Start generating to see your history here</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Account Info -->
     <div class="glass-card p-6">
       <h2 class="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
@@ -1051,7 +1204,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== MAIN APP VIEW (Logged In) ===== -->
-<div class="view" id="appView">
+<div class="view initializing" id="appView">
   <div class="relative z-10 max-w-2xl mx-auto px-4 pt-4 pb-44">
     <header class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
@@ -1242,8 +1395,52 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- ===== HISTORY VIEW ===== -->
+<div class="view initializing" id="historyView">
+  <div class="relative z-10 max-w-3xl mx-auto px-4 pt-6 pb-24">
+    <header class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <button onclick="navigateTo('/dashboard')" class="w-10 h-10 rounded-xl bg-white/60 backdrop-blur flex items-center justify-center text-gray-600 hover:text-primary-600 hover:bg-white/80 transition-all duration-300 shadow-sm" aria-label="Back">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Generation History</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="historyPlanBadge" class="badge badge-free">Free</span>
+      </div>
+    </header>
+
+    <!-- Tabs for Active vs Deleted (if SuperAdmin or show own deleted?) -->
+    <nav class="tab-bar mb-6" role="tablist" id="historyTabs">
+      <button class="tab-btn active" onclick="switchHistoryTab('active')" role="tab" aria-selected="true" id="historyTabActive">
+        <i class="fa-solid fa-clock-rotate-left"></i> Active
+      </button>
+      <button class="tab-btn" onclick="switchHistoryTab('deleted')" role="tab" aria-selected="false" id="historyTabDeleted">
+        <i class="fa-solid fa-trash-can"></i> Recently Deleted
+      </button>
+    </nav>
+
+    <div id="historyContent">
+      <div id="activeHistoryList" class="space-y-3">
+        <div class="empty-state">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <p class="font-semibold text-gray-400">No history found</p>
+          <p class="text-sm">Your generations will appear here</p>
+        </div>
+      </div>
+      <div id="deletedHistoryList" class="space-y-3" style="display:none;">
+        <div class="empty-state">
+          <i class="fa-solid fa-trash-can"></i>
+          <p class="font-semibold text-gray-400">No deleted items</p>
+          <p class="text-sm">Deleted items will appear here</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===== FREE TOOLS VIEW (No Login Required) ===== -->
-<div class="view" id="freeToolsView">
+<div class="view initializing" id="freeToolsView">
   <div class="relative z-10 free-tool-container pt-4 pb-32">
     
     <!-- Simple Header - No User Menu -->
@@ -1444,7 +1641,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== PRICING VIEW ===== -->
-<div class="view" id="pricingView">
+<div class="view initializing" id="pricingView">
   <div class="relative z-10 max-w-4xl mx-auto px-4 pt-8 pb-24">
     <header class="flex items-center gap-4 mb-10">
       <button onclick="navigateTo(currentUser ? '/dashboard' : '/home')" class="glass-btn btn-secondary !min-h-0 !py-2.5 !px-4 !rounded-xl">
@@ -1469,7 +1666,7 @@ tailwind.config = {
           <li class="flex items-start gap-3"><i class="fa-solid fa-check text-green-500 mt-1 text-lg"></i> Basic QR sizes (S, M, L)</li>
           <li class="flex items-start gap-3"><i class="fa-solid fa-check text-green-500 mt-1 text-lg"></i> Standard PDF quality</li>
           <li class="flex items-start gap-3"><i class="fa-solid fa-xmark text-gray-300 mt-1 text-lg"></i> Watermark on exports</li>
-          <li class="flex items-start gap-3"><i class="fa-solid fa-xmark text-gray-300 mt-1 text-lg"></i> No priority support</li>
+          <li class="flex items-start gap-3"><i class="fa-solid fa-xmark text-gray-300 mt-1 text-lg"></i> History deletes after 7 days</li>
         </ul>
         <button onclick="navigateTo(currentUser ? '/dashboard' : '/home')" class="glass-btn btn-secondary w-full !py-4">Current Plan</button>
       </div>
@@ -1490,6 +1687,7 @@ tailwind.config = {
           <li class="flex items-start gap-3"><i class="fa-solid fa-check text-green-500 mt-1 text-lg"></i> All sizes including HD</li>
           <li class="flex items-start gap-3"><i class="fa-solid fa-check text-green-500 mt-1 text-lg"></i> No watermark</li>
           <li class="flex items-start gap-3"><i class="fa-solid fa-check text-green-500 mt-1 text-lg"></i> Advanced PDF formatting</li>
+          <li class="flex items-start gap-3"><i class="fa-solid fa-check text-green-500 mt-1 text-lg"></i> Permanent history storage</li>
           <li class="flex items-start gap-3"><i class="fa-solid fa-check text-green-500 mt-1 text-lg"></i> Priority support via email</li>
         </ul>
         <button onclick="startUpgradeFlow()" class="glass-btn btn-primary w-full !py-4" id="pricingUpgradeBtn">Upgrade to Pro</button>
@@ -1529,6 +1727,11 @@ tailwind.config = {
             <td class="text-center font-bold text-primary-600">High Quality</td>
           </tr>
           <tr>
+            <td>History Retention</td>
+            <td class="text-center">7 Days</td>
+            <td class="text-center font-bold text-primary-600">Permanent</td>
+          </tr>
+          <tr>
             <td>Support</td>
             <td class="text-center">Community</td>
             <td class="text-center font-bold text-primary-600">Priority Email</td>
@@ -1547,7 +1750,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== TERMS VIEW ===== -->
-<div class="view" id="termsView">
+<div class="view initializing" id="termsView">
   <div class="relative z-10 max-w-3xl mx-auto px-4 pt-8 pb-24">
     <header class="flex items-center gap-4 mb-10">
       <button onclick="navigateTo(currentUser ? '/dashboard' : '/home')" class="glass-btn btn-secondary !min-h-0 !py-2.5 !px-4 !rounded-xl">
@@ -1588,7 +1791,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== PRIVACY VIEW ===== -->
-<div class="view" id="privacyView">
+<div class="view initializing" id="privacyView">
   <div class="relative z-10 max-w-3xl mx-auto px-4 pt-8 pb-24">
     <header class="flex items-center gap-4 mb-10">
       <button onclick="navigateTo(currentUser ? '/dashboard' : '/home')" class="glass-btn btn-secondary !min-h-0 !py-2.5 !px-4 !rounded-xl">
@@ -1608,9 +1811,21 @@ tailwind.config = {
         <li><strong>Email address:</strong> When you create an account or sign in with Google.</li>
         <li><strong>Profile information:</strong> Display name and profile photo (if using Google Sign-In).</li>
         <li><strong>Usage data:</strong> How you interact with our tools (generation counts, feature usage).</li>
+        <li><strong>Generation history:</strong> Stored securely for your convenience (see retention policy below).</li>
       </ul>
       
-      <h2 class="text-xl font-bold text-gray-900 mt-8 mb-4">3. Google Account Data Safety</h2>
+      <h2 class="text-xl font-bold text-gray-900 mt-8 mb-4">3. Data Retention</h2>
+      <div class="bg-blue-50/80 backdrop-blur border border-blue-200/60 rounded-2xl p-6 mb-5">
+        <p class="text-sm text-blue-900 font-bold mb-3 flex items-center gap-2"><i class="fa-solid fa-database text-blue-600 text-lg"></i>Your Data Retention Policy</p>
+        <ul class="text-sm text-blue-800 space-y-2 list-disc pl-6">
+          <li><strong>Free users:</strong> Generation history automatically moves to "Recently Deleted" after 7 days.</li>
+          <li><strong>Pro users:</strong> History is stored permanently until you choose to delete it.</li>
+          <li><strong>Recently Deleted:</strong> Items remain recoverable by administrators for audit purposes.</li>
+          <li><strong>Permanent Deletion:</strong> Only SuperAdmin can permanently purge data from our systems.</li>
+        </ul>
+      </div>
+      
+      <h2 class="text-xl font-bold text-gray-900 mt-8 mb-4">4. Google Account Data Safety</h2>
       <div class="bg-blue-50/80 backdrop-blur border border-blue-200/60 rounded-2xl p-6 mb-5">
         <p class="text-sm text-blue-900 font-bold mb-3 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-blue-600 text-lg"></i>Your Google Account Data is Safe With Us</p>
         <ul class="text-sm text-blue-800 space-y-2 list-disc pl-6">
@@ -1620,7 +1835,7 @@ tailwind.config = {
         </ul>
       </div>
       
-      <h2 class="text-xl font-bold text-gray-900 mt-8 mb-4">4. Contact Us</h2>
+      <h2 class="text-xl font-bold text-gray-900 mt-8 mb-4">5. Contact Us</h2>
       <p class="text-sm text-gray-600 leading-relaxed">If you have questions about this Privacy Policy, please contact us at: <br>
       <strong>Email:</strong> <a href="mailto:support@luviio.com" class="text-primary-600 underline font-semibold">support@luviio.com</a></p>
     </div>
@@ -1628,7 +1843,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== ADMIN PANEL VIEW ===== -->
-<div class="view" id="adminView">
+<div class="view initializing" id="adminView">
   <div class="relative z-10 max-w-6xl mx-auto px-4 pt-6 pb-8">
     <header class="flex items-center justify-between mb-8">
       <div class="flex items-center gap-4">
@@ -1663,16 +1878,24 @@ tailwind.config = {
       </div>
     </div>
 
+    <!-- Admin Navigation Tabs -->
     <div class="flex gap-3 mb-5 overflow-x-auto pb-2">
-      <button class="size-btn active" data-filter="all" onclick="filterUsers(this,'all')">All Users</button>
-      <button class="size-btn" data-filter="active" onclick="filterUsers(this,'active')">Active</button>
-      <button class="size-btn" data-filter="inactive" onclick="filterUsers(this,'inactive')">Inactive</button>
-      <button class="size-btn" data-filter="suspended" onclick="filterUsers(this,'suspended')">Suspended</button>
-      <button class="size-btn" data-filter="banned" onclick="filterUsers(this,'banned')">Banned</button>
-      <button class="size-btn" data-filter="pro" onclick="filterUsers(this,'pro')">Pro Only</button>
+      <button class="size-btn active" data-admin-tab="users" onclick="switchAdminTab(this,'users')">Users</button>
+      <button class="size-btn" data-admin-tab="history" onclick="switchAdminTab(this,'history')">All History</button>
+      <button class="size-btn" data-admin-tab="deleted" onclick="switchAdminTab(this,'deleted')">Recently Deleted</button>
     </div>
-    
-    <div class="glass-card p-5 overflow-x-auto">
+
+    <!-- Users Tab Content -->
+    <div id="adminUsersContent" class="glass-card p-5 overflow-x-auto">
+      <div class="flex gap-3 mb-5 overflow-x-auto pb-2">
+        <button class="size-btn active" data-filter="all" onclick="filterUsers(this,'all')">All Users</button>
+        <button class="size-btn" data-filter="active" onclick="filterUsers(this,'active')">Active</button>
+        <button class="size-btn" data-filter="inactive" onclick="filterUsers(this,'inactive')">Inactive</button>
+        <button class="size-btn" data-filter="suspended" onclick="filterUsers(this,'suspended')">Suspended</button>
+        <button class="size-btn" data-filter="banned" onclick="filterUsers(this,'banned')">Banned</button>
+        <button class="size-btn" data-filter="pro" onclick="filterUsers(this,'pro')">Pro Only</button>
+      </div>
+      
       <table class="admin-table" id="adminTable">
         <thead>
           <tr>
@@ -1688,6 +1911,29 @@ tailwind.config = {
           <tr><td colspan="6" class="text-center py-12 text-gray-400"><div class="spinner mx-auto mb-3" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div>Loading...</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- All History Tab Content -->
+    <div id="adminHistoryContent" class="glass-card p-5" style="display:none;">
+      <h3 class="text-lg font-bold text-gray-900 mb-4">All User Generation History</h3>
+      <div id="adminAllHistoryList" class="space-y-3">
+        <div class="empty-state">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <p class="font-semibold text-gray-400">Loading history...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recently Deleted Tab Content -->
+    <div id="adminDeletedContent" class="glass-card p-5" style="display:none;">
+      <h3 class="text-lg font-bold text-gray-900 mb-4">Recently Deleted Items</h3>
+      <p class="text-sm text-gray-500 mb-4">Items here are soft-deleted. You can restore them or permanently remove them.</p>
+      <div id="adminDeletedList" class="space-y-3">
+        <div class="empty-state">
+          <i class="fa-solid fa-trash-can"></i>
+          <p class="font-semibold text-gray-400">No deleted items</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1712,6 +1958,7 @@ tailwind.config = {
           <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i>5 generations per day</li>
           <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i>Basic features</li>
           <li class="flex items-center gap-2"><i class="fa-solid fa-xmark text-gray-300"></i>Watermark on exports</li>
+          <li class="flex items-center gap-2"><i class="fa-solid fa-xmark text-gray-300"></i>History expires in 7 days</li>
         </ul>
       </div>
       <div class="p-6 rounded-2xl border-2 border-primary-500/40 bg-gradient-to-br from-primary-500/5 to-accent-500/5 relative">
@@ -1725,6 +1972,7 @@ tailwind.config = {
           <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i>Unlimited everything</li>
           <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i>No watermark</li>
           <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i>HD quality exports</li>
+          <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i>Permanent history storage</li>
           <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i>Priority support</li>
         </ul>
         <button onclick="startUpgradeFlow(); closePlanModal();" class="glass-btn btn-primary w-full mt-6" id="proUpgradeBtn">
@@ -1857,6 +2105,19 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- ===== HISTORY PREVIEW MODAL ===== -->
+<div class="modal-overlay" id="historyPreviewModal">
+  <div class="modal-content" style="max-width:500px;">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-extrabold text-gray-900 tracking-tight">History Details</h3>
+      <button onclick="closeHistoryPreviewModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all" aria-label="Close">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+    <div id="historyPreviewContent" class="space-y-4"></div>
+  </div>
+</div>
+
 <script>
 /* ========================================
    Firebase Configuration & Init
@@ -1891,6 +2152,12 @@ let currentFilter = 'all';
 let allUsers = [];
 let countdownInterval = null;
 
+// History state
+let userHistory = [];
+let deletedHistory = [];
+let currentHistoryTab = 'active';
+let currentAdminTab = 'users';
+
 // Free tools state
 let freeCurrentTab = 'qr';
 let freeSelectedSize = 250;
@@ -1900,6 +2167,10 @@ let freePdfFile = null;
 // Guest usage tracking
 const DAILY_LIMIT = 5;
 const USAGE_KEY_PREFIX = 'luvtools_usage_';
+
+// App initialization state
+let appInitialized = false;
+let authResolved = false;
 
 /* ========================================
    Router System - Fixed for Refresh
@@ -1913,6 +2184,7 @@ const routes = {
   '/qr': 'appView',
   '/wa-link': 'appView',
   '/pdf': 'appView',
+  '/history': 'historyView',
   '/free': 'freeToolsView',
   '/free/qr': 'freeToolsView',
   '/free/wa-link': 'freeToolsView',
@@ -1928,7 +2200,6 @@ function getCurrentPath() {
   let path = window.location.pathname;
   // Handle local file testing
   if (path.includes('.html') || path === '/' || path === '') {
-    // Check hash for SPA-like routing in file:// protocol
     const hash = window.location.hash.replace('#', '');
     if (hash) return hash;
     return '/';
@@ -1937,7 +2208,6 @@ function getCurrentPath() {
 }
 
 function navigateTo(path) {
-  // Use history API for real servers, fallback to hash for local files
   if (window.location.protocol === 'file:') {
     window.location.hash = path;
   } else {
@@ -1947,10 +2217,12 @@ function navigateTo(path) {
 }
 
 function handleRoute() {
+  if (!appInitialized) return; // Don't route until ready
+  
   const path = getCurrentPath();
   
   // Route protection rules
-  if ((path === '/dashboard') && !currentUser) {
+  if ((path === '/dashboard' || path === '/history') && !currentUser) {
     navigateTo('/login');
     return;
   }
@@ -1985,29 +2257,42 @@ function handleRoute() {
     return;
   }
   
-  // Hide all views first
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  // Hide all views first - smooth transition
+  document.querySelectorAll('.view').forEach(v => {
+    v.classList.remove('active');
+    v.style.opacity = '0';
+    v.style.transform = 'translateY(10px)';
+  });
   
-  // Show target view
-  const targetView = document.getElementById(viewId);
-  if (targetView) {
-    targetView.classList.add('active');
-  }
-  
-  // Initialize specific views
-  if (path.startsWith('/free')) {
-    initFreeTools(path);
-  } else if (path === '/qr' || path === '/wa-link' || path === '/pdf') {
-    const tabMap = { '/qr': 'qr', '/wa-link': 'whatsapp', '/pdf': 'pdf' };
-    switchTab(tabMap[path]);
-    if (!currentUser) checkGuestLimits();
-  } else if (path === '/dashboard') {
-    loadDashboardStats();
-  } else if (path === '/admin' || path === '/admin/dashboard') {
-    loadAdminUsers();
-  }
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Show target view with slight delay for smooth animation
+  setTimeout(() => {
+    const targetView = document.getElementById(viewId);
+    if (targetView) {
+      targetView.classList.add('active');
+      // Force reflow then animate in
+      void targetView.offsetWidth;
+      targetView.style.opacity = '1';
+      targetView.style.transform = 'translateY(0)';
+    }
+    
+    // Initialize specific views
+    if (path.startsWith('/free')) {
+      initFreeTools(path);
+    } else if (path === '/qr' || path === '/wa-link' || path === '/pdf') {
+      const tabMap = { '/qr': 'qr', '/wa-link': 'whatsapp', '/pdf': 'pdf' };
+      switchTab(tabMap[path]);
+      if (!currentUser) checkGuestLimits();
+    } else if (path === '/dashboard') {
+      loadDashboardStats();
+      loadDashboardHistory();
+    } else if (path === '/history') {
+      loadUserHistory();
+    } else if (path === '/admin' || path === '/admin/dashboard') {
+      loadAdminUsers();
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 50);
 }
 
 // Listen for popstate (back/forward buttons)
@@ -2030,7 +2315,10 @@ function showToast(message, type = 'info') {
   toast.className = `toast ${type}`;
   toast.innerHTML = `<i class="fa-solid ${icons[type]} toast-icon"></i><span>${message}</span>`;
   container.appendChild(toast);
-  setTimeout(() => { toast.classList.add('out'); setTimeout(() => toast.remove(), 300); }, 3500);
+  setTimeout(() => { 
+    toast.classList.add('out'); 
+    setTimeout(() => toast.remove(), 300); 
+  }, 3500);
 }
 
 function togglePwdVis(inputId, btn) {
@@ -2046,9 +2334,39 @@ function formatDate(ts) {
   return d.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+function formatDateTime(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('en-MY', { 
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const now = new Date();
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const diff = now - d;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return formatDate(ts);
+}
+
 function showView(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(viewId).classList.add('active');
+  const view = document.getElementById(viewId);
+  if (view) {
+    view.classList.add('active');
+    view.style.opacity = '1';
+    view.style.transform = 'translateY(0)';
+  }
 }
 
 /* ========================================
@@ -2097,7 +2415,6 @@ function updateCountdownDisplay(timerElId) {
   if (remaining > 0) {
     timerEl.textContent = formatTimeRemaining(remaining);
   } else {
-    // Reset counts at midnight
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith(USAGE_KEY_PREFIX)) {
         const datePart = key.split('_').pop();
@@ -2155,6 +2472,7 @@ let authInitialized = false;
 
 auth.onAuthStateChanged(async (user) => {
   authInitialized = true;
+  authResolved = true;
   
   if (user) {
     currentUser = user;
@@ -2167,6 +2485,7 @@ auth.onAuthStateChanged(async (user) => {
         if (userData.status === 'suspended' || userData.status === 'banned') {
           showToast('Your account has been suspended or banned. Contact support.', 'error');
           await auth.signOut();
+          hideLoadingScreen();
           return;
         }
       } else {
@@ -2205,10 +2524,9 @@ auth.onAuthStateChanged(async (user) => {
     userData = null;
     
     const path = getCurrentPath();
-    if (['/dashboard', '/admin', '/admin/dashboard'].includes(path)) {
+    if (['/dashboard', '/history', '/admin', '/admin/dashboard'].includes(path)) {
       navigateTo('/login');
     } else if (['/qr', '/wa-link', '/pdf'].includes(path)) {
-      // Redirect non-logged users to free versions
       const freeMap = { '/qr': '/free/qr', '/wa-link': '/free/wa-link', '/pdf': '/free/pdf' };
       navigateTo(freeMap[path]);
     } else if (path === '/login' || path === '/auth') {
@@ -2219,6 +2537,9 @@ auth.onAuthStateChanged(async (user) => {
       showView('landingView');
     }
   }
+  
+  // Hide loading screen after a short delay to ensure smooth transition
+  setTimeout(hideLoadingScreen, 300);
 });
 
 async function handleLogin() {
@@ -2297,13 +2618,37 @@ function showRegister() { document.getElementById('loginForm').style.display = '
 function showLogin() { document.getElementById('loginForm').style.display = 'block'; document.getElementById('registerForm').style.display = 'none'; }
 
 /* ========================================
+   Loading Screen Management
+   ======================================== */
+function hideLoadingScreen() {
+  const loadingScreen = document.getElementById('loadingScreen');
+  if (loadingScreen) {
+    loadingScreen.classList.add('hidden');
+    // Remove initializing class from all views
+    document.querySelectorAll('.view.initializing').forEach(v => {
+      v.classList.remove('initializing');
+    });
+    appInitialized = true;
+  }
+}
+
+// Fallback: hide loading screen after max 5 seconds
+setTimeout(() => {
+  if (!appInitialized) {
+    hideLoadingScreen();
+    appInitialized = true;
+    handleRoute();
+  }
+}, 5000);
+
+/* ========================================
    UI Setup
    ======================================== */
 function setupUI() {
   if (!userData) return;
   
   // Update badges
-  ['planBadge', 'planBadgeApp'].forEach(id => {
+  ['planBadge', 'planBadgeApp', 'historyPlanBadge'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       if (userData.plan === 'pro') {
@@ -2339,45 +2684,42 @@ function setupUI() {
     if (el) el.style.display = userData.role === 'superadmin' ? 'flex' : 'none';
   });
   
-  // Update dashboard elements
-  updateDashboardUI();
+  // Show/hide history tabs based on role
+  const historyTabs = document.getElementById('historyTabs');
+  if (historyTabs) {
+    historyTabs.style.display = userData.role === 'superadmin' ? 'flex' : 'none';
+  }
   
+  updateDashboardUI();
   updateActionButton();
 }
 
 function updateDashboardUI() {
   if (!userData) return;
   
-  // Avatar
   const avatar = document.getElementById('dashboardAvatar');
   if (avatar) avatar.textContent = (userData.displayName || userData.email)[0].toUpperCase();
   
-  // Greeting
   const greeting = document.getElementById('dashboardGreeting');
   if (greeting) greeting.textContent = `Welcome back, ${userData.displayName || 'User'}!`;
   
-  // Email displays
   ['dashboardEmail', 'dashEmail', 'userMenuEmail', 'userMenuEmailApp'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = userData.email;
   });
   
-  // Display name
   const displayName = document.getElementById('dashDisplayName');
   if (displayName) displayName.textContent = userData.displayName || '—';
   
-  // Plan badge on dashboard
   const dashPlan = document.getElementById('dashPlanBadge');
   if (dashPlan) {
     dashPlan.className = userData.plan === 'pro' ? 'badge badge-pro' : 'badge badge-free';
     dashPlan.innerHTML = userData.plan === 'pro' ? '<i class="fa-solid fa-crown mr-1"></i>Pro' : 'Free';
   }
   
-  // Joined date
   const joined = document.getElementById('dashJoined');
   if (joined) joined.textContent = formatDate(userData.createdAt);
   
-  // Stats
   document.getElementById('statQrCount').textContent = userData.qrCount || 0;
   document.getElementById('statWaCount').textContent = userData.waCount || 0;
   document.getElementById('statPdfCount').textContent = userData.pdfCount || 0;
@@ -2394,6 +2736,75 @@ async function loadDashboardStats() {
   } catch (err) {
     console.error(err);
   }
+}
+
+async function loadDashboardHistory() {
+  if (!currentUser) return;
+  const listContainer = document.getElementById('dashboardHistoryList');
+  if (!listContainer) return;
+  
+  try {
+    const snapshot = await db.collection('history')
+      .where('userId', '==', currentUser.uid)
+      .where('deleted', '==', false)
+      .orderBy('createdAt', 'desc')
+      .limit(5)
+      .get();
+    
+    if (snapshot.empty) {
+      listContainer.innerHTML = `
+        <div class="empty-state">
+          <i class="fa-solid fa-folder-open"></i>
+          <p class="font-semibold text-gray-400">No history yet</p>
+          <p class="text-sm">Start generating to see your history here</p>
+        </div>`;
+      return;
+    }
+    
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    listContainer.innerHTML = items.map(item => renderHistoryItem(item)).join('');
+  } catch (err) {
+    console.error('Error loading dashboard history:', err);
+  }
+}
+
+function renderHistoryItem(item) {
+  const typeIcons = {
+    qr: { icon: 'fa-qrcode', class: 'history-type-qr', label: 'QR Code' },
+    wa: { icon: 'fa-brands fa-whatsapp', class: 'history-type-wa', label: 'WhatsApp Link' },
+    pdf: { icon: 'fa-file-pdf', class: 'history-type-pdf', label: 'PDF Document' }
+  };
+  const typeInfo = typeIcons[item.type] || typeIcons.qr;
+  
+  let previewContent = '';
+  if (item.type === 'qr' && item.previewData) {
+    previewContent = `<img src="${item.previewData}" alt="QR Preview" class="history-preview">`;
+  } else if (item.type === 'wa' && item.data) {
+    previewContent = `<span class="text-xs text-green-600 font-mono truncate block max-w-[150px]">${item.data.phone || ''}</span>`;
+  } else if (item.type === 'pdf') {
+    previewContent = `<i class="fa-solid fa-file-pdf text-red-500 text-2xl"></i>`;
+  }
+  
+  return `
+    <div class="history-item" onclick="previewHistoryItem('${item.id}')">
+      <div class="flex items-center gap-4">
+        <div class="history-type-icon ${typeInfo.class}">
+          <i class="${typeInfo.icon.startsWith('fa-brands') ? typeInfo.icon : 'fa-solid ' + typeInfo.icon}"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-bold text-sm text-gray-900">${typeInfo.label}</span>
+            ${item.deleted ? '<span class="text-xs text-red-500 font-bold">DELETED</span>' : ''}
+          </div>
+          <p class="text-xs text-gray-500 truncate">${item.contentSummary || 'No summary'}</p>
+          <div class="history-meta mt-1 flex items-center gap-3">
+            <span>${timeAgo(item.createdAt)}</span>
+            ${item.size ? `<span>Size: ${item.size}px</span>` : ''}
+          </div>
+        </div>
+        ${previewContent ? `<div class="shrink-0">${previewContent}</div>` : ''}
+      </div>
+    </div>`;
 }
 
 function toggleUserMenu() {
@@ -2464,14 +2875,14 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
   const tabMap = { qr: 'tabQr', whatsapp: 'tabWhatsapp', pdf: 'tabPdf' };
   const panelMap = { qr: 'qrPanel', whatsapp: 'whatsappPanel', pdf: 'pdfPanel' };
-  document.getElementById(tabMap[tab]).classList.add('active');
-  document.getElementById(tabMap[tab]).setAttribute('aria-selected', 'true');
+  document.getElementById(tabMap[tab])?.classList.add('active');
+  document.getElementById(tabMap[tab])?.setAttribute('aria-selected', 'true');
   document.getElementById(panelMap[tab]).style.display = 'block';
   updateActionButton();
   checkGuestLimits();
   
   const urlMap = { qr: '/qr', whatsapp: '/wa-link', pdf: '/pdf' };
-  if (getCurrentPath() !== urlMap[tab]) {
+  if (getCurrentPath() !== urlMap[tab] && appInitialized) {
     window.history.replaceState({}, '', urlMap[tab]);
   }
 }
@@ -2490,10 +2901,273 @@ function updateActionButton() {
 }
 
 /* ========================================
+   HISTORY SYSTEM
+   ======================================== */
+async function saveToHistory(type, data) {
+  if (!currentUser) return;
+  
+  try {
+    const historyData = {
+      userId: currentUser.uid,
+      type: type,
+      data: data,
+      contentSummary: generateContentSummary(type, data),
+      size: data.size || null,
+      previewData: data.previewData || null,
+      deleted: false,
+      deletedAt: null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    await db.collection('history').add(historyData);
+  } catch (err) {
+    console.error('Error saving to history:', err);
+  }
+}
+
+function generateContentSummary(type, data) {
+  switch(type) {
+    case 'qr':
+      return (data.text || '').substring(0, 50) + ((data.text || '').length > 50 ? '...' : '');
+    case 'wa':
+      return `Phone: ${data.phone || ''}` + (data.message ? ` | Msg: ${data.message.substring(0, 30)}...` : '');
+    case 'pdf':
+      return data.title || 'Untitled PDF';
+    default:
+      return 'Unknown';
+  }
+}
+
+async function loadUserHistory() {
+  if (!currentUser) return;
+  
+  const activeList = document.getElementById('activeHistoryList');
+  const deletedList = document.getElementById('deletedHistoryList');
+  
+  try {
+    // Load active history
+    const activeSnapshot = await db.collection('history')
+      .where('userId', '==', currentUser.uid)
+      .where('deleted', '==', false)
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
+    
+    userHistory = activeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    if (userHistory.length === 0) {
+      activeList.innerHTML = `
+        <div class="empty-state">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <p class="font-semibold text-gray-400">No history found</p>
+          <p class="text-sm">Your generations will appear here</p>
+        </div>`;
+    } else {
+      activeList.innerHTML = userHistory.map(item => renderHistoryItem(item)).join('');
+    }
+    
+    // Load deleted history (for superadmins or own deleted items)
+    if (userData?.role === 'superadmin') {
+      const deletedSnapshot = await db.collection('history')
+        .where('deleted', '==', true)
+        .orderBy('deletedAt', 'desc')
+        .limit(100)
+        .get();
+      
+      deletedHistory = deletedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } else {
+      const deletedSnapshot = await db.collection('history')
+        .where('userId', '==', currentUser.uid)
+        .where('deleted', '==', true)
+        .orderBy('deletedAt', 'desc')
+        .limit(20)
+        .get();
+      
+      deletedHistory = deletedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+    
+    if (deletedHistory.length === 0) {
+      deletedList.innerHTML = `
+        <div class="empty-state">
+          <i class="fa-solid fa-trash-can"></i>
+          <p class="font-semibold text-gray-400">No deleted items</p>
+          <p class="text-sm">Deleted items will appear here</p>
+        </div>`;
+    } else {
+      deletedList.innerHTML = deletedHistory.map(item => `
+        <div class="history-item deleted" id="del-${item.id}">
+          <div class="flex items-center gap-4">
+            <div class="history-type-${item.type === 'qr' ? 'qr' : item.type === 'wa' ? 'wa' : 'pdf'}">
+              <i class="fa-solid ${item.type === 'qr' ? 'fa-qrcode' : item.type === 'wa' ? 'fa-brands fa-whatsapp' : 'fa-file-pdf'}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-sm text-gray-700">${item.contentSummary || 'Deleted item'}</p>
+              <p class="text-xs text-red-400">Deleted ${timeAgo(item.deletedAt)}</p>
+            </div>
+            ${userData?.role === 'superadmin' ? `
+              <button onclick="restoreHistoryItem('${item.id}')" class="glass-btn btn-secondary !py-2 !px-3 !text-xs">
+                <i class="fa-solid fa-rotate-left"></i> Restore
+              </button>
+              <button onclick="permanentDeleteHistoryItem('${item.id}')" class="glass-btn btn-danger !py-2 !px-3 !text-xs">
+                <i class="fa-solid fa-trash-can"></i> Purge
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+  } catch (err) {
+    console.error('Error loading history:', err);
+    activeList.innerHTML = `<div class="empty-state"><i class="fa-solid fa-exclamation-triangle text-red-400"></i><p class="font-semibold text-red-400">Failed to load history</p></div>`;
+  }
+}
+
+function switchHistoryTab(tab) {
+  currentHistoryTab = tab;
+  document.getElementById('historyTabActive')?.classList.toggle('active', tab === 'active');
+  document.getElementById('historyTabDeleted')?.classList.toggle('active', tab === 'deleted');
+  document.getElementById('activeHistoryList').style.display = tab === 'active' ? '' : 'none';
+  document.getElementById('deletedHistoryList').style.display = tab === 'deleted' ? '' : 'none';
+}
+
+async function deleteHistoryItem(itemId) {
+  if (!confirm('Delete this item? It will move to Recently Deleted.')) return;
+  
+  try {
+    await db.collection('history').doc(itemId).update({
+      deleted: true,
+      deletedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Item moved to Recently Deleted', 'info');
+    loadUserHistory();
+    loadDashboardHistory();
+  } catch (err) {
+    showToast('Failed to delete item', 'error');
+  }
+}
+
+async function restoreHistoryItem(itemId) {
+  try {
+    await db.collection('history').doc(itemId).update({
+      deleted: false,
+      deletedAt: null
+    });
+    showToast('Item restored successfully!', 'success');
+    loadUserHistory();
+  } catch (err) {
+    showToast('Failed to restore item', 'error');
+  }
+}
+
+async function permanentDeleteHistoryItem(itemId) {
+  if (!confirm('PERMANENTLY DELETE this item? This cannot be undone.')) return;
+  
+  try {
+    await db.collection('history').doc(itemId).delete();
+    showToast('Item permanently deleted', 'success');
+    loadUserHistory();
+  } catch (err) {
+    showToast('Failed to delete item', 'error');
+  }
+}
+
+function previewHistoryItem(itemId) {
+  const item = [...userHistory, ...deletedHistory].find(i => i.id === itemId);
+  if (!item) return;
+  
+  const content = document.getElementById('historyPreviewContent');
+  
+  let detailsHTML = `
+    <div class="flex items-center gap-3 mb-4">
+      <div class="history-type-icon ${item.type === 'qr' ? 'history-type-qr' : item.type === 'wa' ? 'history-type-wa' : 'history-type-pdf'}">
+        <i class="fa-solid ${item.type === 'qr' ? 'fa-qrcode' : item.type === 'wa' ? 'fa-brands fa-whatsapp' : 'fa-file-pdf'} text-lg"></i>
+      </div>
+      <div>
+        <p class="font-bold text-gray-900">${item.type.toUpperCase()} Generation</p>
+        <p class="text-xs text-gray-500">${formatDateTime(item.createdAt)}</p>
+      </div>
+    </div>
+    <div class="glass-divider"></div>`;
+  
+  if (item.type === 'qr' && item.previewData) {
+    detailsHTML += `
+      <div class="text-center my-4">
+        <img src="${item.previewData}" alt="QR Code" style="max-width:200px;border-radius:12px;border:1px solid rgba(200,195,220,0.3);">
+      </div>`;
+  }
+  
+  if (item.data) {
+    detailsHTML += `
+      <div class="bg-white/40 rounded-xl p-4 space-y-2">
+        ${Object.entries(item.data).map(([key, val]) => `
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500 font-medium capitalize">${key}:</span>
+            <span class="text-gray-900 font-semibold break-all max-w-[200px]">${typeof val === 'string' ? val.substring(0, 100) : JSON.stringify(val)}</span>
+          </div>
+        `).join('')}
+      </div>`;
+  }
+  
+  if (item.contentSummary) {
+    detailsHTML += `
+      <div class="mt-4 p-3 bg-blue-50/50 rounded-xl">
+        <p class="text-xs text-blue-800"><strong>Summary:</strong> ${item.contentSummary}</p>
+      </div>`;
+  }
+  
+  detailsHTML += `
+    <div class="glass-divider"></div>
+    <div class="flex gap-3 mt-4">
+      ${!item.deleted ? `
+        <button onclick="deleteHistoryItem('${item.id}'); closeHistoryPreviewModal();" class="glass-btn btn-secondary flex-1 !text-sm !py-3">
+          <i class="fa-solid fa-trash-can"></i> Delete
+        </button>
+      ` : ''}
+      <button onclick="closeHistoryPreviewModal()" class="glass-btn btn-primary flex-1 !text-sm !py-3">Close</button>
+    </div>`;
+  
+  content.innerHTML = detailsHTML;
+  document.getElementById('historyPreviewModal').classList.add('open');
+}
+
+function closeHistoryPreviewModal() {
+  document.getElementById('historyPreviewModal').classList.remove('open');
+}
+
+// Auto-cleanup old free user history (7 days)
+async function cleanupOldHistory() {
+  if (!currentUser || userData?.plan === 'pro') return;
+  
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const oldItems = await db.collection('history')
+      .where('userId', '==', currentUser.uid)
+      .where('deleted', '==', false)
+      .where('createdAt', '<', sevenDaysAgo)
+      .get();
+    
+    if (!oldItems.empty) {
+      const batch = db.batch();
+      oldItems.docs.forEach(doc => {
+        batch.update(doc.ref, {
+          deleted: true,
+          deletedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      await batch.commit();
+      console.log(`Cleaned up ${oldItems.size} old history items`);
+    }
+  } catch (err) {
+    console.error('Cleanup error:', err);
+  }
+}
+
+/* ========================================
    FREE TOOLS PAGE FUNCTIONS
    ======================================== */
 function initFreeTools(path) {
-  // Set default tab based on URL
   const tabMap = { '/free/qr': 'qr', '/free/wa-link': 'whatsapp', '/free/pdf': 'pdf' };
   const defaultTab = tabMap[path] || 'qr';
   switchFreeTab(defaultTab);
@@ -2504,12 +3178,10 @@ function initFreeTools(path) {
 function switchFreeTab(tab) {
   freeCurrentTab = tab;
   
-  // Update tabs
   document.querySelectorAll('[id^="freeTab"]').forEach(b => b.classList.remove('active'));
   const tabIdMap = { qr: 'freeTabQr', whatsapp: 'freeTabWhatsapp', pdf: 'freeTabPdf' };
   document.getElementById(tabIdMap[tab])?.classList.add('active');
   
-  // Update panels
   ['freeQrPanel', 'freeWaPanel', 'freePdfPanel'].forEach(p => {
     const el = document.getElementById(p);
     if (el) el.style.display = 'none';
@@ -2517,11 +3189,10 @@ function switchFreeTab(tab) {
   const panelMap = { qr: 'freeQrPanel', whatsapp: 'freeWaPanel', pdf: 'freePdfPanel' };
   document.getElementById(panelMap[tab]).style.display = 'block';
   
-  // Update URL hash or path
   const urlMap = { qr: '/free/qr', whatsapp: '/free/wa-link', pdf: '/free/pdf' };
-  if (window.location.protocol === 'file:') {
+  if (window.location.protocol === 'file:' && appInitialized) {
     window.location.hash = urlMap[tab];
-  } else {
+  } else if (appInitialized) {
     window.history.replaceState({}, '', urlMap[tab]);
   }
   
@@ -2634,7 +3305,7 @@ function generateFreeQR() {
   const container = document.getElementById('freeQrcodeContainer');
   container.innerHTML = '';
 
-  new QRCode(container, {
+  const qr = new QRCode(container, {
     text: text,
     width: freeSelectedSize,
     height: freeSelectedSize,
@@ -2660,14 +3331,13 @@ function downloadFreeQR() {
   const canvas = document.createElement('canvas');
   const padding = 40;
   canvas.width = img.naturalWidth + padding * 2;
-  canvas.height = img.naturalHeight + padding * 2 + 24; // space for watermark
+  canvas.height = img.naturalHeight + padding * 2 + 24;
   const ctx = canvas.getContext('2d');
   
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(img, padding, padding);
   
-  // Watermark for free users
   ctx.fillStyle = 'rgba(0,0,0,0.08)';
   ctx.font = '11px sans-serif';
   ctx.textAlign = 'right';
@@ -2750,7 +3420,6 @@ function generateFreePDF() {
         y += 6;
       });
       
-      // Watermark
       pdf.setFontSize(8);
       pdf.setTextColor(200, 200, 200);
       pdf.text('luviio.com', 175, 290);
@@ -2763,7 +3432,7 @@ function generateFreePDF() {
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          pdf.addImage(img, 'JPEG', 10, 10, 190, 0); // auto height
+          pdf.addImage(img, 'JPEG', 10, 10, 190, 0);
           pdf.setTextColor(200, 200, 200);
           pdf.setFontSize(8);
           pdf.text('luviio.com', 180, 290);
@@ -2794,7 +3463,7 @@ function selectSize(btn) {
   selectedQrSize = parseInt(btn.dataset.size);
 }
 
-function generateQR() {
+async function generateQR() {
   const tool = 'qr';
   
   if (!currentUser && !canUseTool(tool)) {
@@ -2820,13 +3489,20 @@ function generateQR() {
   const section = document.getElementById('qrPreviewSection');
   section.style.display = 'block';
 
-  new QRCode(qrContainer, {
+  const qr = new QRCode(qrContainer, {
     text: input,
     width: selectedQrSize,
     height: selectedQrSize,
     colorDark: '#1e1b3a',
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // Save to history
+  await saveToHistory('qr', {
+    text: input,
+    size: selectedQrSize,
+    previewData: qrContainer.querySelector('img')?.src || null
   });
 
   incrementAndRecordUsage(tool);
@@ -2874,7 +3550,7 @@ function downloadQR() {
 /* ========================================
    WhatsApp Link Generator (Logged In)
    ======================================== */
-function generateWaLink() {
+async function generateWaLink() {
   const tool = 'wa';
   
   if (!currentUser && !canUseTool(tool)) {
@@ -2890,6 +3566,13 @@ function generateWaLink() {
   const link = `https://wa.me/${phone}${message ? '?text=' + encodeURIComponent(message) : ''}`;
   document.getElementById('waLink').value = link;
   document.getElementById('waResultSection').style.display = 'block';
+  
+  // Save to history
+  await saveToHistory('wa', {
+    phone: phone,
+    message: message,
+    link: link
+  });
   
   incrementAndRecordUsage(tool);
   
@@ -3020,6 +3703,13 @@ async function generatePDF() {
       generatedPdfBlob = pdf.output('blob');
       showPdfPreview();
       
+      // Save to history
+      await saveToHistory('pdf', {
+        title: document.getElementById('pdfTitle')?.value || 'PDF Document',
+        mode: 'image',
+        fileCount: pdfFiles.length
+      });
+      
       incrementAndRecordUsage(tool);
       showToast('PDF created successfully!', 'success');
     } catch (err) {
@@ -3076,6 +3766,12 @@ async function generatePDF() {
       }
       generatedPdfBlob = pdf.output('blob');
       showPdfPreview();
+      
+      // Save to history
+      await saveToHistory('pdf', {
+        title: title || 'PDF Document',
+        mode: 'text'
+      });
       
       incrementAndRecordUsage(tool);
       showToast('PDF created successfully!', 'success');
@@ -3250,13 +3946,26 @@ function retryPayment() {
 /* ========================================
    SuperAdmin Panel
    ======================================== */
-async function showAdminPanel() {
+function showAdminPanel() {
   closeUserMenu();
   navigateTo('/admin/dashboard');
 }
 
 function closeAdminPanel() { 
   navigateTo('/dashboard');
+}
+
+function switchAdminTab(btn, tab) {
+  currentAdminTab = tab;
+  document.querySelectorAll('[data-admin-tab]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  document.getElementById('adminUsersContent').style.display = tab === 'users' ? '' : 'none';
+  document.getElementById('adminHistoryContent').style.display = tab === 'history' ? '' : 'none';
+  document.getElementById('adminDeletedContent').style.display = tab === 'deleted' ? '' : 'none';
+  
+  if (tab === 'history') loadAdminAllHistory();
+  if (tab === 'deleted') loadAdminDeletedHistory();
 }
 
 async function loadAdminUsers() {
@@ -3271,6 +3980,104 @@ async function loadAdminUsers() {
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-red-400">Failed to load users</td></tr>';
     console.error(err);
+  }
+}
+
+async function loadAdminAllHistory() {
+  const listContainer = document.getElementById('adminAllHistoryList');
+  if (!listContainer) return;
+  
+  listContainer.innerHTML = '<div class="text-center py-8"><div class="spinner mx-auto" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div></div>';
+  
+  try {
+    const snapshot = await db.collection('history')
+      .where('deleted', '==', false)
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .get();
+    
+    if (snapshot.empty) {
+      listContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><p>No generation history found</p></div>';
+      return;
+    }
+    
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    listContainer.innerHTML = items.map(item => `
+      <div class="history-item">
+        <div class="flex items-center gap-4">
+          <div class="history-type-icon ${item.type === 'qr' ? 'history-type-qr' : item.type === 'wa' ? 'history-type-wa' : 'history-type-pdf'}">
+            <i class="fa-solid ${item.type === 'qr' ? 'fa-qrcode' : item.type === 'wa' ? 'fa-brands fa-whatsapp' : 'fa-file-pdf'}"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm text-gray-900">${item.contentSummary || 'Unknown'}</p>
+            <p class="text-xs text-gray-500">User: ${(item.userId || '').substring(0, 8)}... • ${timeAgo(item.createdAt)}</p>
+          </div>
+          <button onclick="adminSoftDeleteHistory('${item.id}')" class="glass-btn btn-secondary !py-2 !px-3 !text-xs">
+            <i class="fa-solid fa-trash-can"></i> Soft Delete
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    listContainer.innerHTML = '<div class="empty-state text-red-400"><i class="fa-solid fa-exclamation-triangle"></i><p>Failed to load history</p></div>';
+  }
+}
+
+async function loadAdminDeletedHistory() {
+  const listContainer = document.getElementById('adminDeletedList');
+  if (!listContainer) return;
+  
+  listContainer.innerHTML = '<div class="text-center py-8"><div class="spinner mx-auto" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div></div>';
+  
+  try {
+    const snapshot = await db.collection('history')
+      .where('deleted', '==', true)
+      .orderBy('deletedAt', 'desc')
+      .limit(100)
+      .get();
+    
+    if (snapshot.empty) {
+      listContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-trash-can"></i><p>No deleted items found</p></div>';
+      return;
+    }
+    
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    listContainer.innerHTML = items.map(item => `
+      <div class="history-item deleted">
+        <div class="flex items-center gap-4">
+          <div class="history-type-icon ${item.type === 'qr' ? 'history-type-qr' : item.type === 'wa' ? 'history-type-wa' : 'history-type-pdf'}">
+            <i class="fa-solid ${item.type === 'qr' ? 'fa-qrcode' : item.type === 'wa' ? 'fa-brands fa-whatsapp' : 'fa-file-pdf'}"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm text-gray-700">${item.contentSummary || 'Deleted item'}</p>
+            <p class="text-xs text-red-400">Deleted ${timeAgo(item.deletedAt)} • User: ${(item.userId || '').substring(0, 8)}...</p>
+          </div>
+          <button onclick="restoreHistoryItem('${item.id}')" class="glass-btn btn-secondary !py-2 !px-3 !text-xs">
+            <i class="fa-solid fa-rotate-left"></i> Restore
+          </button>
+          <button onclick="permanentDeleteHistoryItem('${item.id}')" class="glass-btn btn-danger !py-2 !px-3 !text-xs">
+            <i class="fa-solid fa-bomb"></i> Purge
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    listContainer.innerHTML = '<div class="empty-state text-red-400"><i class="fa-solid fa-exclamation-triangle"></i><p>Failed to load deleted items</p></div>';
+  }
+}
+
+async function adminSoftDeleteHistory(itemId) {
+  if (!confirm('Move this item to Recently Deleted?')) return;
+  
+  try {
+    await db.collection('history').doc(itemId).update({
+      deleted: true,
+      deletedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Item moved to Recently Deleted', 'info');
+    loadAdminAllHistory();
+  } catch (err) {
+    showToast('Failed to delete', 'error');
   }
 }
 
@@ -3404,7 +4211,7 @@ function openUserManage(userId) {
     <div class="glass-divider"></div>
     
     <div class="mb-5">
-      <p class="text-xs font-black text-gray-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+      <p class="text-xs font-black text-gray-500 mb-3 uppercase tracking-wide flex items-center gap-2">
         <i class="fa-solid fa-crown text-amber-500"></i> Plan Management
       </p>
       <div class="admin-action-grid">
@@ -3418,7 +4225,7 @@ function openUserManage(userId) {
     <div class="glass-divider"></div>
     
     <div class="mb-5">
-      <p class="text-xs font-black text-gray-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+      <p class="text-xs font-black text-gray-500 mb-3 uppercase tracking-wide flex items-center gap-2">
         <i class="fa-solid fa-user-shield text-blue-500"></i> Account Status
       </p>
       <div class="grid grid-cols-4 gap-2">
@@ -3440,7 +4247,7 @@ function openUserManage(userId) {
     <div class="glass-divider"></div>
     
     <div class="mb-5">
-      <p class="text-xs font-black text-gray-500 mb-3 uppercase tracking-wider flex items-center gap-2">
+      <p class="text-xs font-black text-gray-500 mb-3 uppercase tracking-wide flex items-center gap-2">
         <i class="fa-solid fa-shield-halved text-purple-500"></i> Role Assignment
       </p>
       <div class="grid grid-cols-2 gap-3">
@@ -3456,7 +4263,7 @@ function openUserManage(userId) {
     <div class="glass-divider"></div>
     
     <div class="space-y-3">
-      <p class="text-xs font-black text-gray-500 uppercase tracking-wider flex items-center gap-2">
+      <p class="text-xs font-black text-gray-500 uppercase tracking-wide flex items-center gap-2">
         <i class="fa-solid fa-bolt text-amber-500"></i> Quick Actions
       </p>
       <button onclick="adminSendResetEmail()" class="glass-btn btn-secondary w-full !py-3 !text-sm font-semibold">
@@ -3572,6 +4379,7 @@ document.addEventListener('keydown', (e) => {
     closePaymentModal();
     closeProfileModal();
     closeAdminUserModal();
+    closeHistoryPreviewModal();
     closeUserMenu();
   }
 });
@@ -3581,16 +4389,21 @@ document.addEventListener('keydown', (e) => {
    ======================================== */
 document.getElementById('currentYearFooter').textContent = new Date().getFullYear();
 
-// Initialize router immediately
-handleRoute();
+// Initialize router after a short delay to allow Firebase to initialize
+setTimeout(() => {
+  if (!appInitialized && authResolved) {
+    hideLoadingScreen();
+    handleRoute();
+  }
+}, 100);
 
-// Load admin stats if on admin page initially
-if (getCurrentPath() === '/admin' || getCurrentPath() === '/admin/dashboard') {
-  // Will be loaded by handleRoute, but double-check after auth
-  setTimeout(() => {
-    if (userData?.role === 'superadmin') loadAdminUsers();
-  }, 1000);
-}
+// Run cleanup on login
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    // Wait a bit then cleanup old history for free users
+    setTimeout(cleanupOldHistory, 2000);
+  }
+});
 </script>
 </body>
 </html>
