@@ -3032,10 +3032,20 @@ async function saveToHistory(type, data) {
 
 // Load dashboard recent activity
 async function loadDashboardHistory() {
-  if (!currentUser) return;
+  if (!currentUser || !userData) {
+    console.log('Dashboard history skipped: No user');
+    return;
+  }
   
   const container = document.getElementById('dashboardHistoryList');
   if (!container) return;
+  
+  // Show loading state
+  container.innerHTML = `
+    <div class="empty-state py-6">
+      <div class="spinner mx-auto mb-3" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;width:20px;height:20px;"></div>
+      <p class="text-xs font-medium text-gray-400">Loading activity...</p>
+    </div>`;
   
   try {
     const snapshot = await db.collection('users')
@@ -3059,8 +3069,31 @@ async function loadDashboardHistory() {
     container.innerHTML = items.map(item => renderHistoryItem(item)).join('');
     
   } catch (err) {
-    console.error(err);
-    container.innerHTML = `<div class="empty-state py-6"><i class="fa-solid fa-triangle-exclamation text-2xl text-yellow-500"></i><p class="text-xs font-medium mt-2">Failed to load</p></div>`;
+    console.error('Dashboard History Error:', err.code, err.message);
+    
+    // Specific error messages
+    if (err.code === 'permission-denied') {
+      container.innerHTML = `
+        <div class="empty-state py-6">
+          <i class="fa-solid fa-lock text-2xl text-red-400"></i>
+          <p class="text-xs font-medium mt-2">Permission denied</p>
+          <p class="text-[10px] mt-1 text-gray-400">Check Firestore Security Rules</p>
+        </div>`;
+    } else if (err.code === 'failed-precondition') {
+      container.innerHTML = `
+        <div class="empty-state py-6">
+          <i class="fa-solid fa-database text-2xl text-orange-400"></i>
+          <p class="text-xs font-medium mt-2">Index required</p>
+          <p class="text-[10px] mt-1 text-gray-400">Click the link in console to create index</p>
+        </div>`;
+    } else {
+      container.innerHTML = `
+        <div class="empty-state py-6">
+          <i class="fa-solid fa-triangle-exclamation text-2xl text-yellow-500"></i>
+          <p class="text-xs font-medium mt-2">Failed to load</p>
+          <p class="text-[10px] mt-1 text-gray-400">${err.message || 'Unknown error'}</p>
+        </div>`;
+    }
   }
 }
 
@@ -3129,7 +3162,20 @@ async function loadFullHistory(filter = 'all') {
   const container = document.getElementById('historyListContainer');
   if (!container) return;
   
-  container.innerHTML = '<div class="text-center py-8"><div class="spinner mx-auto" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div></div>';
+  if (!currentUser) {
+    container.innerHTML = `
+      <div class="empty-state py-8">
+        <i class="fa-solid fa-user-xmark text-3xl text-gray-300"></i>
+        <p class="text-xs font-medium mt-2">Please sign in to view history</p>
+      </div>`;
+    return;
+  }
+  
+  container.innerHTML = `
+    <div class="text-center py-8">
+      <div class="spinner mx-auto" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div>
+      <p class="text-xs text-gray-400 mt-3">Loading history...</p>
+    </div>`;
   
   try {
     let query = db.collection('users')
@@ -3137,6 +3183,8 @@ async function loadFullHistory(filter = 'all') {
       .collection('history')
       .orderBy('createdAt', 'desc');
     
+    // Note: If using both orderBy and where, you may need a composite index
+    // Firebase will show an error link in console if index is missing
     if (filter !== 'all') {
       query = query.where('type', '==', filter);
     }
@@ -3148,6 +3196,7 @@ async function loadFullHistory(filter = 'all') {
         <div class="empty-state py-8">
           <i class="fa-regular fa-folder-open text-3xl"></i>
           <p class="text-xs font-medium mt-2">No ${filter !== 'all' ? filter.toUpperCase() : ''} items found</p>
+          <p class="text-[10px] mt-1">Start generating to build your history</p>
         </div>`;
       return;
     }
@@ -3156,16 +3205,31 @@ async function loadFullHistory(filter = 'all') {
     container.innerHTML = userHistoryItems.map(item => renderHistoryItem(item)).join('');
     
   } catch (err) {
-    console.error(err);
-    container.innerHTML = `<div class="empty-state py-8"><i class="fa-solid fa-triangle-exclamation text-3xl text-yellow-500"></i><p class="text-xs font-medium mt-2">Failed to load</p></div>`;
+    console.error('Full History Load Error:', err);
+    
+    let errorMsg = 'Failed to load history';
+    let errorIcon = 'fa-triangle-exclamation';
+    let errorColor = 'text-yellow-500';
+    
+    if (err.code === 'permission-denied') {
+      errorMsg = 'Permission denied. Check your login status.';
+      errorIcon = 'fa-lock';
+      errorColor = 'text-red-500';
+    } else if (err.code === 'failed-precondition') {
+      errorMsg = 'Database index required. Check console for link.';
+      errorIcon = 'fa-database';
+      errorColor = 'text-orange-500';
+    } else if (err.message) {
+      errorMsg = err.message;
+    }
+    
+    container.innerHTML = `
+      <div class="empty-state py-8">
+        <i class="fa-solid ${errorIcon} text-3xl ${errorColor}"></i>
+        <p class="text-xs font-medium mt-2">${errorMsg}</p>
+        <button onclick="loadFullHistory('${filter}')" class="mt-3 text-[10px] text-primary-600 underline font-bold">Retry</button>
+      </div>`;
   }
-}
-
-function filterHistory(btn, filter) {
-  currentHistoryFilter = filter;
-  document.querySelectorAll('[data-hfilter]').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  loadFullHistory(filter);
 }
 
 // Delete history item (for logged-in users)
@@ -3242,6 +3306,11 @@ async function cleanupOldHistory(userId) {
 // ===== DELETED ITEMS (SuperAdmin Only) =====
 
 function openDeletedHistoryModal() {
+  // Double-check auth state before opening
+  if (!currentUser || !userData || userData.role !== 'superadmin') {
+    showToast('Only SuperAdmins can access Deleted Items', 'error');
+    return;
+  }
   loadDeletedHistory();
   document.getElementById('deletedHistoryModal').classList.add('open');
 }
@@ -3254,9 +3323,26 @@ async function loadDeletedHistory() {
   const container = document.getElementById('deletedHistoryListContainer');
   if (!container) return;
   
-  container.innerHTML = '<div class="text-center py-8"><div class="spinner mx-auto" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div></div>';
+  // Verify user is superadmin before attempting
+  if (!currentUser || !userData || userData.role !== 'superadmin') {
+    container.innerHTML = `
+      <div class="empty-state py-8">
+        <i class="fa-solid fa-shield-halved text-3xl text-red-300"></i>
+        <p class="text-xs font-medium mt-2">Access Denied</p>
+        <p class="text-[10px] mt-1">Only SuperAdmins can view deleted items</p>
+      </div>`;
+    return;
+  }
+  
+  container.innerHTML = `
+    <div class="text-center py-8">
+      <div class="spinner mx-auto" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div>
+      <p class="text-xs text-gray-400 mt-3">Loading deleted items...</p>
+    </div>`;
   
   try {
+    // This query requires the recently_deleted collection to exist
+    // and security rules to allow superadmin reads
     const snapshot = await db.collection('recently_deleted')
       .orderBy('deletedAt', 'desc')
       .limit(100)
@@ -3276,8 +3362,30 @@ async function loadDeletedHistory() {
     container.innerHTML = items.map(item => renderDeletedItem(item)).join('');
     
   } catch (err) {
-    console.error(err);
-    container.innerHTML = `<div class="empty-state py-8"><i class="fa-solid fa-triangle-exclamation text-3xl text-yellow-500"></i><p class="text-xs font-medium mt-2">Failed to load</p></div>`;
+    console.error('Deleted History Error:', err.code, err.message);
+    
+    let errorMsg = 'Failed to load deleted items';
+    let errorDetail = '';
+    
+    if (err.code === 'permission-denied') {
+      errorMsg = 'Insufficient Permissions';
+      errorDetail = 'Your account may not have SuperAdmin role in Firestore.';
+    } else if (err.code === 'not-found') {
+      errorMsg = 'Collection Not Found';
+      errorDetail = 'The recently_deleted collection may not exist yet.';
+    } else if (err.code === 'failed-precondition') {
+      errorMsg = 'Index Required';
+      errorDetail = 'Please create the composite index shown in console error.';
+    }
+    
+    container.innerHTML = `
+      <div class="empty-state py-8">
+        <i class="fa-solid fa-triangle-exclamation text-3xl text-red-400"></i>
+        <p class="text-xs font-bold mt-2 text-red-600">${errorMsg}</p>
+        ${errorDetail ? `<p class="text-[10px] mt-1 text-gray-500">${errorDetail}</p>` : ''}
+        <p class="text-[9px] mt-2 text-gray-400 font-mono break-all">${err.code || ''}</p>
+        <button onclick="loadDeletedHistory()" class="mt-3 glass-btn btn-secondary !py-1.5 !px-4 !text-[10px]">Retry</button>
+      </div>`;
   }
 }
 
