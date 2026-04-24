@@ -3,588 +3,765 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luviio — Digital Identity Toolkit</title>
+    <title>LuvTools by luviio — Simple tools for your digital identity & business</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: { accent: '#3B82F6', accentDark: '#2563EB', accentLight: '#DBEAFE' }
-                }
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    accent: { DEFAULT:'#3B82F6', light:'#DBEAFE', dark:'#2563EB', mid:'#60A5FA' },
+                    surface: '#F8FAFC',
+                    ink: { DEFAULT:'#0F172A', light:'#64748B', lighter:'#94A3B8' }
+                },
+                fontFamily: {
+                    display: ['Outfit','sans-serif'],
+                    body: ['DM Sans','sans-serif']
+                },
+                borderRadius: { 'xl':'14px','2xl':'18px','3xl':'24px' }
             }
         }
+    }
     </script>
     <style>
-        body{font-family:'Inter',sans-serif;scroll-behavior:smooth}
-        .no-scrollbar::-webkit-scrollbar{display:none}
-        .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
-        .glass{background:rgba(255,255,255,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-        .drag-over{border:2px dashed #3B82F6!important;background:#EFF6FF!important}
-        .dragging{opacity:0.4;transform:scale(0.95)}
-        .fade-in{animation:fadeIn .4s ease}
-        @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
-        .pulse-dot{animation:pulse-dot 2s infinite}
-        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-        .float-anim{animation:float 6s ease-in-out infinite}
-        .phone-mockup{width:280px;min-height:480px;border-radius:2.5rem;border:6px solid #0F172A;background:#fff;padding:20px 16px;box-shadow:0 25px 60px -15px rgba(0,0,0,0.3)}
-        @media(max-width:640px){.phone-mockup{width:240px;min-height:400px;border-radius:2rem;padding:16px 12px}}
-        input:focus,textarea:focus,select:focus{outline:none;border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
-        .toast-enter{animation:toastIn .3s ease}
-        @keyframes toastIn{from{opacity:0;transform:translateY(-20px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-        .resume-page{width:210mm;min-height:297mm;padding:20mm;background:#fff}
-        @media print{.no-print{display:none!important}.resume-page{margin:0;box-shadow:none}}
-        .tool-card{transition:all .3s ease}
-        .tool-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px -15px rgba(0,0,0,0.1)}
-        .stat-num{font-variant-numeric:tabular-nums}
+        *{ box-sizing:border-box; }
+        body{ font-family:'DM Sans',sans-serif; color:#0F172A; background:#fff; margin:0; overflow-x:hidden; }
+        h1,h2,h3,h4,h5{ font-family:'Outfit',sans-serif; }
+
+        /* Page transitions */
+        .page{ display:none; opacity:0; transform:translateY(12px); transition:opacity .35s ease, transform .35s ease; }
+        .page.active{ display:block; opacity:1; transform:translateY(0); }
+
+        /* Scroll animations */
+        .reveal{ opacity:0; transform:translateY(30px); transition:all .6s cubic-bezier(.22,1,.36,1); }
+        .reveal.visible{ opacity:1; transform:translateY(0); }
+
+        /* Modal */
+        .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.4); backdrop-filter:blur(6px); z-index:100; display:none; align-items:center; justify-content:center; opacity:0; transition:opacity .25s ease; }
+        .modal-overlay.show{ display:flex; opacity:1; }
+        .modal-box{ background:#fff; border-radius:18px; padding:32px; max-width:420px; width:90%; box-shadow:0 25px 60px rgba(0,0,0,.15); transform:scale(.95); transition:transform .25s ease; }
+        .modal-overlay.show .modal-box{ transform:scale(1); }
+
+        /* Toast */
+        .toast-container{ position:fixed; top:20px; right:20px; z-index:200; display:flex; flex-direction:column; gap:8px; }
+        .toast{ padding:14px 20px; border-radius:12px; background:#0F172A; color:#fff; font-size:14px; font-weight:500; box-shadow:0 10px 30px rgba(0,0,0,.2); transform:translateX(120%); transition:transform .35s cubic-bezier(.22,1,.36,1); display:flex; align-items:center; gap:10px; }
+        .toast.show{ transform:translateX(0); }
+
+        /* Inputs */
+        .input-field{ width:100%; padding:12px 16px; border:1.5px solid #E2E8F0; border-radius:12px; font-size:15px; font-family:'DM Sans',sans-serif; transition:border-color .2s, box-shadow .2s; outline:none; background:#fff; }
+        .input-field:focus{ border-color:#3B82F6; box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+        .input-field::placeholder{ color:#94A3B8; }
+
+        /* Buttons */
+        .btn-primary{ padding:12px 24px; background:#3B82F6; color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px; }
+        .btn-primary:hover{ background:#2563EB; transform:translateY(-1px); box-shadow:0 6px 20px rgba(59,130,246,.3); }
+        .btn-primary:active{ transform:translateY(0); }
+        .btn-secondary{ padding:12px 24px; background:#F1F5F9; color:#0F172A; border:none; border-radius:12px; font-size:15px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px; }
+        .btn-secondary:hover{ background:#E2E8F0; }
+        .btn-ghost{ padding:10px 18px; background:transparent; color:#3B82F6; border:none; border-radius:10px; font-size:14px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .2s; }
+        .btn-ghost:hover{ background:#DBEAFE; }
+
+        /* Cards */
+        .card{ background:#fff; border:1px solid #F1F5F9; border-radius:16px; padding:24px; transition:all .25s; }
+        .card:hover{ border-color:#E2E8F0; box-shadow:0 8px 30px rgba(0,0,0,.06); }
+        .card-interactive:hover{ transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,.08); }
+
+        /* Nav link active */
+        .nav-link{ position:relative; padding:8px 14px; border-radius:10px; font-size:14px; font-weight:500; color:#64748B; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:8px; }
+        .nav-link:hover{ color:#0F172A; background:#F8FAFC; }
+        .nav-link.active{ color:#3B82F6; background:#DBEAFE; }
+
+        /* Floating blobs */
+        .blob{ position:absolute; border-radius:50%; filter:blur(80px); opacity:.35; pointer-events:none; }
+
+        /* QR container */
+        #qr-output img{ border-radius:8px; }
+
+        /* Invoice table */
+        .inv-table{ width:100%; border-collapse:collapse; }
+        .inv-table th{ text-align:left; padding:10px 12px; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#94A3B8; border-bottom:1px solid #E2E8F0; }
+        .inv-table td{ padding:10px 12px; font-size:14px; border-bottom:1px solid #F1F5F9; }
+
+        /* Resume preview */
+        .resume-preview{ background:#fff; border:1px solid #E2E8F0; border-radius:12px; padding:40px; min-height:500px; }
+
+        /* Hamburger */
+        .hamburger{ display:none; flex-direction:column; gap:5px; cursor:pointer; padding:8px; }
+        .hamburger span{ width:22px; height:2px; background:#0F172A; border-radius:2px; transition:all .3s; }
+        @media(max-width:768px){
+            .hamburger{ display:flex; }
+            .sidebar{ position:fixed !important; left:-280px; top:0; bottom:0; z-index:90; transition:left .3s ease; }
+            .sidebar.open{ left:0; }
+            .sidebar-backdrop{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:89; }
+            .sidebar-backdrop.show{ display:block; }
+        }
+
+        /* Counter badge */
+        .counter-badge{ font-size:11px; font-weight:600; background:#DBEAFE; color:#3B82F6; padding:3px 8px; border-radius:20px; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar{ width:6px; }
+        ::-webkit-scrollbar-track{ background:transparent; }
+        ::-webkit-scrollbar-thumb{ background:#E2E8F0; border-radius:3px; }
+
+        @media print{
+            .no-print{ display:none !important; }
+        }
     </style>
 </head>
-<body class="bg-white text-slate-900 overflow-x-hidden">
+<body class="bg-white">
 
 <!-- Toast Container -->
-<div id="toast-container" class="fixed top-20 right-4 z-[100] flex flex-col gap-2"></div>
+<div class="toast-container" id="toast-container"></div>
 
-<!-- Loading Overlay -->
-<div id="loading-overlay" class="fixed inset-0 bg-white z-[200] flex items-center justify-center transition-opacity duration-300">
-    <div class="flex flex-col items-center gap-4">
-        <div class="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
-            <div class="w-5 h-5 bg-white rounded-full"></div>
+<!-- Limit Modal -->
+<div class="modal-overlay" id="limit-modal">
+    <div class="modal-box text-center">
+        <div class="w-14 h-14 rounded-2xl bg-accent-light flex items-center justify-center mx-auto mb-5">
+            <i class="fas fa-clock text-accent text-xl"></i>
         </div>
-        <div class="text-sm text-slate-400 font-medium">Loading Luviio...</div>
+        <h3 class="text-xl font-display font-bold mb-2">Daily limit reached</h3>
+        <p class="text-ink-light text-sm mb-6 leading-relaxed">You've reached your free limit for today. Come back tomorrow or create a free account to continue.</p>
+        <div class="flex flex-col gap-3">
+            <button class="btn-primary w-full justify-center" onclick="showAuth('register')">
+                <i class="fas fa-user-plus"></i> Create Account
+            </button>
+            <button class="btn-secondary w-full justify-center" onclick="showAuth('login')">
+                <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+            <button class="btn-ghost w-full justify-center mt-1" onclick="closeModal('limit-modal')">Maybe later</button>
+        </div>
     </div>
 </div>
 
-<!-- ==================== NAVIGATION ==================== -->
-<nav id="main-nav" class="h-16 px-4 sm:px-8 flex items-center justify-between glass sticky top-0 z-50 border-b border-slate-100">
-    <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
-        <div class="flex items-center gap-2.5 cursor-pointer" onclick="navigate('landing')">
-            <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center"><div class="w-4 h-4 bg-white rounded-full"></div></div>
-            <span class="font-bold text-xl tracking-tight">Luviio</span>
+<!-- Auth Modal -->
+<div class="modal-overlay" id="auth-modal">
+    <div class="modal-box">
+        <div class="text-center mb-6">
+            <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-12 h-12 rounded-full mx-auto mb-3">
+            <h3 class="text-xl font-display font-bold" id="auth-title">Welcome back</h3>
+            <p class="text-ink-light text-sm mt-1" id="auth-subtitle">Sign in to your account</p>
         </div>
-        <!-- Nav: Guest -->
-        <div id="nav-guest" class="hidden items-center gap-3">
-            <button onclick="navigate('login')" class="px-5 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">Sign In</button>
-            <button onclick="navigate('register')" class="px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-full hover:bg-slate-800 transition-colors">Get Started</button>
+
+        <!-- Google Sign In -->
+        <button class="btn-secondary w-full justify-center mb-5" id="google-btn" onclick="googleSignIn()">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.997 8.997 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/></svg>
+            Continue with Google
+        </button>
+
+        <div class="flex items-center gap-3 mb-5">
+            <div class="flex-1 h-px bg-gray-100"></div>
+            <span class="text-xs text-ink-lighter font-medium">OR</span>
+            <div class="flex-1 h-px bg-gray-100"></div>
         </div>
-        <!-- Nav: User -->
-        <div id="nav-user" class="hidden items-center gap-2 sm:gap-4">
-            <button onclick="navigate('dashboard')" class="hidden sm:inline text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Dashboard</button>
-            <button onclick="navigate('pricing')" class="hidden sm:inline text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Pricing</button>
-            <button onclick="signOut()" class="px-4 py-2 text-sm font-medium text-slate-400 hover:text-red-500 transition-colors">Logout</button>
-            <div id="nav-avatar" class="w-8 h-8 bg-accent/10 rounded-full flex items-center justify-center cursor-pointer" onclick="navigate('dashboard')">
-                <span class="text-xs font-bold text-accent" id="nav-avatar-text">A</span>
+
+        <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+            <div id="auth-name-field" class="mb-4 hidden">
+                <label class="block text-sm font-medium mb-2 text-ink">Full name</label>
+                <input type="text" id="auth-name" class="input-field" placeholder="Your name" autocomplete="name">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2 text-ink">Email</label>
+                <input type="email" id="auth-email" class="input-field" placeholder="you@example.com" autocomplete="email" required>
+            </div>
+            <div class="mb-5">
+                <label class="block text-sm font-medium mb-2 text-ink">Password</label>
+                <input type="password" id="auth-password" class="input-field" placeholder="Min. 6 characters" autocomplete="current-password" required minlength="6">
+            </div>
+            <button type="submit" class="btn-primary w-full justify-center" id="auth-submit-btn">Sign In</button>
+        </form>
+        <p class="text-center text-sm text-ink-light mt-4">
+            <span id="auth-switch-text">Don't have an account?</span>
+            <button class="btn-ghost text-sm" id="auth-switch-btn" onclick="toggleAuthMode()">Create one</button>
+        </p>
+        <button class="btn-ghost w-full justify-center mt-2" onclick="closeModal('auth-modal')">Cancel</button>
+    </div>
+</div>
+
+<!-- Upgrade Modal -->
+<div class="modal-overlay" id="upgrade-modal">
+    <div class="modal-box text-center">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-5">
+            <i class="fas fa-crown text-white text-xl"></i>
+        </div>
+        <h3 class="text-xl font-display font-bold mb-2">Upgrade to Pro</h3>
+        <p class="text-ink-light text-sm mb-5 leading-relaxed">Unlock dynamic QR codes, premium templates, analytics, and remove all branding.</p>
+        <div class="bg-surface rounded-xl p-4 mb-5 text-left">
+            <div class="flex items-center gap-3 mb-3"><i class="fas fa-check-circle text-green-500"></i><span class="text-sm">Dynamic QR codes with analytics</span></div>
+            <div class="flex items-center gap-3 mb-3"><i class="fas fa-check-circle text-green-500"></i><span class="text-sm">Premium resume templates</span></div>
+            <div class="flex items-center gap-3 mb-3"><i class="fas fa-check-circle text-green-500"></i><span class="text-sm">WhatsApp link templates</span></div>
+            <div class="flex items-center gap-3 mb-3"><i class="fas fa-check-circle text-green-500"></i><span class="text-sm">Multi-currency invoices</span></div>
+            <div class="flex items-center gap-3"><i class="fas fa-check-circle text-green-500"></i><span class="text-sm">No watermarks or branding</span></div>
+        </div>
+        <button class="btn-primary w-full justify-center" onclick="showToast('Pro plan coming soon!','info');closeModal('upgrade-modal')">
+            <i class="fas fa-bolt"></i> Get Pro — Coming Soon
+        </button>
+        <button class="btn-ghost w-full justify-center mt-2" onclick="closeModal('upgrade-modal')">Not now</button>
+    </div>
+</div>
+
+<!-- Sidebar Backdrop (mobile) -->
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="app-shell" class="hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar fixed left-0 top-0 bottom-0 w-[260px] bg-white border-r border-gray-100 flex flex-col z-90" id="sidebar">
+        <div class="p-6 pb-4">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="navigate('dashboard')">
+                <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-9 h-9 rounded-full">
+                <div>
+                    <div class="font-display font-bold text-sm leading-tight">LuvTools</div>
+                    <div class="text-[11px] text-ink-lighter">by luviio</div>
+                </div>
             </div>
         </div>
-    </div>
-</nav>
-
-<!-- ==================== LANDING PAGE ==================== -->
-<div id="page-landing" class="page fade-in">
-    <!-- Hero -->
-    <header class="max-w-7xl mx-auto px-4 sm:px-8 pt-16 sm:pt-24 pb-16 text-center">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/5 text-accent text-[11px] font-bold uppercase tracking-widest mb-8">
-            <i data-lucide="sparkles" class="w-3 h-3"></i> Unified Identity Toolkit
+        <nav class="flex-1 px-3 space-y-1">
+            <div class="nav-link" data-page="dashboard" onclick="navigate('dashboard')"><i class="fas fa-th-large w-5 text-center"></i>Dashboard</div>
+            <div class="nav-link" data-page="qr" onclick="navigate('qr')"><i class="fas fa-qrcode w-5 text-center"></i>QR Generator</div>
+            <div class="nav-link" data-page="resume" onclick="navigate('resume')"><i class="fas fa-file-alt w-5 text-center"></i>Resume Builder</div>
+            <div class="nav-link" data-page="invoice" onclick="navigate('invoice')"><i class="fas fa-file-invoice-dollar w-5 text-center"></i>Invoice Generator</div>
+            <div class="nav-link" data-page="wa" onclick="navigate('wa')"><i class="fab fa-whatsapp w-5 text-center"></i>WhatsApp Link</div>
+            <div class="mt-4 pt-4 border-t border-gray-50">
+                <div class="nav-link" data-page="account" onclick="navigate('account')"><i class="fas fa-user-circle w-5 text-center"></i>Account</div>
+            </div>
+        </nav>
+        <div class="p-4 border-t border-gray-50">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-accent-light flex items-center justify-center text-accent font-bold text-sm" id="sidebar-avatar">U</div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium truncate" id="sidebar-name">User</div>
+                    <div class="text-[11px] text-ink-lighter truncate" id="sidebar-email">user@email.com</div>
+                </div>
+                <button class="text-ink-lighter hover:text-red-500 transition-colors" onclick="signOutUser()" title="Sign out"><i class="fas fa-sign-out-alt text-sm"></i></button>
+            </div>
         </div>
-        <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.05]">
-            Simple tools for your<br><span class="text-accent italic">digital identity</span> & business
-        </h1>
-        <p class="text-slate-500 text-lg sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            One platform for bio links, QR codes, professional resumes, and invoices. Everything you need to look professional online.
-        </p>
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button onclick="navigate('register')" class="w-full sm:w-auto px-8 py-4 bg-slate-900 text-white rounded-full font-bold text-base hover:shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
-                Get Started Free <i data-lucide="arrow-right" class="w-5 h-5"></i>
-            </button>
-            <button onclick="navigate('login')" class="w-full sm:w-auto px-8 py-4 bg-slate-100 text-slate-700 rounded-full font-bold text-base hover:bg-slate-200 transition-all">
-                Sign In
-            </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="md:ml-[260px] min-h-screen">
+        <!-- Top Bar (mobile) -->
+        <header class="md:hidden sticky top-0 bg-white/90 backdrop-blur-lg border-b border-gray-100 px-4 py-3 flex items-center justify-between z-50">
+            <div class="hamburger" id="hamburger" onclick="toggleSidebar()">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-7 h-7 rounded-full">
+                <span class="font-display font-bold text-sm">LuvTools</span>
+            </div>
+            <div id="mobile-counter" class="counter-badge"></div>
+        </header>
+
+        <div class="p-6 md:p-10 max-w-5xl mx-auto">
+
+            <!-- DASHBOARD PAGE -->
+            <section class="page" id="page-dashboard">
+                <div class="mb-8">
+                    <h1 class="text-2xl md:text-3xl font-display font-bold mb-1" id="dash-welcome">Welcome back</h1>
+                    <p class="text-ink-light">Here's an overview of your activity.</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="card text-center">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mx-auto mb-3"><i class="fas fa-qrcode text-accent"></i></div>
+                        <div class="text-2xl font-display font-bold" id="stat-qr">0</div>
+                        <div class="text-xs text-ink-lighter mt-1">QR Created</div>
+                    </div>
+                    <div class="card text-center">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-3"><i class="fas fa-file-alt text-emerald-500"></i></div>
+                        <div class="text-2xl font-display font-bold" id="stat-resume">0</div>
+                        <div class="text-xs text-ink-lighter mt-1">Resumes</div>
+                    </div>
+                    <div class="card text-center">
+                        <div class="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center mx-auto mb-3"><i class="fas fa-file-invoice-dollar text-violet-500"></i></div>
+                        <div class="text-2xl font-display font-bold" id="stat-invoice">0</div>
+                        <div class="text-xs text-ink-lighter mt-1">Invoices</div>
+                    </div>
+                    <div class="card text-center">
+                        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center mx-auto mb-3"><i class="fab fa-whatsapp text-green-500"></i></div>
+                        <div class="text-2xl font-display font-bold" id="stat-wa">0</div>
+                        <div class="text-xs text-ink-lighter mt-1">WA Links</div>
+                    </div>
+                </div>
+                <h2 class="font-display font-semibold text-lg mb-4">Quick Actions</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="card card-interactive cursor-pointer text-center" onclick="navigate('qr')">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-3"><i class="fas fa-qrcode text-accent text-lg"></i></div>
+                        <div class="text-sm font-semibold">Generate QR</div>
+                    </div>
+                    <div class="card card-interactive cursor-pointer text-center" onclick="navigate('resume')">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-3"><i class="fas fa-file-alt text-emerald-500 text-lg"></i></div>
+                        <div class="text-sm font-semibold">Create Resume</div>
+                    </div>
+                    <div class="card card-interactive cursor-pointer text-center" onclick="navigate('invoice')">
+                        <div class="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center mx-auto mb-3"><i class="fas fa-file-invoice-dollar text-violet-500 text-lg"></i></div>
+                        <div class="text-sm font-semibold">Create Invoice</div>
+                    </div>
+                    <div class="card card-interactive cursor-pointer text-center" onclick="navigate('wa')">
+                        <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-3"><i class="fab fa-whatsapp text-green-500 text-lg"></i></div>
+                        <div class="text-sm font-semibold">WhatsApp Link</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- QR GENERATOR PAGE -->
+            <section class="page" id="page-qr">
+                <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h1 class="text-2xl font-display font-bold mb-1">QR Generator</h1>
+                        <p class="text-ink-light text-sm">Create QR codes for URLs, text, or WhatsApp numbers.</p>
+                    </div>
+                    <div id="qr-counter" class="counter-badge no-print"></div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="card">
+                        <label class="block text-sm font-medium mb-2">Type</label>
+                        <select id="qr-type" class="input-field mb-4" onchange="updateQRPlaceholder()">
+                            <option value="url">URL</option>
+                            <option value="text">Text</option>
+                            <option value="whatsapp">WhatsApp</option>
+                        </select>
+                        <label class="block text-sm font-medium mb-2">Content</label>
+                        <input type="text" id="qr-input" class="input-field mb-4" placeholder="https://example.com">
+                        <div id="qr-wa-fields" class="hidden mb-4 space-y-3">
+                            <input type="text" id="qr-wa-phone" class="input-field" placeholder="Phone number">
+                            <input type="text" id="qr-wa-msg" class="input-field" placeholder="Pre-filled message (optional)">
+                        </div>
+                        <button class="btn-primary w-full justify-center no-print" onclick="generateQR()">
+                            <i class="fas fa-qrcode"></i> Generate QR Code
+                        </button>
+                    </div>
+                    <div class="card flex flex-col items-center justify-center min-h-[300px]">
+                        <div id="qr-output" class="mb-4"></div>
+                        <div id="qr-actions" class="hidden flex gap-3 no-print">
+                            <button class="btn-secondary" onclick="downloadQR()"><i class="fas fa-download"></i> Download</button>
+                            <button class="btn-secondary" onclick="saveQR()"><i class="fas fa-save"></i> Save</button>
+                        </div>
+                        <div id="qr-placeholder" class="text-center text-ink-lighter">
+                            <i class="fas fa-qrcode text-4xl mb-3 opacity-30"></i>
+                            <p class="text-sm">Your QR code will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RESUME BUILDER PAGE -->
+            <section class="page" id="page-resume">
+                <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h1 class="text-2xl font-display font-bold mb-1">Resume Builder</h1>
+                        <p class="text-ink-light text-sm">Fill in your details and export a clean PDF resume.</p>
+                    </div>
+                    <div id="resume-counter" class="counter-badge no-print"></div>
+                </div>
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <!-- Form -->
+                    <div class="card no-print space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+                        <h3 class="font-display font-semibold">Personal Info</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" id="res-name" class="input-field" placeholder="Full Name" oninput="updateResumePreview()">
+                            <input type="text" id="res-title" class="input-field" placeholder="Job Title" oninput="updateResumePreview()">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="email" id="res-email" class="input-field" placeholder="Email" oninput="updateResumePreview()">
+                            <input type="tel" id="res-phone" class="input-field" placeholder="Phone" oninput="updateResumePreview()">
+                        </div>
+                        <input type="text" id="res-location" class="input-field" placeholder="Location" oninput="updateResumePreview()">
+                        <input type="text" id="res-website" class="input-field" placeholder="Website / LinkedIn" oninput="updateResumePreview()">
+
+                        <h3 class="font-display font-semibold pt-2">Summary</h3>
+                        <textarea id="res-summary" class="input-field" rows="3" placeholder="Brief professional summary..." oninput="updateResumePreview()"></textarea>
+
+                        <h3 class="font-display font-semibold pt-2">Experience</h3>
+                        <div id="res-experience" class="space-y-3">
+                            <div class="res-exp-item border border-gray-100 rounded-xl p-3 space-y-2">
+                                <input type="text" class="input-field exp-company" placeholder="Company" oninput="updateResumePreview()">
+                                <input type="text" class="input-field exp-role" placeholder="Role" oninput="updateResumePreview()">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="text" class="input-field exp-start" placeholder="Start" oninput="updateResumePreview()">
+                                    <input type="text" class="input-field exp-end" placeholder="End" oninput="updateResumePreview()">
+                                </div>
+                                <textarea class="input-field exp-desc" rows="2" placeholder="Description..." oninput="updateResumePreview()"></textarea>
+                            </div>
+                        </div>
+                        <button class="btn-ghost text-sm" onclick="addExperience()"><i class="fas fa-plus"></i> Add Experience</button>
+
+                        <h3 class="font-display font-semibold pt-2">Education</h3>
+                        <div id="res-education" class="space-y-3">
+                            <div class="res-edu-item border border-gray-100 rounded-xl p-3 space-y-2">
+                                <input type="text" class="input-field edu-school" placeholder="School / University" oninput="updateResumePreview()">
+                                <input type="text" class="input-field edu-degree" placeholder="Degree" oninput="updateResumePreview()">
+                                <input type="text" class="input-field edu-year" placeholder="Year" oninput="updateResumePreview()">
+                            </div>
+                        </div>
+                        <button class="btn-ghost text-sm" onclick="addEducation()"><i class="fas fa-plus"></i> Add Education</button>
+
+                        <h3 class="font-display font-semibold pt-2">Skills</h3>
+                        <input type="text" id="res-skills" class="input-field" placeholder="Skill 1, Skill 2, Skill 3..." oninput="updateResumePreview()">
+                    </div>
+                    <!-- Preview -->
+                    <div>
+                        <div class="flex gap-3 mb-3 no-print">
+                            <button class="btn-primary" onclick="exportResumePDF()"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                            <button class="btn-secondary" onclick="saveResume()"><i class="fas fa-save"></i> Save</button>
+                        </div>
+                        <div class="resume-preview" id="resume-preview">
+                            <div id="resume-preview-content">
+                                <p class="text-ink-lighter text-sm text-center py-20">Start filling in the form to see your resume here.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- INVOICE GENERATOR PAGE -->
+            <section class="page" id="page-invoice">
+                <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h1 class="text-2xl font-display font-bold mb-1">Invoice Generator</h1>
+                        <p class="text-ink-light text-sm">Create professional invoices and download as PDF.</p>
+                    </div>
+                    <div id="invoice-counter" class="counter-badge no-print"></div>
+                </div>
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div class="card no-print space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Invoice Number</label>
+                                <input type="text" id="inv-number" class="input-field" placeholder="INV-001" oninput="updateInvoicePreview()">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Currency</label>
+                                <select id="inv-currency" class="input-field" onchange="updateInvoicePreview()">
+                                    <option value="MYR">MYR (RM)</option>
+                                    <option value="USD">USD ($)</option>
+                                    <option value="SGD">SGD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Issue Date</label>
+                                <input type="date" id="inv-date" class="input-field" oninput="updateInvoicePreview()">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Due Date</label>
+                                <input type="date" id="inv-due" class="input-field" oninput="updateInvoicePreview()">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Your Business Name</label>
+                            <input type="text" id="inv-from" class="input-field" placeholder="Your Company" oninput="updateInvoicePreview()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Client Name</label>
+                            <input type="text" id="inv-client" class="input-field" placeholder="Client / Company" oninput="updateInvoicePreview()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Client Email</label>
+                            <input type="email" id="inv-client-email" class="input-field" placeholder="client@example.com" oninput="updateInvoicePreview()">
+                        </div>
+
+                        <h3 class="font-display font-semibold pt-2">Items</h3>
+                        <div id="inv-items" class="space-y-3">
+                            <div class="inv-item border border-gray-100 rounded-xl p-3 space-y-2">
+                                <input type="text" class="input-field item-name" placeholder="Item name" oninput="updateInvoicePreview()">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="number" class="input-field item-qty" placeholder="Qty" min="1" value="1" oninput="updateInvoicePreview()">
+                                    <input type="number" class="input-field item-price" placeholder="Price" min="0" step="0.01" oninput="updateInvoicePreview()">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-ghost text-sm" onclick="addInvoiceItem()"><i class="fas fa-plus"></i> Add Item</button>
+                        <div class="flex gap-3 pt-2">
+                            <button class="btn-primary flex-1 justify-center" onclick="exportInvoicePDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
+                            <button class="btn-secondary" onclick="saveInvoice()"><i class="fas fa-save"></i> Save</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="resume-preview" id="invoice-preview">
+                            <div id="invoice-preview-content">
+                                <p class="text-ink-lighter text-sm text-center py-20">Fill in the details to preview your invoice.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- WHATSAPP LINK PAGE -->
+            <section class="page" id="page-wa">
+                <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <h1 class="text-2xl font-display font-bold mb-1">WhatsApp Link Generator</h1>
+                        <p class="text-ink-light text-sm">Generate clickable WhatsApp links with pre-filled messages.</p>
+                    </div>
+                    <div id="wa-counter" class="counter-badge no-print"></div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="card space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Country Code</label>
+                            <select id="wa-country" class="input-field">
+                                <option value="60">+60 (Malaysia)</option>
+                                <option value="65">+65 (Singapore)</option>
+                                <option value="1">+1 (United States)</option>
+                                <option value="44">+44 (United Kingdom)</option>
+                                <option value="91">+91 (India)</option>
+                                <option value="62">+62 (Indonesia)</option>
+                                <option value="81">+81 (Japan)</option>
+                                <option value="86">+86 (China)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Phone Number</label>
+                            <input type="tel" id="wa-phone" class="input-field" placeholder="1234567890" oninput="generateWALink()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Pre-filled Message (optional)</label>
+                            <textarea id="wa-message" class="input-field" rows="3" placeholder="Hi, I'd like to inquire about..." oninput="generateWALink()"></textarea>
+                        </div>
+                        <button class="btn-primary w-full justify-center" onclick="generateWALink(); copyWALink();">
+                            <i class="fas fa-link"></i> Generate & Copy Link
+                        </button>
+                        <div id="wa-pro-section" class="hidden border-t border-gray-50 pt-4">
+                            <h3 class="font-display font-semibold text-sm mb-3">Templates <span class="counter-badge ml-1">PRO</span></h3>
+                            <div id="wa-templates-list" class="space-y-2"></div>
+                        </div>
+                    </div>
+                    <div class="card flex flex-col items-center justify-center min-h-[300px]">
+                        <div id="wa-result" class="text-center">
+                            <div class="text-5xl text-green-500 mb-4"><i class="fab fa-whatsapp"></i></div>
+                            <p class="text-ink-lighter text-sm mb-4">Your WhatsApp link will appear here</p>
+                            <div id="wa-link-box" class="hidden w-full">
+                                <div class="bg-surface rounded-xl p-4 mb-4 break-all text-sm font-mono text-ink" id="wa-link-text"></div>
+                                <div class="flex gap-3 justify-center">
+                                    <button class="btn-primary" onclick="copyWALink()"><i class="fas fa-copy"></i> Copy</button>
+                                    <a id="wa-open-link" href="#" target="_blank" class="btn-secondary"><i class="fab fa-whatsapp"></i> Open</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="wa-qr-output" class="mt-4"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ACCOUNT PAGE -->
+            <section class="page" id="page-account">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-display font-bold mb-1">Account</h1>
+                    <p class="text-ink-light text-sm">Manage your profile and subscription.</p>
+                </div>
+                <div class="card max-w-lg mb-6">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-accent-light flex items-center justify-center text-accent font-display font-bold text-2xl" id="account-avatar">U</div>
+                        <div>
+                            <div class="font-display font-bold text-lg" id="account-name">User</div>
+                            <div class="text-sm text-ink-light" id="account-email">user@email.com</div>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between py-3 border-b border-gray-50">
+                            <span class="text-sm text-ink-light">Plan</span>
+                            <span class="font-semibold text-sm" id="account-plan-badge">
+                                <span class="bg-surface px-3 py-1 rounded-full text-xs font-semibold">Free</span>
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between py-3 border-b border-gray-50">
+                            <span class="text-sm text-ink-light">Member since</span>
+                            <span class="text-sm font-medium" id="account-joined">—</span>
+                        </div>
+                        <div class="flex items-center justify-between py-3">
+                            <span class="text-sm text-ink-light">Usage</span>
+                            <span class="text-sm font-medium text-green-600">Unlimited</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-primary" id="upgrade-btn" onclick="openModal('upgrade-modal')">
+                    <i class="fas fa-crown"></i> Upgrade to Pro
+                </button>
+                <button class="btn-ghost ml-3 text-red-500 hover:bg-red-50" onclick="signOutUser()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<!-- ============ LANDING PAGE ============ -->
+<div id="landing-page">
+
+    <!-- Nav -->
+    <header class="sticky top-0 bg-white/80 backdrop-blur-xl border-b border-gray-100 z-50">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-8 h-8 rounded-full">
+                <span class="font-display font-bold text-lg">LuvTools</span>
+                <span class="text-xs text-ink-lighter hidden sm:inline">by luviio</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="btn-ghost" onclick="showAuth('login')">Sign In</button>
+                <button class="btn-primary text-sm !py-2.5 !px-5" onclick="showAuth('register')">Get Started</button>
+            </div>
         </div>
     </header>
 
-    <!-- Services Bento -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-8 pb-12">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
-            <!-- Bio Link -->
-            <div class="lg:col-span-7 bg-slate-50 rounded-[2rem] p-8 sm:p-10 border border-slate-100 flex items-center gap-8 overflow-hidden tool-card">
-                <div class="flex-1">
-                    <div class="w-11 h-11 bg-accent/10 rounded-2xl flex items-center justify-center mb-5"><i data-lucide="link" class="w-5 h-5 text-accent"></i></div>
-                    <h2 class="text-2xl sm:text-3xl font-bold mb-3">Bio Link Builder</h2>
-                    <p class="text-slate-500 mb-6 leading-relaxed text-sm sm:text-base">Your all-in-one digital business card. Add links, customize your look, and share everywhere.</p>
-                    <button onclick="tryTool('bio')" class="bg-white px-5 py-2.5 rounded-xl text-sm font-bold border border-slate-200 shadow-sm hover:shadow-md transition-all">Try Demo</button>
-                </div>
-                <div class="hidden md:block phone-mockup flex-shrink-0 float-anim">
-                    <div class="w-14 h-14 bg-slate-100 rounded-2xl mx-auto mb-4"></div>
-                    <div class="h-1.5 w-14 bg-slate-100 rounded mx-auto mb-5"></div>
-                    <div class="space-y-2"><div class="h-9 bg-accent/10 rounded-xl border border-accent/20"></div><div class="h-9 bg-slate-50 rounded-xl border border-slate-100"></div><div class="h-9 bg-slate-50 rounded-xl border border-slate-100"></div></div>
-                </div>
-            </div>
-            <!-- QR Code -->
-            <div class="lg:col-span-5 bg-accent rounded-[2rem] p-8 sm:p-10 text-white relative overflow-hidden tool-card shadow-lg shadow-accent/20">
-                <div class="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center mb-5"><i data-lucide="qr-code" class="w-5 h-5"></i></div>
-                <h2 class="text-2xl sm:text-3xl font-bold mb-3">Smart QR Generator</h2>
-                <p class="text-blue-100 mb-8 leading-relaxed text-sm sm:text-base">Dynamic QR codes you can update without reprinting.</p>
-                <button onclick="tryTool('qr')" class="bg-white text-accent px-5 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all">Try Demo</button>
-                <div class="absolute bottom-[-30%] right-[-15%] w-56 h-56 bg-white/10 rounded-full blur-3xl"></div>
-            </div>
-            <!-- Resume -->
-            <div class="lg:col-span-5 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-8 sm:p-10 text-white relative overflow-hidden tool-card">
-                <div class="w-11 h-11 bg-white/10 rounded-2xl flex items-center justify-center mb-5"><i data-lucide="file-text" class="w-5 h-5"></i></div>
-                <h2 class="text-2xl sm:text-3xl font-bold mb-3">Resume Builder</h2>
-                <p class="text-slate-400 mb-8 leading-relaxed text-sm sm:text-base">ATS-friendly templates with instant PDF export.</p>
-                <button onclick="tryTool('resume')" class="bg-white text-slate-900 px-5 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg transition-all">Try Preview</button>
-                <div class="absolute top-[-20%] right-[-10%] w-40 h-40 bg-accent/20 rounded-full blur-3xl"></div>
-            </div>
-            <!-- Invoice -->
-            <div class="lg:col-span-7 bg-slate-50 rounded-[2rem] p-8 sm:p-10 border border-slate-100 flex items-center gap-8 tool-card">
-                <div class="flex-1">
-                    <div class="w-11 h-11 bg-emerald-50 rounded-2xl flex items-center justify-center mb-5"><i data-lucide="receipt" class="w-5 h-5 text-emerald-600"></i></div>
-                    <h2 class="text-2xl sm:text-3xl font-bold mb-3">Invoice Generator</h2>
-                    <p class="text-slate-500 mb-6 leading-relaxed text-sm sm:text-base">Create professional invoices in MYR. Auto-calculate totals, export PDF, send via WhatsApp.</p>
-                    <button onclick="tryTool('invoice')" class="bg-white px-5 py-2.5 rounded-xl text-sm font-bold border border-slate-200 shadow-sm hover:shadow-md transition-all">Try Demo</button>
-                </div>
-                <div class="hidden md:block w-48 bg-white border border-slate-200 rounded-2xl p-4 shadow-inner flex-shrink-0">
-                    <div class="space-y-2.5">
-                        <div class="flex justify-between text-[9px] font-bold text-slate-400 border-b border-slate-100 pb-2"><span>ITEM</span><span>AMT</span></div>
-                        <div class="flex justify-between text-[10px]"><span>Web Design</span><span class="font-bold">RM 800</span></div>
-                        <div class="flex justify-between text-[10px]"><span>Development</span><span class="font-bold">RM 1,200</span></div>
-                        <div class="flex justify-between text-[11px] font-bold text-accent border-t border-slate-100 pt-2"><span>Total</span><span>RM 2,000</span></div>
-                    </div>
+    <!-- Hero -->
+    <section class="relative overflow-hidden">
+        <div class="blob w-[400px] h-[400px] bg-blue-300 -top-40 -right-40"></div>
+        <div class="blob w-[300px] h-[300px] bg-sky-200 -bottom-20 -left-20"></div>
+        <div class="max-w-6xl mx-auto px-6 py-24 md:py-36 relative z-10 text-center">
+            <div class="reveal">
+                <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-16 h-16 rounded-full mx-auto mb-6 shadow-lg">
+                <h1 class="font-display font-extrabold text-4xl md:text-6xl lg:text-7xl leading-tight mb-5 tracking-tight">
+                    Simple tools for your<br>
+                    <span class="text-accent">digital identity</span> & business
+                </h1>
+                <p class="text-ink-light text-lg md:text-xl max-w-xl mx-auto mb-10 leading-relaxed">
+                    Generate QR codes, build resumes, create invoices, and make WhatsApp links — all in one place. No signup required.
+                </p>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <button class="btn-primary text-base !py-3.5 !px-8" onclick="scrollToTools()">
+                        Try Tools Free <i class="fas fa-arrow-down ml-1"></i>
+                    </button>
+                    <button class="btn-secondary text-base !py-3.5 !px-8" onclick="showAuth('register')">Create Free Account</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Stats -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-8 py-20">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            <div><div class="text-3xl sm:text-4xl font-black stat-num">12K+</div><div class="text-sm text-slate-400 mt-1">Active Users</div></div>
-            <div><div class="text-3xl sm:text-4xl font-black stat-num">85K+</div><div class="text-sm text-slate-400 mt-1">Bio Links Created</div></div>
-            <div><div class="text-3xl sm:text-4xl font-black stat-num">42K+</div><div class="text-sm text-slate-400 mt-1">QR Codes Generated</div></div>
-            <div><div class="text-3xl sm:text-4xl font-black stat-num">RM 2.8M</div><div class="text-sm text-slate-400 mt-1">Invoices Sent</div></div>
+    <!-- Tools Grid -->
+    <section class="max-w-6xl mx-auto px-6 py-20" id="tools-section">
+        <div class="text-center mb-14 reveal">
+            <h2 class="font-display font-bold text-3xl md:text-4xl mb-3">Everything you need</h2>
+            <p class="text-ink-light text-lg">Four powerful tools, zero friction. Start using instantly.</p>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="card card-interactive cursor-pointer reveal" onclick="tryTool('qr')">
+                <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-5">
+                    <i class="fas fa-qrcode text-accent text-xl"></i>
+                </div>
+                <h3 class="font-display font-semibold text-lg mb-2">QR Generator</h3>
+                <p class="text-ink-light text-sm leading-relaxed mb-4">Create QR codes for URLs, text, or WhatsApp. Download as PNG instantly.</p>
+                <span class="text-accent text-sm font-semibold">Try now <i class="fas fa-arrow-right ml-1"></i></span>
+            </div>
+            <div class="card card-interactive cursor-pointer reveal" onclick="tryTool('resume')">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5">
+                    <i class="fas fa-file-alt text-emerald-500 text-xl"></i>
+                </div>
+                <h3 class="font-display font-semibold text-lg mb-2">Resume Builder</h3>
+                <p class="text-ink-light text-sm leading-relaxed mb-4">Build a clean, professional resume with live preview and PDF export.</p>
+                <span class="text-accent text-sm font-semibold">Try now <i class="fas fa-arrow-right ml-1"></i></span>
+            </div>
+            <div class="card card-interactive cursor-pointer reveal" onclick="tryTool('invoice')">
+                <div class="w-14 h-14 rounded-2xl bg-violet-50 flex items-center justify-center mb-5">
+                    <i class="fas fa-file-invoice-dollar text-violet-500 text-xl"></i>
+                </div>
+                <h3 class="font-display font-semibold text-lg mb-2">Invoice Generator</h3>
+                <p class="text-ink-light text-sm leading-relaxed mb-4">Create invoices with multiple items, auto totals, and multi-currency support.</p>
+                <span class="text-accent text-sm font-semibold">Try now <i class="fas fa-arrow-right ml-1"></i></span>
+            </div>
+            <div class="card card-interactive cursor-pointer reveal" onclick="tryTool('wa')">
+                <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center mb-5">
+                    <i class="fab fa-whatsapp text-green-500 text-xl"></i>
+                </div>
+                <h3 class="font-display font-semibold text-lg mb-2">WhatsApp Link</h3>
+                <p class="text-ink-light text-sm leading-relaxed mb-4">Generate clickable WhatsApp links with country codes and pre-filled messages.</p>
+                <span class="text-accent text-sm font-semibold">Try now <i class="fas fa-arrow-right ml-1"></i></span>
+            </div>
         </div>
     </section>
-</div>
 
-<!-- ==================== LOGIN PAGE ==================== -->
-<div id="page-login" class="page hidden fade-in">
-    <div class="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-16">
-        <div class="w-full max-w-sm">
-            <div class="text-center mb-10">
-                <h1 class="text-3xl font-bold tracking-tight mb-2">Welcome back</h1>
-                <p class="text-slate-500 text-sm">Sign in to your Luviio account</p>
+    <!-- How It Works -->
+    <section class="bg-surface py-20">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-14 reveal">
+                <h2 class="font-display font-bold text-3xl md:text-4xl mb-3">How it works</h2>
+                <p class="text-ink-light text-lg">Three steps. No barriers.</p>
             </div>
-            <div class="space-y-3">
-                <button onclick="googleSignIn()" class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                    Continue with Google
-                </button>
-                <div class="flex items-center gap-3 py-2"><div class="flex-1 h-px bg-slate-200"></div><span class="text-xs text-slate-400 font-medium">or</span><div class="flex-1 h-px bg-slate-200"></div></div>
-                <div class="space-y-3">
-                    <input id="login-email" type="email" placeholder="Email address" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm">
-                    <input id="login-password" type="password" placeholder="Password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm">
-                    <button onclick="emailSignIn()" class="w-full py-3 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-slate-800 transition-colors">Sign In</button>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center reveal">
+                    <div class="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mx-auto mb-5 font-display font-bold text-accent">1</div>
+                    <h3 class="font-display font-semibold text-lg mb-2">Pick a tool</h3>
+                    <p class="text-ink-light text-sm">Choose from QR, Resume, Invoice, or WhatsApp link generator.</p>
+                </div>
+                <div class="text-center reveal">
+                    <div class="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mx-auto mb-5 font-display font-bold text-accent">2</div>
+                    <h3 class="font-display font-semibold text-lg mb-2">Fill in details</h3>
+                    <p class="text-ink-light text-sm">Enter your content and see live preview as you type.</p>
+                </div>
+                <div class="text-center reveal">
+                    <div class="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mx-auto mb-5 font-display font-bold text-accent">3</div>
+                    <h3 class="font-display font-semibold text-lg mb-2">Download & share</h3>
+                    <p class="text-ink-light text-sm">Export as PDF or PNG. Copy links. Done in seconds.</p>
                 </div>
             </div>
-            <p class="text-center text-sm text-slate-500 mt-6">Don't have an account? <span class="text-accent font-semibold cursor-pointer hover:underline" onclick="navigate('register')">Create one</span></p>
         </div>
-    </div>
-</div>
+    </section>
 
-<!-- ==================== REGISTER PAGE ==================== -->
-<div id="page-register" class="page hidden fade-in">
-    <div class="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-16">
-        <div class="w-full max-w-sm">
-            <div class="text-center mb-10">
-                <h1 class="text-3xl font-bold tracking-tight mb-2">Create account</h1>
-                <p class="text-slate-500 text-sm">Start building your digital identity</p>
-            </div>
-            <div class="space-y-3">
-                <button onclick="googleSignIn()" class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                    Continue with Google
-                </button>
-                <div class="flex items-center gap-3 py-2"><div class="flex-1 h-px bg-slate-200"></div><span class="text-xs text-slate-400 font-medium">or</span><div class="flex-1 h-px bg-slate-200"></div></div>
-                <div class="space-y-3">
-                    <input id="reg-name" type="text" placeholder="Full name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm">
-                    <input id="reg-email" type="email" placeholder="Email address" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm">
-                    <input id="reg-password" type="password" placeholder="Password (min 6 characters)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm">
-                    <button onclick="emailSignUp()" class="w-full py-3 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-slate-800 transition-colors">Create Account</button>
-                </div>
-            </div>
-            <p class="text-center text-sm text-slate-500 mt-6">Already have an account? <span class="text-accent font-semibold cursor-pointer hover:underline" onclick="navigate('login')">Sign in</span></p>
+    <!-- Free vs Pro -->
+    <section class="max-w-6xl mx-auto px-6 py-20">
+        <div class="text-center mb-14 reveal">
+            <h2 class="font-display font-bold text-3xl md:text-4xl mb-3">Free vs Pro</h2>
+            <p class="text-ink-light text-lg">Start free. Upgrade when you need more.</p>
         </div>
-    </div>
-</div>
-
-<!-- ==================== DASHBOARD PAGE ==================== -->
-<div id="page-dashboard" class="page hidden fade-in">
-    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Welcome back, <span id="dash-name">User</span></h1>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="text-slate-500 text-sm">luviio.com/</span>
-                    <input id="dash-username" type="text" class="text-sm font-semibold text-accent bg-transparent border-b border-dashed border-accent/30 focus:border-accent w-32 px-0 py-0" value="username" onchange="updateUsername(this.value)">
-                    <button onclick="copyProfileLink()" class="p-1 hover:bg-slate-100 rounded-lg transition-colors"><i data-lucide="copy" class="w-3.5 h-3.5 text-slate-400"></i></button>
-                </div>
-            </div>
-            <div id="plan-badge" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full text-xs font-bold text-slate-600 self-start">
-                <i data-lucide="zap" class="w-3 h-3"></i> Free Plan
-            </div>
-        </div>
-
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                <div class="flex items-center gap-2 mb-3"><div class="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center"><i data-lucide="eye" class="w-4 h-4 text-accent"></i></div></div>
-                <div class="text-2xl font-black stat-num" id="stat-views">0</div>
-                <div class="text-xs text-slate-400 font-medium mt-1">Bio Views</div>
-            </div>
-            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                <div class="flex items-center gap-2 mb-3"><div class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center"><i data-lucide="scan" class="w-4 h-4 text-purple-600"></i></div></div>
-                <div class="text-2xl font-black stat-num" id="stat-scans">0</div>
-                <div class="text-xs text-slate-400 font-medium mt-1">QR Scans</div>
-            </div>
-            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                <div class="flex items-center gap-2 mb-3"><div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center"><i data-lucide="mouse-pointer-click" class="w-4 h-4 text-emerald-600"></i></div></div>
-                <div class="text-2xl font-black stat-num" id="stat-clicks">0</div>
-                <div class="text-xs text-slate-400 font-medium mt-1">Link Clicks</div>
-            </div>
-            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                <div class="flex items-center gap-2 mb-3"><div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center"><i data-lucide="file-text" class="w-4 h-4 text-amber-600"></i></div></div>
-                <div class="text-2xl font-black stat-num" id="stat-invoices">0</div>
-                <div class="text-xs text-slate-400 font-medium mt-1">Invoices Sent</div>
-            </div>
-        </div>
-
-        <!-- Tools Grid -->
-        <h2 class="text-lg font-bold mb-4">Quick Tools</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <button onclick="navigate('bio')" class="tool-card bg-white rounded-2xl p-6 border border-slate-200 text-left group">
-                <div class="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors"><i data-lucide="link" class="w-6 h-6 text-accent"></i></div>
-                <h3 class="font-bold text-base mb-1">Bio Links</h3>
-                <p class="text-xs text-slate-400">Build your link-in-bio page</p>
-            </button>
-            <button onclick="navigate('qr')" class="tool-card bg-white rounded-2xl p-6 border border-slate-200 text-left group">
-                <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-100 transition-colors"><i data-lucide="qr-code" class="w-6 h-6 text-purple-600"></i></div>
-                <h3 class="font-bold text-base mb-1">QR Generator</h3>
-                <p class="text-xs text-slate-400">Create smart QR codes</p>
-            </button>
-            <button onclick="navigate('resume')" class="tool-card bg-white rounded-2xl p-6 border border-slate-200 text-left group">
-                <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-slate-200 transition-colors"><i data-lucide="file-text" class="w-6 h-6 text-slate-700"></i></div>
-                <h3 class="font-bold text-base mb-1">Resume Builder</h3>
-                <p class="text-xs text-slate-400">ATS-friendly PDF export</p>
-            </button>
-            <button onclick="navigate('invoice')" class="tool-card bg-white rounded-2xl p-6 border border-slate-200 text-left group">
-                <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-100 transition-colors"><i data-lucide="receipt" class="w-6 h-6 text-emerald-600"></i></div>
-                <h3 class="font-bold text-base mb-1">Invoice Maker</h3>
-                <p class="text-xs text-slate-400">Professional billing in MYR</p>
-            </button>
-        </div>
-
-        <!-- Upgrade Banner -->
-        <div class="bg-gradient-to-r from-accent to-accentDark rounded-2xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-                <h3 class="font-bold text-lg mb-1">Upgrade to Pro</h3>
-                <p class="text-blue-100 text-sm">Unlimited links, dynamic QR, analytics, and no branding.</p>
-            </div>
-            <button onclick="navigate('pricing')" class="px-6 py-3 bg-white text-accent rounded-xl text-sm font-bold hover:shadow-lg transition-all flex-shrink-0">View Plans — RM 15/mo</button>
-        </div>
-    </main>
-</div>
-
-<!-- ==================== BIO BUILDER PAGE ==================== -->
-<div id="page-bio" class="page hidden fade-in">
-    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-bold">Bio Link Builder</h1>
-                <p class="text-sm text-slate-500">Customize your public profile page</p>
-            </div>
-            <button onclick="saveBio()" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Save</button>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Editor -->
-            <div class="space-y-6">
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Profile</h3>
-                    <div class="flex items-center gap-4">
-                        <div id="bio-avatar-preview" class="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center overflow-hidden flex-shrink-0">
-                            <span class="text-xl font-bold text-accent" id="bio-avatar-letter">U</span>
-                        </div>
-                        <div class="flex-1 space-y-2">
-                            <input id="bio-display-name" type="text" placeholder="Display name" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateBioPreview()">
-                            <input id="bio-tagline" type="text" placeholder="Short tagline or bio" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateBioPreview()">
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Links</h3>
-                        <button onclick="addBioLink()" class="text-xs font-bold text-accent hover:underline flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Add Link</button>
-                    </div>
-                    <div id="bio-links-list" class="space-y-2"></div>
-                    <p class="text-[11px] text-slate-400">Drag to reorder. Free plan: max 5 links.</p>
-                </div>
-            </div>
-            <!-- Preview -->
-            <div class="flex flex-col items-center">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Live Preview</p>
-                <div id="bio-phone" class="phone-mockup no-scrollbar overflow-y-auto" style="max-height:560px">
-                    <div id="bio-preview-content"></div>
-                </div>
-                <div id="bio-demo-badge" class="hidden mt-4 px-3 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full">Demo Mode — Sign in to save</div>
-            </div>
-        </div>
-    </main>
-</div>
-
-<!-- ==================== QR GENERATOR PAGE ==================== -->
-<div id="page-qr" class="page hidden fade-in">
-    <main class="max-w-3xl mx-auto px-4 sm:px-8 py-8">
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold">Smart QR Generator</h1>
-            <p class="text-sm text-slate-500">Create QR codes for any URL or text</p>
-        </div>
-        <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200">
-            <div class="space-y-4 mb-6">
-                <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Content</label>
-                    <input id="qr-input" type="text" placeholder="https://your-link.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm" value="https://luviio.com">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Size</label>
-                        <select id="qr-size" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm">
-                            <option value="200">200 x 200</option>
-                            <option value="300" selected>300 x 300</option>
-                            <option value="400">400 x 400</option>
-                            <option value="512">512 x 512</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Color</label>
-                        <div class="flex gap-2 items-center">
-                            <input id="qr-color" type="color" value="#0F172A" class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
-                            <span class="text-sm text-slate-500" id="qr-color-label">#0F172A</span>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="generateQR()" class="w-full py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors">Generate QR Code</button>
-            </div>
-            <div id="qr-result" class="hidden text-center py-6 border-t border-slate-100">
-                <canvas id="qr-canvas" class="mx-auto rounded-2xl shadow-lg mb-4"></canvas>
-                <div class="flex justify-center gap-3">
-                    <button onclick="downloadQR('png')" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> PNG</button>
-                    <button onclick="downloadQR('svg')" class="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors flex items-center gap-2"><i data-lucide="file-code" class="w-4 h-4"></i> SVG</button>
-                </div>
-            </div>
-            <div id="qr-demo-badge" class="hidden text-center mt-4"><span class="px-3 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full">Demo Mode — Sign in to save</span></div>
-        </div>
-    </main>
-</div>
-
-<!-- ==================== RESUME BUILDER PAGE ==================== -->
-<div id="page-resume" class="page hidden fade-in">
-    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-2xl font-bold">Resume Builder</h1>
-                <p class="text-sm text-slate-500">Fill in your details and export as PDF</p>
-            </div>
-            <div class="flex gap-2">
-                <select id="resume-template" class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium" onchange="updateResumePreview()">
-                    <option value="modern">Modern</option>
-                    <option value="classic">Classic</option>
-                    <option value="minimal">Minimal</option>
-                </select>
-                <button onclick="exportResumePDF()" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Export PDF</button>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            <!-- Form -->
-            <div class="space-y-4 max-h-[calc(100vh-180px)] overflow-y-auto no-scrollbar pr-2">
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Personal Info</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input id="res-name" type="text" placeholder="Full Name" class="col-span-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateResumePreview()">
-                        <input id="res-email" type="email" placeholder="Email" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateResumePreview()">
-                        <input id="res-phone" type="text" placeholder="Phone" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateResumePreview()">
-                        <input id="res-location" type="text" placeholder="Location" class="col-span-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateResumePreview()">
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Summary</h3>
-                    <textarea id="res-summary" rows="3" placeholder="Brief professional summary..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none" oninput="updateResumePreview()"></textarea>
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Experience</h3>
-                        <button onclick="addResumeEntry('exp')" class="text-xs font-bold text-accent hover:underline flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Add</button>
-                    </div>
-                    <div id="res-exp-list" class="space-y-3"></div>
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Education</h3>
-                        <button onclick="addResumeEntry('edu')" class="text-xs font-bold text-accent hover:underline flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Add</button>
-                    </div>
-                    <div id="res-edu-list" class="space-y-3"></div>
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Skills</h3>
-                    <input id="res-skills" type="text" placeholder="Comma separated: JavaScript, React, Design..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateResumePreview()">
-                </div>
-                <div id="resume-demo-badge" class="hidden"><span class="px-3 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full">Demo Mode — Sign in to export</span></div>
-            </div>
-            <!-- Preview -->
-            <div class="bg-slate-100 rounded-2xl p-4 sm:p-8 flex items-start justify-center overflow-auto max-h-[calc(100vh-180px)]">
-                <div id="resume-preview" class="resume-page shadow-2xl rounded-lg text-xs" style="font-size:11px;line-height:1.5"></div>
-            </div>
-        </div>
-    </main>
-</div>
-
-<!-- ==================== INVOICE GENERATOR PAGE ==================== -->
-<div id="page-invoice" class="page hidden fade-in">
-    <main class="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-2xl font-bold">Invoice Generator</h1>
-                <p class="text-sm text-slate-500">Create and send professional invoices</p>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="sendInvoiceWhatsApp()" class="px-5 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition-colors flex items-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> WhatsApp</button>
-                <button onclick="exportInvoicePDF()" class="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> PDF</button>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            <!-- Form -->
-            <div class="space-y-4 max-h-[calc(100vh-180px)] overflow-y-auto no-scrollbar pr-2">
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Invoice Details</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input id="inv-number" type="text" placeholder="INV-001" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                        <input id="inv-date" type="date" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                        <input id="inv-due" type="date" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">From (Your Details)</h3>
-                    <input id="inv-from-name" type="text" placeholder="Your Name / Company" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                    <input id="inv-from-email" type="text" placeholder="Email" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                    <input id="inv-from-phone" type="text" placeholder="Phone" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Bill To</h3>
-                    <input id="inv-to-name" type="text" placeholder="Client Name" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                    <input id="inv-to-email" type="text" placeholder="Client Email" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                    <input id="inv-to-phone" type="text" placeholder="Client Phone (for WhatsApp)" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Items</h3>
-                        <button onclick="addInvoiceItem()" class="text-xs font-bold text-accent hover:underline flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Add Item</button>
-                    </div>
-                    <div id="inv-items-list" class="space-y-2"></div>
-                </div>
-                <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
-                    <h3 class="font-bold text-sm uppercase tracking-wider text-slate-400">Tax & Notes</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <input id="inv-tax" type="number" placeholder="Tax %" value="0" min="0" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" oninput="updateInvoicePreview()">
-                    </div>
-                    <textarea id="inv-notes" rows="2" placeholder="Bank details, payment instructions..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none" oninput="updateInvoicePreview()"></textarea>
-                </div>
-                <div id="invoice-demo-badge" class="hidden"><span class="px-3 py-1 bg-amber-50 text-amber-700 text-[11px] font-bold rounded-full">Demo Mode — Sign in to save & send</span></div>
-            </div>
-            <!-- Preview -->
-            <div class="bg-slate-100 rounded-2xl p-4 sm:p-8 flex items-start justify-center overflow-auto max-h-[calc(100vh-180px)]">
-                <div id="invoice-preview" class="w-full max-w-[595px] bg-white shadow-2xl rounded-lg p-8 text-xs" style="font-size:11px;line-height:1.6"></div>
-            </div>
-        </div>
-    </main>
-</div>
-
-<!-- ==================== PRICING PAGE ==================== -->
-<div id="page-pricing" class="page hidden fade-in">
-    <main class="max-w-4xl mx-auto px-4 sm:px-8 py-16 text-center">
-        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-3">Simple, transparent pricing</h1>
-        <p class="text-slate-500 mb-12">All prices in Malaysia Ringgit (MYR)</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            <!-- Free -->
-            <div class="bg-white rounded-2xl p-8 border border-slate-200 text-left">
-                <h3 class="font-bold text-lg mb-1">Free</h3>
-                <p class="text-slate-400 text-sm mb-4">Get started at no cost</p>
-                <div class="text-4xl font-black mb-6">RM 0<span class="text-base font-normal text-slate-400">/mo</span></div>
-                <ul class="space-y-3 mb-8 text-sm">
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> 5 bio links max</li>
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> Basic QR codes</li>
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> 1 resume template</li>
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-500"></i> 5 invoices/month</li>
-                    <li class="flex items-center gap-2 text-slate-400"><i data-lucide="x" class="w-4 h-4"></i> Luviio watermark</li>
-                    <li class="flex items-center gap-2 text-slate-400"><i data-lucide="x" class="w-4 h-4"></i> No analytics</li>
+        <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <div class="card reveal border-2 border-gray-100">
+                <h3 class="font-display font-bold text-xl mb-1">Free</h3>
+                <p class="text-ink-light text-sm mb-5">Perfect for casual use</p>
+                <div class="text-3xl font-display font-bold mb-5">$0<span class="text-base font-normal text-ink-lighter">/forever</span></div>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-green-500 mt-0.5"></i>Unlimited usage</li>
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-green-500 mt-0.5"></i>Static QR codes</li>
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-green-500 mt-0.5"></i>Basic resume template</li>
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-green-500 mt-0.5"></i>Invoice generator</li>
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-green-500 mt-0.5"></i>WhatsApp link generator</li>
+                    <li class="flex items-start gap-2 text-ink-lighter"><i class="fas fa-times text-ink-lighter mt-0.5"></i>Includes watermark</li>
                 </ul>
-                <button onclick="navigate(currentUser?'dashboard':'register')" class="w-full py-3 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors">Current Plan</button>
             </div>
-            <!-- Pro -->
-            <div class="bg-slate-900 rounded-2xl p-8 text-white text-left relative overflow-hidden shadow-xl">
-                <div class="absolute top-4 right-4 px-2 py-0.5 bg-accent text-white text-[10px] font-bold rounded-full uppercase">Popular</div>
-                <h3 class="font-bold text-lg mb-1">Pro</h3>
-                <p class="text-slate-400 text-sm mb-4">For professionals & creators</p>
-                <div class="text-4xl font-black mb-6">RM 15<span class="text-base font-normal text-slate-400">/mo</span></div>
-                <ul class="space-y-3 mb-8 text-sm">
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Unlimited bio links</li>
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Dynamic QR + analytics</li>
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-accent"></i> All resume templates</li>
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Unlimited invoices</li>
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Remove branding</li>
-                    <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-accent"></i> Full analytics dashboard</li>
+            <div class="card reveal border-2 border-accent relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-accent text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl">PRO</div>
+                <h3 class="font-display font-bold text-xl mb-1">Pro</h3>
+                <p class="text-ink-light text-sm mb-5">For professionals & businesses</p>
+                <div class="text-3xl font-display font-bold mb-5">$9<span class="text-base font-normal text-ink-lighter">/month</span></div>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-accent mt-0.5"></i>Everything in Free</li>
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-accent mt-0.5"></i>Dynamic QR + analytics</li>
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-accent mt-0.5"></i>Premium resume templates</li>
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-accent mt-0.5"></i>WhatsApp templates</li>
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-accent mt-0.5"></i>Multi-currency invoices</li>
+                    <li class="flex items-start gap-2"><i class="fas fa-check text-accent mt-0.5"></i>No watermark or branding</li>
                 </ul>
-                <button onclick="toast('Pro plan coming soon!','info')" class="w-full py-3 bg-accent text-white rounded-xl text-sm font-bold hover:bg-accentDark transition-colors">Upgrade to Pro</button>
+                <button class="btn-primary w-full justify-center mt-6" onclick="openModal('upgrade-modal')">
+                    <i class="fas fa-bolt"></i> Get Pro
+                </button>
             </div>
         </div>
-    </main>
-</div>
+    </section>
 
-<!-- ==================== PUBLIC PROFILE PAGE ==================== -->
-<div id="page-profile" class="page hidden fade-in">
-    <div class="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-16">
-        <div class="w-full max-w-sm">
-            <div id="profile-content" class="text-center"></div>
-        </div>
-    </div>
-</div>
-
-<!-- ==================== FOOTER ==================== -->
-<footer class="h-12 px-4 sm:px-8 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-100 bg-white fixed bottom-0 w-full z-40">
-    <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
-        <div class="flex gap-4 font-bold uppercase tracking-widest opacity-60">
-            <span>&copy; 2025 Luviio</span>
-            <span class="hover:text-slate-900 cursor-pointer hidden sm:inline">Privacy</span>
-            <span class="hover:text-slate-900 cursor-pointer hidden sm:inline">Terms</span>
-        </div>
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-1.5">
-                <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot"></div>
-                <span class="font-bold uppercase tracking-widest hidden sm:inline">Active</span>
+    <!-- Footer -->
+    <footer class="border-t border-gray-100 py-10">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="Luviio" class="w-6 h-6 rounded-full">
+                <span class="font-display font-semibold text-sm">LuvTools by luviio</span>
             </div>
+            <p class="text-xs text-ink-lighter">&copy; 2025 Luviio. All rights reserved.</p>
         </div>
-    </div>
-</footer>
+    </footer>
+</div>
 
-<!-- ==================== FIREBASE & APP LOGIC ==================== -->
+
+<!-- ============ FIREBASE ============ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDSp-HX00hZaJwTFaZ4X06pU7pARGjhl1M",
@@ -600,883 +777,803 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+const googleProvider = new GoogleAuthProvider();
 
-// Expose to global
-window.auth = auth;
-window.db = db;
-window.provider = provider;
+// Expose to global scope
+window.firebaseAuth = auth;
+window.firebaseDb = db;
 window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
 window.signInWithEmailAndPassword = signInWithEmailAndPassword;
 window.signInWithPopup = signInWithPopup;
-window.fbSignOut = fbSignOut;
+window.GoogleAuthProvider = GoogleAuthProvider;
+window.googleProvider = googleProvider;
 window.onAuthStateChanged = onAuthStateChanged;
-window.doc = doc;
+window.fbSignOut = fbSignOut;
 window.setDoc = setDoc;
 window.getDoc = getDoc;
 window.updateDoc = updateDoc;
+window.serverTimestamp = serverTimestamp;
+window.doc = doc;
 
-// Wait for DOM then init app
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => window.initApp());
-} else {
-    window.initApp();
-}
-</script>
-
-<script>
-// ==================== STATE ====================
-let currentUser = null;
-let userData = null;
-let isDemoMode = false;
-let bioLinks = [];
-let resumeExp = [];
-let resumeEdu = [];
-let invoiceItems = [];
-let dragSrcIndex = null;
-
-// ==================== TOAST ====================
-function toast(msg, type = 'info') {
-    const c = document.getElementById('toast-container');
-    const colors = { info: 'bg-slate-900 text-white', success: 'bg-emerald-600 text-white', error: 'bg-red-600 text-white', warn: 'bg-amber-500 text-white' };
-    const t = document.createElement('div');
-    t.className = `${colors[type]||colors.info} px-5 py-3 rounded-xl text-sm font-medium shadow-lg toast-enter flex items-center gap-2`;
-    const icons = { info: 'info', success: 'check-circle', error: 'alert-circle', warn: 'alert-triangle' };
-    t.innerHTML = `<i data-lucide="${icons[type]||'info'}" class="w-4 h-4 flex-shrink-0"></i><span>${msg}</span>`;
-    c.appendChild(t);
-    lucide.createIcons({ nodes: [t] });
-    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3500);
-}
-
-// ==================== AUTH ====================
-function emailSignIn() {
-    const email = document.getElementById('login-email').value.trim();
-    const pass = document.getElementById('login-password').value;
-    if (!email || !pass) return toast('Please fill in all fields', 'warn');
-    window.signInWithEmailAndPassword(window.auth, email, pass).catch(e => toast(e.message.replace('Firebase: ',''), 'error'));
-}
-
-function emailSignUp() {
-    const name = document.getElementById('reg-name').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const pass = document.getElementById('reg-password').value;
-    if (!name || !email || !pass) return toast('Please fill in all fields', 'warn');
-    if (pass.length < 6) return toast('Password must be at least 6 characters', 'warn');
-    window.createUserWithEmailAndPassword(window.auth, email, pass)
-        .then(cred => {
-            const uname = email.split('@')[0].replace(/[^a-z0-9]/gi,'').toLowerCase();
-            window.setDoc(window.doc(window.db, 'users', cred.user.uid), {
-                uid: cred.user.uid, name, email, username: uname,
-                stats: { bioViews: 0, qrScans: 0, linkClicks: 0, invoices: 0 },
-                plan: 'free', createdAt: new Date().toISOString()
-            });
-        })
-        .catch(e => toast(e.message.replace('Firebase: ',''), 'error'));
-}
-
-function googleSignIn() {
-    window.signInWithPopup(window.auth, window.provider)
-        .then(result => {
-            const user = result.user;
-            const ref = window.doc(window.db, 'users', user.uid);
-            window.getDoc(ref).then(snap => {
-                if (!snap.exists()) {
-                    const uname = user.email.split('@')[0].replace(/[^a-z0-9]/gi,'').toLowerCase();
-                    window.setDoc(ref, {
-                        uid: user.uid, name: user.displayName || 'User', email: user.email, username: uname,
-                        stats: { bioViews: 0, qrScans: 0, linkClicks: 0, invoices: 0 },
-                        plan: 'free', createdAt: new Date().toISOString()
-                    });
-                }
-            });
-        })
-        .catch(e => { if (e.code !== 'auth/popup-closed-by-user') toast(e.message.replace('Firebase: ',''), 'error'); });
-}
-
-function signOut() {
-    window.fbSignOut(window.auth);
-    currentUser = null;
-    userData = null;
-    navigate('landing');
-    toast('Signed out', 'info');
-}
-
-// Auth state listener
-window.onAuthStateChanged(window.auth, async (user) => {
-    currentUser = user;
-    const guest = document.getElementById('nav-guest');
-    const usr = document.getElementById('nav-user');
+// Listen for auth state
+onAuthStateChanged(auth, (user) => {
     if (user) {
-        guest.style.display = 'none';
-        usr.style.display = 'flex';
-        // Load user data
-        try {
-            const snap = await window.getDoc(window.doc(window.db, 'users', user.uid));
+        window.currentUser = user;
+        getDoc(doc(db, "users", user.uid)).then((snap) => {
             if (snap.exists()) {
-                userData = snap.data();
-                updateNavUser();
-                // If on landing/login/register, go to dashboard
-                const visible = document.querySelector('.page:not(.hidden)');
-                if (visible && ['landing','login','register'].includes(visible.id.replace('page-',''))) {
-                    navigate('dashboard');
-                }
+                window.userData = snap.data();
+                enterApp();
+            } else {
+                // Create doc if missing
+                const data = {
+                    uid: user.uid,
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    plan: 'free',
+                    createdAt: serverTimestamp(),
+                    stats: { qr: 0, resume: 0, invoice: 0, wa: 0 }
+                };
+                setDoc(doc(db, "users", user.uid), data).then(() => {
+                    window.userData = data;
+                    enterApp();
+                });
             }
-        } catch(e) { console.error(e); }
+        });
     } else {
-        guest.style.display = 'flex';
-        usr.style.display = 'none';
-        userData = null;
+        window.currentUser = null;
+        window.userData = null;
+        showLanding();
     }
-    hideLoading();
 });
 
-function updateNavUser() {
-    if (!userData) return;
-    document.getElementById('nav-avatar-text').textContent = (userData.name || 'U')[0].toUpperCase();
+function showLanding() {
+    document.getElementById('landing-page').style.display = '';
+    document.getElementById('app-shell').classList.add('hidden');
 }
 
-function hideLoading() {
-    const el = document.getElementById('loading-overlay');
-    el.style.opacity = '0';
-    setTimeout(() => el.style.display = 'none', 300);
+function enterApp() {
+    document.getElementById('landing-page').style.display = 'none';
+    document.getElementById('app-shell').classList.remove('hidden');
+    updateSidebar();
+    updateAccount();
+    loadStats();
+    navigate('dashboard');
 }
 
-// ==================== NAVIGATION ====================
+function updateSidebar() {
+    if (!window.userData) return;
+    const name = window.userData.name || 'User';
+    document.getElementById('sidebar-name').textContent = name;
+    document.getElementById('sidebar-email').textContent = window.userData.email;
+    document.getElementById('sidebar-avatar').textContent = name.charAt(0).toUpperCase();
+}
+
+function updateAccount() {
+    if (!window.userData) return;
+    const name = window.userData.name || 'User';
+    document.getElementById('account-name').textContent = name;
+    document.getElementById('account-email').textContent = window.userData.email;
+    document.getElementById('account-avatar').textContent = name.charAt(0).toUpperCase();
+    const plan = window.userData.plan || 'free';
+    document.getElementById('account-plan-badge').innerHTML = plan === 'pro'
+        ? '<span class="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-xs font-semibold"><i class="fas fa-crown mr-1"></i>Pro</span>'
+        : '<span class="bg-surface px-3 py-1 rounded-full text-xs font-semibold">Free</span>';
+    document.getElementById('upgrade-btn').style.display = plan === 'pro' ? 'none' : '';
+    if (window.userData.createdAt) {
+        const d = window.userData.createdAt.toDate ? window.userData.createdAt.toDate() : new Date(window.userData.createdAt);
+        document.getElementById('account-joined').textContent = d.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+    }
+}
+
+async function loadStats() {
+    if (!window.userData) return;
+    const s = window.userData.stats || { qr:0, resume:0, invoice:0, wa:0 };
+    document.getElementById('stat-qr').textContent = s.qr || 0;
+    document.getElementById('stat-resume').textContent = s.resume || 0;
+    document.getElementById('stat-invoice').textContent = s.invoice || 0;
+    document.getElementById('stat-wa').textContent = s.wa || 0;
+}
+
+async function incrementStat(tool) {
+    if (!window.currentUser) return;
+    const stats = { ...(window.userData.stats || { qr:0, resume:0, invoice:0, wa:0 }) };
+    stats[tool] = (stats[tool] || 0) + 1;
+    window.userData.stats = stats;
+    await updateDoc(doc(db, "users", window.currentUser.uid), { stats });
+    loadStats();
+}
+
+// Expose functions
+window.enterApp = enterApp;
+window.updateSidebar = updateSidebar;
+window.updateAccount = updateAccount;
+window.loadStats = loadStats;
+window.incrementStat = incrementStat;
+window.showLanding = showLanding;
+</script>
+
+
+<!-- ============ APP LOGIC ============ -->
+<script>
+// ========== STATE ==========
+let currentPage = 'landing';
+let authMode = 'login';
+let qrInstance = null;
+let waTemplates = [];
+
+// ========== NAVIGATION ==========
 function navigate(page) {
-    isDemoMode = false;
-    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-    const el = document.getElementById('page-' + page);
-    if (el) { el.classList.remove('hidden'); el.classList.add('fade-in'); }
-    window.scrollTo(0, 0);
-    lucide.createIcons();
-
-    // Page-specific init
-    if (page === 'dashboard') initDashboard();
-    if (page === 'bio') initBio();
-    if (page === 'qr') initQR();
-    if (page === 'resume') initResume();
-    if (page === 'invoice') initInvoice();
+    currentPage = page;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + page);
+    if (target) {
+        // Small delay for transition effect
+        setTimeout(() => target.classList.add('active'), 30);
+    }
+    // Update nav links
+    document.querySelectorAll('.nav-link').forEach(l => {
+        l.classList.toggle('active', l.dataset.page === page);
+    });
+    // Update counters
+    if (!window.currentUser) {
+        updateCounters();
+    }
+    // Close sidebar on mobile
+    closeSidebar();
+    // Tool-specific init
+    if (page === 'invoice') {
+        const today = new Date().toISOString().split('T')[0];
+        if (!document.getElementById('inv-date').value) document.getElementById('inv-date').value = today;
+        const due = new Date();
+        due.setDate(due.getDate() + 30);
+        if (!document.getElementById('inv-due').value) document.getElementById('inv-due').value = due.toISOString().split('T')[0];
+        if (!document.getElementById('inv-number').value) document.getElementById('inv-number').value = 'INV-' + String(Math.floor(Math.random()*9000)+1000);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function tryTool(tool) {
-    isDemoMode = true;
-    navigate(tool);
-}
-
-// ==================== DASHBOARD ====================
-function initDashboard() {
-    if (!userData) return;
-    document.getElementById('dash-name').textContent = userData.name || 'User';
-    document.getElementById('dash-username').value = userData.username || 'username';
-    const s = userData.stats || {};
-    document.getElementById('stat-views').textContent = (s.bioViews || 0).toLocaleString();
-    document.getElementById('stat-scans').textContent = (s.qrScans || 0).toLocaleString();
-    document.getElementById('stat-clicks').textContent = (s.linkClicks || 0).toLocaleString();
-    document.getElementById('stat-invoices').textContent = (s.invoices || 0).toLocaleString();
-    const badge = document.getElementById('plan-badge');
-    if (userData.plan === 'pro') {
-        badge.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 rounded-full text-xs font-bold text-accent self-start';
-        badge.innerHTML = '<i data-lucide="crown" class="w-3 h-3"></i> Pro Plan';
-    } else {
-        badge.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-full text-xs font-bold text-slate-600 self-start';
-        badge.innerHTML = '<i data-lucide="zap" class="w-3 h-3"></i> Free Plan';
+    // Guest trying a tool
+    if (checkLimit(tool)) {
+        // Show app shell with that tool
+        document.getElementById('landing-page').style.display = 'none';
+        document.getElementById('app-shell').classList.remove('hidden');
+        // Hide sidebar on mobile for guests, show it on desktop
+        updateGuestUI();
+        navigate(tool);
     }
-    lucide.createIcons();
 }
 
-async function updateUsername(val) {
-    if (!currentUser || !val.trim()) return;
-    const clean = val.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+function updateGuestUI() {
+    document.getElementById('sidebar-name').textContent = 'Guest';
+    document.getElementById('sidebar-email').textContent = 'Not signed in';
+    document.getElementById('sidebar-avatar').textContent = 'G';
+    // Hide sign out for guests
+}
+
+// ========== SIDEBAR ==========
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-backdrop').classList.toggle('show');
+}
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-backdrop').classList.remove('show');
+}
+
+// ========== DAILY LIMIT ==========
+function getTodayKey() {
+    return 'luviio_limits_' + new Date().toISOString().split('T')[0];
+}
+
+function getLimits() {
     try {
-        await window.updateDoc(window.doc(window.db, 'users', currentUser.uid), { username: clean });
-        userData.username = clean;
-        toast('Username updated!', 'success');
-    } catch(e) { toast('Failed to update username', 'error'); }
+        return JSON.parse(localStorage.getItem(getTodayKey())) || {};
+    } catch(e) { return {}; }
 }
 
-function copyProfileLink() {
-    const uname = document.getElementById('dash-username').value || 'username';
-    navigator.clipboard.writeText('https://appluviio.web.app/' + uname).then(() => toast('Profile link copied!', 'success'));
+function checkLimit(tool) {
+    if (window.currentUser) return true; // Logged in = unlimited
+    const limits = getLimits();
+    const used = limits[tool] || 0;
+    if (used >= 3) {
+        openModal('limit-modal');
+        return false;
+    }
+    return true;
 }
 
-// ==================== BIO BUILDER ====================
-function initBio() {
-    const badge = document.getElementById('bio-demo-badge');
-    if (isDemoMode) {
-        badge.classList.remove('hidden');
-        bioLinks = [
-            { id: 1, title: 'Portfolio Website', url: 'https://example.com', platform: 'web' },
-            { id: 2, title: 'WhatsApp', url: 'https://wa.me/60123456789', platform: 'whatsapp' },
-            { id: 3, title: 'Shopee Store', url: 'https://shopee.com.my/shop', platform: 'shopee' },
-            { id: 4, title: 'TikTok', url: 'https://tiktok.com/@user', platform: 'tiktok' },
-        ];
-        document.getElementById('bio-display-name').value = 'Alex Rivera';
-        document.getElementById('bio-tagline').value = 'Designer & Creator';
-        document.getElementById('bio-avatar-letter').textContent = 'A';
-    } else if (userData) {
-        badge.classList.add('hidden');
-        document.getElementById('bio-display-name').value = userData.bioName || userData.name || '';
-        document.getElementById('bio-tagline').value = userData.bioTagline || '';
-        document.getElementById('bio-avatar-letter').textContent = (userData.name || 'U')[0].toUpperCase();
-        bioLinks = userData.bioLinks || [];
-        if (bioLinks.length === 0) {
-            bioLinks = [{ id: Date.now(), title: 'My Website', url: 'https://', platform: 'web' }];
+function useLimit(tool) {
+    if (window.currentUser) return true;
+    const limits = getLimits();
+    limits[tool] = (limits[tool] || 0) + 1;
+    localStorage.setItem(getTodayKey(), JSON.stringify(limits));
+    updateCounters();
+    return true;
+}
+
+function getRemaining(tool) {
+    if (window.currentUser) return Infinity;
+    const limits = getLimits();
+    return 3 - (limits[tool] || 0);
+}
+
+function updateCounters() {
+    const tools = ['qr','resume','invoice','wa'];
+    tools.forEach(t => {
+        const el = document.getElementById(t + '-counter');
+        if (!el) return;
+        if (window.currentUser) {
+            el.innerHTML = '<i class="fas fa-infinity mr-1"></i>Unlimited';
+            el.className = 'counter-badge no-print bg-green-50 text-green-600';
+        } else {
+            const rem = getRemaining(t);
+            el.textContent = rem + '/3 left today';
+            el.className = 'counter-badge no-print ' + (rem <= 1 ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-accent');
         }
-    } else {
-        badge.classList.remove('hidden');
-        bioLinks = [{ id: Date.now(), title: 'Example Link', url: 'https://example.com', platform: 'web' }];
-    }
-    renderBioLinksList();
-    updateBioPreview();
-}
-
-function addBioLink() {
-    if (!isDemoMode && bioLinks.length >= 5 && userData?.plan !== 'pro') {
-        return toast('Free plan: max 5 links. Upgrade to Pro for unlimited.', 'warn');
-    }
-    bioLinks.push({ id: Date.now(), title: 'New Link', url: 'https://', platform: 'web' });
-    renderBioLinksList();
-    updateBioPreview();
-}
-
-function removeBioLink(idx) {
-    bioLinks.splice(idx, 1);
-    renderBioLinksList();
-    updateBioPreview();
-}
-
-function renderBioLinksList() {
-    const list = document.getElementById('bio-links-list');
-    list.innerHTML = bioLinks.map((link, i) => {
-        const platforms = [
-            { val: 'web', label: 'Web', icon: 'globe' },
-            { val: 'whatsapp', label: 'WhatsApp', icon: 'message-circle' },
-            { val: 'shopee', label: 'Shopee', icon: 'shopping-bag' },
-            { val: 'tiktok', label: 'TikTok', icon: 'music' },
-            { val: 'instagram', label: 'Instagram', icon: 'camera' },
-            { val: 'email', label: 'Email', icon: 'mail' },
-        ];
-        return `<div class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100 group" draggable="true" ondragstart="dragBioStart(event,${i})" ondragover="dragBioOver(event)" ondrop="dragBioDrop(event,${i})" ondragend="dragBioEnd(event)">
-            <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 cursor-grab flex-shrink-0"></i>
-            <select onchange="bioLinks[${i}].platform=this.value;updateBioPreview()" class="w-24 px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium flex-shrink-0">
-                ${platforms.map(p => `<option value="${p.val}" ${link.platform===p.val?'selected':''}>${p.label}</option>`).join('')}
-            </select>
-            <input value="${escHtml(link.title)}" oninput="bioLinks[${i}].title=this.value;updateBioPreview()" class="flex-1 px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs min-w-0" placeholder="Title">
-            <button onclick="removeBioLink(${i})" class="p-1 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-400"></i></button>
-        </div>`;
-    }).join('');
-    lucide.createIcons();
-}
-
-function dragBioStart(e, idx) { dragSrcIndex = idx; e.target.closest('[draggable]').classList.add('dragging'); }
-function dragBioOver(e) { e.preventDefault(); e.target.closest('[draggable]')?.classList.add('drag-over'); }
-function dragBioDrop(e, idx) {
-    e.preventDefault();
-    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-    if (dragSrcIndex !== null && dragSrcIndex !== idx) {
-        const item = bioLinks.splice(dragSrcIndex, 1)[0];
-        bioLinks.splice(idx, 0, item);
-        renderBioLinksList();
-        updateBioPreview();
-    }
-}
-function dragBioEnd(e) { dragSrcIndex = null; document.querySelectorAll('.dragging,.drag-over').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); }); }
-
-function updateBioPreview() {
-    const name = document.getElementById('bio-display-name')?.value || 'Your Name';
-    const tagline = document.getElementById('bio-tagline')?.value || '';
-    const letter = name[0]?.toUpperCase() || 'U';
-    document.getElementById('bio-avatar-letter').textContent = letter;
-
-    const platformStyles = {
-        web: { bg: 'bg-slate-900', text: 'text-white' },
-        whatsapp: { bg: 'bg-green-500', text: 'text-white' },
-        shopee: { bg: 'bg-orange-500', text: 'text-white' },
-        tiktok: { bg: 'bg-slate-900', text: 'text-white' },
-        instagram: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-white' },
-        email: { bg: 'bg-accent', text: 'text-white' },
-    };
-
-    const linksHtml = bioLinks.map(l => {
-        const s = platformStyles[l.platform] || platformStyles.web;
-        return `<a href="${escHtml(l.url)}" target="_blank" class="flex items-center justify-between ${s.bg} ${s.text} rounded-2xl px-5 py-3.5 text-sm font-semibold no-underline hover:opacity-90 transition-opacity">
-            <span>${escHtml(l.title)}</span><span class="opacity-60">→</span>
-        </a>`;
-    }).join('');
-
-    const watermark = (!isDemoMode && userData?.plan !== 'pro') ? '<div class="text-center mt-6"><span class="text-[10px] text-slate-300 font-medium">Powered by Luviio</span></div>' : '';
-
-    document.getElementById('bio-preview-content').innerHTML = `
-        <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <span class="text-2xl font-bold text-accent">${letter}</span>
-            </div>
-            <div class="font-bold text-base">${escHtml(name)}</div>
-            ${tagline ? `<div class="text-xs text-slate-400 mt-0.5">${escHtml(tagline)}</div>` : ''}
-        </div>
-        <div class="space-y-2.5">${linksHtml}</div>
-        ${watermark}
-    `;
-}
-
-async function saveBio() {
-    if (isDemoMode || !currentUser) return toast('Sign in to save your bio', 'warn');
-    try {
-        await window.updateDoc(window.doc(window.db, 'users', currentUser.uid), {
-            bioName: document.getElementById('bio-display-name').value,
-            bioTagline: document.getElementById('bio-tagline').value,
-            bioLinks: bioLinks
-        });
-        userData.bioName = document.getElementById('bio-display-name').value;
-        userData.bioTagline = document.getElementById('bio-tagline').value;
-        userData.bioLinks = bioLinks;
-        toast('Bio saved!', 'success');
-    } catch(e) { toast('Failed to save', 'error'); }
-}
-
-// ==================== QR GENERATOR ====================
-function initQR() {
-    const badge = document.getElementById('qr-demo-badge');
-    if (isDemoMode) badge.classList.remove('hidden');
-    else badge.classList.add('hidden');
-    document.getElementById('qr-color').addEventListener('input', function() {
-        document.getElementById('qr-color-label').textContent = this.value.toUpperCase();
     });
+    // Mobile counter
+    const mc = document.getElementById('mobile-counter');
+    if (mc && !window.currentUser) {
+        const currentTool = currentPage;
+        if (['qr','resume','invoice','wa'].includes(currentTool)) {
+            const rem = getRemaining(currentTool);
+            mc.textContent = rem + '/3';
+            mc.className = 'counter-badge ' + (rem <= 1 ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-accent');
+        }
+    }
+}
+
+// ========== MODALS ==========
+function openModal(id) {
+    const m = document.getElementById(id);
+    m.style.display = 'flex';
+    requestAnimationFrame(() => m.classList.add('show'));
+}
+function closeModal(id) {
+    const m = document.getElementById(id);
+    m.classList.remove('show');
+    setTimeout(() => m.style.display = 'none', 250);
+}
+
+// ========== AUTH ==========
+function showAuth(mode) {
+    authMode = mode;
+    closeModal('limit-modal');
+    if (mode === 'register') {
+        document.getElementById('auth-title').textContent = 'Create your account';
+        document.getElementById('auth-subtitle').textContent = 'Join LuvTools for free';
+        document.getElementById('auth-name-field').classList.remove('hidden');
+        document.getElementById('auth-submit-btn').textContent = 'Create Account';
+        document.getElementById('auth-switch-text').textContent = 'Already have an account?';
+        document.getElementById('auth-switch-btn').textContent = 'Sign in';
+    } else {
+        document.getElementById('auth-title').textContent = 'Welcome back';
+        document.getElementById('auth-subtitle').textContent = 'Sign in to your account';
+        document.getElementById('auth-name-field').classList.add('hidden');
+        document.getElementById('auth-submit-btn').textContent = 'Sign In';
+        document.getElementById('auth-switch-text').textContent = "Don't have an account?";
+        document.getElementById('auth-switch-btn').textContent = 'Create one';
+    }
+    openModal('auth-modal');
+}
+
+function toggleAuthMode() {
+    showAuth(authMode === 'login' ? 'register' : 'login');
+}
+
+async function handleAuthSubmit(e) {
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const name = document.getElementById('auth-name').value.trim();
+    try {
+        if (authMode === 'register') {
+            const cred = await window.createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+            await window.setDoc(window.doc(window.firebaseDb, "users", cred.user.uid), {
+                uid: cred.user.uid,
+                name: name || email.split('@')[0],
+                email: email,
+                plan: 'free',
+                createdAt: window.serverTimestamp(),
+                stats: { qr:0, resume:0, invoice:0, wa:0 }
+            });
+            window.userData = { name: name || email.split('@')[0], email, plan:'free', stats:{qr:0,resume:0,invoice:0,wa:0} };
+            window.showToast('Account created successfully!', 'success');
+        } else {
+            await window.signInWithEmailAndPassword(window.firebaseAuth, email, password);
+            window.showToast('Signed in successfully!', 'success');
+        }
+        closeModal('auth-modal');
+        // Clear form
+        document.getElementById('auth-form').reset();
+    } catch(err) {
+        let msg = 'Something went wrong. Please try again.';
+        if (err.code === 'auth/email-already-in-use') msg = 'This email is already registered.';
+        else if (err.code === 'auth/invalid-credential') msg = 'Invalid email or password.';
+        else if (err.code === 'auth/weak-password') msg = 'Password must be at least 6 characters.';
+        else if (err.code === 'auth/user-not-found') msg = 'No account found with this email.';
+        window.showToast(msg, 'error');
+    }
+}
+
+async function googleSignIn() {
+    try {
+        const result = await window.signInWithPopup(window.firebaseAuth, window.googleProvider);
+        const user = result.user;
+        const snap = await window.getDoc(window.doc(window.firebaseDb, "users", user.uid));
+        if (!snap.exists()) {
+            const data = {
+                uid: user.uid,
+                name: user.displayName || 'User',
+                email: user.email,
+                plan: 'free',
+                createdAt: window.serverTimestamp(),
+                stats: { qr:0, resume:0, invoice:0, wa:0 }
+            };
+            await window.setDoc(window.doc(window.firebaseDb, "users", user.uid), data);
+            window.userData = data;
+        }
+        window.showToast('Signed in with Google!', 'success');
+        closeModal('auth-modal');
+    } catch(err) {
+        if (err.code !== 'auth/popup-closed-by-user') {
+            window.showToast('Google sign-in failed. Please try again.', 'error');
+        }
+    }
+}
+
+async function signOutUser() {
+    try {
+        await window.fbSignOut(window.firebaseAuth);
+        window.currentUser = null;
+        window.userData = null;
+        window.showToast('Signed out', 'success');
+    } catch(e) {
+        window.showToast('Sign out failed', 'error');
+    }
+}
+
+// ========== TOAST ==========
+function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+    const color = type === 'success' ? '#22C55E' : type === 'error' ? '#EF4444' : '#3B82F6';
+    toast.innerHTML = `<i class="fas ${icon}" style="color:${color}"></i> ${message}`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 350);
+    }, 3000);
+}
+
+// ========== QR GENERATOR ==========
+function updateQRPlaceholder() {
+    const type = document.getElementById('qr-type').value;
+    const input = document.getElementById('qr-input');
+    const waFields = document.getElementById('qr-wa-fields');
+    if (type === 'url') { input.placeholder = 'https://example.com'; input.type = 'url'; }
+    else if (type === 'text') { input.placeholder = 'Enter any text...'; input.type = 'text'; }
+    else { input.placeholder = ''; input.type = 'hidden'; }
+    waFields.classList.toggle('hidden', type !== 'whatsapp');
 }
 
 function generateQR() {
-    const text = document.getElementById('qr-input').value.trim();
-    if (!text) return toast('Please enter a URL or text', 'warn');
-    const size = parseInt(document.getElementById('qr-size').value);
-    const color = document.getElementById('qr-color').value;
-    const canvas = document.getElementById('qr-canvas');
-    QRCode.toCanvas(canvas, text, { width: size, margin: 2, color: { dark: color, light: '#FFFFFF' } }, function(error) {
-        if (error) return toast('Failed to generate QR code', 'error');
-        document.getElementById('qr-result').classList.remove('hidden');
-    });
-}
-
-function downloadQR(format) {
-    if (format === 'png') {
-        const canvas = document.getElementById('qr-canvas');
-        const link = document.createElement('a');
-        link.download = 'luviio-qr.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    } else if (format === 'svg') {
-        const text = document.getElementById('qr-input').value.trim();
-        const color = document.getElementById('qr-color').value;
-        QRCode.toString(text, { type: 'svg', color: { dark: color, light: '#FFFFFF' } }, function(err, svg) {
-            if (err) return toast('Failed to generate SVG', 'error');
-            const blob = new Blob([svg], { type: 'image/svg+xml' });
-            const link = document.createElement('a');
-            link.download = 'luviio-qr.svg';
-            link.href = URL.createObjectURL(blob);
-            link.click();
-        });
-    }
-    toast('QR downloaded!', 'success');
-}
-
-// ==================== RESUME BUILDER ====================
-function initResume() {
-    const badge = document.getElementById('resume-demo-badge');
-    if (isDemoMode) {
-        badge.classList.remove('hidden');
-        document.getElementById('res-name').value = 'Alex Rivera';
-        document.getElementById('res-email').value = 'alex@example.com';
-        document.getElementById('res-phone').value = '+60 12-345 6789';
-        document.getElementById('res-location').value = 'Kuala Lumpur, Malaysia';
-        document.getElementById('res-summary').value = 'Creative professional with 5+ years of experience in UI/UX design and frontend development. Passionate about building beautiful, functional digital products.';
-        document.getElementById('res-skills').value = 'UI/UX Design, Figma, React, JavaScript, Tailwind CSS, Node.js, Firebase';
-        resumeExp = [
-            { title: 'Senior UI Designer', company: 'TechCorp Sdn Bhd', period: '2022 — Present', desc: 'Lead design for mobile app with 50K+ users. Established design system used across 3 products.' },
-            { title: 'Frontend Developer', company: 'Digital Agency KL', period: '2020 — 2022', desc: 'Built responsive web applications using React and Tailwind CSS for 20+ client projects.' }
-        ];
-        resumeEdu = [
-            { title: 'BSc Computer Science', school: 'University of Malaya', period: '2016 — 2020' }
-        ];
+    if (!checkLimit('qr')) return;
+    const type = document.getElementById('qr-type').value;
+    let content = '';
+    if (type === 'whatsapp') {
+        const phone = document.getElementById('qr-wa-phone').value.trim();
+        const msg = document.getElementById('qr-wa-msg').value.trim();
+        if (!phone) { showToast('Please enter a phone number', 'error'); return; }
+        content = 'https://wa.me/' + phone + (msg ? '?text=' + encodeURIComponent(msg) : '');
     } else {
-        badge.classList.add('hidden');
-        resumeExp = userData?.resumeExp || [];
-        resumeEdu = userData?.resumeEdu || [];
-        if (resumeExp.length === 0) resumeExp.push({ title: '', company: '', period: '', desc: '' });
-        if (resumeEdu.length === 0) resumeEdu.push({ title: '', school: '', period: '' });
+        content = document.getElementById('qr-input').value.trim();
     }
-    renderResumeEntries();
-    updateResumePreview();
+    if (!content) { showToast('Please enter content', 'error'); return; }
+
+    const output = document.getElementById('qr-output');
+    output.innerHTML = '';
+    document.getElementById('qr-placeholder').style.display = 'none';
+    document.getElementById('qr-actions').classList.remove('hidden');
+
+    qrInstance = new QRCode(output, {
+        text: content,
+        width: 220,
+        height: 220,
+        colorDark: '#0F172A',
+        colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    useLimit('qr');
+    if (window.currentUser) window.incrementStat('qr');
+    showToast('QR code generated!', 'success');
 }
 
-function addResumeEntry(type) {
-    if (type === 'exp') resumeExp.push({ title: '', company: '', period: '', desc: '' });
-    else resumeEdu.push({ title: '', school: '', period: '' });
-    renderResumeEntries();
-    updateResumePreview();
+function downloadQR() {
+    const canvas = document.querySelector('#qr-output canvas');
+    if (!canvas) { showToast('Generate a QR code first', 'error'); return; }
+    const link = document.createElement('a');
+    link.download = 'luviio-qr-' + Date.now() + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('QR code downloaded!', 'success');
 }
 
-function removeResumeEntry(type, idx) {
-    if (type === 'exp') resumeExp.splice(idx, 1);
-    else resumeEdu.splice(idx, 1);
-    renderResumeEntries();
-    updateResumePreview();
+function saveQR() {
+    if (!window.currentUser) { showAuth('login'); return; }
+    showToast('QR code saved to your account!', 'success');
 }
 
-function renderResumeEntries() {
-    const expList = document.getElementById('res-exp-list');
-    expList.innerHTML = resumeExp.map((e, i) => `
-        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2 group">
-            <div class="flex justify-between items-center">
-                <span class="text-[10px] font-bold text-slate-400">#${i+1}</span>
-                <button onclick="removeResumeEntry('exp',${i})" class="p-1 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-3 h-3 text-red-400"></i></button>
-            </div>
-            <input value="${escHtml(e.title)}" oninput="resumeExp[${i}].title=this.value;updateResumePreview()" placeholder="Job Title" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs">
-            <div class="grid grid-cols-2 gap-2">
-                <input value="${escHtml(e.company)}" oninput="resumeExp[${i}].company=this.value;updateResumePreview()" placeholder="Company" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs">
-                <input value="${escHtml(e.period)}" oninput="resumeExp[${i}].period=this.value;updateResumePreview()" placeholder="Period" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs">
-            </div>
-            <textarea rows="2" oninput="resumeExp[${i}].desc=this.value;updateResumePreview()" placeholder="Description..." class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs resize-none">${escHtml(e.desc)}</textarea>
+// ========== RESUME BUILDER ==========
+function addExperience() {
+    const container = document.getElementById('res-experience');
+    const div = document.createElement('div');
+    div.className = 'res-exp-item border border-gray-100 rounded-xl p-3 space-y-2';
+    div.innerHTML = `
+        <input type="text" class="input-field exp-company" placeholder="Company" oninput="updateResumePreview()">
+        <input type="text" class="input-field exp-role" placeholder="Role" oninput="updateResumePreview()">
+        <div class="grid grid-cols-2 gap-3">
+            <input type="text" class="input-field exp-start" placeholder="Start" oninput="updateResumePreview()">
+            <input type="text" class="input-field exp-end" placeholder="End" oninput="updateResumePreview()">
         </div>
-    `).join('');
+        <textarea class="input-field exp-desc" rows="2" placeholder="Description..." oninput="updateResumePreview()"></textarea>
+        <button class="btn-ghost text-xs text-red-500" onclick="this.parentElement.remove(); updateResumePreview();"><i class="fas fa-trash"></i> Remove</button>
+    `;
+    container.appendChild(div);
+}
 
-    const eduList = document.getElementById('res-edu-list');
-    eduList.innerHTML = resumeEdu.map((e, i) => `
-        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2 group">
-            <div class="flex justify-between items-center">
-                <span class="text-[10px] font-bold text-slate-400">#${i+1}</span>
-                <button onclick="removeResumeEntry('edu',${i})" class="p-1 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-3 h-3 text-red-400"></i></button>
-            </div>
-            <input value="${escHtml(e.title)}" oninput="resumeEdu[${i}].title=this.value;updateResumePreview()" placeholder="Degree / Certificate" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs">
-            <div class="grid grid-cols-2 gap-2">
-                <input value="${escHtml(e.school)}" oninput="resumeEdu[${i}].school=this.value;updateResumePreview()" placeholder="Institution" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs">
-                <input value="${escHtml(e.period)}" oninput="resumeEdu[${i}].period=this.value;updateResumePreview()" placeholder="Period" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs">
-            </div>
-        </div>
-    `).join('');
-    lucide.createIcons();
+function addEducation() {
+    const container = document.getElementById('res-education');
+    const div = document.createElement('div');
+    div.className = 'res-edu-item border border-gray-100 rounded-xl p-3 space-y-2';
+    div.innerHTML = `
+        <input type="text" class="input-field edu-school" placeholder="School / University" oninput="updateResumePreview()">
+        <input type="text" class="input-field edu-degree" placeholder="Degree" oninput="updateResumePreview()">
+        <input type="text" class="input-field edu-year" placeholder="Year" oninput="updateResumePreview()">
+        <button class="btn-ghost text-xs text-red-500" onclick="this.parentElement.remove(); updateResumePreview();"><i class="fas fa-trash"></i> Remove</button>
+    `;
+    container.appendChild(div);
 }
 
 function updateResumePreview() {
-    const tpl = document.getElementById('resume-template')?.value || 'modern';
-    const name = document.getElementById('res-name')?.value || '';
-    const email = document.getElementById('res-email')?.value || '';
-    const phone = document.getElementById('res-phone')?.value || '';
-    const loc = document.getElementById('res-location')?.value || '';
-    const summary = document.getElementById('res-summary')?.value || '';
-    const skills = document.getElementById('res-skills')?.value || '';
+    const name = document.getElementById('res-name').value;
+    const title = document.getElementById('res-title').value;
+    const email = document.getElementById('res-email').value;
+    const phone = document.getElementById('res-phone').value;
+    const location = document.getElementById('res-location').value;
+    const website = document.getElementById('res-website').value;
+    const summary = document.getElementById('res-summary').value;
+    const skills = document.getElementById('res-skills').value;
 
-    const expHtml = resumeExp.filter(e => e.title).map(e => `
-        <div style="margin-bottom:12px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-                <strong style="font-size:12px">${escHtml(e.title)}</strong>
-                <span style="font-size:10px;color:#94A3B8">${escHtml(e.period)}</span>
-            </div>
-            <div style="font-size:10px;color:#64748B;margin-bottom:3px">${escHtml(e.company)}</div>
-            ${e.desc ? `<div style="font-size:10px;color:#475569;line-height:1.5">${escHtml(e.desc)}</div>` : ''}
-        </div>
-    `).join('');
+    // Collect experiences
+    const expItems = [];
+    document.querySelectorAll('.res-exp-item').forEach(item => {
+        expItems.push({
+            company: item.querySelector('.exp-company').value,
+            role: item.querySelector('.exp-role').value,
+            start: item.querySelector('.exp-start').value,
+            end: item.querySelector('.exp-end').value,
+            desc: item.querySelector('.exp-desc').value
+        });
+    });
 
-    const eduHtml = resumeEdu.filter(e => e.title).map(e => `
-        <div style="margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;align-items:baseline">
-                <strong style="font-size:12px">${escHtml(e.title)}</strong>
-                <span style="font-size:10px;color:#94A3B8">${escHtml(e.period)}</span>
-            </div>
-            <div style="font-size:10px;color:#64748B">${escHtml(e.school)}</div>
-        </div>
-    `).join('');
+    // Collect education
+    const eduItems = [];
+    document.querySelectorAll('.res-edu-item').forEach(item => {
+        eduItems.push({
+            school: item.querySelector('.edu-school').value,
+            degree: item.querySelector('.edu-degree').value,
+            year: item.querySelector('.edu-year').value
+        });
+    });
 
-    const skillsHtml = skills ? `<div style="display:flex;flex-wrap:wrap;gap:5px">${skills.split(',').map(s => s.trim()).filter(Boolean).map(s => `<span style="background:#F1F5F9;color:#334155;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:500">${escHtml(s)}</span>`).join('')}</div>` : '';
-
-    const contactLine = [email, phone, loc].filter(Boolean).join(' &middot; ');
-
-    const watermark = (!isDemoMode && userData?.plan !== 'pro') ? '<div style="text-align:center;margin-top:20px;font-size:8px;color:#CBD5E1">Created with Luviio</div>' : '';
+    if (!name && !title && !summary) {
+        document.getElementById('resume-preview-content').innerHTML = '<p class="text-ink-lighter text-sm text-center py-20">Start filling in the form to see your resume here.</p>';
+        return;
+    }
 
     let html = '';
-    if (tpl === 'modern') {
-        html = `<div style="padding:0">
-            <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #3B82F6">
-                <div style="font-size:22px;font-weight:800;color:#0F172A;letter-spacing:-0.5px">${escHtml(name) || 'Your Name'}</div>
-                <div style="font-size:10px;color:#64748B;margin-top:4px">${contactLine}</div>
-            </div>
-            ${summary ? `<div style="margin-bottom:16px"><div style="font-size:10px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Summary</div><div style="font-size:10px;color:#475569;line-height:1.6">${escHtml(summary)}</div></div>` : ''}
-            ${expHtml ? `<div style="margin-bottom:16px"><div style="font-size:10px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Experience</div>${expHtml}</div>` : ''}
-            ${eduHtml ? `<div style="margin-bottom:16px"><div style="font-size:10px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Education</div>${eduHtml}</div>` : ''}
-            ${skillsHtml ? `<div><div style="font-size:10px;font-weight:700;color:#3B82F6;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Skills</div>${skillsHtml}</div>` : ''}
-            ${watermark}
-        </div>`;
-    } else if (tpl === 'classic') {
-        html = `<div style="padding:0">
-            <div style="text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #E2E8F0">
-                <div style="font-size:22px;font-weight:800;color:#0F172A;letter-spacing:1px;text-transform:uppercase">${escHtml(name) || 'Your Name'}</div>
-                <div style="font-size:10px;color:#64748B;margin-top:4px">${contactLine}</div>
-            </div>
-            ${summary ? `<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#0F172A;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid #E2E8F0;padding-bottom:4px">Professional Summary</div><div style="font-size:10px;color:#475569;line-height:1.6">${escHtml(summary)}</div></div>` : ''}
-            ${expHtml ? `<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#0F172A;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid #E2E8F0;padding-bottom:4px">Work Experience</div>${expHtml}</div>` : ''}
-            ${eduHtml ? `<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#0F172A;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid #E2E8F0;padding-bottom:4px">Education</div>${eduHtml}</div>` : ''}
-            ${skillsHtml ? `<div><div style="font-size:11px;font-weight:700;color:#0F172A;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid #E2E8F0;padding-bottom:4px">Skills</div>${skillsHtml}</div>` : ''}
-            ${watermark}
-        </div>`;
-    } else {
-        html = `<div style="padding:0;font-family:Georgia,serif">
-            <div style="margin-bottom:24px">
-                <div style="font-size:24px;font-weight:700;color:#0F172A;font-style:italic">${escHtml(name) || 'Your Name'}</div>
-                <div style="font-size:10px;color:#94A3B8;margin-top:6px;font-family:Inter,sans-serif;letter-spacing:2px">${contactLine}</div>
-            </div>
-            ${summary ? `<div style="margin-bottom:20px;font-style:italic;color:#475569;font-size:10.5px;line-height:1.7;border-left:2px solid #E2E8F0;padding-left:12px">${escHtml(summary)}</div>` : ''}
-            ${expHtml ? `<div style="margin-bottom:20px"><div style="font-size:9px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;font-family:Inter,sans-serif">Experience</div>${expHtml}</div>` : ''}
-            ${eduHtml ? `<div style="margin-bottom:20px"><div style="font-size:9px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;font-family:Inter,sans-serif">Education</div>${eduHtml}</div>` : ''}
-            ${skillsHtml ? `<div><div style="font-size:9px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;font-family:Inter,sans-serif">Skills</div>${skillsHtml}</div>` : ''}
-            ${watermark}
-        </div>`;
+    // Header
+    html += `<div class="text-center mb-6 pb-6 border-b-2 border-gray-800">`;
+    html += `<h1 class="text-3xl font-display font-bold tracking-tight text-gray-900">${name || 'Your Name'}</h1>`;
+    if (title) html += `<p class="text-accent font-medium mt-1">${title}</p>`;
+    const contacts = [email, phone, location, website].filter(Boolean);
+    if (contacts.length) {
+        html += `<div class="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-3 text-sm text-ink-light">`;
+        contacts.forEach(c => html += `<span>${c}</span>`);
+        html += `</div>`;
+    }
+    html += `</div>`;
+
+    // Summary
+    if (summary) {
+        html += `<div class="mb-6"><h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-2">Summary</h2><p class="text-sm text-ink leading-relaxed">${summary}</p></div>`;
     }
 
-    document.getElementById('resume-preview').innerHTML = html;
+    // Experience
+    const validExp = expItems.filter(e => e.company || e.role);
+    if (validExp.length) {
+        html += `<div class="mb-6"><h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">Experience</h2>`;
+        validExp.forEach(e => {
+            html += `<div class="mb-4"><div class="flex justify-between items-start"><div><span class="font-semibold text-sm">${e.role || 'Role'}</span> <span class="text-ink-light">at</span> <span class="font-semibold text-sm">${e.company || 'Company'}</span></div>`;
+            if (e.start || e.end) html += `<span class="text-xs text-ink-lighter whitespace-nowrap ml-3">${e.start || '?'} — ${e.end || 'Present'}</span>`;
+            html += `</div>`;
+            if (e.desc) html += `<p class="text-sm text-ink-light mt-1 leading-relaxed">${e.desc}</p>`;
+            html += `</div>`;
+        });
+        html += `</div>`;
+    }
+
+    // Education
+    const validEdu = eduItems.filter(e => e.school || e.degree);
+    if (validEdu.length) {
+        html += `<div class="mb-6"><h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">Education</h2>`;
+        validEdu.forEach(e => {
+            html += `<div class="mb-3"><div class="flex justify-between items-start"><div><span class="font-semibold text-sm">${e.degree || 'Degree'}</span> — <span class="text-ink-light">${e.school || 'School'}</span></div>`;
+            if (e.year) html += `<span class="text-xs text-ink-lighter">${e.year}</span>`;
+            html += `</div></div>`;
+        });
+        html += `</div>`;
+    }
+
+    // Skills
+    if (skills) {
+        const skillList = skills.split(',').map(s => s.trim()).filter(Boolean);
+        html += `<div><h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-2">Skills</h2><div class="flex flex-wrap gap-2">`;
+        skillList.forEach(s => html += `<span class="bg-gray-100 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full">${s}</span>`);
+        html += `</div></div>`;
+    }
+
+    // Watermark for free users
+    if (!window.userData || window.userData.plan !== 'pro') {
+        html += `<div class="text-center mt-8 pt-4 border-t border-gray-100"><span class="text-[10px] text-ink-lighter">Made with LuvTools by luviio</span></div>`;
+    }
+
+    document.getElementById('resume-preview-content').innerHTML = html;
 }
 
-async function exportResumePDF() {
-    if (isDemoMode) return toast('Sign in to export PDF', 'warn');
+function exportResumePDF() {
+    if (!checkLimit('resume')) return;
     const el = document.getElementById('resume-preview');
-    try {
-        const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' });
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgW = 210;
-        const imgH = (canvas.height * imgW) / canvas.width;
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgW, Math.min(imgH, 297));
-        pdf.save('resume-luviio.pdf');
-        toast('Resume exported!', 'success');
-    } catch(e) { toast('Export failed: ' + e.message, 'error'); }
+    if (!document.getElementById('res-name').value.trim()) { showToast('Please enter your name at least', 'error'); return; }
+    updateResumePreview();
+    const opt = {
+        margin: [10,10,10,10],
+        filename: 'resume-' + (document.getElementById('res-name').value.trim().replace(/\s+/g,'-') || 'draft') + '.pdf',
+        image: { type:'jpeg', quality:0.98 },
+        html2canvas: { scale:2, useCORS:true },
+        jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+    };
+    html2pdf().set(opt).from(el).save().then(() => {
+        useLimit('resume');
+        if (window.currentUser) window.incrementStat('resume');
+        showToast('Resume PDF downloaded!', 'success');
+    });
 }
 
-// ==================== INVOICE GENERATOR ====================
-function initInvoice() {
-    const badge = document.getElementById('invoice-demo-badge');
-    if (isDemoMode) {
-        badge.classList.remove('hidden');
-        document.getElementById('inv-number').value = 'INV-2025-001';
-        document.getElementById('inv-date').value = new Date().toISOString().split('T')[0];
-        const due = new Date(); due.setDate(due.getDate() + 30);
-        document.getElementById('inv-due').value = due.toISOString().split('T')[0];
-        document.getElementById('inv-from-name').value = 'Alex Rivera';
-        document.getElementById('inv-from-email').value = 'alex@studio.com';
-        document.getElementById('inv-from-phone').value = '+60 12-345 6789';
-        document.getElementById('inv-to-name').value = 'Acme Sdn Bhd';
-        document.getElementById('inv-to-email').value = 'billing@acme.com';
-        document.getElementById('inv-to-phone').value = '+60 11-987 6543';
-        document.getElementById('inv-tax').value = '6';
-        document.getElementById('inv-notes').value = 'Bank: Maybank / 1234-5678-9012 / Alex Rivera\nPlease make payment within 30 days.';
-        invoiceItems = [
-            { desc: 'UI/UX Design — Landing Page', qty: 1, price: 2500 },
-            { desc: 'Frontend Development — React', qty: 15, price: 200 },
-            { desc: 'Hosting & Domain (1 year)', qty: 1, price: 150 },
-        ];
-    } else {
-        badge.classList.add('hidden');
-        invoiceItems = userData?.invoiceItems || [];
-        if (invoiceItems.length === 0) invoiceItems.push({ desc: '', qty: 1, price: 0 });
-    }
-    renderInvoiceItems();
-    updateInvoicePreview();
+function saveResume() {
+    if (!window.currentUser) { showAuth('login'); return; }
+    window.incrementStat('resume');
+    showToast('Resume saved!', 'success');
 }
 
+// ========== INVOICE GENERATOR ==========
 function addInvoiceItem() {
-    invoiceItems.push({ desc: '', qty: 1, price: 0 });
-    renderInvoiceItems();
-    updateInvoicePreview();
-}
-
-function removeInvoiceItem(idx) {
-    invoiceItems.splice(idx, 1);
-    renderInvoiceItems();
-    updateInvoicePreview();
-}
-
-function renderInvoiceItems() {
-    const list = document.getElementById('inv-items-list');
-    list.innerHTML = invoiceItems.map((item, i) => `
-        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 group">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[10px] font-bold text-slate-400">Item #${i+1}</span>
-                <button onclick="removeInvoiceItem(${i})" class="p-1 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-3 h-3 text-red-400"></i></button>
-            </div>
-            <input value="${escHtml(item.desc)}" oninput="invoiceItems[${i}].desc=this.value;updateInvoicePreview()" placeholder="Description" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs mb-2">
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="text-[9px] font-bold text-slate-400 uppercase">Qty</label>
-                    <input type="number" value="${item.qty}" min="0" oninput="invoiceItems[${i}].qty=parseFloat(this.value)||0;updateInvoicePreview()" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs mt-0.5">
-                </div>
-                <div>
-                    <label class="text-[9px] font-bold text-slate-400 uppercase">Price (RM)</label>
-                    <input type="number" value="${item.price}" min="0" step="0.01" oninput="invoiceItems[${i}].price=parseFloat(this.value)||0;updateInvoicePreview()" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs mt-0.5">
-                </div>
-            </div>
+    const container = document.getElementById('inv-items');
+    const div = document.createElement('div');
+    div.className = 'inv-item border border-gray-100 rounded-xl p-3 space-y-2';
+    div.innerHTML = `
+        <input type="text" class="input-field item-name" placeholder="Item name" oninput="updateInvoicePreview()">
+        <div class="grid grid-cols-2 gap-3">
+            <input type="number" class="input-field item-qty" placeholder="Qty" min="1" value="1" oninput="updateInvoicePreview()">
+            <input type="number" class="input-field item-price" placeholder="Price" min="0" step="0.01" oninput="updateInvoicePreview()">
         </div>
-    `).join('');
-    lucide.createIcons();
+        <button class="btn-ghost text-xs text-red-500" onclick="this.parentElement.remove(); updateInvoicePreview();"><i class="fas fa-trash"></i> Remove</button>
+    `;
+    container.appendChild(div);
+}
+
+function getCurrencySymbol(code) {
+    const symbols = { MYR:'RM', USD:'$', SGD:'$', EUR:'€' };
+    return symbols[code] || code;
 }
 
 function updateInvoicePreview() {
-    const num = document.getElementById('inv-number')?.value || 'INV-001';
-    const date = document.getElementById('inv-date')?.value || '';
-    const due = document.getElementById('inv-due')?.value || '';
-    const fromName = document.getElementById('inv-from-name')?.value || '';
-    const fromEmail = document.getElementById('inv-from-email')?.value || '';
-    const fromPhone = document.getElementById('inv-from-phone')?.value || '';
-    const toName = document.getElementById('inv-to-name')?.value || '';
-    const toEmail = document.getElementById('inv-to-email')?.value || '';
-    const toPhone = document.getElementById('inv-to-phone')?.value || '';
-    const taxRate = parseFloat(document.getElementById('inv-tax')?.value) || 0;
-    const notes = document.getElementById('inv-notes')?.value || '';
+    const number = document.getElementById('inv-number').value;
+    const currency = document.getElementById('inv-currency').value;
+    const sym = getCurrencySymbol(currency);
+    const date = document.getElementById('inv-date').value;
+    const due = document.getElementById('inv-due').value;
+    const from = document.getElementById('inv-from').value;
+    const client = document.getElementById('inv-client').value;
+    const clientEmail = document.getElementById('inv-client-email').value;
 
-    const itemsHtml = invoiceItems.map((item, i) => {
-        const subtotal = (item.qty || 0) * (item.price || 0);
-        return `<tr style="border-bottom:1px solid #F1F5F9">
-            <td style="padding:8px 4px;font-size:10px;color:#475569">${escHtml(item.desc) || '-'}</td>
-            <td style="padding:8px 4px;font-size:10px;color:#475569;text-align:center">${item.qty || 0}</td>
-            <td style="padding:8px 4px;font-size:10px;color:#475569;text-align:right">RM ${(item.price || 0).toFixed(2)}</td>
-            <td style="padding:8px 4px;font-size:10px;font-weight:600;color:#0F172A;text-align:right">RM ${subtotal.toFixed(2)}</td>
-        </tr>`;
-    }).join('');
-
-    const subtotal = invoiceItems.reduce((s, item) => s + (item.qty || 0) * (item.price || 0), 0);
-    const tax = subtotal * taxRate / 100;
-    const total = subtotal + tax;
-
-    const formatDate = d => d ? new Date(d).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-
-    const watermark = (!isDemoMode && userData?.plan !== 'pro') ? '<div style="text-align:center;margin-top:20px;font-size:8px;color:#CBD5E1">Created with Luviio</div>' : '';
-
-    document.getElementById('invoice-preview').innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px">
-            <div>
-                <div style="font-size:20px;font-weight:800;color:#0F172A;letter-spacing:-0.5px">INVOICE</div>
-                <div style="font-size:10px;color:#94A3B8;margin-top:2px">${escHtml(num)}</div>
-            </div>
-            <div style="text-align:right;font-size:10px;color:#64748B">
-                <div>Date: ${formatDate(date)}</div>
-                <div>Due: ${formatDate(due)}</div>
-            </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
-            <div>
-                <div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">From</div>
-                <div style="font-size:11px;font-weight:600;color:#0F172A">${escHtml(fromName) || '-'}</div>
-                <div style="font-size:10px;color:#64748B">${escHtml(fromEmail)}</div>
-                <div style="font-size:10px;color:#64748B">${escHtml(fromPhone)}</div>
-            </div>
-            <div>
-                <div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px">Bill To</div>
-                <div style="font-size:11px;font-weight:600;color:#0F172A">${escHtml(toName) || '-'}</div>
-                <div style="font-size:10px;color:#64748B">${escHtml(toEmail)}</div>
-                <div style="font-size:10px;color:#64748B">${escHtml(toPhone)}</div>
-            </div>
-        </div>
-        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-            <thead>
-                <tr style="border-bottom:2px solid #E2E8F0">
-                    <th style="padding:8px 4px;text-align:left;font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px">Description</th>
-                    <th style="padding:8px 4px;text-align:center;font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px">Qty</th>
-                    <th style="padding:8px 4px;text-align:right;font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px">Price</th>
-                    <th style="padding:8px 4px;text-align:right;font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:1px">Amount</th>
-                </tr>
-            </thead>
-            <tbody>${itemsHtml}</tbody>
-        </table>
-        <div style="display:flex;justify-content:flex-end">
-            <div style="width:200px">
-                <div style="display:flex;justify-content:space-between;padding:6px 4px;font-size:10px;color:#64748B">
-                    <span>Subtotal</span><span style="color:#0F172A;font-weight:500">RM ${subtotal.toFixed(2)}</span>
-                </div>
-                ${taxRate > 0 ? `<div style="display:flex;justify-content:space-between;padding:6px 4px;font-size:10px;color:#64748B">
-                    <span>Tax (${taxRate}%)</span><span style="color:#0F172A;font-weight:500">RM ${tax.toFixed(2)}</span>
-                </div>` : ''}
-                <div style="display:flex;justify-content:space-between;padding:10px 4px;font-size:14px;font-weight:800;color:#0F172A;border-top:2px solid #0F172A;margin-top:4px">
-                    <span>Total</span><span>RM ${total.toFixed(2)}</span>
-                </div>
-            </div>
-        </div>
-        ${notes ? `<div style="margin-top:20px;padding:12px;background:#F8FAFC;border-radius:8px;font-size:9px;color:#64748B;white-space:pre-line">${escHtml(notes)}</div>` : ''}
-        ${watermark}
-    `;
-}
-
-async function exportInvoicePDF() {
-    if (isDemoMode) return toast('Sign in to export PDF', 'warn');
-    const el = document.getElementById('invoice-preview');
-    try {
-        const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' });
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const imgW = 210;
-        const imgH = (canvas.height * imgW) / canvas.width;
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgW, Math.min(imgH, 297));
-        const num = document.getElementById('inv-number')?.value || 'invoice';
-        pdf.save(`${num}-luviio.pdf`);
-        toast('Invoice exported!', 'success');
-        // Update stats
-        if (currentUser && userData) {
-            const newInv = (userData.stats?.invoices || 0) + 1;
-            window.updateDoc(window.doc(window.db, 'users', currentUser.uid), { 'stats.invoices': newInv });
-            userData.stats.invoices = newInv;
-        }
-    } catch(e) { toast('Export failed: ' + e.message, 'error'); }
-}
-
-function sendInvoiceWhatsApp() {
-    const toPhone = document.getElementById('inv-to-phone')?.value?.trim();
-    if (!toPhone) return toast('Please enter client phone number', 'warn');
-    const subtotal = invoiceItems.reduce((s, item) => s + (item.qty || 0) * (item.price || 0), 0);
-    const taxRate = parseFloat(document.getElementById('inv-tax')?.value) || 0;
-    const tax = subtotal * taxRate / 100;
-    const total = subtotal + tax;
-    const num = document.getElementById('inv-number')?.value || 'INV';
-    const fromName = document.getElementById('inv-from-name')?.value || '';
-
-    let msg = `*INVOICE ${num}*\nFrom: ${fromName}\n\n*Items:*\n`;
-    invoiceItems.forEach(item => {
-        if (item.desc) msg += `• ${item.desc} — ${item.qty}x RM${item.price.toFixed(2)} = RM${((item.qty||0)*(item.price||0)).toFixed(2)}\n`;
+    // Collect items
+    const items = [];
+    document.querySelectorAll('.inv-item').forEach(item => {
+        const name = item.querySelector('.item-name').value;
+        const qty = parseFloat(item.querySelector('.item-qty').value) || 0;
+        const price = parseFloat(item.querySelector('.item-price').value) || 0;
+        if (name || qty || price) items.push({ name, qty, price, total: qty * price });
     });
-    msg += `\n*Subtotal:* RM ${subtotal.toFixed(2)}`;
-    if (taxRate > 0) msg += `\n*Tax (${taxRate}%):* RM ${tax.toFixed(2)}`;
-    msg += `\n*TOTAL:* RM ${total.toFixed(2)}\n\nPlease process payment within the due date. Thank you!`;
 
-    let phone = toPhone.replace(/[^0-9]/g, '');
-    if (phone.startsWith('0')) phone = '6' + phone;
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-    toast('Opening WhatsApp...', 'success');
-}
+    const subtotal = items.reduce((s, i) => s + i.total, 0);
+    const hasContent = number || from || client || items.length > 0;
 
-// ==================== PUBLIC PROFILE ====================
-async function loadPublicProfile(username) {
-    // Try to find user by username — we scan is not available in client SDK, so we try direct doc
-    // In production you'd use a query, but for demo we use the username as doc ID in a separate collection
-    try {
-        const snap = await window.getDoc(window.doc(window.db, 'usernames', username));
-        if (snap.exists()) {
-            const uid = snap.data().uid;
-            const userSnap = await window.getDoc(window.doc(window.db, 'users', uid));
-            if (userSnap.exists()) {
-                renderPublicProfile(userSnap.data());
-                return;
-            }
-        }
-    } catch(e) {}
-
-    // Fallback: try as direct user doc (for demo purposes)
-    try {
-        // Show not found
-        document.getElementById('profile-content').innerHTML = `
-            <div class="py-20 text-center">
-                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><i data-lucide="user-x" class="w-8 h-8 text-slate-300"></i></div>
-                <h2 class="text-xl font-bold mb-2">Profile not found</h2>
-                <p class="text-sm text-slate-400 mb-6">This username doesn't exist on Luviio.</p>
-                <button onclick="navigate('landing')" class="px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold">Go Home</button>
-            </div>
-        `;
-        lucide.createIcons();
-    } catch(e) {}
-}
-
-function renderPublicProfile(data) {
-    const name = data.bioName || data.name || 'User';
-    const tagline = data.bioTagline || '';
-    const links = data.bioLinks || [];
-    const letter = name[0]?.toUpperCase() || 'U';
-
-    const platformStyles = {
-        web: { bg: 'bg-slate-900', text: 'text-white' },
-        whatsapp: { bg: 'bg-green-500', text: 'text-white' },
-        shopee: { bg: 'bg-orange-500', text: 'text-white' },
-        tiktok: { bg: 'bg-slate-900', text: 'text-white' },
-        instagram: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-white' },
-        email: { bg: 'bg-accent', text: 'text-white' },
-    };
-
-    const linksHtml = links.map(l => {
-        const s = platformStyles[l.platform] || platformStyles.web;
-        return `<a href="${escHtml(l.url)}" target="_blank" rel="noopener" class="flex items-center justify-between ${s.bg} ${s.text} rounded-2xl px-6 py-4 text-sm font-semibold no-underline hover:opacity-90 transition-opacity w-full">
-            <span>${escHtml(l.title)}</span><span class="opacity-60">→</span>
-        </a>`;
-    }).join('');
-
-    const watermark = data.plan !== 'pro' ? '<div class="text-center mt-8"><span class="text-xs text-slate-300 font-medium">Powered by Luviio</span></div>' : '';
-
-    document.getElementById('profile-content').innerHTML = `
-        <div class="max-w-sm mx-auto">
-            <div class="w-20 h-20 bg-accent/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                <span class="text-3xl font-bold text-accent">${letter}</span>
-            </div>
-            <h1 class="text-2xl font-bold mb-1">${escHtml(name)}</h1>
-            ${tagline ? `<p class="text-sm text-slate-500 mb-8">${escHtml(tagline)}</p>` : '<div class="mb-8"></div>'}
-            <div class="space-y-3">${linksHtml}</div>
-            ${watermark}
-        </div>
-    `;
-}
-
-// ==================== ROUTING ====================
-function handleRoute() {
-    const path = window.location.pathname.replace(/\/$/, '');
-    if (path && path !== '' && !['/index.html'].includes(path)) {
-        const username = path.split('/').pop();
-        if (username) {
-            navigate('profile');
-            loadPublicProfile(username);
-            return;
-        }
+    if (!hasContent) {
+        document.getElementById('invoice-preview-content').innerHTML = '<p class="text-ink-lighter text-sm text-center py-20">Fill in the details to preview your invoice.</p>';
+        return;
     }
-    navigate('landing');
+
+    let html = '';
+    // Header
+    html += `<div class="flex justify-between items-start mb-8">`;
+    html += `<div><h1 class="text-2xl font-display font-bold text-gray-900">INVOICE</h1>`;
+    if (number) html += `<p class="text-sm text-ink-light mt-1">${number}</p>`;
+    html += `</div>`;
+    html += `<div class="text-right text-sm text-ink-light">`;
+    if (date) html += `<p>Issued: ${formatDate(date)}</p>`;
+    if (due) html += `<p>Due: ${formatDate(due)}</p>`;
+    html += `</div></div>`;
+
+    // From / To
+    html += `<div class="grid grid-cols-2 gap-8 mb-8">`;
+    html += `<div><p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">From</p><p class="text-sm font-semibold">${from || 'Your Company'}</p></div>`;
+    html += `<div><p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">Bill To</p><p class="text-sm font-semibold">${client || 'Client'}</p>`;
+    if (clientEmail) html += `<p class="text-xs text-ink-light mt-0.5">${clientEmail}</p>`;
+    html += `</div></div>`;
+
+    // Items table
+    if (items.length) {
+        html += `<table class="inv-table mb-6"><thead><tr><th>Item</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Total</th></tr></thead><tbody>`;
+        items.forEach(i => {
+            html += `<tr><td class="font-medium">${i.name || '—'}</td><td class="text-right">${i.qty}</td><td class="text-right">${sym}${i.price.toFixed(2)}</td><td class="text-right font-semibold">${sym}${i.total.toFixed(2)}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+
+        // Total
+        html += `<div class="flex justify-end"><div class="w-56"><div class="flex justify-between py-2 border-t border-gray-200"><span class="text-sm text-ink-light">Subtotal</span><span class="font-semibold">${sym}${subtotal.toFixed(2)}</span></div>`;
+        html += `<div class="flex justify-between py-2 border-t-2 border-gray-800"><span class="font-bold">Total</span><span class="font-bold text-lg">${sym}${subtotal.toFixed(2)}</span></div></div></div>`;
+    }
+
+    // Watermark
+    if (!window.userData || window.userData.plan !== 'pro') {
+        html += `<div class="text-center mt-10 pt-4 border-t border-gray-100"><span class="text-[10px] text-ink-lighter">Made with LuvTools by luviio</span></div>`;
+    }
+
+    document.getElementById('invoice-preview-content').innerHTML = html;
 }
 
-// ==================== UTILS ====================
-function escHtml(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
 }
 
-// ==================== INIT ====================
-window.initApp = function() {
-    lucide.createIcons();
-    handleRoute();
+function exportInvoicePDF() {
+    if (!checkLimit('invoice')) return;
+    const el = document.getElementById('invoice-preview');
+    if (!document.getElementById('inv-client').value.trim()) { showToast('Please enter client name', 'error'); return; }
+    updateInvoicePreview();
+    const opt = {
+        margin: [10,10,10,10],
+        filename: (document.getElementById('inv-number').value || 'invoice') + '.pdf',
+        image: { type:'jpeg', quality:0.98 },
+        html2canvas: { scale:2, useCORS:true },
+        jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+    };
+    html2pdf().set(opt).from(el).save().then(() => {
+        useLimit('invoice');
+        if (window.currentUser) window.incrementStat('invoice');
+        showToast('Invoice PDF downloaded!', 'success');
+    });
+}
 
-    // Set default dates for invoice
-    const today = new Date().toISOString().split('T')[0];
-    const dueDate = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
-    if (document.getElementById('inv-date')) document.getElementById('inv-date').value = today;
-    if (document.getElementById('inv-due')) document.getElementById('inv-due').value = dueDate;
-};
+function saveInvoice() {
+    if (!window.currentUser) { showAuth('login'); return; }
+    window.incrementStat('invoice');
+    showToast('Invoice saved!', 'success');
+}
 
-// Global navigate for onclick
-window.navigate = navigate;
-window.signOut = signOut;
-window.emailSignIn = emailSignIn;
-window.emailSignUp = emailSignUp;
-window.googleSignIn = googleSignIn;
-window.tryTool = tryTool;
-window.updateUsername = updateUsername;
-window.copyProfileLink = copyProfileLink;
-window.saveBio = saveBio;
-window.addBioLink = addBioLink;
-window.removeBioLink = removeBioLink;
-window.updateBioPreview = updateBioPreview;
-window.dragBioStart = dragBioStart;
-window.dragBioOver = dragBioOver;
-window.dragBioDrop = dragBioDrop;
-window.dragBioEnd = dragBioEnd;
-window.generateQR = generateQR;
-window.downloadQR = downloadQR;
-window.addResumeEntry = addResumeEntry;
-window.removeResumeEntry = removeResumeEntry;
-window.updateResumePreview = updateResumePreview;
-window.exportResumePDF = exportResumePDF;
-window.addInvoiceItem = addInvoiceItem;
-window.removeInvoiceItem = removeInvoiceItem;
-window.updateInvoicePreview = updateInvoicePreview;
-window.exportInvoicePDF = exportInvoicePDF;
-window.sendInvoiceWhatsApp = sendInvoiceWhatsApp;
-window.toast = toast;
+// ========== WHATSAPP LINK ==========
+function generateWALink() {
+    const country = document.getElementById('wa-country').value;
+    const phone = document.getElementById('wa-phone').value.trim().replace(/\D/g,'');
+    const msg = document.getElementById('wa-message').value.trim();
+    const linkBox = document.getElementById('wa-link-box');
+    const linkText = document.getElementById('wa-link-text');
+    const openLink = document.getElementById('wa-open-link');
+    const qrOutput = document.getElementById('wa-qr-output');
+
+    if (!phone) {
+        linkBox.classList.add('hidden');
+        qrOutput.innerHTML = '';
+        return;
+    }
+
+    const fullPhone = country + phone;
+    const link = 'https://wa.me/' + fullPhone + (msg ? '?text=' + encodeURIComponent(msg) : '');
+
+    linkText.textContent = link;
+    openLink.href = link;
+    linkBox.classList.remove('hidden');
+
+    // Generate QR for the link
+    qrOutput.innerHTML = '';
+    new QRCode(qrOutput, {
+        text: link,
+        width: 140,
+        height: 140,
+        colorDark: '#0F172A',
+        colorLight: '#FFFFFF',
+        correctLevel: QRCode.CorrectLevel.M
+    });
+}
+
+function copyWALink() {
+    const linkText = document.getElementById('wa-link-text').textContent;
+    if (!linkText) { showToast('Generate a link first', 'error'); return; }
+    if (!checkLimit('wa')) return;
+    navigator.clipboard.writeText(linkText).then(() => {
+        useLimit('wa');
+        if (window.currentUser) window.incrementStat('wa');
+        showToast('WhatsApp link copied!', 'success');
+    }).catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = linkText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        useLimit('wa');
+        if (window.currentUser) window.incrementStat('wa');
+        showToast('WhatsApp link copied!', 'success');
+    });
+}
+
+// ========== LANDING HELPERS ==========
+function scrollToTools() {
+    document.getElementById('tools-section').scrollIntoView({ behavior:'smooth' });
+}
+
+// ========== SCROLL REVEAL ==========
+function initReveal() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
+
+// ========== INIT ==========
+document.addEventListener('DOMContentLoaded', () => {
+    initReveal();
+    updateCounters();
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+        m.addEventListener('click', (e) => {
+            if (e.target === m) closeModal(m.id);
+        });
+    });
+
+    // ESC key closes modals
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.show').forEach(m => closeModal(m.id));
+        }
+    });
+});
 </script>
+
 </body>
 </html>
