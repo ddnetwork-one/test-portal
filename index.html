@@ -25,7 +25,8 @@ tailwind.config = {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<!-- qrcodejs library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.7.1/firebase-app-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/firebase@10.7.1/firebase-auth-compat.js"></script>
@@ -210,13 +211,17 @@ tailwind.config = {
     max-width: 420px; width: 100%;
     animation: fadeSlideIn 0.3s ease;
   }
+  /* QR code output styling */
   .qr-preview-wrap {
     background: #fff; border-radius: 16px; padding: 20px;
     display: inline-flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 20px rgba(0,0,0,0.06);
     position: relative;
   }
-  .qr-preview-wrap canvas { display: block; max-width: 100%; height: auto !important; }
+  /* qrcodejs creates a canvas + img inside the container */
+  #qrcodeContainer { display: inline-block; line-height: 0; }
+  #qrcodeContainer img { display: block !important; border-radius: 4px; }
+  #qrcodeContainer canvas { display: none !important; }
   .badge {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 4px 10px; border-radius: 8px;
@@ -439,12 +444,11 @@ tailwind.config = {
           </div>
         </div>
       </div>
-      <!-- QR Preview — always in DOM, visibility controlled by JS -->
+      <!-- QR Preview — container for qrcodejs, hidden until generated -->
       <div id="qrPreviewSection" class="mt-4 glass-card p-6" style="display:none;">
         <div class="flex flex-col items-center">
-          <div class="qr-preview-wrap" id="qrPreviewWrap">
-            <!-- Canvas is always here; QRCode renders onto it -->
-            <canvas id="qrCanvas"></canvas>
+          <div class="qr-preview-wrap">
+            <div id="qrcodeContainer"></div>
             <div class="watermark" id="qrWatermark">Appluvii Free</div>
           </div>
           <div class="flex gap-3 mt-5 justify-center">
@@ -891,10 +895,9 @@ function updateActionButton() {
 }
 
 /* ========================================
-   QR Code Generator — FIXED
-   Uses toDataURL into a fresh Image, drawn
-   onto a pre-existing canvas that's always
-   in the DOM. No timing issues.
+   QR Code Generator — uses qrcodejs library
+   qrcodejs creates both a <canvas> and an <img>
+   inside the target container div.
    ======================================== */
 function selectSize(btn) {
   document.querySelectorAll('.size-btn[data-size]').forEach(b => b.classList.remove('active'));
@@ -902,72 +905,77 @@ function selectSize(btn) {
   selectedQrSize = parseInt(btn.dataset.size);
 }
 
-async function generateQR() {
+function generateQR() {
   const input = document.getElementById('qrInput').value.trim();
-  if (!input) { showToast('Please enter a URL or text', 'error'); return; }
+
+  if (!input) {
+    showToast('Please enter a URL or text', 'error');
+    return;
+  }
 
   if (typeof QRCode === 'undefined') {
     showToast('QR library is still loading. Please try again.', 'error');
     return;
   }
 
-  try {
-    /* Generate QR as a data URL — no canvas needed yet */
-    const dataUrl = await QRCode.toDataURL(input, {
-      width: selectedQrSize,
-      margin: 2,
-      color: { dark: '#1e1b3a', light: '#ffffff' },
-      errorCorrectionLevel: 'H'
-    });
+  /* Clear previous QR code from the container */
+  const qrContainer = document.getElementById('qrcodeContainer');
+  qrContainer.innerHTML = '';
 
-    /* Load the data URL into an Image object */
-    const img = new Image();
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = dataUrl;
-    });
+  /* Show the preview section first so the container has layout */
+  const section = document.getElementById('qrPreviewSection');
+  section.style.display = 'block';
 
-    /* Now show the preview section */
-    const section = document.getElementById('qrPreviewSection');
-    section.style.display = 'block';
+  /* qrcodejs renders into the div — it creates canvas + img internally */
+  new QRCode(qrContainer, {
+    text: input,
+    width: selectedQrSize,
+    height: selectedQrSize,
+    colorDark: '#1e1b3a',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
 
-    /* The canvas is already in the DOM (always present, just hidden via parent).
-       Force it to the correct size and draw the QR image onto it. */
-    const canvas = document.getElementById('qrCanvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0);
-
-    /* Scroll into view */
-    setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-    showToast('QR code generated!', 'success');
-  } catch (err) {
-    console.error('QR generation error:', err);
-    showToast('Failed to generate QR code', 'error');
-  }
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+  showToast('QR code generated!', 'success');
 }
 
 function downloadQR() {
-  const canvas = document.getElementById('qrCanvas');
-  if (!canvas.width || !canvas.height) { showToast('Generate a QR code first', 'error'); return; }
+  /* qrcodejs creates a <canvas> and an <img> inside the container.
+     We grab the <img> since it's always available as a rendered element. */
+  const qrContainer = document.getElementById('qrcodeContainer');
+  const qrImg = qrContainer.querySelector('img');
+
+  if (!qrImg || !qrImg.src) {
+    showToast('Generate a QR code first', 'error');
+    return;
+  }
+
   const isPro = userData && userData.plan === 'pro';
+
+  /* Draw onto an offscreen canvas to add padding + optional watermark */
   const dlCanvas = document.createElement('canvas');
   const padding = 40;
-  dlCanvas.width = canvas.width + padding * 2;
-  dlCanvas.height = canvas.height + padding * 2 + (isPro ? 0 : 24);
+  const wmHeight = isPro ? 0 : 24;
+  dlCanvas.width = qrImg.naturalWidth + padding * 2;
+  dlCanvas.height = qrImg.naturalHeight + padding * 2 + wmHeight;
   const ctx = dlCanvas.getContext('2d');
+
+  /* White background */
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, dlCanvas.width, dlCanvas.height);
-  ctx.drawImage(canvas, padding, padding);
+
+  /* Draw QR image centered */
+  ctx.drawImage(qrImg, padding, padding);
+
+  /* Watermark for free users */
   if (!isPro) {
     ctx.fillStyle = 'rgba(0,0,0,0.08)';
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText('Appluvii Free', dlCanvas.width - padding, dlCanvas.height - 12);
   }
+
   const link = document.createElement('a');
   link.download = 'appluvii-qrcode.png';
   link.href = dlCanvas.toDataURL('image/png');
