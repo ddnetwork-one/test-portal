@@ -3402,12 +3402,36 @@ async function handleRegister() {
 
 async function handleSignOut() {
   try {
+    closeUserMenu(); // Close menu immediately
     await auth.signOut();
+    
+    // Clear any pending redirects that might interfere
+    sessionStorage.removeItem('pendingAuthRedirect');
+    
+    // Force navigation to home/landing page
+    currentUser = null;
+    userData = null;
+    isEmailVerified = false;
+    
     showToast('Signed out successfully', 'info');
-    closeUserMenu();
-    navigateTo('/home');
+    
+    // Use replaceState to prevent back button returning to dashboard
+    if (window.location.protocol === 'file:') {
+      window.location.hash = '/home';
+    } else {
+      window.history.replaceState({}, '', '/home');
+    }
+    
+    // Direct view switch without animation delay for logout
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('landingView').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    
   } catch (err) {
+    console.error('Sign out error:', err);
     showToast('Sign out failed', 'error');
+    // Even on error, try to go to home
+    navigateTo('/home');
   }
 }
 
@@ -4049,16 +4073,16 @@ function renderHistoryItem(item) {
   let preview = '';
   let quickAction = '';
   
-  // FIX #1: Enhanced download buttons for each type with better UX
+// Updated: Removed download/regenerate buttons for QR and PDF in Recent Activity list
   if (item.type === 'qr' && item.data?.text) {
     preview = `<div class="text-[10px] text-gray-500 truncate max-w-[160px]">${escapeHtml(item.data.text.substring(0, 55))}${item.data.text.length > 55 ? '...' : ''}</div>`;
-    quickAction = `<button onclick="event.stopPropagation(); openHistoryDetail('${item.id}', '${item.type}')" class="history-detail-action-btn !py-1 !px-2 !text-[9px]" title="View & Download"><i class="fa-solid fa-download"></i></button>`;
+    quickAction = ``; // No quick action - click row to view details in modal
   } else if (item.type === 'wa' && item.data?.phone) {
     preview = `<div class="text-[10px] text-gray-500">+${item.data.phone}</div>`;
     quickAction = `<button onclick="event.stopPropagation(); copyToClipboard('${item.data.link || ('https://wa.me/' + item.data.phone)}')" class="history-detail-action-btn !py-1 !px-2 !text-[9px]" title="Copy Link"><i class="fa-regular fa-copy"></i></button>`;
   } else if (item.type === 'pdf') {
     preview = `<div class="text-[10px] text-gray-500">${item.data?.title || 'Document'}</div>`;
-    quickAction = `<button onclick="event.stopPropagation(); openHistoryDetail('${item.id}', '${item.type}')" class="history-detail-action-btn !py-1 !px-2 !text-[9px]" title="Regenerate & Download"><i class="fa-solid fa-file-pdf"></i></button>`;
+    quickAction = ``; // No quick action - click row to view details in modal
   }
   
   return `
