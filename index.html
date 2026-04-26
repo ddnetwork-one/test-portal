@@ -1343,6 +1343,46 @@ tailwind.config = {
     background: rgba(255,255,255,0.3);
   }
 
+  /* ===== FORGOT PASSWORD MODAL STYLES ===== */
+  .forgot-password-modal {
+    text-align: center;
+  }
+  .forgot-password-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.05) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 24px;
+    color: #6366f1;
+  }
+  .forgot-password-email {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2563eb;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(59,130,246,0.04) 100%);
+    border: 1.5px solid rgba(37,99,235,0.25);
+    border-radius: 14px;
+    margin-top: 16px;
+    transition: all 0.2s ease;
+    width: 100%;
+    justify-content: center;
+  }
+  .forgot-password-email:hover {
+    background: linear-gradient(135deg, rgba(37,99,235,0.12) 0%, rgba(59,130,246,0.08) 100%);
+    border-color: rgba(37,99,235,0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37,99,235,0.15);
+  }
+
   @media (max-width: 480px) {
     .glass-card { border-radius: 18px; padding: 16px !important; }
     .modal-content { padding: 18px; border-radius: 22px; }
@@ -1368,6 +1408,10 @@ tailwind.config = {
     }
     .announcement-marquee-text {
       font-size: 11px;
+    }
+    .forgot-password-email {
+      font-size: 14px;
+      padding: 10px 16px;
     }
   }
   @media (min-width: 768px) {
@@ -1412,7 +1456,7 @@ tailwind.config = {
       </div>
     </nav>
 
-    <!-- Announcement Marquee Banner (Only shows if activated by SuperAdmin) -->
+    <!-- Announcement Marquee Banner (Only shows if activated by SuperAdmin) - VISIBLE TO ALL USERS INCLUDING NON-LOGGED IN -->
     <div id="announcementBanner" style="display:none;" class="max-w-4xl mx-auto px-4 mb-4 md:mb-6">
       <div class="announcement-marquee-container">
         <i class="fa-solid fa-bullhorn"></i>
@@ -1666,7 +1710,7 @@ tailwind.config = {
       </div>
     </footer>
   </div>
-</div
+</div>
 
 <!-- ===== AUTH VIEW ===== -->
 <div class="view" id="authView">
@@ -1687,7 +1731,7 @@ tailwind.config = {
         <h1 class="text-xl md:text-2xl font-extrabold tracking-tight text-gray-900">LuvTools</h1>
         <p class="text-xs md:text-sm text-gray-500 mt-1.5 md:mt-2 font-medium">by luviio — QR Codes, WhatsApp Links & PDF Tools</p>
       </div>
-        
+      
       <!-- Security Warning in Auth View -->
       <div class="security-warning !mb-5 md:!mb-6 !text-[10px] md:!text-xs !py-3 !px-3">
         <i class="fa-solid fa-shield-halved !text-sm"></i>
@@ -1723,9 +1767,16 @@ tailwind.config = {
           </svg>
           <span class="!text-gray-700 font-semibold">Sign in with Google</span>
         </button>
-        <p class="text-center text-xs md:text-sm text-gray-500 mt-4 md:mt-5">
-          New here? <button onclick="showRegister()" class="text-primary-600 font-bold hover:underline">Create account</button>
-        </p>
+        
+        <!-- NEW: Forgot Password Link Added Here (#1) -->
+        <div class="text-center mt-4 md:mt-5 space-y-2">
+          <button onclick="showForgotPasswordModal()" class="text-xs md:text-sm text-primary-600 font-bold hover:underline hover:text-primary-700 transition-colors">
+            Forgot password?
+          </button>
+          <p class="text-xs md:text-sm text-gray-500">
+            New here? <button onclick="showRegister()" class="text-primary-600 font-bold hover:underline">Create account</button>
+          </p>
+        </div>
       </div>
       
       <div id="registerForm" style="display:none;">
@@ -1781,7 +1832,7 @@ tailwind.config = {
 <div class="view" id="dashboardView">
   <div class="relative z-10 max-w-4xl mx-auto px-4 pt-3 md:pt-5 pb-20 md:pb-24 content-with-sticky-footer">
     
-    <!-- Announcement Marquee Banner for Dashboard (Only if activated) -->
+    <!-- Announcement Marquee Banner for Dashboard (Only if activated) - VISIBLE TO ALL USERS -->
     <div id="dashboardAnnouncementBanner" style="display:none;" class="mb-3 md:mb-4">
       <div class="announcement-marquee-container">
         <i class="fa-solid fa-bullhorn"></i>
@@ -1981,7 +2032,7 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- ===== MAIN APP VIEW (Logged In) ===== -->
+<!-- ===== MAIN APP VIEW (Logged In) - FIXED LOADING ISSUE (#2) ===== -->
 <div class="view" id="appView">
   <div class="relative z-10 max-w-2xl mx-auto px-4 pt-2 md:pt-3 pb-36 md:pb-40 content-with-sticky-footer">
     <header class="flex items-center justify-between mb-3 md:mb-5">
@@ -2906,6 +2957,45 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- ===== FORGOT PASSWORD MODAL (#1) ===== -->
+<div class="modal-overlay" id="forgotPasswordModal">
+  <div class="modal-content forgot-password-modal" style="max-width:420px;">
+    <div class="flex items-center justify-between mb-4 md:mb-6">
+      <h3 class="text-base md:text-lg md:text-xl font-extrabold text-gray-900 tracking-tight">Forgot Password?</h3>
+      <button onclick="closeForgotPasswordModal()" class="w-8 h-8 md:w-9 md:h-9 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all" aria-label="Close">
+        <i class="fa-solid fa-xmark text-sm md:text-lg"></i>
+      </button>
+    </div>
+    
+    <div class="forgot-password-icon">
+      <i class="fa-solid fa-key"></i>
+    </div>
+    
+    <p class="text-sm md:text-base text-gray-700 font-medium mb-2 leading-relaxed">
+      Don't worry! We can help you reset your password.
+    </p>
+    <p class="text-xs md:text-sm text-gray-500 mb-4 leading-relaxed">
+      Please contact our support team to request a password reset. They will assist you in recovering access to your account.
+    </p>
+    
+    <a href="mailto:support@luviio.com?subject=Password Reset Request - LuvTools Account&body=Hi Support Team,%0A%0AI would like to reset my password for my LuvTools account.%0A%0AMy email address: [Please enter your email]%0A%0AThank you!" class="forgot-password-email">
+      <i class="fa-solid fa-envelope"></i>
+      Contact Support: support@luviio.com
+    </a>
+    
+    <p class="text-[10px] md:text-xs text-gray-400 mt-4 text-center italic">
+      Our team typically responds within 24 hours during business days.
+    </p>
+    
+    <div class="glass-divider !my-4"></div>
+    
+    <p class="text-xs text-gray-500 text-center">
+      Remember your password? 
+      <button onclick="closeForgotPasswordModal(); showLogin();" class="text-primary-600 font-bold hover:underline">Back to Sign In</button>
+    </p>
+  </div>
+</div>
+
 <script>
 /* ========================================
    Firebase Configuration & Init
@@ -2972,8 +3062,12 @@ let isTransitioning = false;
 // Announcement state
 let currentAnnouncementData = null;
 
+// App initialization state - FIX #2: Prevent infinite loading loops
+let appInitialized = false;
+let initAttempts = 0;
+
 /* ========================================
-   Router System - Fixed for Refresh & Mobile Google Auth + Smooth Transitions #4
+   Router System - Fixed for Refresh & Mobile Google Auth + Smooth Transitions #4 + Loading Fix #2
    ======================================== */
 const routes = {
   '/': 'landingView',
@@ -3083,13 +3177,15 @@ function handleRoute() {
     void targetView.offsetWidth;
   }
   
-  // Initialize specific views
+  // Initialize specific views - FIX #2: Ensure proper initialization without loading loops
   if (path.startsWith('/free')) {
     initFreeTools(path);
   } else if (path === '/qr' || path === '/wa-link' || path === '/pdf') {
     const tabMap = { qr: 'qr', whatsapp: 'whatsapp', pdf: 'pdf' };
     switchTab(tabMap[path]);
     if (!currentUser) checkGuestLimits();
+    // FIX #2: Ensure tools are usable immediately for logged-in users
+    else ensureToolsUsable();
   } else if (path === '/dashboard') {
     loadDashboardStats();
     loadDashboardHistory();
@@ -3277,6 +3373,19 @@ function checkGuestLimits() {
   }
 }
 
+// FIX #2: Ensure tools are usable for logged-in users (remove any disabled states)
+function ensureToolsUsable() {
+  const banner = document.getElementById('guestLimitBanner');
+  const actionBtn = document.getElementById('mainActionBtn');
+  
+  if (banner) banner.style.display = 'none';
+  if (actionBtn) {
+    actionBtn.disabled = false;
+    actionBtn.classList.remove('opacity-50', '!cursor-not-allowed');
+  }
+  stopCountdown();
+}
+
 function showAuthFromLanding() {
   navigateTo('/login');
 }
@@ -3288,6 +3397,7 @@ let authInitialized = false;
 
 auth.onAuthStateChanged(async (user) => {
   authInitialized = true;
+  appInitialized = true; // Mark app as initialized
   
   if (user) {
     currentUser = user;
@@ -3356,7 +3466,7 @@ auth.onAuthStateChanged(async (user) => {
     
     setupUI();
     setupVerificationUI(); // NEW: Setup verification UI
-    loadAnnouncementBanner(); // Load announcement banner
+    loadAnnouncementBanner(); // Load announcement banner for ALL users including non-logged (#3)
     hideLoadingScreen();
     
     const pendingRedirect = sessionStorage.getItem('pendingAuthRedirect');
@@ -3388,7 +3498,7 @@ auth.onAuthStateChanged(async (user) => {
       showView('landingView');
     }
     
-    // Load announcement banner for non-logged users too (landing page)
+    // Load announcement banner for non-logged users too (#3)
     loadAnnouncementBanner();
   }
 });
@@ -3592,6 +3702,17 @@ function showRegister() {
 function showLogin() { 
   document.getElementById('loginForm').style.display = 'block'; 
   document.getElementById('registerForm').style.display = 'none'; 
+}
+
+/* ========================================
+   FORGOT PASSWORD FUNCTIONS (#1)
+   ======================================== */
+function showForgotPasswordModal() {
+  document.getElementById('forgotPasswordModal').classList.add('open');
+}
+
+function closeForgotPasswordModal() {
+  document.getElementById('forgotPasswordModal').classList.remove('open');
 }
 
 /* ========================================
@@ -3954,7 +4075,9 @@ function switchTab(tab) {
   document.getElementById(tabMap[tab]).setAttribute('aria-selected', 'true');
   document.getElementById(panelMap[tab]).style.display = 'block';
   updateActionButton();
-  checkGuestLimits();
+  // FIX #2: Check limits for guests, ensure usability for logged-in users
+  if (!currentUser) checkGuestLimits();
+  else ensureToolsUsable();
   const urlMap = { qr: '/qr', whatsapp: '/wa-link', pdf: '/pdf' };
   if (getCurrentPath() !== urlMap[tab]) window.history.replaceState({}, '', urlMap[tab]);
 }
@@ -4507,7 +4630,7 @@ function renderDeletedItem(item) {
 }
 
 async function restoreDeletedItem(deletedItemId) {
-  if (!confirm('Restore this item to the users history?')) return;
+  if (!deletedItemId) return;
   try {
     const deletedDoc = await db.collection('recently_deleted').doc(deletedItemId).get();
     if (deletedDoc.exists) {
@@ -4522,22 +4645,23 @@ async function restoreDeletedItem(deletedItemId) {
 }
 
 async function permanentlyDeleteItem(deletedItemId) {
+  if (!deletedItemId) return;
   if (!confirm('PERMANENTLY delete this item? This cannot be undone.')) return;
   try { await db.collection('recently_deleted').doc(deletedItemId).delete(); showToast('Item permanently deleted', 'success'); loadDeletedHistory(); } catch (err) { console.error(err); showToast('Failed to delete', 'error'); }
 }
 
 /* ========================================
-   ANNOUNCEMENT BANNER SYSTEM - NEW FEATURE
+   ANNOUNCEMENT BANNER SYSTEM - NEW FEATURE (#3: Visible to ALL users)
    ======================================== */
 
-// Load announcement banner from Firestore
+// Load announcement banner from Firestore - NOW LOADS FOR ALL USERS INCLUDING NON-LOGGED IN
 async function loadAnnouncementBanner() {
   try {
     const doc = await db.collection('settings').doc('announcement').get();
     if (doc.exists) {
       currentAnnouncementData = doc.data();
       
-      // Update both landing page and dashboard banners
+      // Update both landing page and dashboard banners regardless of login status (#3)
       updateAnnouncementBannerDisplay(currentAnnouncementData);
     } else {
       currentAnnouncementData = null;
@@ -4563,7 +4687,7 @@ function updateAnnouncementBannerDisplay(data) {
     return;
   }
   
-  // Show on Landing Page
+  // Show on Landing Page (visible to everyone including non-logged users)
   const landingBanner = document.getElementById('announcementBanner');
   const landingText = document.getElementById('announcementText');
   if (landingBanner && landingText) {
@@ -4571,7 +4695,7 @@ function updateAnnouncementBannerDisplay(data) {
     landingText.textContent = message + ' • ' + (data.updatedAt ? formatDate(data.updatedAt) : '');
   }
   
-  // Show on Dashboard (if logged in)
+  // Show on Dashboard (if logged in and element exists)
   const dashBanner = document.getElementById('dashboardAnnouncementBanner');
   const dashText = document.getElementById('dashboardAnnouncementText');
   if (dashBanner && dashText) {
@@ -4615,7 +4739,7 @@ function openAnnouncementModal() {
   if (currentAnnouncementData) {
     if (msgInput) msgInput.value = currentAnnouncementData.message || '';
     if (activeToggle) activeToggle.checked = currentAnnouncementData.isActive || false;
-    if (statusBadge) {
+  if (statusBadge) {
       statusBadge.className = currentAnnouncementData.isActive ? 'badge badge-active' : 'badge badge-inactive';
       statusBadge.textContent = currentAnnouncementData.isActive ? 'Active' : 'Inactive';
     }
@@ -4707,7 +4831,7 @@ async function saveAnnouncement() {
       updatedAt: new Date()
     };
     
-    // Update UI
+    // Update UI - This will show/hide banners for ALL users immediately (#3)
     updateAnnouncementBannerDisplay(currentAnnouncementData);
     
     // Update modal status
@@ -4999,7 +5123,7 @@ function updatePlanModalContent() {
     title.textContent = 'Manage Your Plan';
     container.innerHTML = `
       <div class="space-y-3 md:space-y-4">
-        <div class="text-center p-3.5 md:p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl md:rounded-2xl border border-green-200">
+        <div class="text-center p-3.5 md:p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl md:rounded-2xl border border-green-200 mb-3 md:mb-4">
           <div class="w-14 h-14 md:w-16 md:w-18 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mx-auto mb-2 md:mb-3 shadow-lg shadow-green-500/20">
             <i class="fa-solid fa-crown text-white text-lg md:text-2xl"></i>
           </div>
@@ -5192,7 +5316,7 @@ function renderAdminTable() {
         <td>${roleBadge}</td>
         <td class="text-[10px] md:text-xs text-gray-500 whitespace-nowrap font-medium">${formatDate(u.createdAt)}</td>
         <td>
-          <button onclick="openUserManage('${u.id}')" class="glass-btn btn-secondary !min-h-0 !py-1.5 md:!py-2 !px-2 md:!px-3 !rounded-lg !text-[10px] md:!text-xs font-semibold">
+          <button onclick="openUserManage('${u.id}')" class="glass-btn btn-secondary !min-h-0 !py-1.5 md:!py-2 !px-2 md:!px-3 !rounded-lg !text-[10px] md:!text-sm font-semibold">
             <i class="fa-solid fa-pen-to-square mr-1"></i> Manage
           </button>
         </td>
@@ -5246,7 +5370,7 @@ function openUserManage(userId) {
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-1.5 md:gap-3.5 mb-3 md:mb-4 text-xs md:text-sm">
+    <div class="grid grid-cols-2 gap-1.5 md:gap-3 mb-3 md:mb-4 text-xs md:text-sm">
       <div class="bg-white/30 p-2 md:p-2.5 rounded-xl">
         <p class="text-[9px] md:text-xs text-gray-400 font-bold uppercase tracking-wide mb-1">Plan</p>
         ${user.plan === 'pro' ? '<span class="badge badge-pro"><i class="fa-solid fa-crown mr-1"></i>Pro</span>' : '<span class="badge badge-free">Free</span>'}
@@ -5436,7 +5560,7 @@ async function adminDeleteUser() {
     updateAdminStats();
     closeAdminUserModal();
     showToast('User deleted permanently', 'success');
-  } catch (err) { showToast('Failed to delete user', 'error'); console.error(err); }
+  } catch (err) { console.error(err); showToast('Failed to delete user', 'error'); }
 }
 
 /* ========================================
@@ -5454,6 +5578,7 @@ document.addEventListener('keydown', (e) => {
     closeAdminUserModal(); closeUserMenu(); closeHistoryModal();
     closeHistoryDetailModal(); closeDeletedHistoryModal();
     closeAnnouncementModal();
+    closeForgotPasswordModal(); // NEW: Close forgot password modal
   }
 });
 
