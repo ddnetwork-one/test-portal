@@ -1284,6 +1284,65 @@ tailwind.config = {
     gap: 4px;
   }
 
+  /* ===== ANNOUNCEMENT MARQUEE BANNER ===== */
+  .announcement-marquee-container {
+    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .announcement-marquee-container i {
+    color: white;
+    font-size: 16px;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.1); }
+  }
+  .announcement-marquee-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  .announcement-marquee-text {
+    display: inline-block;
+    white-space: nowrap;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    animation: marqueeScroll 20s linear infinite;
+    padding-right: 50px;
+  }
+  @keyframes marqueeScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+  .announcement-close-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .announcement-close-btn:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
   @media (max-width: 480px) {
     .glass-card { border-radius: 18px; padding: 16px !important; }
     .modal-content { padding: 18px; border-radius: 22px; }
@@ -1302,6 +1361,13 @@ tailwind.config = {
     .toast {
       font-size: 12px;
       padding: 12px 14px;
+    }
+    .announcement-marquee-container {
+      padding: 8px 12px;
+      margin-bottom: 12px;
+    }
+    .announcement-marquee-text {
+      font-size: 11px;
     }
   }
   @media (min-width: 768px) {
@@ -1345,6 +1411,21 @@ tailwind.config = {
         </button>
       </div>
     </nav>
+
+    <!-- Announcement Marquee Banner (Only shows if activated by SuperAdmin) -->
+    <div id="announcementBanner" style="display:none;" class="max-w-4xl mx-auto px-4 mb-4 md:mb-6">
+      <div class="announcement-marquee-container">
+        <i class="fa-solid fa-bullhorn"></i>
+        <div class="announcement-marquee-wrapper">
+          <div class="announcement-marquee-text" id="announcementText">
+            <!-- Will be populated by JavaScript from Firestore -->
+          </div>
+        </div>
+        <button onclick="closeAnnouncementBanner()" class="announcement-close-btn" aria-label="Close announcement">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+    </div>
 
     <!-- Security Warning Banner -->
     <div class="max-w-4xl mx-auto px-4 mb-4 md:mb-6">
@@ -1690,6 +1771,21 @@ tailwind.config = {
 <div class="view" id="dashboardView">
   <div class="relative z-10 max-w-4xl mx-auto px-4 pt-3 md:pt-5 pb-20 md:pb-24 content-with-sticky-footer">
     
+    <!-- Announcement Marquee Banner for Dashboard (Only if activated) -->
+    <div id="dashboardAnnouncementBanner" style="display:none;" class="mb-3 md:mb-4">
+      <div class="announcement-marquee-container">
+        <i class="fa-solid fa-bullhorn"></i>
+        <div class="announcement-marquee-wrapper">
+          <div class="announcement-marquee-text" id="dashboardAnnouncementText">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        <button onclick="closeDashboardAnnouncementBanner()" class="announcement-close-btn" aria-label="Close announcement">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+    </div>
+
     <!-- Email Verification Banner (shown when unverified) -->
     <div id="verificationBanner" style="display:none;">
       <div class="verify-banner">
@@ -2224,7 +2320,6 @@ tailwind.config = {
             <i class="fa-regular fa-file-lines mr-1 md:mr-1.5"></i>Text
           </button>
         </div>
-
         <div id="freePdfImgSection">
           <div class="drop-zone" onclick="document.getElementById('freePdfFile').click()">
             <i class="fa-solid fa-cloud-arrow-up text-2xl md:text-3xl text-gray-400 mb-1.5 md:mb-2"></i>
@@ -2241,7 +2336,7 @@ tailwind.config = {
 
         <button onclick="generateFreePDF()" class="free-main-btn mt-3 md:mt-4" id="freePdfBtn">
           <i class="fa-solid fa-file-pdf"></i> Convert to PDF
-</button>
+        </button>
 
         <div class="free-usage-indicator mt-2.5 md:mt-3">
           <i class="fa-solid fa-chart-simple text-red-500"></i>
@@ -2472,6 +2567,11 @@ tailwind.config = {
         <button onclick="openDeletedHistoryModal()" class="glass-btn btn-secondary !py-1.5 md:!py-2 !px-2.5 md:!px-3 !text-[10px] md:!text-xs !min-h-0 !rounded-xl">
           <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">Deleted Items</span>
         </button>
+        
+        <!-- NEW: Announcement Management Button for SuperAdmin -->
+        <button onclick="openAnnouncementModal()" class="glass-btn btn-primary !py-1.5 md:!py-2 !px-2.5 md:!px-3 !text-[10px] md:!text-xs !min-h-0 !rounded-xl !from-amber-500 !to-orange-500 !shadow-amber-500/25">
+          <i class="fa-solid fa-bullhorn mr-1"></i> <span class="hidden sm:inline">Announcement</span>
+        </button>
       </div>
     </header>
     
@@ -2692,7 +2792,7 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- ===== HISTORY DETAIL MODAL (View/Download Previous Items) - ENHANCED FOR FIX #1 ===== -->
+<!-- ===== HISTORY DETAIL MODAL (View Previous Items - NO DOWNLOAD FOR QR/PDF) - FIXED #1 ===== -->
 <div class="modal-overlay" id="historyDetailModal">
   <div class="modal-content" style="max-width:480px;">
     <div class="flex items-center justify-between mb-3 md:mb-5">
@@ -2727,6 +2827,70 @@ tailwind.config = {
         <i class="fa-regular fa-circle-check text-2xl text-green-400"></i>
         <p class="text-xs font-medium mt-2">No deleted items</p>
         <p class="text-[10px] mt-1">Deleted items will appear here</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ANNOUNCEMENT MANAGEMENT MODAL (SuperAdmin Only) ===== -->
+<div class="modal-overlay" id="announcementModal">
+  <div class="modal-content" style="max-width:520px;">
+    <div class="flex items-center justify-between mb-4 md:mb-6">
+      <h3 class="text-base md:text-lg md:text-xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
+        <i class="fa-solid fa-bullhorn text-amber-500"></i> Manage Announcement Banner
+      </h3>
+      <button onclick="closeAnnouncementModal()" class="w-8 h-8 md:w-9 md:h-9 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all" aria-label="Close">
+        <i class="fa-solid fa-xmark text-sm md:text-lg"></i>
+      </button>
+    </div>
+    
+    <div class="space-y-4">
+      <!-- Current Status -->
+      <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-gray-700 uppercase tracking-wide">Status</span>
+          <span id="announcementStatusBadge" class="badge badge-inactive">Inactive</span>
+        </div>
+        <p class="text-xs text-gray-500" id="announcementStatusText">Banner is currently hidden from all users</p>
+      </div>
+      
+      <!-- Announcement Content -->
+      <div>
+        <label class="block text-[10px] md:text-xs font-bold text-gray-500 mb-1.5 md:mb-2 ml-1 uppercase tracking-wide">Announcement Message</label>
+        <textarea id="announcementMessageInput" class="glass-input" rows="3" placeholder="Enter announcement message... e.g., Scheduled maintenance on [Date] at [Time]. We'll be back shortly!">Scheduled maintenance on January 25, 2026 at 2:00 AM MYT. We'll be back shortly!</textarea>
+      </div>
+      
+      <!-- Toggle Active/Inactive -->
+      <div class="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-gray-200">
+        <div>
+          <p class="text-sm font-bold text-gray-900">Activate Banner</p>
+          <p class="text-xs text-gray-500">Show announcement to all users (Landing Page + Dashboard)</p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="announcementActiveToggle" class="sr-only peer">
+          <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+        </label>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="flex gap-3">
+        <button onclick="saveAnnouncement()" class="glass-btn btn-primary flex-1 !text-xs md:!text-sm">
+          <i class="fa-solid fa-save mr-2"></i> Save Changes
+        </button>
+        <button onclick="toggleAnnouncementPreview()" class="glass-btn btn-secondary flex-1 !text-xs md:!text-sm">
+          <i class="fa-solid fa-eye mr-2"></i> Preview
+        </button>
+      </div>
+      
+      <!-- Preview Area -->
+      <div id="announcementPreviewArea" style="display:none;" class="mt-4">
+        <p class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Live Preview</p>
+        <div class="announcement-marquee-container">
+          <i class="fa-solid fa-bullhorn"></i>
+          <div class="announcement-marquee-wrapper">
+            <div class="announcement-marquee-text" id="announcementPreviewText"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2794,6 +2958,9 @@ let isEmailVerified = false;
 
 // Page transition lock for FIX #4 (prevent double animations)
 let isTransitioning = false;
+
+// Announcement state
+let currentAnnouncementData = null;
 
 /* ========================================
    Router System - Fixed for Refresh & Mobile Google Auth + Smooth Transitions #4
@@ -3179,6 +3346,7 @@ auth.onAuthStateChanged(async (user) => {
     
     setupUI();
     setupVerificationUI(); // NEW: Setup verification UI
+    loadAnnouncementBanner(); // Load announcement banner
     hideLoadingScreen();
     
     const pendingRedirect = sessionStorage.getItem('pendingAuthRedirect');
@@ -3202,16 +3370,16 @@ auth.onAuthStateChanged(async (user) => {
     const path = getCurrentPath();
     if (['/dashboard', '/admin', '/admin/dashboard'].includes(path)) {
       navigateTo('/login');
-    } else if (['/qr', '/wa-link', '/pdf'].includes(path)) {
-      const freeMap = { '/qr': '/free/qr', '/wa-link': '/free/wa-link', '/pdf': '/free/pdf' };
-      navigateTo(freeMap[path]);
-    } else if (path === '/login' || path === '/auth') {
+    } else if (['/login', '/auth'].includes(path)) {
       showView('authView');
     } else if (path.startsWith('/free')) {
       initFreeTools(path);
     } else {
       showView('landingView');
     }
+    
+    // Load announcement banner for non-logged users too (landing page)
+    loadAnnouncementBanner();
   }
 });
 
@@ -3977,7 +4145,7 @@ function generateFreePDF() {
 }
 
 /* ========================================
-   HISTORY SYSTEM - ENHANCED WITH DOWNLOAD FIX #1
+   HISTORY SYSTEM - ENHANCED WITH NO DOWNLOAD FOR QR/PDF (#1)
    ======================================== */
 
 // Save generation to history
@@ -3991,7 +4159,7 @@ async function saveToHistory(type, data) {
   } catch (err) { console.error('Failed to save history:', err); }
 }
 
-// Load dashboard recent activity - FIXED SCROLL OVERLAP & DOWNLOAD #1
+// Load dashboard recent activity - FIXED SCROLL OVERLAP & NO DOWNLOAD BUTTONS (#1)
 async function loadDashboardHistory() {
   if (!currentUser || !userData) return;
   const container = document.getElementById('dashboardHistoryList');
@@ -4091,7 +4259,7 @@ function getTimeAgo(date) {
 function openHistoryModal() { loadFullHistory(); document.getElementById('historyModal').classList.add('open'); }
 function closeHistoryModal() { document.getElementById('historyModal').classList.remove('open'); }
 
-// Load full history - WITH DOWNLOAD BUTTONS IN MODAL (but not in dashboard list)
+// Load full history - WITH CLICK TO VIEW DETAILS (but no download for QR/PDF)
 async function loadFullHistory(filter = 'all') {
   const container = document.getElementById('historyListContainer');
   if (!container) return;
@@ -4106,9 +4274,45 @@ async function loadFullHistory(filter = 'all') {
     if (snapshot.empty) { container.innerHTML = `<div class="empty-state py-7"><i class="fa-regular fa-folder-open text-2xl"></i><p class="text-xs font-medium mt-2">No items found</p><p class="text-[10px] mt-1">Start generating to build your history</p></div>`; return; }
     
     userHistoryItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    // In full modal, we show items WITH click-to-view capability
-    container.innerHTML = userHistoryItems.map(item => renderHistoryItem(item)).join('');
+    // Render items that are clickable to view details
+    container.innerHTML = userHistoryItems.map(item => renderHistoryItemClickable(item)).join('');
   } catch (err) { console.error('Full History Load Error:', err); container.innerHTML = `<div class="empty-state py-7"><i class="fa-solid fa-triangle-exclamation text-2xl text-red-400"></i><p class="text-xs font-bold mt-2">${err.message || 'Failed to load history'}</p><button onclick="loadFullHistory('all')" class="mt-2.5 glass-btn btn-secondary !py-1.5 !px-3.5 !text-[10px]">Retry</button></div>`; }
+}
+
+// Clickable history item for full modal (opens detail view)
+function renderHistoryItemClickable(item) {
+  const icons = {
+    qr: { bg: 'from-primary-500 to-primary-700', icon: 'fa-qrcode', label: 'QR Code' },
+    wa: { bg: 'from-green-500 to-green-700', icon: 'fa-brands fa-whatsapp', label: 'WhatsApp Link' },
+    pdf: { bg: 'from-red-500 to-red-700', icon: 'fa-file-pdf', label: 'PDF Document' }
+  };
+  
+  const config = icons[item.type] || icons.qr;
+  const timeAgo = item.createdAt ? getTimeAgo(item.createdAt.toDate()) : 'Unknown';
+  
+  let preview = '';
+  if (item.type === 'qr' && item.data?.text) {
+    preview = `<div class="text-[10px] text-gray-500 truncate max-w-[180px]">${escapeHtml(item.data.text.substring(0, 60))}${item.data.text.length > 60 ? '...' : ''}</div>`;
+  } else if (item.type === 'wa' && item.data?.phone) {
+    preview = `<div class="text-[10px] text-gray-500">+${item.data.phone}</div>`;
+  } else if (item.type === 'pdf') {
+    preview = `<div class="text-[10px] text-gray-500">${item.data?.title || 'Document'}</div>`;
+  }
+  
+  return `
+    <div class="history-item cursor-pointer" onclick="openHistoryDetail('${item.id}', '${item.type}')" title="Click to view details (${timeAgo})">
+      <div class="history-icon bg-gradient-to-br ${config.bg}">
+        <i class="${config.icon.includes('fa-brands') ? config.icon : 'fa-solid ' + config.icon}"></i>
+      </div>
+      <div class="history-content">
+        <div class="history-title">${config.label}</div>
+        ${preview}
+        <div class="history-meta">${timeAgo}</div>
+      </div>
+      <div class="history-action">
+        <i class="fa-solid fa-eye text-primary-500 text-xs"></i>
+      </div>
+    </div>`;
 }
 
 // Delete history item
@@ -4146,7 +4350,7 @@ async function cleanupOldHistory(userId) {
 }
 
 /* ========================================
-   HISTORY DETAIL MODAL - VIEW/DOWNLOAD ITEMS - COMPLETELY REDESIGNED FOR FIX #1
+   HISTORY DETAIL MODAL - VIEW ONLY (NO DOWNLOAD FOR QR/PDF) - COMPLETELY REDESIGNED FOR FIX #1
    ======================================== */
 
 async function openHistoryDetail(itemId, type) {
@@ -4167,17 +4371,17 @@ async function openHistoryDetail(itemId, type) {
     const titles = { qr: 'QR Code Details', wa: 'WhatsApp Link Details', pdf: 'PDF Document Details' };
     title.innerHTML = `<i class="fa-solid ${item.type === 'qr' ? 'fa-qrcode' : (item.type === 'wa' ? 'fa-brands fa-whatsapp' : 'fa-file-pdf')} text-primary-500"></i> ${titles[item.type] || 'Item Details'}`;
     
-    if (item.type === 'qr') renderQRDetail(content, item);
-    else if (item.type === 'wa') renderWADetail(content, item);
-    else if (item.type === 'pdf') renderPDFDetail(content, item);
+    if (item.type === 'qr') renderQRDetailView(content, item);
+    else if (item.type === 'wa') renderWADetailView(content, item);
+    else if (item.type === 'pdf') renderPDFDetailView(content, item);
     else content.innerHTML = `<p class="text-center text-gray-500 py-7">Unknown item type</p>`;
   } catch (err) { console.error(err); content.innerHTML = `<div class="empty-state py-7"><i class="fa-solid fa-triangle-exclamation text-2xl text-red-400"></i><p class="text-xs font-bold mt-2">Error Loading</p><p class="text-[10px] mt-1 text-gray-400">${err.message}</p></div>`; }
 }
 
 function closeHistoryDetailModal() { document.getElementById('historyDetailModal').classList.remove('open'); currentViewingHistoryItem = null; }
 
-// FIX #1: Complete QR Detail View with Working Download
-function renderQRDetail(container, item) {
+// FIX #1: QR Detail View - VIEW ONLY, NO DOWNLOAD BUTTON
+function renderQRDetailView(container, item) {
   const data = item.data || {};
   const text = data.text || 'No content';
   const size = data.size || 250;
@@ -4188,13 +4392,14 @@ function renderQRDetail(container, item) {
     <div class="history-detail-preview"><div id="detailQRPreview" class="inline-block"></div><div class="watermark" style="position:absolute; bottom:10px; right:10px;">luviio.com</div></div>
     <div class="history-detail-info" style="background:#f9fafb;"><strong>Content:</strong><br><div style="word-break:break-all;font-size:11px;color:#4b5563;margin-top:4px;padding:8px;background:white;border-radius:8px;border:1px solid #e5e7eb;">${escapeHtml(text)}</div></div>
     <div class="history-detail-actions">
-      <button onclick="regenerateAndDownloadQR(\`${escapeHtml(text)}\`, ${size})" class="history-detail-action-btn download-primary">
-        <i class="fa-solid fa-download"></i> Download PNG
-      </button>
       <button onclick="copyQRContent(\`${escapeHtml(text)}\`)" class="history-detail-action-btn">
         <i class="fa-regular fa-copy"></i> Copy Text
       </button>
       ${userData?.role === 'superadmin' ? `<button onclick="deleteHistoryItem('${item.id}'); closeHistoryDetailModal();" class="history-detail-action-btn" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;"><i class="fa-solid fa-trash-can"></i> Delete</button>` : ''}
+    </div>
+    <div class="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-200 text-center">
+      <i class="fa-solid fa-info-circle text-blue-500 mr-2"></i>
+      <span class="text-xs font-bold text-blue-700">Download unavailable for previous QR codes. Please regenerate to download.</span>
     </div>`;
   setTimeout(() => {
     const previewContainer = document.getElementById('detailQRPreview');
@@ -4202,7 +4407,7 @@ function renderQRDetail(container, item) {
   }, 100);
 }
 
-function renderWADetail(container, item) {
+function renderWADetailView(container, item) {
   const data = item.data || {};
   const phone = data.phone || '';
   const message = data.message || '';
@@ -4224,7 +4429,8 @@ function renderWADetail(container, item) {
     </div>`;
 }
 
-function renderPDFDetail(container, item) {
+// FIX #1: PDF Detail View - VIEW ONLY, NO DOWNLOAD BUTTON
+function renderPDFDetailView(container, item) {
   const data = item.data || {};
   const title = data.title || 'Document';
   const mode = data.mode || 'text';
@@ -4234,74 +4440,26 @@ function renderPDFDetail(container, item) {
     <div class="history-detail-info"><strong>Type:</strong> PDF Document<br><strong>Created:</strong> ${time}<br><strong>Title:</strong> ${title}<br><strong>Mode:</strong> ${mode === 'image' ? 'Image to PDF' : 'Text to PDF'}</div>
     <div class="history-detail-preview" style="min-height:110px;display:flex;align-items:center;justify-content:center;background:#f9fafb;border:2px dashed #d1d5db;border-radius:14px;"><div style="text-align:center;color:#9ca3af;"><i class="fa-solid fa-file-pdf text-3xl" style="color:#ef4444;"></i><p class="text-xs font-semibold mt-1.5">PDF Document</p><p class="text-[10px] mt-1">Preview not available<br>(Regenerate to download)</p></div></div>
     <div class="history-detail-actions">
-      <button onclick="regeneratePDFFromHistory(${JSON.stringify(data).replace(/"/g, '&quot;')})" class="history-detail-action-btn" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;">
-        <i class="fa-solid fa-rotate-right"></i> Regenerate & Download
-      </button>
       ${userData?.role === 'superadmin' ? `<button onclick="deleteHistoryItem('${item.id}'); closeHistoryDetailModal();" class="history-detail-action-btn" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;"><i class="fa-solid fa-trash-can"></i> Delete</button>` : ''}
+    </div>
+    <div class="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-200 text-center">
+      <i class="fa-solid fa-info-circle text-blue-500 mr-2"></i>
+      <span class="text-xs font-bold text-blue-700">Download unavailable for previous PDFs. Please regenerate to download.</span>
     </div>`;
 }
 
-// Action functions for detail modal - FIXED FOR PROPER DOWNLOAD #1
-function regenerateAndDownloadQR(text, size) {
-  if (!text) { showToast('No content to generate', 'error'); return; }
-  
-  // Show loading state
-  showToast('Generating QR Code...', 'info');
-  
-  const tempDiv = document.createElement('div');
-  tempDiv.style.display = 'none';
-  document.body.appendChild(tempDiv);
-  try {
-    new QRCode(tempDiv, { text: text, width: size, height: size, colorDark: '#1e1b3a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
-    const img = tempDiv.querySelector('img');
-    if (img && img.src) {
-      const canvas = document.createElement('canvas');
-      const padding = 40;
-      const wmHeight = (userData && userData.plan === 'pro') ? 0 : 24;
-      canvas.width = img.naturalWidth + padding * 2;
-      canvas.height = img.naturalHeight + padding * 2 + wmHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, padding, padding);
-      if (!(userData && userData.plan === 'pro')) {
-        ctx.fillStyle = 'rgba(0,0,0,0.08)';
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText('luviio.com', canvas.width - padding, canvas.height - 12);
-      }
-      const link = document.createElement('a');
-      link.download = 'luvtools-qr-regenerated.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      showToast('QR Code downloaded successfully!', 'success');
-    }
-  } catch (err) { console.error(err); showToast('Failed to generate QR', 'error'); }
-  finally { document.body.removeChild(tempDiv); }
-}
-
+// Action functions for detail modal - LIMITED (no download for QR/PDF)
 function copyQRContent(text) { if (!text) return; navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!', 'success')); }
 function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!', 'success')).catch(() => { const textarea = document.createElement('textarea'); textarea.value = text; document.body.appendChild(textarea); textarea.select(); document.execCommand('copy'); document.body.removeChild(textarea); showToast('Copied!', 'success'); }); }
 
-async function regeneratePDFFromHistory(data) {
-  if (!data) { showToast('No data to regenerate', 'error'); return; }
-  showToast('Regenerating PDF...', 'info');
-  try {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-    if (data.mode === 'text' && data.content) {
-      pdf.setFontSize(12);
-      const lines = pdf.splitTextToSize(data.content, 170);
-      let y = 20;
-      lines.forEach(line => { if (y > 280) { pdf.addPage(); y = 20; } pdf.text(line, 20, y); y += 6; });
-      if (!(userData && userData.plan === 'pro')) { pdf.setFontSize(8); pdf.setTextColor(200, 200, 200); pdf.text('luviio.com', 175, 290); }
-      pdf.save(`luvtools-${data.title || 'document'}-regenerated.pdf`);
-      showToast('PDF regenerated and downloaded!', 'success');
-    } else { showToast('Image PDF regeneration requires original file. Please create a new one.', 'info'); }
-  } catch (err) { console.error(err); showToast('Failed to regenerate PDF', 'error'); }
+async function regeneratePDFFromHistory(dataStr) { 
+  try { 
+    const data = JSON.parse(dataStr); 
+    showToast('PDF regeneration requires original file. Please create a new one.', 'info'); 
+  } catch(e) { 
+    showToast('Could not regenerate PDF', 'error'); 
+  } 
 }
-
-function regenAndDownPDF(dataStr) { try { const data = JSON.parse(dataStr); regeneratePDFFromHistory(data); } catch(e) { showToast('Could not regenerate PDF', 'error'); } }
 
 /* ========================================
    DELETED HISTORY (SuperAdmin Only)
@@ -4356,6 +4514,210 @@ async function restoreDeletedItem(deletedItemId) {
 async function permanentlyDeleteItem(deletedItemId) {
   if (!confirm('PERMANENTLY delete this item? This cannot be undone.')) return;
   try { await db.collection('recently_deleted').doc(deletedItemId).delete(); showToast('Item permanently deleted', 'success'); loadDeletedHistory(); } catch (err) { console.error(err); showToast('Failed to delete', 'error'); }
+}
+
+/* ========================================
+   ANNOUNCEMENT BANNER SYSTEM - NEW FEATURE
+   ======================================== */
+
+// Load announcement banner from Firestore
+async function loadAnnouncementBanner() {
+  try {
+    const doc = await db.collection('settings').doc('announcement').get();
+    if (doc.exists) {
+      currentAnnouncementData = doc.data();
+      
+      // Update both landing page and dashboard banners
+      updateAnnouncementBannerDisplay(currentAnnouncementData);
+    } else {
+      currentAnnouncementData = null;
+      hideAllAnnouncementBanners();
+    }
+  } catch (err) {
+    console.error('Error loading announcement:', err);
+    currentAnnouncementData = null;
+    hideAllAnnouncementBanners();
+  }
+}
+
+// Update display based on announcement data
+function updateAnnouncementBannerDisplay(data) {
+  if (!data || !data.isActive) {
+    hideAllAnnouncementBanners();
+    return;
+  }
+  
+  const message = data.message || '';
+  if (!message.trim()) {
+    hideAllAnnouncementBanners();
+    return;
+  }
+  
+  // Show on Landing Page
+  const landingBanner = document.getElementById('announcementBanner');
+  const landingText = document.getElementById('announcementText');
+  if (landingBanner && landingText) {
+    landingBanner.style.display = 'block';
+    landingText.textContent = message + ' • ' + (data.updatedAt ? formatDate(data.updatedAt) : '');
+  }
+  
+  // Show on Dashboard (if logged in)
+  const dashBanner = document.getElementById('dashboardAnnouncementBanner');
+  const dashText = document.getElementById('dashboardAnnouncementText');
+  if (dashBanner && dashText) {
+    dashBanner.style.display = 'block';
+    dashText.textContent = message + ' • ' + (data.updatedAt ? formatDate(data.updatedAt) : '');
+  }
+}
+
+// Hide all announcement banners
+function hideAllAnnouncementBanners() {
+  const landingBanner = document.getElementById('announcementBanner');
+  const dashBanner = document.getElementById('dashboardAnnouncementBanner');
+  if (landingBanner) landingBanner.style.display = 'none';
+  if (dashBanner) dashBanner.style.display = 'none';
+}
+
+// Close announcement banner handlers
+function closeAnnouncementBanner() {
+  const banner = document.getElementById('announcementBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+function closeDashboardAnnouncementBanner() {
+  const banner = document.getElementById('dashboardAnnouncementBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+// Open announcement management modal (SuperAdmin only)
+function openAnnouncementModal() {
+  if (!currentUser || !userData || userData.role !== 'superadmin') {
+    showToast('Only SuperAdmins can manage announcements', 'error');
+    return;
+  }
+  
+  // Load current values into form
+  const msgInput = document.getElementById('announcementMessageInput');
+  const activeToggle = document.getElementById('announcementActiveToggle');
+  const statusBadge = document.getElementById('announcementStatusBadge');
+  const statusText = document.getElementById('announcementStatusText');
+  
+  if (currentAnnouncementData) {
+    if (msgInput) msgInput.value = currentAnnouncementData.message || '';
+    if (activeToggle) activeToggle.checked = currentAnnouncementData.isActive || false;
+    if (statusBadge) {
+      statusBadge.className = currentAnnouncementData.isActive ? 'badge badge-active' : 'badge badge-inactive';
+      statusBadge.textContent = currentAnnouncementData.isActive ? 'Active' : 'Inactive';
+    }
+    if (statusText) {
+      statusText.textContent = currentAnnouncementData.isActive 
+        ? 'Banner is visible to all users' 
+        : 'Banner is hidden from all users';
+    }
+  } else {
+    if (msgInput) msgInput.value = 'Scheduled maintenance on [Date] at [Time]. We\'ll be back shortly!';
+    if (activeToggle) activeToggle.checked = false;
+    if (statusBadge) {
+      statusBadge.className = 'badge badge-inactive';
+      statusBadge.textContent = 'Inactive';
+    }
+    if (statusText) statusText.textContent = 'Banner is currently hidden from all users';
+  }
+  
+  document.getElementById('announcementModal').classList.add('open');
+}
+
+function closeAnnouncementModal() {
+  document.getElementById('announcementModal').classList.remove('open');
+  document.getElementById('announcementPreviewArea').style.display = 'none';
+}
+
+// Toggle announcement preview
+function toggleAnnouncementPreview() {
+  const previewArea = document.getElementById('announcementPreviewArea');
+  const previewText = document.getElementById('announcementPreviewText');
+  const msgInput = document.getElementById('announcementMessageInput');
+  
+  if (previewArea && previewText && msgInput) {
+    if (previewArea.style.display === 'none') {
+      previewArea.style.display = 'block';
+      previewText.textContent = msgInput.value || 'No message entered';
+    } else {
+      previewArea.style.display = 'none';
+    }
+  }
+}
+
+// Save announcement to Firestore
+async function saveAnnouncement() {
+  if (!currentUser || !userData || userData.role !== 'superadmin') {
+    showToast('Only SuperAdmins can save announcements', 'error');
+    return;
+  }
+  
+  const msgInput = document.getElementById('announcementMessageInput');
+  const activeToggle = document.getElementById('announcementActiveToggle');
+  
+  const message = msgInput ? msgInput.value.trim() : '';
+  const isActive = activeToggle ? activeToggle.checked : false;
+  
+  if (!message) {
+    showToast('Please enter an announcement message', 'error');
+    return;
+  }
+  
+  try {
+    const announcementRef = db.collection('settings').doc('announcement');
+    
+    if (currentAnnouncementData) {
+      // Update existing
+      await announcementRef.update({
+        message: message,
+        isActive: isActive,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: currentUser.uid,
+        updatedByEmail: userData.email
+      });
+    } else {
+      // Create new
+      await announcementRef.set({
+        message: message,
+        isActive: isActive,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: currentUser.uid,
+        createdByEmail: userData.email
+      });
+    }
+    
+    // Refresh local state
+    currentAnnouncementData = {
+      message: message,
+      isActive: isActive,
+      updatedAt: new Date()
+    };
+    
+    // Update UI
+    updateAnnouncementBannerDisplay(currentAnnouncementData);
+    
+    // Update modal status
+    const statusBadge = document.getElementById('announcementStatusBadge');
+    const statusText = document.getElementById('announcementStatusText');
+    if (statusBadge) {
+      statusBadge.className = isActive ? 'badge badge-active' : 'badge badge-inactive';
+      statusBadge.textContent = isActive ? 'Active' : 'Inactive';
+    }
+    if (statusText) {
+      statusText.textContent = isActive ? 'Banner is visible to all users' : 'Banner is hidden from all users';
+    }
+    
+    showToast('Announcement saved successfully!', 'success');
+    closeAnnouncementModal();
+    
+  } catch (err) {
+    console.error('Error saving announcement:', err);
+    showToast('Failed to save announcement', 'error');
+  }
 }
 
 /* ========================================
@@ -4770,7 +5132,7 @@ async function loadAdminUsers() {
     if (err.code === 'permission-denied') errorHTML = `<tr><td colspan="7" class="text-center py-8 md:py-10"><div class="text-red-400 mb-2.5"><i class="fa-solid fa-lock text-2xl md:text-3xl block mb-1.5"></i><p class="font-bold text-sm md:text-base">Permission Denied</p><p class="text-xs md:text-sm text-gray-500 max-w-md mx-auto leading-relaxed">Your account does not have SuperAdmin access in Firestore Security Rules.<br><span class="text-[10px] text-gray-400">Error code: ${err.code}</span></p><button onclick="loadAdminUsers()" class="mt-3 glass-btn btn-secondary !py-1.5 !px-3.5 !text-[10px]">Retry</button></td></tr>`;
     else if (err.code === 'failed-precondition') {
       const indexUrl = err.message.match(/https:\/\/console\.firebase\.google\.com[^\s]*/);
-      errorHTML = `<tr><td colspan="7" class="text-center py-8 md:py-10"><div class="text-orange-400 mb-2.5"><i class="fa-solid fa-database text-2xl md:text-3xl block mb-1.5"></i><p class="font-bold text-sm md:text-base">Index Required</p><p class="text-xs md:text-sm text-gray-500 max-w-md mx-auto leading-relaxed mb-2.5">Firebase requires a composite index for this query.<br>Please click the link below to create it automatically (one-time setup).</p>${indexUrl ? `<a href="${indexUrl[0]}" target="_blank" rel="noopener noreferrer" class="inline-block mt-2 px-3.5 py-2 bg-primary-500 text-white rounded-lg text-xs font-bold hover:bg-primary-600 transition-colors">Create Index in Console</a>` : ''}<p class="text-[10px] text-gray-400 mt-2.5">After creating the index, wait 1-2 minutes then retry.</p><button onclick="loadAdminUsers()" class="mt-2.5 glass-btn btn-secondary !py-1.5 !px-3.5 !text-[10px]">Retry After Index Created</button></td></tr>`;
+      errorHTML = `<tr><td colspan="7" class="text-center py-8 md:py-10"><div class="text-orange-400 mb-2.5"><i class="fa-solid fa-database text-2xl md:text-3xl block mb-1.5"></i><p class="font-bold text-sm md:text-base">Index Required</p><p class="text-xs md:text-sm text-gray-500 max-w-md mx-auto leading-relaxed mb-2.5">Firebase requires a composite index for this query.<br>Please click the link below to create it automatically (one-time setup).</p>${indexUrl ? `<a href="${indexUrl[0]}" target="_blank" rel="noopener noreferrer" class="inline-block mt-2 px-3.5 py-2 bg-primary-500 text-white rounded-lg text-xs font-bold hover:bg-primary-600 transition-colors">Create Index in Console</a>` : ''}<p class="text-[10px] text-gray-400 mt-2.5">After creating the index, wait 1-2 minutes then retry.</p><button onclick="loadAdminUsers()" class="mt-2 glass-btn btn-secondary !py-1.5 !px-3.5 !text-[10px]">Retry After Index Created</button></td></tr>`;
     } else errorHTML = `<tr><td colspan="7" class="text-center py-8 md:py-10"><div class="text-red-400 mb-2.5"><i class="fa-solid fa-triangle-exclamation text-2xl md:text-3xl block mb-1.5"></i><p class="font-bold text-sm md:text-base">Unexpected Error</p><p class="text-xs md:text-sm text-gray-500 max-w-md mx-auto leading-relaxed mb-1.5">An unexpected error occurred while loading users.</p><p class="text-[10px] text-gray-400 font-mono break-all bg-gray-100 p-2 rounded mb-2.5">${err.code}: ${err.message}</p><button onclick="loadAdminUsers()" class="mt-2 glass-btn btn-secondary !py-1.5 !px-3.5 !text-[10px]">Retry</button></td></tr>`;
     tbody.innerHTML = errorHTML;
   }
@@ -5081,6 +5443,7 @@ document.addEventListener('keydown', (e) => {
     closePlanModal(); closePaymentModal(); closeProfileModal();
     closeAdminUserModal(); closeUserMenu(); closeHistoryModal();
     closeHistoryDetailModal(); closeDeletedHistoryModal();
+    closeAnnouncementModal();
   }
 });
 
