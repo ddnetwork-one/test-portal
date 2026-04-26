@@ -11,6 +11,16 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#6366f1">
 
+<!-- Structured Data - UPDATE 5 -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "LuvTools",
+  "url": "https://app.luviio.com"
+}
+</script>
+
 <title>LuvTools by luviio | Free QR Generator, WhatsApp Link, PDF Convert - No Login</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -50,20 +60,69 @@ tailwind.config = {
     --blob2: rgba(236,72,153,0.12);
     --blob3: rgba(59,130,246,0.1);
   }
-  *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { overflow-x: hidden; scroll-behavior: smooth; }
+  
+  *, *::before, *::after { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+  }
+  
+  html { 
+    overflow-x: hidden; 
+    scroll-behavior: smooth;
+    height: 100%;
+  }
+  
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
     background: var(--surface);
     min-height: 100dvh;
     overflow-x: hidden;
     position: relative;
+    height: auto;
+    min-height: 100vh;
   }
   
+  /* UPDATE 4: Remove double scroll - Full screen app container */
+  .app-container {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .view-container {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .view-container::-webkit-scrollbar {
+    width: 0;
+    display: none;
+  }
+  
+  .view-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   /* Enhanced Liquid Glass */
-  .bg-blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .bg-blobs { 
+    position: fixed; 
+    inset: 0; 
+    z-index: 0; 
+    pointer-events: none; 
+    overflow: hidden; 
+  }
   .blob {
-    position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6;
+    position: absolute; 
+    border-radius: 50%; 
+    filter: blur(80px); 
+    opacity: 0.6;
     animation: blobFloat 25s ease-in-out infinite alternate;
     will-change: transform;
   }
@@ -259,38 +318,135 @@ tailwind.config = {
     border-top: 1px solid rgba(255,255,255,0.5);
   }
 
-  /* Toast */
-  .toast-container { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 420px; }
+  /* UPDATE 2: Enhanced Toast Notification System with Liquid Glass & Animation */
+  .toast-container { 
+    position: fixed; 
+    top: 16px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    z-index: 9999; 
+    width: 90%; 
+    max-width: 420px;
+    pointer-events: none;
+  }
   .toast {
     background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
-    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    backdrop-filter: blur(30px); 
+    -webkit-backdrop-filter: blur(30px);
     border: 1px solid rgba(255,255,255,0.8);
-    border-radius: 16px; padding: 14px 18px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.04);
-    display: flex; align-items: center; gap: 10px;
-    font-size: 13px; font-weight: 600; color: #1e1b3a;
-    animation: toastIn 0.35s ease-out;
+    border-radius: 16px; 
+    padding: 14px 18px;
+    box-shadow: 
+      0 8px 32px rgba(0,0,0,0.1), 
+      0 2px 8px rgba(0,0,0,0.04),
+      inset 0 1px 0 rgba(255,255,255,1);
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    font-size: 13px; 
+    font-weight: 600; 
+    color: #1e1b3a;
     margin-bottom: 8px;
     border-left: 4px solid;
+    pointer-events: auto;
+    animation: toastSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .toast::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 2s infinite;
   }
   .toast.success { border-left-color: #22c55e; }
   .toast.error { border-left-color: #ef4444; }
   .toast.info { border-left-color: #6366f1; }
-  .toast.out { animation: toastOut 0.3s ease-out forwards; }
-  .toast .toast-icon { font-size: 18px; }
+  .toast.warning { border-left-color: #f59e0b; }
+  .toast.out { 
+    animation: toastSlideOut 0.35s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards; 
+  }
+  .toast .toast-icon { 
+    font-size: 18px; 
+    flex-shrink: 0;
+  }
   .toast.success .toast-icon { color: #22c55e; }
   .toast.error .toast-icon { color: #ef4444; }
   .toast.info .toast-icon { color: #6366f1; }
-  @keyframes toastIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-  @keyframes toastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-15px) scale(0.96); } }
+  .toast.warning .toast-icon { color: #f59e0b; }
+  .toast .toast-message {
+    flex: 1;
+    line-height: 1.4;
+  }
+  .toast .toast-close {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .toast .toast-close:hover {
+    background: rgba(0,0,0,0.05);
+    color: #6b7280;
+  }
+  
+  /* Progress bar for auto-dismiss */
+  .toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: currentColor;
+    opacity: 0.3;
+    border-radius: 0 0 16px 16px;
+    animation: progressShrink linear forwards;
+  }
+  
+  @keyframes toastSlideIn { 
+    from { 
+      opacity: 0; 
+      transform: translateY(-20px) scale(0.95) translateX(-50%); 
+    } to { 
+      opacity: 1; 
+      transform: translateY(0) scale(1) translateX(-50%); 
+    } 
+  }
+  @keyframes toastSlideOut { 
+    from { 
+      opacity: 1; 
+      transform: translateY(0) scale(1) translateX(-50%); 
+    } to { 
+      opacity: 0; 
+      transform: translateY(-15px) scale(0.96) translateX(-50%); 
+    } 
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  @keyframes progressShrink {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
 
   .view { 
     display: none; 
     animation: fadeSlideIn 0.4s ease-out; 
     position: relative;
     z-index: 10;
+    min-height: 100vh;
   }
-  .view.active { display: block; }
+  .view.active { 
+    display: block; 
+  }
   @keyframes fadeSlideIn { 
     from { opacity: 0; transform: translateY(12px); } 
     to { opacity: 1; transform: translateY(0); } 
@@ -417,7 +573,6 @@ tailwind.config = {
     animation: shimmer 3s linear infinite;
     border-radius: 4px 4px 0 0;
   }
-  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
   .spinner {
     width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
@@ -788,6 +943,18 @@ tailwind.config = {
     z-index: 10;
   }
 
+  /* Email verification badge */
+  .email-unverified {
+    background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.08) 100%);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: #d97706;
+  }
+  .email-verified {
+    background: linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.08) 100%);
+    border: 1px solid rgba(34,197,94,0.3);
+    color: #16a34a;
+  }
+
   @media (max-width: 480px) {
     .glass-card { border-radius: 18px; padding: 20px !important; }
     .modal-content { padding: 20px; border-radius: 22px; }
@@ -802,6 +969,8 @@ tailwind.config = {
 </head>
 <body>
 
+<div class="app-container">
+
 <!-- Loading Screen -->
 <div class="loading-screen" id="loadingScreen">
   <img src="https://images.luviio.com/luviio-logo-circle-v1.png" alt="LuvTools Logo" class="w-16 h-16 md:w-20 md:h-20 rounded-full shadow-xl animate-pulse object-cover">
@@ -814,11 +983,12 @@ tailwind.config = {
   <div class="blob blob-3"></div>
 </div>
 
+<!-- UPDATE 2: Enhanced Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- ===== LANDING PAGE VIEW ===== -->
-<div class="view" id="landingView">
-  <div class="relative z-10">
+<div class="view view-container" id="landingView">
+  <div class="relative z-10 pb-8">
     <!-- Navigation -->
     <nav class="max-w-6xl mx-auto px-4 py-4 md:py-5 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -1049,7 +1219,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== AUTH VIEW ===== -->
-<div class="view" id="authView">
+<div class="view view-container" id="authView">
   <div class="min-h-[100dvh] flex flex-col items-center justify-center px-4 md:px-5 py-8 md:py-10 relative z-10">
     <div class="glass-card w-full max-w-md p-7 md:p-10">
       <div class="text-center mb-7 md:mb-10">
@@ -1127,7 +1297,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== DASHBOARD VIEW ===== -->
-<div class="view" id="dashboardView">
+<div class="view view-container" id="dashboardView">
   <div class="relative z-10 max-w-4xl mx-auto px-4 pt-4 md:pt-6 pb-24 md:pb-28">
     <header class="flex items-center justify-between mb-6 md:mb-8">
       <div class="flex items-center gap-3 md:gap-4">
@@ -1203,7 +1373,7 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- Recent Activity / History -->
+    <!-- Recent Activity / History - UPDATE 3: Removed Download button, simplified layout -->
     <div class="glass-card p-5 md:p-6 mb-6 md:mb-8">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-base md:text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -1259,17 +1429,32 @@ tailwind.config = {
           <span class="text-xs md:text-sm text-gray-500 font-semibold">Current Plan</span>
           <span id="dashPlanBadge" class="badge badge-free">Free</span>
         </div>
+        <div class="flex items-center justify-between py-2.5 md:py-3 border-b border-gray-100">
+          <span class="text-xs md:text-sm text-gray-500 font-semibold">Email Status</span>
+          <span id="dashEmailStatus" class="badge email-unverified"><i class="fa-regular fa-envelope mr-1"></i>Not Verified</span>
+        </div>
         <div class="flex items-center justify-between py-2.5 md:py-3">
           <span class="text-xs md:text-sm text-gray-500 font-semibold">Member Since</span>
           <span class="text-xs md:text-sm text-gray-900 font-bold" id="dashJoined">—</span>
         </div>
+      </div>
+      
+      <!-- UPDATE 1: Email Verification Actions -->
+      <div id="emailVerificationActions" class="mt-4 p-4 rounded-xl bg-amber-50/50 border border-amber-200/50" style="display:none;">
+        <p class="text-xs font-bold text-amber-800 mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-triangle-exclamation"></i> Email Verification Required
+        </p>
+        <p class="text-[11px] text-amber-700 mb-3">Please verify your email address to unlock full features.</p>
+        <button onclick="sendVerificationEmail()" class="glass-btn w-full !py-2.5 !text-xs font-semibold !bg-amber-500 !text-white !border-amber-400 hover:!bg-amber-600">
+          <i class="fa-solid fa-paper-plane mr-2"></i> Send Verification Email
+        </button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ===== MAIN APP VIEW (Logged In) ===== -->
-<div class="view" id="appView">
+<div class="view view-container" id="appView">
   <div class="relative z-10 max-w-2xl mx-auto px-4 pt-3 md:pt-4 pb-40 md:pb-44">
     <header class="flex items-center justify-between mb-4 md:mb-6">
       <div class="flex items-center gap-2 md:gap-3">
@@ -1459,7 +1644,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== FREE TOOLS VIEW (No Login Required) ===== -->
-<div class="view" id="freeToolsView">
+<div class="view view-container" id="freeToolsView">
   <div class="relative z-10 free-tool-container pt-3 md:pt-4 pb-28 md:pb-32">
     
     <!-- Simple Header - No User Menu -->
@@ -1658,7 +1843,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== PRICING VIEW ===== -->
-<div class="view" id="pricingView">
+<div class="view view-container" id="pricingView">
   <div class="relative z-10 max-w-4xl mx-auto px-4 pt-6 md:pt-8 pb-20 md:pb-24">
     <header class="flex items-center gap-3 md:gap-4 mb-6 md:mb-10">
       <button onclick="navigateTo(currentUser ? '/dashboard' : '/home')" class="glass-btn btn-secondary !min-h-0 !py-2 !px-3 md:!py-2.5 md:!px-4 !rounded-xl !text-xs md:!text-sm">
@@ -1761,7 +1946,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== TERMS VIEW ===== -->
-<div class="view" id="termsView">
+<div class="view view-container" id="termsView">
   <div class="relative z-10 max-w-3xl mx-auto px-4 pt-6 md:pt-8 pb-20 md:pb-24">
     <header class="flex items-center gap-3 md:gap-4 mb-6 md:mb-10">
       <button onclick="navigateTo(currentUser ? '/dashboard' : '/home')" class="glass-btn btn-secondary !min-h-0 !py-2 !px-3 md:!py-2.5 md:!px-4 !rounded-xl !text-xs md:!text-sm">
@@ -1802,7 +1987,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== PRIVACY VIEW ===== -->
-<div class="view" id="privacyView">
+<div class="view view-container" id="privacyView">
   <div class="relative z-10 max-w-3xl mx-auto px-4 pt-6 md:pt-8 pb-20 md:pb-24">
     <header class="flex items-center gap-3 md:gap-4 mb-6 md:mb-10">
       <button onclick="navigateTo(currentUser ? '/dashboard' : '/home')" class="glass-btn btn-secondary !min-h-0 !py-2 !px-3 md:!py-2.5 md:!px-4 !rounded-xl !text-xs md:!text-sm">
@@ -1842,7 +2027,7 @@ tailwind.config = {
 </div>
 
 <!-- ===== ADMIN PANEL VIEW ===== -->
-<div class="view" id="adminView">
+<div class="view view-container" id="adminView">
   <div class="relative z-10 max-w-6xl mx-auto px-4 pt-4 md:pt-6 pb-6 md:pb-8">
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 mb-6 md:mb-8">
       <div class="flex items-center gap-3 md:gap-4">
@@ -1904,7 +2089,7 @@ tailwind.config = {
           </tr>
         </thead>
         <tbody id="adminTableBody">
-          <tr><td colspan="6" class="text-center py-10 md:py-12 text-gray-400"><div class="spinner mx-auto mb-3" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div>Loading...</td></tr>
+          <tr><td colspan="6" class="text-center py-10 md:py-12 text-gray-400"><div class=" spinner mx-auto mb-3" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div>Loading...</td></tr>
         </tbody>
       </table>
     </div>
@@ -2056,7 +2241,7 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- ===== HISTORY MODAL (Logged In Users) ===== -->
+<!-- ===== HISTORY MODAL (Logged In Users) - UPDATE 3: Removed category filters, show all -->
 <div class="modal-overlay" id="historyModal">
   <div class="modal-content" style="max-width:520px;">
     <div class="flex items-center justify-between mb-4 md:mb-6">
@@ -2068,12 +2253,9 @@ tailwind.config = {
       </button>
     </div>
     
-    <!-- Fixed Filter Buttons Container -->
-    <div class="flex gap-2 mb-4 overflow-x-auto pb-1 flex-wrap" id="historyFilterContainer">
-      <button class="size-btn active !text-xs" data-hfilter="all" onclick="filterHistory(this,'all')">All</button>
-      <button class="size-btn !text-xs" data-hfilter="qr" onclick="filterHistory(this,'qr')">QR Codes</button>
-      <button class="size-btn !text-xs" data-hfilter="wa" onclick="filterHistory(this,'wa')">WhatsApp</button>
-      <button class="size-btn !text-xs" data-hfilter="pdf" onclick="filterHistory(this,'pdf')">PDFs</button>
+    <!-- UPDATE 3: Removed filter buttons, simplified header -->
+    <div class="mb-4 p-3 bg-gradient-to-r from-primary-50 to-accent-50 rounded-xl border border-primary-100">
+      <p class="text-xs text-gray-600 text-center"><i class="fa-solid fa-info-circle mr-1 text-primary-500"></i> Showing all your recent activity across all tools</p>
     </div>
     
     <div id="historyListContainer" class="history-list">
@@ -2086,7 +2268,7 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- ===== HISTORY DETAIL MODAL (View/Download Previous Items) ===== -->
+<!-- ===== HISTORY DETAIL MODAL (View/Download Previous Items) - UPDATE 3: Removed Download PNG button -->
 <div class="modal-overlay" id="historyDetailModal">
   <div class="modal-content" style="max-width:520px;">
     <div class="flex items-center justify-between mb-4 md:mb-6">
@@ -2167,7 +2349,6 @@ let freePdfMode = 'img';
 let freePdfFile = null;
 
 // History state
-let currentHistoryFilter = 'all';
 let userHistoryItems = [];
 
 // Guest usage tracking
@@ -2180,11 +2361,11 @@ const FREE_USER_HISTORY_DAYS = 7;
 // Current viewing history item for detail modal
 let currentViewingHistoryItem = null;
 
-// Payment disabled flag (UPDATE 3)
+// Payment disabled flag
 const PAYMENT_DISABLED = true;
 
 /* ========================================
-   Router System - Fixed for Refresh & Mobile Google Auth
+   Router System
    ======================================== */
 const routes = {
   '/': 'landingView',
@@ -2208,9 +2389,7 @@ const routes = {
 
 function getCurrentPath() {
   let path = window.location.pathname;
-  // Handle local file testing
   if (path.includes('.html') || path === '/' || path === '') {
-    // Check hash for SPA-like routing in file:// protocol
     const hash = window.location.hash.replace('#', '');
     if (hash) return hash;
     return '/';
@@ -2219,7 +2398,6 @@ function getCurrentPath() {
 }
 
 function navigateTo(path) {
-  // Use history API for real servers, fallback to hash for local files
   if (window.location.protocol === 'file:') {
     window.location.hash = path;
   } else {
@@ -2231,7 +2409,6 @@ function navigateTo(path) {
 function handleRoute() {
   const path = getCurrentPath();
   
-  // Route protection rules
   if ((path === '/dashboard') && !currentUser) {
     navigateTo('/login');
     return;
@@ -2248,13 +2425,12 @@ function handleRoute() {
     }
   }
   
-  // Auto-redirect logged-in users from landing/home to dashboard
-  if (currentUser && (path === '/' || path === '/home')) {
+  // UPDATE 6: Smooth animation - Logged in users never see login page
+  if (currentUser && (path === '/' || path === '/home' || path === '/login' || path === '/auth')) {
     navigateTo('/dashboard');
     return;
   }
   
-  // Redirect logged-in users away from free pages to full app
   if (currentUser && path.startsWith('/free')) {
     const toolMap = { '/free/qr': '/qr', '/free/wa-link': '/wa-link', '/free/pdf': '/pdf' };
     navigateTo(toolMap[path] || '/dashboard');
@@ -2267,16 +2443,12 @@ function handleRoute() {
     return;
   }
   
-  // Hide all views first
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  
-  // Show target view
   const targetView = document.getElementById(viewId);
   if (targetView) {
     targetView.classList.add('active');
   }
   
-  // Initialize specific views
   if (path.startsWith('/free')) {
     initFreeTools(path);
   } else if (path === '/qr' || path === '/wa-link' || path === '/pdf') {
@@ -2289,33 +2461,58 @@ function handleRoute() {
   } else if (path === '/admin' || path === '/admin/dashboard') {
     loadAdminUsers();
   } else if (path === '/pricing') {
-    updatePricingPage(); // UPDATE 1: Update pricing page based on plan
+    updatePricingPage();
   }
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Listen for popstate (back/forward buttons)
 window.addEventListener('popstate', handleRoute);
-
-// Listen for hash changes (for file:// protocol)
 window.addEventListener('hashchange', () => {
-  if (window.location.protocol === 'file:') {
-    handleRoute();
-  }
+  if (window.location.protocol === 'file:') handleRoute();
 });
 
 /* ========================================
    Utilities
    ======================================== */
-function showToast(message, type = 'info') {
+
+// UPDATE 2: Enhanced Toast System with Liquid Glass Design & Animation
+function showToast(message, type = 'info', duration = 3500) {
   const container = document.getElementById('toastContainer');
-  const icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', info: 'fa-circle-info' };
+  const icons = { 
+    success: 'fa-circle-check', 
+    error: 'fa-circle-exclamation', 
+    info: 'fa-circle-info',
+    warning: 'fa-triangle-exclamation'
+  };
+  
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<i class="fa-solid ${icons[type]} toast-icon"></i><span>${message}</span>`;
+  toast.innerHTML = `
+    <span class="toast-icon"><i class="fa-solid ${icons[type]}"></i></span>
+    <span class="toast-message">${message}</span>
+    <button class="toast-close" onclick="dismissToast(this.parentElement)" aria-label="Dismiss notification">
+      <i class="fa-solid fa-xmark text-xs"></i>
+    </button>
+    <div class="toast-progress" style="animation-duration: ${duration}ms;"></div>
+  `;
+  
   container.appendChild(toast);
-  setTimeout(() => { toast.classList.add('out'); setTimeout(() => toast.remove(), 300); }, 3500);
+  
+  // Auto-dismiss with smooth animation
+  setTimeout(() => {
+    dismissToast(toast);
+  }, duration);
+}
+
+function dismissToast(toastElement) {
+  if (!toastElement || toastElement.classList.contains('out')) return;
+  toastElement.classList.add('out');
+  setTimeout(() => {
+    if (toastElement.parentElement) {
+      toastElement.remove();
+    }
+  }, 350);
 }
 
 function togglePwdVis(inputId, btn) {
@@ -2342,7 +2539,6 @@ function showView(viewId) {
   document.getElementById(viewId).classList.add('active');
 }
 
-// Hide loading screen
 function hideLoadingScreen() {
   const loader = document.getElementById('loadingScreen');
   if (loader) {
@@ -2397,7 +2593,6 @@ function updateCountdownDisplay(timerElId) {
   if (remaining > 0) {
     timerEl.textContent = formatTimeRemaining(remaining);
   } else {
-    // Reset counts at midnight
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith(USAGE_KEY_PREFIX)) {
         const datePart = key.split('_').pop();
@@ -2478,6 +2673,7 @@ auth.onAuthStateChanged(async (user) => {
           plan: 'free',
           role: 'user',
           status: 'active',
+          emailVerified: user.emailVerified || false,
           qrCount: 0,
           waCount: 0,
           pdfCount: 0,
@@ -2485,23 +2681,51 @@ auth.onAuthStateChanged(async (user) => {
           lastLogin: firebase.firestore.FieldValue.serverTimestamp()
         };
         await db.collection('users').doc(user.uid).set(userData);
+        
+        // UPDATE 1: Send verification email for new accounts
+        if (!user.emailVerified && user.email) {
+          try {
+            await user.sendEmailVerification();
+            console.log('Verification email sent to:', user.email);
+          } catch (e) {
+            console.error('Failed to send verification email:', e);
+          }
+        }
       }
-      await db.collection('users').doc(user.uid).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
       
-      // Run cleanup for free users (auto-delete old history)
+      // Update email verification status in Firestore if changed
+      if (user.emailVerified !== userData.emailVerified) {
+        await db.collection('users').doc(user.uid).update({
+          emailVerified: user.emailVerified
+        });
+        userData.emailVerified = user.emailVerified;
+      }
+      
+      await db.collection('users').doc(user.uid).update({ 
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+        emailVerified: user.emailVerified 
+      });
+      
       if (userData.plan !== 'pro') {
         cleanupOldHistory(user.uid);
       }
     } catch (err) {
       console.error('Firestore error:', err);
-      userData = { email: user.email, plan: 'free', role: 'user', status: 'active', qrCount: 0, waCount: 0, pdfCount: 0 };
+      userData = { 
+        email: user.email, 
+        plan: 'free', 
+        role: 'user', 
+        status: 'active', 
+        qrCount: 0, 
+        waCount: 0, 
+        pdfCount: 0,
+        emailVerified: user.emailVerified || false
+      };
     }
     
     setupUI();
     hideLoadingScreen();
     
-    // Navigate appropriately after auth - FIX FOR MOBILE GOOGLE AUTH STUCK ISSUE
-    // Check if we were trying to sign in from a specific page
     const pendingRedirect = sessionStorage.getItem('pendingAuthRedirect');
     if (pendingRedirect) {
       sessionStorage.removeItem('pendingAuthRedirect');
@@ -2523,7 +2747,6 @@ auth.onAuthStateChanged(async (user) => {
     if (['/dashboard', '/admin', '/admin/dashboard'].includes(path)) {
       navigateTo('/login');
     } else if (['/qr', '/wa-link', '/pdf'].includes(path)) {
-      // Redirect non-logged users to free versions
       const freeMap = { '/qr': '/free/qr', '/wa-link': '/free/wa-link', '/pdf': '/free/pdf' };
       navigateTo(freeMap[path]);
     } else if (path === '/login' || path === '/auth') {
@@ -2561,8 +2784,6 @@ async function handleLogin() {
 }
 
 async function handleGoogleSignIn() {
-  // FIX FOR MOBILE: Store intended redirect before starting Google Auth flow
-  // This ensures we know where to go after the redirect comes back
   const currentPath = getCurrentPath();
   if (currentPath !== '/login' && currentPath !== '/auth') {
     sessionStorage.setItem('pendingAuthRedirect', '/dashboard');
@@ -2572,14 +2793,11 @@ async function handleGoogleSignIn() {
 
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
-    
-    // Add these parameters to force account selection (no auto-login)
     provider.setCustomParameters({
       prompt: 'select_account',
       login_hint: ''
     });
     
-    // Show loading state on button
     const googleBtn = document.getElementById('googleSignInBtn');
     if (googleBtn) {
       googleBtn.disabled = true;
@@ -2588,20 +2806,12 @@ async function handleGoogleSignIn() {
     
     showToast('Connecting to Google...', 'info');
     
-    // Use signInWithPopup for better mobile support and immediate feedback
-    // Popup works better on mobile than redirect because:
-    // 1. It doesn't leave the app context
-    // 2. It returns immediately with credentials
-    // 3. No need to handle redirect URL parsing
     await auth.signInWithPopup(provider);
-    
-    // Success will be handled by onAuthStateChanged above
     showToast('Welcome!', 'success');
     
   } catch (err) {
     console.error('Google Sign-In Error:', err);
     
-    // Restore button state
     const googleBtn = document.getElementById('googleSignInBtn');
     if (googleBtn) {
       googleBtn.disabled = false;
@@ -2613,34 +2823,15 @@ async function handleGoogleSignIn() {
       </svg><span class="!text-gray-700 font-semibold">Sign in with Google</span>`;
     }
     
-    // Handle specific errors gracefully
-    if (err.code === 'auth/popup-closed-by-user') {
-      return; // User cancelled, don't show error
-    }
+    if (err.code === 'auth/popup-closed-by-user') return;
+    if (err.code === 'auth/cancelled-popup-request') return;
     
-    if (err.code === 'auth/cancelled-popup-request') {
-      return; // Multiple popups blocked
-    }
-    
-    // If popup fails on certain environments (like some mobile browsers that block popups)
-    // Fall back to redirect method but ensure we handle the return properly
-    if (err.code === 'auth/operation-not-supported-in-this-environment' || 
-        err.code === 'auth/popup-blocked') {
-      
+    if (err.code === 'auth/operation-not-supported-in-this-environment' || err.code === 'auth/popup-blocked') {
       showToast('Popup blocked. Trying alternative sign-in...', 'info');
-      
       try {
         const fallbackProvider = new firebase.auth.GoogleAuthProvider();
-        fallbackProvider.setCustomParameters({
-          prompt: 'select_account'
-        });
-        
-        // For redirect, we need to ensure the auth state change handles navigation
+        fallbackProvider.setCustomParameters({ prompt: 'select_account' });
         await auth.signInWithRedirect(fallbackProvider);
-        
-        // Note: After redirect, onAuthStateChanged will fire
-        // The pendingAuthRedirect in sessionStorage will handle navigation
-        
       } catch (redirectErr) {
         console.error('Redirect auth also failed:', redirectErr);
         showToast('Google sign-in failed. Please try again or use email/password.', 'error');
@@ -2663,8 +2854,16 @@ async function handleRegister() {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div>';
   try {
-    await auth.createUserWithEmailAndPassword(email, password);
-    showToast('Account created! Welcome to LuvTools.', 'success');
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    
+    // UPDATE 1: Send verification email immediately after registration
+    try {
+      await cred.user.sendEmailVerification();
+      showToast('Account created! Verification email sent. Please check your inbox.', 'success');
+    } catch (e) {
+      console.error('Failed to send verification email:', e);
+      showToast('Account created! Welcome to LuvTools.', 'success');
+    }
   } catch (err) {
     const msgs = {
       'auth/email-already-in-use': 'This email is already registered',
@@ -2692,14 +2891,14 @@ function showRegister() { document.getElementById('loginForm').style.display = '
 function showLogin() { document.getElementById('loginForm').style.display = 'block'; document.getElementById('registerForm').style.display = 'none'; }
 
 /* ========================================
-   UI Setup - UPDATE 1: Pro User Handling
+   UI Setup - Email Verification Status
    ======================================== */
 function setupUI() {
   if (!userData) return;
   
   const isPro = userData.plan === 'pro';
+  const isEmailVerified = userData.emailVerified || currentUser?.emailVerified;
   
-  // Update badges
   ['planBadge', 'planBadgeApp'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -2713,77 +2912,81 @@ function setupUI() {
     }
   });
   
-  // Update pro banner and watermark
   const proBanner = document.getElementById('proBanner');
   const watermark = document.getElementById('qrWatermark');
   if (proBanner) proBanner.style.display = isPro ? 'none' : 'flex';
   if (watermark) watermark.style.display = isPro ? 'none' : 'block';
   
-  // UPDATE 1: Handle Upgrade/Downgrade buttons based on current plan
-  // Dashboard upgrade button
   const dashUpgradeBtn = document.getElementById('dashboardUpgradeBtn');
   const dashUpgradeText = document.getElementById('dashboardUpgradeText');
   if (dashUpgradeBtn && dashUpgradeText) {
     if (isPro) {
-      // User is Pro - Show Downgrade option instead of Upgrade
       dashUpgradeBtn.className = 'glass-btn !py-2 !px-3 md:!py-2.5 md:!px-4 !text-[10px] md:!text-xs !min-h-0 !rounded-xl btn-secondary';
       dashUpgradeText.textContent = 'Downgrade';
-      dashUpgradeBtn.onclick = openPlanModal; // Will show downgrade option in modal
+      dashUpgradeBtn.onclick = openPlanModal;
     } else {
-      // User is Free - Show Upgrade
       dashUpgradeBtn.className = 'glass-btn btn-secondary !py-2 !px-3 md:!py-2.5 md:!px-4 !text-[10px] md:!text-xs !min-h-0 !rounded-xl';
       dashUpgradeText.textContent = 'Upgrade';
       dashUpgradeBtn.onclick = openPlanModal;
     }
   }
   
-  // App header upgrade button
   const appUpgradeBtn = document.getElementById('appUpgradeBtn');
   const appUpgradeText = document.getElementById('appUpgradeText');
   if (appUpgradeBtn && appUpgradeText) {
     if (isPro) {
-      appUpgradeBtn.style.display = 'none'; // Hide upgrade button entirely for Pro users in app view
+      appUpgradeBtn.style.display = 'none';
     } else {
       appUpgradeBtn.style.display = 'inline-flex';
       appUpgradeText.textContent = 'Upgrade';
     }
   }
   
-  // Update user menu info
-  const initials = (userData.displayName || userData.email)[0].toUpperCase();
   ['userMenuBtn', 'userMenuBtnApp'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.textContent = initials;
+    if (el) el.textContent = (userData.displayName || userData.email)[0].toUpperCase();
   });
   ['userMenuEmail', 'userMenuEmailApp'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = userData.email;
   });
   
-  // Show admin button for superadmins
   ['adminMenuBtn', 'adminMenuBtnApp'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = userData.role === 'superadmin' ? 'flex' : 'none';
   });
   
-  // Update dashboard elements
-  updateDashboardUI();
+  // UPDATE 1: Update email verification status display
+  const emailStatusBadge = document.getElementById('dashEmailStatus');
+  const emailVerificationActions = document.getElementById('emailVerificationActions');
   
+  if (emailStatusBadge) {
+    if (isEmailVerified) {
+      emailStatusBadge.className = 'badge email-verified';
+      emailStatusBadge.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i>Verified';
+    } else {
+      emailStatusBadge.className = 'badge email-unverified';
+      emailStatusBadge.innerHTML = '<i class="fa-regular fa-envelope mr-1"></i>Not Verified';
+    }
+  }
+  
+  if (emailVerificationActions) {
+    emailVerificationActions.style.display = isEmailVerified ? 'none' : 'block';
+  }
+  
+  updateDashboardUI();
   updateActionButton();
   
-  // Update pricing page if visible
   if (document.getElementById('pricingView').classList.contains('active')) {
     updatePricingPage();
   }
 }
 
-// UPDATE 1: Function to update Pricing Page based on current plan
 function updatePricingPage() {
   if (!userData) return;
   
   const isPro = userData.plan === 'pro';
   
-  // Update Free Plan Card
   const freeBadge = document.getElementById('pricingFreeBadge');
   const freeBtn = document.getElementById('pricingFreeBtn');
   if (freeBadge) {
@@ -2804,7 +3007,6 @@ function updatePricingPage() {
     }
   }
   
-  // Update Pro Plan Card
   const proLabel = document.getElementById('pricingProLabel');
   const proCard = document.getElementById('pricingProCard');
   const upgradeBtn = document.getElementById('pricingUpgradeBtn');
@@ -2821,7 +3023,6 @@ function updatePricingPage() {
   
   if (upgradeBtn) {
     if (isPro) {
-      // UPDATE 1: Show Downgrade button for Pro users
       upgradeBtn.className = 'glass-btn btn-secondary w-full !py-3 md:!py-4 !text-xs md:!text-sm border-orange-300 text-orange-700 hover:bg-orange-50';
       upgradeBtn.innerHTML = '<i class="fa-solid fa-arrow-down mr-2"></i>Downgrade to Free';
       upgradeBtn.onclick = () => {
@@ -2830,7 +3031,6 @@ function updatePricingPage() {
         }
       };
     } else {
-      // UPDATE 3: Disable payment or allow based on PAYMENT_DISABLED flag
       if (PAYMENT_DISABLED) {
         upgradeBtn.className = 'glass-btn w-full !py-3 md:!py-4 !text-xs md:!text-sm opacity-60 cursor-not-allowed relative overflow-hidden payment-disabled';
         upgradeBtn.innerHTML = '<span>Upgrade to Pro (Coming Soon)</span>';
@@ -2846,7 +3046,6 @@ function updatePricingPage() {
     }
   }
   
-  // Highlight current plan card
   if (proCard) {
     if (isPro) {
       proCard.className = 'glass-card p-6 md:p-9 relative overflow-visible border-2 border-green-500 bg-gradient-to-br from-green-50 to-white';
@@ -2856,7 +3055,6 @@ function updatePricingPage() {
   }
 }
 
-// UPDATE 1: Downgrade function
 async function downgradePlan() {
   if (!currentUser) return;
   
@@ -2875,7 +3073,6 @@ async function downgradePlan() {
 function updateDashboardUI() {
   if (!userData) return;
   
-  // Avatar - Use logo image if available, otherwise initial
   const avatarImg = document.getElementById('dashboardAvatar');
   const avatarText = document.getElementById('dashboardAvatarText');
   if (avatarImg && avatarText) {
@@ -2890,21 +3087,17 @@ function updateDashboardUI() {
     }
   }
   
-  // Greeting
   const greeting = document.getElementById('dashboardGreeting');
   if (greeting) greeting.textContent = `Welcome back, ${userData.displayName || 'User'}!`;
   
-  // Email displays
   ['dashboardEmail', 'dashEmail', 'userMenuEmail', 'userMenuEmailApp'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = userData.email;
   });
   
-  // Display name
   const displayName = document.getElementById('dashDisplayName');
   if (displayName) displayName.textContent = userData.displayName || '—';
   
-  // Plan badge on dashboard - UPDATE 1: Show exact current plan
   const dashPlan = document.getElementById('dashPlanBadge');
   if (dashPlan) {
     if (userData.plan === 'pro') {
@@ -2916,11 +3109,9 @@ function updateDashboardUI() {
     }
   }
   
-  // Joined date
   const joined = document.getElementById('dashJoined');
   if (joined) joined.textContent = formatDate(userData.createdAt);
   
-  // Stats
   document.getElementById('statQrCount').textContent = userData.qrCount || 0;
   document.getElementById('statWaCount').textContent = userData.waCount || 0;
   document.getElementById('statPdfCount').textContent = userData.pdfCount || 0;
@@ -3036,7 +3227,6 @@ function updateActionButton() {
    FREE TOOLS PAGE FUNCTIONS
    ======================================== */
 function initFreeTools(path) {
-  // Set default tab based on URL
   const tabMap = { '/free/qr': 'qr', '/free/wa-link': 'whatsapp', '/free/pdf': 'pdf' };
   const defaultTab = tabMap[path] || 'qr';
   switchFreeTab(defaultTab);
@@ -3047,12 +3237,10 @@ function initFreeTools(path) {
 function switchFreeTab(tab) {
   freeCurrentTab = tab;
   
-  // Update tabs
   document.querySelectorAll('[id^="freeTab"]').forEach(b => b.classList.remove('active'));
   const tabIdMap = { qr: 'freeTabQr', whatsapp: 'freeTabWhatsapp', pdf: 'freeTabPdf' };
   document.getElementById(tabIdMap[tab])?.classList.add('active');
   
-  // Update panels
   ['freeQrPanel', 'freeWaPanel', 'freePdfPanel'].forEach(p => {
     const el = document.getElementById(p);
     if (el) el.style.display = 'none';
@@ -3060,7 +3248,6 @@ function switchFreeTab(tab) {
   const panelMap = { qr: 'freeQrPanel', whatsapp: 'freeWaPanel', pdf: 'freePdfPanel' };
   document.getElementById(panelMap[tab]).style.display = 'block';
   
-  // Update URL hash or path
   const urlMap = { qr: '/free/qr', whatsapp: '/free/wa-link', pdf: '/free/pdf' };
   if (window.location.protocol === 'file:') {
     window.location.hash = urlMap[tab];
@@ -3153,7 +3340,6 @@ function checkFreeLimits() {
   updateFreeUsageIndicators();
 }
 
-// ===== FREE QR GENERATOR =====
 function generateFreeQR() {
   const tool = 'qr';
   
@@ -3203,14 +3389,13 @@ function downloadFreeQR() {
   const canvas = document.createElement('canvas');
   const padding = 40;
   canvas.width = img.naturalWidth + padding * 2;
-  canvas.height = img.naturalHeight + padding * 2 + 24; // space for watermark
+  canvas.height = img.naturalHeight + padding * 2 + 24;
   const ctx = canvas.getContext('2d');
   
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(img, padding, padding);
   
-  // Watermark for free users
   ctx.fillStyle = 'rgba(0,0,0,0.08)';
   ctx.font = '11px sans-serif';
   ctx.textAlign = 'right';
@@ -3223,7 +3408,6 @@ function downloadFreeQR() {
   showToast('Downloaded!', 'success');
 }
 
-// ===== FREE WHATSAPP LINK =====
 function generateFreeWA() {
   const tool = 'wa';
   
@@ -3266,7 +3450,6 @@ function openFreeWaLink() {
   if (url) window.open(url, '_blank');
 }
 
-// ===== FREE PDF CONVERTER =====
 function generateFreePDF() {
   const tool = 'pdf';
   
@@ -3293,7 +3476,6 @@ function generateFreePDF() {
         y += 6;
       });
       
-      // Watermark
       pdf.setFontSize(8);
       pdf.setTextColor(200, 200, 200);
       pdf.text('luviio.com', 175, 290);
@@ -3306,7 +3488,7 @@ function generateFreePDF() {
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          pdf.addImage(img, 'JPEG', 10, 10, 190, 0); // auto height
+          pdf.addImage(img, 'JPEG', 10, 10, 190, 0);
           pdf.setTextColor(200, 200, 200);
           pdf.setFontSize(8);
           pdf.text('luviio.com', 180, 290);
@@ -3329,17 +3511,16 @@ function generateFreePDF() {
 }
 
 /* ========================================
-   HISTORY SYSTEM - ENHANCED WITH CLICK PREVIEW
+   HISTORY SYSTEM - UPDATE 3: Simplified without categories
    ======================================== */
 
-// Save generation to history
 async function saveToHistory(type, data) {
   if (!currentUser) return;
   
   try {
     const historyRef = db.collection('users').doc(currentUser.uid).collection('history');
     const item = {
-      type: type, // 'qr', 'wa', 'pdf'
+      type: type,
       data: data,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       userId: currentUser.uid
@@ -3347,7 +3528,6 @@ async function saveToHistory(type, data) {
     
     await historyRef.add(item);
     
-    // Refresh dashboard history if visible
     if (document.getElementById('dashboardView').classList.contains('active')) {
       loadDashboardHistory();
     }
@@ -3356,17 +3536,12 @@ async function saveToHistory(type, data) {
   }
 }
 
-// Load dashboard recent activity
 async function loadDashboardHistory() {
-  if (!currentUser || !userData) {
-    console.log('Dashboard history skipped: No user');
-    return;
-  }
+  if (!currentUser || !userData) return;
   
   const container = document.getElementById('dashboardHistoryList');
   if (!container) return;
   
-  // Show loading state
   container.innerHTML = `
     <div class="empty-state py-6">
       <div class="spinner mx-auto mb-3" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;width:20px;height:20px;"></div>
@@ -3395,18 +3570,15 @@ async function loadDashboardHistory() {
     container.innerHTML = items.map(item => renderHistoryItem(item)).join('');
     
   } catch (err) {
-    console.error('Dashboard History Error:', err.code, err.message);
-    
+    console.error('Dashboard History Error:', err);
     container.innerHTML = `
       <div class="empty-state py-6">
         <i class="fa-solid fa-triangle-exclamation text-2xl text-yellow-500"></i>
         <p class="text-xs font-medium mt-2">Failed to load activity</p>
-        <p class="text-[10px] mt-1 text-gray-400">${err.message || 'Unknown error'}</p>
       </div>`;
   }
 }
 
-// Render single history item with click handler
 function renderHistoryItem(item) {
   const icons = {
     qr: { bg: 'from-primary-500 to-primary-700', icon: 'fa-qrcode', label: 'QR Code' },
@@ -3426,6 +3598,7 @@ function renderHistoryItem(item) {
     preview = `<div class="text-[10px] text-gray-500">${item.data?.title || 'Document'}</div>`;
   }
   
+  // UPDATE 3: Removed Download button from recent activity list
   return `
     <div class="history-item" onclick="openHistoryDetail('${item.id}', '${item.type}')" title="Click to view details">
       <div class="history-icon bg-gradient-to-br ${config.bg}">
@@ -3459,9 +3632,8 @@ function getTimeAgo(date) {
   return `${days}d ago`;
 }
 
-// Open full history modal
 function openHistoryModal() {
-  loadFullHistory();
+  loadFullHistory(); // UPDATE 3: No filter parameter, loads all
   document.getElementById('historyModal').classList.add('open');
 }
 
@@ -3469,8 +3641,8 @@ function closeHistoryModal() {
   document.getElementById('historyModal').classList.remove('open');
 }
 
-// Load full history with filtering - FIXED BUTTON HANDLING
-async function loadFullHistory(filter = 'all') {
+// UPDATE 3: Load full history without category filtering
+async function loadFullHistory() {
   const container = document.getElementById('historyListContainer');
   if (!container) return;
   
@@ -3490,22 +3662,19 @@ async function loadFullHistory(filter = 'all') {
     </div>`;
   
   try {
-    let query = db.collection('users')
+    // UPDATE 3: Fetch all items without type filter
+    const snapshot = await db.collection('users')
       .doc(currentUser.uid)
       .collection('history')
-      .orderBy('createdAt', 'desc');
-    
-    if (filter !== 'all') {
-      query = query.where('type', '==', filter);
-    }
-    
-    const snapshot = await query.limit(50).get();
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
     
     if (snapshot.empty) {
       container.innerHTML = `
         <div class="empty-state py-8">
           <i class="fa-regular fa-folder-open text-3xl"></i>
-          <p class="text-xs font-medium mt-2">No ${filter !== 'all' ? filter.toUpperCase() : ''} items found</p>
+          <p class="text-xs font-medium mt-2">No activity found</p>
           <p class="text-[10px] mt-1">Start generating to build your history</p>
         </div>`;
       return;
@@ -3516,28 +3685,15 @@ async function loadFullHistory(filter = 'all') {
     
   } catch (err) {
     console.error('Full History Load Error:', err);
-    
     container.innerHTML = `
       <div class="empty-state py-8">
         <i class="fa-solid fa-triangle-exclamation text-3xl text-red-400"></i>
-        <p class="text-xs font-bold mt-2">${err.message || 'Failed to load history'}</p>
-        <button onclick="loadFullHistory('${filter}')" class="mt-3 glass-btn btn-secondary !py-1.5 !px-4 !text-[10px]">Retry</button>
+        <p class="text-xs font-bold mt-2">Error Loading</p>
+        <button onclick="loadFullHistory()" class="mt-3 glass-btn btn-secondary !py-1.5 !px-4 !text-[10px]">Retry</button>
       </div>`;
   }
 }
 
-// Filter history - FIXED to properly update active states
-function filterHistory(btn, filter) {
-  currentHistoryFilter = filter;
-  
-  // Update button active states in both containers (dashboard and modal)
-  document.querySelectorAll('[data-hfilter]').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  
-  loadFullHistory(filter);
-}
-
-// Delete history item (for logged-in users)
 async function deleteHistoryItem(itemId) {
   if (!confirm('Delete this item from your history?')) return;
   
@@ -3551,7 +3707,6 @@ async function deleteHistoryItem(itemId) {
     if (itemDoc.exists) {
       const itemData = itemDoc.data();
       
-      // Move to recently_deleted collection (for SuperAdmin recovery)
       await db.collection('recently_deleted').add({
         ...itemData,
         originalUserId: currentUser.uid,
@@ -3560,11 +3715,10 @@ async function deleteHistoryItem(itemId) {
         deletedBy: 'user'
       });
       
-      // Delete from user's history
       await itemDoc.ref.delete();
       
       showToast('Item deleted', 'success');
-      loadFullHistory(currentHistoryFilter);
+      loadFullHistory();
       loadDashboardHistory();
     }
   } catch (err) {
@@ -3573,7 +3727,6 @@ async function deleteHistoryItem(itemId) {
   }
 }
 
-// Cleanup old history for free users (auto-delete after 7 days)
 async function cleanupOldHistory(userId) {
   try {
     const cutoffDate = new Date();
@@ -3600,7 +3753,6 @@ async function cleanupOldHistory(userId) {
         batch.delete(doc.ref);
       });
       await batch.commit();
-      console.log(`Cleaned up ${oldItems.size} old history items for user ${userId}`);
     }
   } catch (err) {
     console.error('Cleanup error:', err);
@@ -3608,10 +3760,9 @@ async function cleanupOldHistory(userId) {
 }
 
 /* ========================================
-   HISTORY DETAIL MODAL - VIEW/REGENERATE ITEMS
+   HISTORY DETAIL MODAL - UPDATE 3: Removed Download button
    ======================================== */
 
-// Open history detail modal to view/download specific item
 async function openHistoryDetail(itemId, type) {
   if (!currentUser) {
     showToast('Please sign in to view details', 'info');
@@ -3622,7 +3773,6 @@ async function openHistoryDetail(itemId, type) {
   const content = document.getElementById('historyDetailContent');
   const title = document.getElementById('historyDetailTitle');
   
-  // Show loading
   content.innerHTML = `
     <div class="text-center py-8">
       <div class="spinner mx-auto mb-3" style="border-color:rgba(150,145,170,0.3);border-top-color:#6366f1;"></div>
@@ -3631,7 +3781,6 @@ async function openHistoryDetail(itemId, type) {
   modal.classList.add('open');
   
   try {
-    // Fetch the specific item
     const docRef = db.collection('users').doc(currentUser.uid).collection('history').doc(itemId);
     const docSnap = await docRef.get();
     
@@ -3640,7 +3789,6 @@ async function openHistoryDetail(itemId, type) {
         <div class="empty-state py-8">
           <i class="fa-solid fa-triangle-exclamation text-3xl text-red-400"></i>
           <p class="text-xs font-bold mt-2">Item Not Found</p>
-          <p class="text-[10px] mt-1 text-gray-400">This item may have been deleted</p>
         </div>`;
       return;
     }
@@ -3648,11 +3796,9 @@ async function openHistoryDetail(itemId, type) {
     const item = { id: docSnap.id, ...docSnap.data() };
     currentViewingHistoryItem = item;
     
-    // Update title based on type
     const titles = { qr: 'QR Code Details', wa: 'WhatsApp Link Details', pdf: 'PDF Document Details' };
     title.innerHTML = `<i class="fa-solid ${item.type === 'qr' ? 'fa-qrcode' : (item.type === 'wa' ? 'fa-brands fa-whatsapp' : 'fa-file-pdf')} text-primary-500"></i> ${titles[item.type] || 'Item Details'}`;
     
-    // Render content based on type
     if (item.type === 'qr') {
       renderQRDetail(content, item);
     } else if (item.type === 'wa') {
@@ -3669,7 +3815,6 @@ async function openHistoryDetail(itemId, type) {
       <div class="empty-state py-8">
         <i class="fa-solid fa-triangle-exclamation text-3xl text-red-400"></i>
         <p class="text-xs font-bold mt-2">Error Loading</p>
-        <p class="text-[10px] mt-1 text-gray-400">${err.message}</p>
       </div>`;
   }
 }
@@ -3679,7 +3824,6 @@ function closeHistoryDetailModal() {
   currentViewingHistoryItem = null;
 }
 
-// Render QR Code Detail View
 function renderQRDetail(container, item) {
   const data = item.data || {};
   const text = data.text || 'No content';
@@ -3706,11 +3850,11 @@ function renderQRDetail(container, item) {
     </div>
     
     <div class="history-detail-actions">
-      <button onclick="regenerateAndDownloadQR('${escapeHtml(text)}', ${size})" class="history-detail-action-btn">
-        <i class="fa-solid fa-download"></i> Download PNG
-      </button>
       <button onclick="copyQRContent('${escapeHtml(text)}')" class="history-detail-action-btn">
         <i class="fa-regular fa-copy"></i> Copy Text
+      </button>
+      <button onclick="regenerateAndDownloadQR('${escapeHtml(text)}', ${size})" class="history-detail-action-btn">
+        <i class="fa-solid fa-download"></i> Regenerate & Download
       </button>
       ${userData?.role === 'superadmin' ? `
         <button onclick="deleteHistoryItem('${item.id}'); closeHistoryDetailModal();" class="history-detail-action-btn" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;">
@@ -3720,7 +3864,6 @@ function renderQRDetail(container, item) {
     </div>
   `;
   
-  // Generate QR preview
   setTimeout(() => {
     const previewContainer = document.getElementById('detailQRPreview');
     if (previewContainer && typeof QRCode !== 'undefined') {
@@ -3736,7 +3879,6 @@ function renderQRDetail(container, item) {
   }, 100);
 }
 
-// Render WhatsApp Link Detail View
 function renderWADetail(container, item) {
   const data = item.data || {};
   const phone = data.phone || '';
@@ -3783,7 +3925,6 @@ function renderWADetail(container, item) {
   `;
 }
 
-// Render PDF Detail View
 function renderPDFDetail(container, item) {
   const data = item.data || {};
   const title = data.title || 'Document';
@@ -3819,7 +3960,6 @@ function renderPDFDetail(container, item) {
   `;
 }
 
-// Action functions for detail modal
 function regenerateAndDownloadQR(text, size) {
   if (!text) { showToast('No content to generate', 'error'); return; }
   
@@ -3878,7 +4018,6 @@ function copyQRContent(text) {
 
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!', 'success')).catch(() => {
-    // Fallback
     const textarea = document.createElement('textarea');
     textarea.value = text;
     document.body.appendChild(textarea);
@@ -3924,11 +4063,10 @@ async function regeneratePDFFromHistory(data) {
 }
 
 /* ========================================
-   DELETED ITEMS (SuperAdmin Only) - FIXED LOADING
+   DELETED ITEMS (SuperAdmin Only)
    ======================================== */
 
 function openDeletedHistoryModal() {
-  // Double-check auth state before opening
   if (!currentUser || !userData || userData.role !== 'superadmin') {
     showToast('Only SuperAdmins can access Deleted Items', 'error');
     return;
@@ -3945,13 +4083,11 @@ async function loadDeletedHistory() {
   const container = document.getElementById('deletedHistoryListContainer');
   if (!container) return;
   
-  // Verify user is superadmin before attempting
   if (!currentUser || !userData || userData.role !== 'superadmin') {
     container.innerHTML = `
       <div class="empty-state py-8">
         <i class="fa-solid fa-shield-halved text-3xl text-red-300"></i>
         <p class="text-xs font-medium mt-2">Access Denied</p>
-        <p class="text-[10px] mt-1 text-gray-400">Only SuperAdmins can view deleted items</p>
       </div>`;
     return;
   }
@@ -3973,7 +4109,6 @@ async function loadDeletedHistory() {
         <div class="empty-state py-8">
           <i class="fa-regular fa-circle-check text-3xl text-green-400"></i>
           <p class="text-xs font-medium mt-2">No deleted items</p>
-          <p class="text-[10px] mt-1">Deleted items will appear here</p>
         </div>`;
       return;
     }
@@ -3982,16 +4117,12 @@ async function loadDeletedHistory() {
     container.innerHTML = items.map(item => renderDeletedItem(item)).join('');
     
   } catch (err) {
-    console.error('Deleted History Error:', err.code, err.message);
-    
+    console.error('Deleted History Error:', err);
     container.innerHTML = `
       <div class="empty-state py-8">
         <i class="fa-solid fa-triangle-exclamation text-3xl text-red-400"></i>
-        <p class="text-xs font-bold mt-2" style="color:${err.code === 'permission-denied' ? '#dc2626' : '#f59e0b'}">${err.code === 'permission-denied' ? 'Permission Denied' : 'Load Failed'}</p>
-        <p class="text-[10px] mt-1 text-gray-500 leading-relaxed">${err.message || 'Unknown error'}</p>
-        <button onclick="loadDeletedHistory()" class="mt-4 glass-btn btn-secondary !py-1.5 !px-4 !text-[10px]">
-          <i class="fa-solid fa-rotate-right mr-1"></i> Retry
-        </button>
+        <p class="text-xs font-bold mt-2">Load Failed</p>
+        <button onclick="loadDeletedHistory()" class="mt-3 glass-btn btn-secondary !py-1.5 !px-4 !text-[10px]">Retry</button>
       </div>`;
   }
 }
@@ -4030,7 +4161,6 @@ function renderDeletedItem(item) {
     </div>`;
 }
 
-// Restore deleted item back to user's history
 async function restoreDeletedItem(deletedItemId) {
   if (!confirm('Restore this item to the users history?')) return;
   
@@ -4041,7 +4171,6 @@ async function restoreDeletedItem(deletedItemId) {
       const data = deletedDoc.data();
       const userId = data.originalUserId;
       
-      // Add back to user's history with restored timestamp
       await db.collection('users').doc(userId).collection('history').add({
         type: data.type,
         data: data.data,
@@ -4051,7 +4180,6 @@ async function restoreDeletedItem(deletedItemId) {
         userId: userId
       });
       
-      // Remove from deleted collection
       await deletedDoc.ref.delete();
       
       showToast('Item restored successfully!', 'success');
@@ -4063,7 +4191,6 @@ async function restoreDeletedItem(deletedItemId) {
   }
 }
 
-// Permanently delete item (SuperAdmin only)
 async function permanentlyDeleteItem(deletedItemId) {
   if (!confirm('PERMANENTLY delete this item? This cannot be undone.')) return;
   
@@ -4121,9 +4248,7 @@ function generateQR() {
     correctLevel: QRCode.CorrectLevel.H
   });
 
-  // Save to history
   saveToHistory('qr', { text: input, size: selectedQrSize });
-  
   incrementAndRecordUsage(tool);
   
   setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
@@ -4186,9 +4311,7 @@ function generateWaLink() {
   document.getElementById('waLink').value = link;
   document.getElementById('waResultSection').style.display = 'block';
   
-  // Save to history
   saveToHistory('wa', { phone: phone, message: message, link: link });
-  
   incrementAndRecordUsage(tool);
   
   setTimeout(() => document.getElementById('waResultSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
@@ -4318,7 +4441,6 @@ async function generatePDF() {
       generatedPdfBlob = pdf.output('blob');
       showPdfPreview();
       
-      // Save to history
       saveToHistory('pdf', { mode: 'image', fileCount: pdfFiles.length, title: pdfFiles[0]?.name || 'Image PDF' });
       
       incrementAndRecordUsage(tool);
@@ -4378,7 +4500,6 @@ async function generatePDF() {
       generatedPdfBlob = pdf.output('blob');
       showPdfPreview();
       
-      // Save to history
       saveToHistory('pdf', { mode: 'text', title: title || 'Untitled Document', contentLength: text.length });
       
       incrementAndRecordUsage(tool);
@@ -4466,7 +4587,7 @@ function handleMainAction() {
 }
 
 /* ========================================
-   Plan Modal - UPDATE 1: Dynamic Content Based on Plan
+   Plan Modal
    ======================================== */
 function openPlanModal() { 
   closeUserMenu(); 
@@ -4478,7 +4599,6 @@ function closePlanModal() {
   document.getElementById('planModal').classList.remove('open'); 
 }
 
-// UPDATE 1: Generate dynamic modal content based on current plan
 function updatePlanModalContent() {
   const container = document.getElementById('planModalContent');
   const title = document.getElementById('planModalTitle');
@@ -4495,7 +4615,6 @@ function updatePlanModalContent() {
   const isPro = userData.plan === 'pro';
   
   if (isPro) {
-    // UPDATE 1: Pro user sees downgrade option
     title.textContent = 'Manage Your Plan';
     container.innerHTML = `
       <div class="space-y-4 md:space-y-5">
@@ -4521,7 +4640,6 @@ function updatePlanModalContent() {
             <ul class="mt-2 space-y-1.5 text-xs text-gray-600">
               <li class="flex items-center gap-2"><i class="fa-solid fa-check text-green-500"></i> 5 generations per day</li>
               <li class="flex items-center gap-2"><i class="fa-solid fa-xmark text-gray-300"></i> Watermark on exports</li>
-              <li class="flex items-center gap-2"><i class="fa-solid fa-xmark text-gray-300"></i> Limited features</li>
             </ul>
           </div>
           
@@ -4534,11 +4652,9 @@ function updatePlanModalContent() {
       </div>
     `;
   } else {
-    // Free user sees upgrade option (or disabled notice)
     title.textContent = 'Choose Your Plan';
     
     if (PAYMENT_DISABLED) {
-      // UPDATE 3: Payment disabled - show coming soon
       container.innerHTML = `
         <div class="space-y-4 md:space-y-5">
           <div class="text-center p-4 md:p-6 bg-yellow-50 rounded-xl md:rounded-2xl border border-yellow-200 mb-4">
@@ -4554,7 +4670,6 @@ function updatePlanModalContent() {
               </div>
               <h4 class="font-bold text-gray-900 text-sm mb-1">Free</h4>
               <div class="text-xl md:text-2xl font-extrabold text-gray-900">RM 0<span class="text-xs font-normal text-gray-500">/mo</span></div>
-              <p class="text-[10px] text-gray-500 mt-2">Limited features</p>
             </div>
             
             <div class="p-4 md:p-5 rounded-xl border-2 border-primary-300 bg-gradient-to-br from-primary-50 to-purple-50 relative overflow-hidden opacity-60">
@@ -4563,19 +4678,15 @@ function updatePlanModalContent() {
               </div>
               <h4 class="font-bold text-gray-900 text-sm mb-1">Pro</h4>
               <div class="text-xl md:text-2xl font-extrabold text-primary-600">RM 9.90<span class="text-xs font-normal text-gray-500">/mo</span></div>
-              <p class="text-[10px] text-gray-500 mt-2">Unlimited everything</p>
             </div>
           </div>
           
           <button disabled class="glass-btn w-full !py-3 md:!py-4 !text-xs md:!text-sm opacity-50 cursor-not-allowed">
             <i class="fa-solid fa-lock mr-2"></i> Upgrade Unavailable
           </button>
-          
-          <p class="text-[10px] text-gray-400 text-center">We'll notify you when payments are re-enabled.</p>
         </div>
       `;
     } else {
-      // Normal upgrade flow (payment enabled)
       container.innerHTML = `
         <div class="space-y-3 md:space-y-4">
           <div class="p-5 md:p-6 rounded-xl md:rounded-2xl border border-gray-200/60 bg-white/50 backdrop-blur">
@@ -4615,10 +4726,9 @@ function updatePlanModalContent() {
 }
 
 /* ========================================
-   Payment Flow - UPDATE 3: Disabled by default
+   Payment Flow
    ======================================== */
 function startUpgradeFlow() {
-  // UPDATE 3: Check if payment is disabled
   if (PAYMENT_DISABLED) {
     showToast('Payment is currently disabled. Please check back later.', 'info');
     return;
@@ -4637,7 +4747,6 @@ function startUpgradeFlow() {
     emailInput.value = userData.email || '';
   }
   
-  // Show disabled notice if applicable
   const disabledNotice = document.getElementById('paymentDisabledNotice');
   if (disabledNotice) {
     disabledNotice.style.display = PAYMENT_DISABLED ? 'block' : 'none';
@@ -4648,7 +4757,6 @@ function startUpgradeFlow() {
   document.getElementById('paymentStep3').style.display = 'none';
   document.getElementById('paymentStep4').style.display = 'none';
   
-  // If payment disabled, show message instead of form
   if (PAYMENT_DISABLED) {
     document.getElementById('paymentTitle').textContent = 'Payment Unavailable';
     document.getElementById('paymentDisabledNotice').style.display = 'block';
@@ -4665,7 +4773,6 @@ function closePaymentModal() {
 }
 
 async function processPayment() {
-  // UPDATE 3: Prevent processing if disabled
   if (PAYMENT_DISABLED) {
     showToast('Payment processing is currently disabled.', 'error');
     return;
@@ -4722,7 +4829,7 @@ function retryPayment() {
 }
 
 /* ========================================
-   SuperAdmin Panel - FIXED LOADING
+   SuperAdmin Panel
    ======================================== */
 async function showAdminPanel() {
   closeUserMenu();
@@ -4739,7 +4846,6 @@ async function loadAdminUsers() {
   
   tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 md:py-12 text-gray-400"><div class="spinner mx-auto mb-3" style="border-color:rgba(150,145,170,0.3);border-top-color:#6b6580;"></div>Loading users...</td></tr>';
   
-  // Double-check permissions before attempting
   if (!currentUser || !userData || userData.role !== 'superadmin') {
     tbody.innerHTML = `<tr><td colspan="6" class="text-center py-10 md:py-12 text-red-400 font-medium text-xs md:text-sm">
       <i class="fa-solid fa-shield-halved text-lg md:text-xl mb-2 block"></i>
@@ -4853,6 +4959,11 @@ function renderAdminTable() {
     const roleIcon = u.role === 'superadmin' ? ' <i class="fa-solid fa-shield-halved text-purple-500 text-[10px] ml-1" title="SuperAdmin"></i>' : '';
     const roleBadge = u.role === 'superadmin' ? '<span class="badge badge-admin text-[9px]">SA</span>' : '<span class="badge badge-inactive text-[9px]">User</span>';
     
+    // UPDATE 1: Show email verification status in admin table
+    const emailVerifiedIcon = u.emailVerified ? 
+      '<i class="fa-solid fa-circle-check text-green-500 ml-1" title="Email Verified"></i>' : 
+      '<i class="fa-regular fa-envelope text-amber-500 ml-1" title="Email Not Verified"></i>';
+    
     return `
       <tr>
         <td>
@@ -4862,7 +4973,7 @@ function renderAdminTable() {
             </div>
             <div class="min-w-0">
               <p class="font-bold text-gray-800 text-xs md:text-sm truncate flex items-center gap-1">${u.displayName || '—'}${roleIcon}</p>
-              <p class="text-[10px] md:text-xs text-gray-400 truncate font-mono">${u.email || '—'}</p>
+              <p class="text-[10px] md:text-xs text-gray-400 truncate font-mono">${u.email || '—'}${emailVerifiedIcon}</p>
             </div>
           </div>
         </td>
@@ -4871,9 +4982,16 @@ function renderAdminTable() {
         <td>${roleBadge}</td>
         <td class="text-[10px] md:text-xs text-gray-500 whitespace-nowrap font-medium">${formatDate(u.createdAt)}</td>
         <td>
-          <button onclick="openUserManage('${u.id}')" class="glass-btn btn-secondary !min-h-0 !py-1.5 md:!py-2 !px-2.5 md:!px-3.5 !rounded-lg !text-[10px] md:!text-xs font-semibold">
-            <i class="fa-solid fa-pen-to-square mr-1"></i> Manage
-          </button>
+          <div class="flex flex-col gap-1">
+            <button onclick="openUserManage('${u.id}')" class="glass-btn btn-secondary !min-h-0 !py-1.5 md:!py-2 !px-2.5 md:!px-3.5 !rounded-lg !text-[10px] md:!text-xs font-semibold">
+              <i class="fa-solid fa-pen-to-square mr-1"></i> Manage
+            </button>
+            ${!u.emailVerified ? `
+              <button onclick="resendVerificationEmail('${u.id}')" class="glass-btn !min-h-0 !py-1.5 md:!py-2 !px-2.5 md:!px-3.5 !rounded-lg !text-[9px] md:!text-xs font-semibold !bg-amber-50 !text-amber-700 !border-amber-200 hover:!bg-amber-100">
+                <i class="fa-solid fa-paper-plane mr-1"></i> Verify Email
+              </button>
+            ` : ''}
+          </div>
         </td>
       </tr>
     `;
@@ -4940,6 +5058,10 @@ function openUserManage(userId) {
         <span class="${user.role === 'superadmin' ? 'badge badge-admin' : 'badge badge-inactive'}">${user.role === 'superadmin' ? 'SuperAdmin' : 'User'}</span>
       </div>
       <div class="bg-white/30 p-2.5 md:p-3 rounded-xl">
+        <p class="text-[9px] md:text-xs text-gray-400 font-bold uppercase tracking-wide mb-1">Email</p>
+        <span class="${user.emailVerified ? 'badge email-verified' : 'badge email-unverified'}">${user.emailVerified ? 'Verified' : 'Not Verified'}</span>
+      </div>
+      <div class="bg-white/30 p-2.5 md:p-3 rounded-xl col-span-2">
         <p class="text-[9px] md:text-xs text-gray-400 font-bold uppercase tracking-wide mb-1">Joined</p>
         <span class="text-gray-700 font-semibold text-xs">${formatDate(user.createdAt)}</span>
       </div>
@@ -4993,6 +5115,23 @@ function openUserManage(userId) {
         </button>
         <button onclick="adminSetRole('superadmin')" class="admin-mini-btn ${user.role === 'superadmin' ? '!bg-purple-100 !border-purple-300 !text-purple-700' : ''}">
           <i class="fa-solid fa-shield-halved mr-1"></i> Set as SA
+        </button>
+      </div>
+    </div>
+    
+    <div class="glass-divider"></div>
+    
+    <!-- UPDATE 1: Email Verification Actions for Admin -->
+    <div class="space-y-2 md:space-y-3 mb-4 md:mb-5">
+      <p class="text-[10px] md:text-xs font-black text-gray-500 uppercase tracking-wider flex items-center gap-2">
+        <i class="fa-solid fa-envelope text-blue-500"></i> Email Actions
+      </p>
+      <div class="grid grid-cols-2 gap-2 md:gap-3">
+        <button onclick="resendVerificationEmailForUser('${managingUserId}')" class="admin-mini-btn !border-blue-300 !text-blue-700 hover:!bg-blue-50">
+          <i class="fa-solid fa-paper-plane mr-1"></i> Resend Verify
+        </button>
+        <button onclick="manualVerifyEmail('${managingUserId}')" class="admin-mini-btn !border-green-300 !text-green-700 hover:!bg-green-50">
+          <i class="fa-solid fa-check-double mr-1"></i> Manual Verify
         </button>
       </div>
     </div>
@@ -5071,6 +5210,100 @@ async function adminSendResetEmail() {
   }
 }
 
+// UPDATE 1: Resend verification email for specific user (Admin function)
+async function resendVerificationEmailForUser(userId) {
+  if (!userId) return;
+  
+  try {
+    // Get the user's email from our data
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      showToast('User not found', 'error');
+      return;
+    }
+    
+    const userEmail = userDoc.data().email;
+    if (!userEmail) {
+      showToast('No email address found for this user', 'error');
+      return;
+    }
+    
+    // Note: Firebase Admin SDK would be needed to actually trigger verification email server-side
+    // For client-side, we can only notify or use cloud functions
+    // Here we'll simulate by updating a "verificationRequested" timestamp
+    
+    await db.collection('users').doc(userId).update({
+      verificationLastRequestedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    showToast(`Verification email request recorded for ${userEmail}. Note: Actual email sending requires Admin SDK or Cloud Functions.`, 'warning');
+    
+  } catch (err) {
+    console.error(err);
+    showToast('Failed to record verification request', 'error');
+  }
+}
+
+// UPDATE 1: Manually mark email as verified (Admin override)
+async function manualVerifyEmail(userId) {
+  if (!userId) return;
+  
+  if (!confirm('Manually mark this user\'s email as verified?')) return;
+  
+  try {
+    await db.collection('users').doc(userId).update({
+      emailVerified: true,
+      emailVerifiedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      emailVerifiedBy: 'admin_manual',
+      emailVerifiedById: currentUser?.uid || 'system'
+    });
+    
+    const user = allUsers.find(u => u.id === userId);
+    if (user) user.emailVerified = true;
+    
+    renderAdminTable();
+    openUserManage(userId);
+    showToast('Email manually marked as verified', 'success');
+    
+  } catch (err) {
+    console.error(err);
+    showToast('Failed to verify email', 'error');
+  }
+}
+
+// UPDATE 1: Resend verification email for current  user (from dashboard)
+async function sendVerificationEmail() {
+  if (!currentUser || !currentUser.email) {
+    showToast('No email address found', 'error');
+    return;
+  }
+  
+  try {
+    await currentUser.sendEmailVerification();
+    showToast('Verification email sent! Please check your inbox.', 'success');
+    
+    // Update UI to show email was sent
+    const actionsDiv = document.getElementById('emailVerificationActions');
+    if (actionsDiv) {
+      actionsDiv.innerHTML = `
+        <div class="p-3 rounded-xl bg-green-50 border border-green-200">
+          <p class="text-xs font-bold text-green-800 flex items-center gap-2 mb-1">
+            <i class="fa-solid fa-circle-check"></i> Email Sent!
+          </p>
+          <p class="text-[10px] text-green-600">Check your inbox and spam folder. Click the link in the email to verify.</p>
+          <button onclick="sendVerificationEmail()" class="mt-2 text-[10px] text-primary-600 underline font-semibold hover:text-primary-800">
+            Resend verification email
+          </button>
+        </div>
+      `;
+    }
+    
+  } catch (err) {
+    console.error('Failed to send verification:', err);
+    showToast('Failed to send verification email. Please try again later.', 'error');
+  }
+}
+
 async function adminDeleteUser() {
   if (!managingUserId) return;
   const btn = document.getElementById('adminDeleteBtn');
@@ -5079,7 +5312,7 @@ async function adminDeleteUser() {
     btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> Click again to confirm deletion';
     btn.className = btn.className.replace('btn-danger', '');
     btn.style.background = 'linear-gradient(135deg, #dc2626, #991b1b)';
-    btn.style.boxShadow = '0 4px 20px rgba(220,38,38,0.4)';
+    btn.style.boxShadow = '0 4px 20px rgba(220,38,68,0.4)';
     setTimeout(() => {
       if (btn && btn.dataset.confirm) {
         delete btn.dataset.confirm;
@@ -5128,28 +5361,18 @@ document.addEventListener('keydown', (e) => {
    ======================================== */
 document.getElementById('currentYearFooter').textContent = new Date().getFullYear();
 
-// Initialize router immediately
 handleRoute();
 
-// Load admin stats if on admin page initially
 if (getCurrentPath() === '/admin' || getCurrentPath() === '/admin/dashboard') {
-  // Will be loaded by handleRoute, but double-check after auth
   setTimeout(() => {
     if (userData?.role === 'superadmin') loadAdminUsers();
   }, 1000);
 }
 
-// Handle visibility change for mobile Google Auth fix
-// This ensures the app updates when returning from a background state (like Google Sign-In redirect)
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && authInitialized) {
-    // Re-check auth state when page becomes visible again
-    // This helps with mobile browsers that may suspend the page during OAuth flows
     const currentPath = getCurrentPath();
-    
-    // If we're stuck on login page but user is actually logged in now, redirect
     if ((currentPath === '/login' || currentPath === '/auth') && currentUser) {
-      // Check if there's a pending redirect from Google Auth
       const pendingRedirect = sessionStorage.getItem('pendingAuthRedirect');
       if (pendingRedirect) {
         sessionStorage.removeItem('pendingAuthRedirect');
@@ -5161,7 +5384,6 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-// Prevent zoom on double-tap for iOS (common issue with mobile web apps)
 let lastTouchEnd = 0;
 document.addEventListener('touchend', (e) => {
   const now = Date.now();
@@ -5171,23 +5393,10 @@ document.addEventListener('touchend', (e) => {
   lastTouchEnd = now;
 }, false);
 
-// Service Worker Registration for PWA-like behavior (optional enhancement)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    // Uncomment below to enable service worker for offline capability
-    /*
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('SW registered:', registration.scope);
-      })
-      .catch(error => {
-        console.log('SW registration failed:', error);
-      });
-    */
-  });
+  window.addEventListener('load', () => {});
 }
 
-// Console welcome message for developers
 console.log('%c🚀 LuvTools by luviio', 'font-size: 20px; font-weight: bold; color: #6366f1;');
 console.log('%cFree QR Generator • WhatsApp Links • PDF Tools', 'font-size: 12px; color: #9ca3af;');
 console.log('%c⚠️ Developer Mode Active', 'font-size: 10px; color: #f59e0b; font-style: italic;');
