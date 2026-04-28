@@ -159,21 +159,6 @@
       background: var(--accent-bg);
     }
 
-    .btn-premium {
-      background: linear-gradient(135deg, #af52de 0%, #bf5af2 100%);
-      color: white;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      border: none;
-      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      box-shadow: 0 4px 12px rgba(175,82,222,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
-    }
-
-    .btn-premium:hover {
-      transform: scale(1.02);
-      box-shadow: 0 6px 20px rgba(175,82,222,0.45), inset 0 1px 0 rgba(255,255,255,0.25);
-    }
-
     /* ===== INPUT FIELDS ===== */
     .input-field {
       background: white;
@@ -293,8 +278,6 @@
       text-align: left;
       transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       cursor: pointer;
-      position: relative;
-      overflow: hidden;
     }
 
     .download-option:hover {
@@ -307,30 +290,6 @@
       border-color: var(--accent);
       background: linear-gradient(135deg, rgba(0,113,227,0.04) 0%, rgba(0,113,227,0.02) 100%);
       box-shadow: 0 0 0 4px var(--accent-bg), var(--shadow-md);
-    }
-
-    .download-option.locked {
-      opacity: 0.75;
-    }
-
-    .download-option.locked::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(255,255,255,0.6);
-      backdrop-filter: blur(2px);
-    }
-
-    .lock-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 5;
-      background: rgba(255,255,255,0.7);
-      backdrop-filter: blur(4px);
-      border-radius: 20px;
     }
 
     /* ===== PROGRESS ===== */
@@ -451,7 +410,6 @@
     .badge-accent { background: var(--accent-bg); color: var(--accent); }
     .badge-warning { background: rgba(255,159,10,0.1); color: var(--warning); }
     .badge-neutral { background: rgba(142,142,147,0.1); color: var(--fg-tertiary); }
-    .badge-premium { background: rgba(175,82,222,0.1); color: #af52de; }
 
     /* ===== MODAL ===== */
     .modal-backdrop {
@@ -460,33 +418,7 @@
       -webkit-backdrop-filter: blur(8px);
     }
 
-    /* ===== PRICING TABLE ===== */
-    .pricing-card {
-      background: white;
-      border: 1.5px solid var(--border);
-      border-radius: 28px;
-      padding: 32px 24px;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .pricing-card.featured {
-      border-color: #af52de;
-      box-shadow: 0 0 0 4px rgba(175,82,222,0.1), var(--shadow-lg);
-      transform: scale(1.02);
-    }
-
-    .pricing-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-xl);
-    }
-
-    .pricing-card.featured:hover {
-      transform: scale(1.02) translateY(-4px);
-    }
-
-    /* ===== ADMIN DASHBOARD ===== */
+    /* ===== ADMIN TABLE ===== */
     .admin-table {
       width: 100%;
       border-collapse: separate;
@@ -497,22 +429,26 @@
       text-align: left;
       padding: 12px 16px;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--fg-tertiary);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-light);
     }
 
     .admin-table td {
       padding: 16px;
-      font-size: 14px;
       border-bottom: 1px solid var(--border-light);
+      font-size: 14px;
       vertical-align: middle;
     }
 
+    .admin-table tr:last-child td {
+      border-bottom: none;
+    }
+
     .admin-table tr:hover td {
-      background: var(--bg-subtle);
+      background: rgba(0,113,227,0.02);
     }
 
     /* ===== FOCUS STATES ===== */
@@ -539,14 +475,6 @@
 
     /* ===== UTILITY ===== */
     .text-balance { text-wrap: balance; }
-    
-    .myr-symbol {
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 0.9em;
-      vertical-align: super;
-      margin-right: 2px;
-    }
   </style>
 </head>
 <body>
@@ -572,17 +500,16 @@
         </button>
 
         <div id="user-menu" class="hidden items-center gap-4">
+          <button id="admin-btn" onclick="openAdminPanel()" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 text-purple-700 hover:bg-purple-100 transition-all text-xs font-semibold" title="Admin Dashboard">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Admin
+          </button>
+          
           <div class="text-right hidden sm:block">
             <p class="text-sm font-medium text-[var(--fg)]" id="user-email">user@email.com</p>
             <p class="text-xs font-medium text-[var(--success)]" id="usage-display">3/5 today</p>
           </div>
           
-          <!-- Admin Button -->
-          <button id="admin-btn" onclick="openAdminDashboard()" class="hidden btn-premium px-4 py-2 rounded-full text-sm flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Admin
-          </button>
-
           <button onclick="signOut()" class="w-10 h-10 rounded-full bg-[var(--bg-subtle)] hover:bg-[rgba(0,0,0,0.06)] flex items-center justify-center transition-all duration-200" title="Sign out" aria-label="Sign out">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </button>
@@ -621,9 +548,6 @@
         <span class="flex items-center gap-2">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           Instant
-        </span>
-        <span class="flex items-center gap-2">
-          <span class="myr-symbol">RM</span> Pricing
         </span>
       </div>
     </section>
@@ -715,13 +639,10 @@
 
         <!-- Download Options -->
         <div class="glass-elevated p-6 sm:p-8">
-          <div class="flex items-center justify-between mb-5">
-            <h3 class="font-semibold text-[var(--fg)] flex items-center gap-2 text-sm">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download Options
-            </h3>
-            <button onclick="openPricingModal()" class="text-xs text-[var(--accent)] hover:underline font-medium">View Pricing →</button>
-          </div>
+          <h3 class="font-semibold text-[var(--fg)] mb-5 flex items-center gap-2 text-sm">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </h3>
 
           <div class="grid sm:grid-cols-3 gap-4 mb-6">
             <button class="download-option selected" data-quality="preview" onclick="selectQuality('preview')">
@@ -729,48 +650,36 @@
                 <div class="w-10 h-10 rounded-2xl bg-[var(--accent-bg)] flex items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
                 </div>
-                <span class="badge badge-success">Free</span>
+                <span class="badge badge-accent">Free</span>
               </div>
               <h4 class="font-semibold text-[var(--fg)] text-sm mb-1">Preview</h4>
-              <p class="text-xs text-[var(--fg-tertiary)]">450px max • Included</p>
+              <p class="text-xs text-[var(--fg-tertiary)]">450px max</p>
             </button>
 
-            <button class="download-option" data-quality="hd" onclick="selectQuality('hd')" id="option-hd">
+            <button class="download-option" data-quality="hd" onclick="selectQuality('hd')">
               <div class="flex items-start justify-between mb-4">
                 <div class="w-10 h-10 rounded-2xl bg-purple-50 flex items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#af52de" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
                 </div>
-                <span class="badge badge-accent">RM 5</span>
+                <span class="badge badge-accent">Standard</span>
               </div>
-              <h4 class="font-semibold text-[var(--fg)] text-sm mb-1">HD Quality</h4>
-              <p class="text-xs text-[var(--fg-tertiary)]">900px max • High res</p>
-              <div class="lock-overlay hidden" id="lock-hd">
-                <div class="flex items-center gap-2 bg-white/90 px-4 py-2 rounded-full shadow-lg">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#af52de" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  <span class="text-xs font-semibold text-[#af52de]">Upgrade</span>
-                </div>
-              </div>
+              <h4 class="font-semibold text-[var(--fg)] text-sm mb-1">HD</h4>
+              <p class="text-xs text-[var(--fg-tertiary)]">900px max</p>
             </button>
 
-            <button class="download-option" data-quality="full" onclick="selectQuality('full')" id="option-full">
+            <button class="download-option" data-quality="full" onclick="selectQuality('full')">
               <div class="flex items-start justify-between mb-4">
                 <div class="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
                 </div>
-                <span class="badge badge-warning">RM 15</span>
+                <span class="badge badge-warning">Premium</span>
               </div>
               <h4 class="font-semibold text-[var(--fg)] text-sm mb-1">Full Resolution</h4>
-              <p class="text-xs text-[var(--fg-tertiary)]">Original size • Best quality</p>
-              <div class="lock-overlay hidden" id="lock-full">
-                <div class="flex items-center gap-2 bg-white/90 px-4 py-2 rounded-full shadow-lg">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  <span class="text-xs font-semibold text-[#ff9f0a]">Premium</span>
-                </div>
-              </div>
+              <p class="text-xs text-[var(--fg-tertiary)]">Original size</p>
             </button>
           </div>
 
-          <button id="download-btn" onclick="handleDownload()" class="btn-primary w-full py-4 rounded-2xl text-base font-medium flex items-center justify-center gap-3">
+          <button id="download-btn" onclick="downloadResult()" class="btn-primary w-full py-4 rounded-2xl text-base font-medium flex items-center justify-center gap-3">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Download PNG — <span id="download-size-label">Preview</span>
           </button>
@@ -793,13 +702,9 @@
           </div>
           <h3 class="text-headline text-2xl text-[var(--fg)] mb-3">Daily Limit Reached</h3>
           <p class="text-body text-[var(--fg-secondary)] mb-8 max-w-sm mx-auto" id="limit-message">You've used all your free processing credits for today.</p>
-          <div class="bg-[var(--bg-subtle)] rounded-2xl p-4 inline-block mb-8">
-            <p class="text-sm text-[var(--fg-tertiary)]">Come back tomorrow for more free downloads!</p>
-            <p class="text-xs text-[var(--fg-tertiary)] mt-1" id="reset-time">Resets at midnight</p>
-          </div>
           <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button onclick="openAuthModal()" class="btn-primary px-8 py-3.5 rounded-full">Sign In for 10 Downloads/Day</button>
-            <button onclick="openPricingModal()" class="btn-premium px-8 py-3.5 rounded-full">Unlock Unlimited</button>
+            <button onclick="openAuthModal()" class="btn-primary px-8 py-3.5 rounded-full">Sign In for More</button>
+            <button onclick="resetAll()" class="btn-secondary px-8 py-3.5 rounded-full">Come Back Tomorrow</button>
           </div>
         </div>
       </div>
@@ -855,7 +760,6 @@
           <h4 class="font-semibold text-[var(--fg)] mb-4 text-xs uppercase tracking-wider">Product</h4>
           <ul class="space-y-3">
             <li><a href="#" class="text-sm text-[var(--fg-tertiary)] hover:text-[var(--accent)] transition-colors">Background Remover</a></li>
-            <li><a href="#" onclick="openPricingModal()" class="text-sm text-[var(--fg-tertiary)] hover:text-[var(--accent)] transition-colors cursor-pointer">Pricing</a></li>
             <li><a href="#" class="text-sm text-[var(--fg-tertiary)] hover:text-[var(--accent)] transition-colors">API Access</a></li>
           </ul>
         </div>
@@ -877,7 +781,7 @@
 
       <div class="mt-12 pt-8 border-t border-[var(--border-light)] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--fg-tertiary)]">
         <span>2024 LuvImage by Luviio</span>
-        <span>All prices in Malaysian Ringgit (MYR)</span>
+        <span>Made with precision</span>
       </div>
     </div>
   </footer>
@@ -894,7 +798,7 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
         <h2 class="text-headline text-xl text-[var(--fg)] mb-1">Welcome Back</h2>
-        <p class="text-sm text-[var(--fg-tertiary)]">Sign in to unlock 10 daily credits & HD exports</p>
+        <p class="text-sm text-[var(--fg-tertiary)]">Sign in to unlock 10 daily credits</p>
       </div>
 
       <div class="flex rounded-2xl bg-[var(--bg-subtle)] p-1 mb-6">
@@ -929,185 +833,75 @@
     </div>
   </div>
 
-  <!-- Pricing Modal -->
-  <div id="pricing-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 modal-backdrop overflow-y-auto py-10">
-    <div class="glass-elevated p-8 md:p-10 w-full max-w-4xl relative shadow-2xl animate-scale-in my-auto">
-      <button onclick="closePricingModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-[var(--bg-subtle)] hover:bg-[rgba(0,0,0,0.06)] flex items-center justify-center transition-colors" aria-label="Close modal">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-
-      <div class="text-center mb-10">
-        <h2 class="text-headline text-2xl md:text-3xl text-[var(--fg)] mb-3">Choose Your Plan</h2>
-        <p class="text-[var(--fg-secondary)]">Unlock higher resolutions and unlimited exports</p>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-6 mb-8">
-        <!-- Free Plan -->
-        <div class="pricing-card">
-          <div class="mb-6">
-            <h3 class="font-bold text-lg text-[var(--fg)] mb-2">Free</h3>
-            <div class="flex items-baseline gap-1">
-              <span class="text-3xl font-bold text-[var(--fg)]">0</span>
-              <span class="text-lg text-[var(--fg-tertiary)]"><span class="myr-symbol">RM</span>/image</span>
-            </div>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm text-[var(--fg-secondary)]">
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              450px preview quality
-            </li>
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              3 exports/day (guest)
-            </li>
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              10 exports/day (signed in)
-            </li>
-            <li class="flex items-center gap-2 text-[var(--fg-tertiary)]">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              No watermark
-            </li>
-          </ul>
-          <button onclick="closePricingModal(); selectQuality('preview');" class="w-full btn-secondary py-3 rounded-xl font-medium">Current Plan</button>
-        </div>
-
-        <!-- HD Plan -->
-        <div class="pricing-card featured">
-          <div class="absolute top-0 right-0 bg-gradient-to-l from-purple-500 to-violet-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-2xl rounded-tr-2xl">POPULAR</div>
-          <div class="mb-6">
-            <h3 class="font-bold text-lg text-[var(--fg)] mb-2">HD Export</h3>
-            <div class="flex items-baseline gap-1">
-              <span class="text-3xl font-bold text-[#af52de]">5</span>
-              <span class="text-lg text-[var(--fg-tertiary)]"><span class="myr-symbol">RM</span>/image</span>
-            </div>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm text-[var(--fg-secondary)]">
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#af52de" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Up to 900px resolution
-            </li>
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#af52de" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              PNG format
-            </li>
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#af52de" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Commercial license
-            </li>
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#af52de" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Priority processing
-            </li>
-          </ul>
-          <button onclick="purchasePlan('hd')" class="w-full btn-premium py-3 rounded-xl font-medium">Get HD Access</button>
-        </div>
-
-        <!-- Full Res Plan -->
-        <div class="pricing-card">
-          <div class="mb-6">
-            <h3 class="font-bold text-lg text-[var(--fg)] mb-2">Full Resolution</h3>
-            <div class="flex items-baseline gap-1">
-              <span class="text-3xl font-bold text-[var(--warning)]">15</span>
-              <span class="text-lg text-[var(--fg-tertiary)]"><span class="myr-symbol">RM</span>/image</span>
-            </div>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm text-[var(--fg-secondary)]">
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Original resolution
-            </li>
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Print-ready quality
-            </li>
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Batch processing
-            </li>
-            <li class="flex items-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff9f0a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              API access included
-            </li>
-          </ul>
-          <button onclick="purchasePlan('full')" class="w-full btn-secondary py-3 rounded-xl font-medium border-[var(--warning)] text-[var(--warning)] hover:bg-amber-50">Get Full Access</button>
-        </div>
-      </div>
-
-      <p class="text-center text-xs text-[var(--fg-tertiary)]">All prices in Malaysian Ringgit (MYR). Secure payment processed locally.</p>
-    </div>
-  </div>
-
   <!-- Admin Dashboard Modal -->
-  <div id="admin-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 modal-backdrop overflow-hidden">
-    <div class="glass-elevated w-full max-w-6xl relative shadow-2xl animate-scale-in m-4 max-h-[90vh] overflow-hidden flex flex-col">
-      <div class="p-6 border-b border-[var(--border-light)] flex items-center justify-between shrink-0">
+  <div id="admin-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 modal-backdrop">
+    <div class="glass-elevated w-full max-w-4xl max-h-[90vh] overflow-hidden relative shadow-2xl animate-scale-in flex flex-col">
+      
+      <!-- Admin Header -->
+      <div class="p-6 border-b border-[var(--border-light)] flex items-center justify-between bg-gradient-to-r from-purple-50 to-indigo-50">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#af52de] to-[#bf5af2] flex items-center justify-center">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <div>
             <h2 class="text-headline text-lg text-[var(--fg)]">Admin Dashboard</h2>
-            <p class="text-xs text-[var(--fg-tertiary)]">Customer Management Panel</p>
+            <p class="text-xs text-[var(--fg-tertiary)]">Customer Management Portal</p>
           </div>
         </div>
-        <button onclick="closeAdminDashboard()" class="w-9 h-9 rounded-full bg-[var(--bg-subtle)] hover:bg-[rgba(0,0,0,0.06)] flex items-center justify-center transition-colors" aria-label="Close admin dashboard">
+        
+        <button onclick="closeAdminPanel()" class="w-9 h-9 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-colors shadow-sm" aria-label="Close admin panel">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
 
-      <div class="p-6 overflow-y-auto flex-1">
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div class="bg-blue-50 rounded-2xl p-4">
-            <p class="text-xs text-[var(--fg-tertiary)] font-semibold uppercase tracking-wide mb-1">Total Users</p>
-            <p class="text-2xl font-bold text-[var(--accent)]" id="admin-total-users">--</p>
-          </div>
-          <div class="bg-emerald-50 rounded-2xl p-4">
-            <p class="text-xs text-[var(--fg-tertiary)] font-semibold uppercase tracking-wide mb-1">Active Today</p>
-            <p class="text-2xl font-bold text-[var(--success)]" id="admin-active-today">--</p>
-          </div>
-          <div class="bg-purple-50 rounded-2xl p-4">
-            <p class="text-xs text-[var(--fg-tertiary)] font-semibold uppercase tracking-wide mb-1">Premium Users</p>
-            <p class="text-2xl font-bold text-[#af52de]" id="admin-premium-users">--</p>
-          </div>
-          <div class="bg-amber-50 rounded-2xl p-4">
-            <p class="text-xs text-[var(--fg-tertiary)] font-semibold uppercase tracking-wide mb-1">Revenue (MYR)</p>
-            <p class="text-2xl font-bold text-[var(--warning)]" id="admin-revenue">--</p>
+      <!-- Admin Stats -->
+      <div class="p-6 grid grid-cols-3 gap-4 border-b border-[var(--border-light)]">
+        <div class="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
+          <p class="text-[10px] text-[var(--fg-tertiary)] uppercase tracking-widest font-semibold mb-1">Total Users</p>
+          <p class="text-2xl font-bold text-[var(--fg)]" id="admin-total-users">0</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
+          <p class="text-[10px] text-[var(--fg-tertiary)] uppercase tracking-widest font-semibold mb-1">Active Today</p>
+          <p class="text-2xl font-bold text-[var(--success)]" id="admin-active-users">0</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-[var(--border-light)]">
+          <p class="text-[10px] text-[var(--fg-tertiary)] uppercase tracking-widest font-semibold mb-1">Premium Plans</p>
+          <p class="text-2xl font-bold text-[var(--accent)]" id="admin-premium-users">0</p>
+        </div>
+      </div>
+
+      <!-- Customer Table -->
+      <div class="flex-1 overflow-auto p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-[var(--fg)] text-sm">All Customers</h3>
+          <div class="relative">
+            <input type="text" id="admin-search" placeholder="Search customers..." onkeyup="filterCustomers()" class="input-field pl-9 pr-4 py-2 text-sm w-64">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-tertiary)]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </div>
         </div>
 
-        <!-- User Table -->
-        <div class="bg-white rounded-2xl border border-[var(--border)] overflow-hidden">
-          <div class="p-4 border-b border-[var(--border-light)] flex items-center justify-between">
-            <h3 class="font-semibold text-[var(--fg)] text-sm">Customer Directory</h3>
-            <div class="flex items-center gap-2">
-              <input type="text" id="admin-search" placeholder="Search users..." class="input-field px-3 py-2 text-sm w-48" oninput="filterUsers()">
-              <button onclick="refreshUserList()" class="btn-secondary px-3 py-2 rounded-xl text-sm flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                Refresh
-              </button>
-            </div>
-          </div>
-          
-          <div class="overflow-x-auto">
-            <table class="admin-table" id="admin-user-table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>Plan</th>
-                  <th>Status</th>
-                  <th>Last Active</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="admin-user-list">
-                <!-- Populated by JS -->
-              </tbody>
-            </table>
-          </div>
+        <div class="bg-white rounded-2xl border border-[var(--border-light)] overflow-hidden">
+          <table class="admin-table" id="customer-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customer-list">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
         </div>
+      </div>
+
+      <!-- Admin Footer -->
+      <div class="p-4 border-t border-[var(--border-light)] bg-[var(--bg-subtle)] flex items-center justify-between text-xs text-[var(--fg-tertiary)]">
+        <span>LuvImage Admin v1.0</span>
+        <span>Last synced: Just now</span>
       </div>
     </div>
   </div>
@@ -1118,8 +912,9 @@
     // =============================================
     const SUPABASE_URL = 'https://your-project.supabase.co';
     const SUPABASE_ANON_KEY = 'your-anon-key';
-    const REMOVE_BG_API_KEY = 'suoy5i4Ke7DLxP2XzsTNUQ2Q';
-    const ADMIN_EMAIL = 'people@luviio.com';
+    
+    // Updated API Endpoint - Using custom BG Removal API
+    const REMOVE_BG_API_URL = 'https://bg-remove-api-67r3.onrender.com/remove-bg';
 
     let supabase = null;
     try {
@@ -1128,12 +923,29 @@
       console.warn('Supabase not configured');
     }
 
-    const FREE_LIMIT = 3;       // Guest users
-    const USER_LIMIT = 10;      // Signed in users
-    const PRICING = {
-      preview: { price: 0, label: 'Preview', maxWidth: 450 },
-      hd: { price: 5, label: 'HD Quality', maxWidth: 900 },
-      full: { price: 15, label: 'Full Resolution', maxWidth: null }
+    // Updated Limits: Free users 3/day, Logged in users 10/day
+    const FREE_LIMIT = 3;
+    const USER_LIMIT = 10;
+
+    // Admin Email
+    const ADMIN_EMAIL = 'people@luviio.com';
+
+    // Mock Customer Data for Admin Dashboard
+    const MOCK_CUSTOMERS = [
+      { id: 1, name: 'John Smith', email: 'john@example.com', plan: 'Free', status: 'active', lastActive: '2 min ago' },
+      { id: 2, name: 'Sarah Johnson', email: 'sarah@example.com', plan: 'Pro', status: 'active', lastActive: '5 min ago' },
+      { id: 3, name: 'Mike Wilson', email: 'mike@example.com', plan: 'Enterprise', status: 'active', lastActive: '1 hour ago' },
+      { id: 4, name: 'Emily Davis', email: 'emily@example.com', plan: 'Free', status: 'inactive', lastActive: '2 days ago' },
+      { id: 5, name: 'Chris Brown', email: 'chris@example.com', plan: 'Pro', status: 'active', lastActive: '30 min ago' },
+      { id: 6, name: 'Lisa Anderson', email: 'lisa@example.com', plan: 'Free', status: 'active', lastActive: 'Just now' },
+      { id: 7, name: 'David Martinez', email: 'david@example.com', plan: 'Enterprise', status: 'active', lastActive: '3 hours ago' },
+      { id: 8, name: 'Jennifer Taylor', email: 'jennifer@example.com', plan: 'Pro', status: 'inactive', lastActive: '1 week ago' },
+    ];
+
+    const QUALITY_PRESETS = {
+      preview: { maxWidth: 450, label: 'Preview', sizeParam: 'preview' },
+      hd: { maxWidth: 900, label: 'HD', sizeParam: 'auto' },
+      full: { maxWidth: null, label: 'Full', sizeParam: 'auto' }
     };
 
     const state = {
@@ -1146,19 +958,8 @@
       user: null,
       isAdmin: false,
       usageCount: parseInt(localStorage.getItem('luvimage_usage') || '0'),
-      lastUsageDate: localStorage.getItem('luvimage_date') || '',
-      purchasedQualities: JSON.parse(localStorage.getItem('luvimage_purchases') || '{}'),
-      userList: []
+      lastUsageDate: localStorage.getItem('luvimage_date') || ''
     };
-
-    // Mock user data for admin demo
-    const MOCK_USERS = [
-      { id: '1', email: 'john@example.com', name: 'John Doe', plan: 'free', status: 'active', lastActive: '2 hours ago', verified: true },
-      { id: '2', email: 'sarah@company.com', name: 'Sarah Lim', plan: 'hd', status: 'active', lastActive: 'Just now', verified: true },
-      { id: '3', email: 'ahmad@mail.my', name: 'Ahmad Razak', plan: 'full', status: 'active', lastActive: '1 day ago', verified: true },
-      { id: '4', email: 'newuser@test.com', name: 'New User', plan: 'free', status: 'pending', lastActive: '3 days ago', verified: false },
-      { id: '5', email: 'design@studio.co', name: 'Studio Design', plan: 'hd', status: 'inactive', lastActive: '1 week ago', verified: true },
-    ];
 
     const $ = sel => document.querySelector(sel);
 
@@ -1191,7 +992,7 @@
 
       supabase.auth.onAuthStateChange((event, session) => {
         state.user = session?.user || null;
-        state.isAdmin = state.user?.email === ADMIN_EMAIL;
+        state.isAdmin = session?.user?.email === ADMIN_EMAIL || false;
         updateUIForUser();
       });
     }
@@ -1209,7 +1010,7 @@
         userMenu.classList.add('flex');
         userEmail.textContent = state.user.email || 'User';
         
-        // Show/hide admin button
+        // Show/hide admin button based on email
         if (state.isAdmin) {
           adminBtn.classList.remove('hidden');
           adminBtn.classList.add('flex');
@@ -1219,14 +1020,11 @@
         }
         
         updateUsageDisplay();
-        updateDownloadLocks();
       } else {
         loginBtn.classList.remove('hidden');
         userMenu.classList.add('hidden');
         userMenu.classList.remove('flex');
-        adminBtn.classList.add('hidden');
-        adminBtn.classList.remove('flex');
-        updateDownloadLocks();
+        state.isAdmin = false;
       }
     }
 
@@ -1236,33 +1034,7 @@
       const limit = state.user ? USER_LIMIT : FREE_LIMIT;
       const remaining = Math.max(0, limit - state.usageCount);
       display.textContent = `${remaining}/${limit} today`;
-      
-      if (remaining <= 2) {
-        display.className = 'text-xs font-medium text-[var(--warning)]';
-      } else if (remaining <= 0) {
-        display.className = 'text-xs font-medium text-[var(--error)]';
-      } else {
-        display.className = 'text-xs font-medium text-[var(--success)]';
-      }
-    }
-
-    function updateDownloadLocks() {
-      const lockHd = $('#lock-hd');
-      const lockFull = $('#lock-full');
-      const optionHd = $('#option-hd');
-      const optionFull = $('#option-full');
-      
-      const hasHd = state.purchasedQualities.hd || state.isAdmin;
-      const hasFull = state.purchasedQualities.full || state.isAdmin;
-
-      if (hasHd && lockHd) lockHd.classList.add('hidden');
-      if (hasFull && lockFull) lockFull.classList.add('hidden');
-      
-      if (!hasHd && optionHd) optionHd.classList.add('locked');
-      else if (optionHd) optionHd.classList.remove('locked');
-      
-      if (!hasFull && optionFull) optionFull.classList.add('locked');
-      else if (optionFull) optionFull.classList.remove('locked');
+      display.className = remaining <= 1 ? 'text-xs font-medium text-[var(--warning)]' : 'text-xs font-medium text-[var(--success)]';
     }
 
     function openAuthModal() {
@@ -1302,19 +1074,10 @@
     async function handleEmailLogin(e) {
       e.preventDefault();
       if (!supabase) return showAuthError('Authentication not configured.');
-      
-      const email = $('#auth-email').value;
-      const password = $('#auth-password').value;
-      
-      // Check if admin
-      if (email === ADMIN_EMAIL) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return showAuthError(error.message);
-        closeAuthModal();
-        return;
-      }
-
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: $('#auth-email').value,
+        password: $('#auth-password').value
+      });
       error ? showAuthError(error.message) : closeAuthModal();
     }
 
@@ -1351,6 +1114,97 @@
     }
 
     // =============================================
+    // ADMIN DASHBOARD
+    // =============================================
+
+    function openAdminPanel() {
+      if (!state.isAdmin) return;
+      
+      const modal = $('#admin-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+      
+      renderCustomerTable(MOCK_CUSTOMERS);
+      updateAdminStats();
+    }
+
+    function closeAdminPanel() {
+      const modal = $('#admin-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+
+    function renderCustomerTable(customers) {
+      const tbody = $('#customer-list');
+      tbody.innerHTML = customers.map(c => `
+        <tr data-email="${c.email.toLowerCase()}">
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                ${c.name.split(' ').map(n => n[0]).join('')}
+              </div>
+              <span class="font-medium text-[var(--fg)]">${c.name}</span>
+            </div>
+          </td>
+          <td class="text-[var(--fg-secondary)]">${c.email}</td>
+          <td>
+            <span class="badge ${c.plan === 'Enterprise' ? 'badge-warning' : c.plan === 'Pro' ? 'badge-accent' : 'badge-neutral'}">${c.plan}</span>
+          </td>
+          <td>
+            <span class="inline-flex items-center gap-1.5 text-xs ${c.status === 'active' ? 'text-[var(--success)]' : 'text-[var(--fg-tertiary)]'}">
+              <span class="w-1.5 h-1.5 rounded-full ${c.status === 'active' ? 'bg-[var(--success)]' : 'bg-gray-300'}"></span>
+              ${c.status === 'active' ? c.lastActive : 'Inactive'}
+            </span>
+          </td>
+          <td>
+            <div class="flex items-center gap-2">
+              <button onclick="sendResetPassword('${c.email}')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-subtle)] hover:bg-[rgba(0,0,0,0.06)] text-[var(--fg-secondary)] transition-colors flex items-center gap-1.5" title="Send Reset Password">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Reset
+              </button>
+              <button onclick="sendVerification('${c.email}')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--accent-bg)] hover:bg-[rgba(0,113,227,0.15)] text-[var(--accent)] transition-colors flex items-center gap-1.5" title="Send Verification Code">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                Verify
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterCustomers() {
+      const search = $('#admin-search').value.toLowerCase();
+      const filtered = MOCK_CUSTOMERS.filter(c => 
+        c.name.toLowerCase().includes(search) || 
+        c.email.toLowerCase().includes(search) ||
+        c.plan.toLowerCase().includes(search)
+      );
+      renderCustomerTable(filtered);
+    }
+
+    function updateAdminStats() {
+      $('#admin-total-users').textContent = MOCK_CUSTOMERS.length;
+      $('#admin-active-users').textContent = MOCK_CUSTOMERS.filter(c => c.status === 'active').length;
+      $('#admin-premium-users').textContent = MOCK_CUSTOMERS.filter(c => c.plan !== 'Free').length;
+    }
+
+    function sendResetPassword(email) {
+      alert(`Password reset link sent to:
+ ${email}
+
+(Note: In production, this would trigger Supabase auth.resetPasswordForEmail())`);
+    }
+
+    function sendVerification(email) {
+      alert(`Verification code sent to:
+ ${email}
+
+(Note: In production, this would send an email/SMS verification)`);
+    }
+
+    // =============================================
     // USAGE TRACKING
     // =============================================
 
@@ -1366,10 +1220,13 @@
 
     function canProcess() {
       checkAndResetDailyUsage();
+      // Admin has unlimited access
+      if (state.isAdmin) return true;
       return state.usageCount < (state.user ? USER_LIMIT : FREE_LIMIT);
     }
 
     function incrementUsage() {
+      if (state.isAdmin) return; // Admin doesn't consume credits
       state.usageCount++;
       localStorage.setItem('luvimage_usage', String(state.usageCount));
       localStorage.setItem('luvimage_date', new Date().toDateString());
@@ -1378,17 +1235,12 @@
 
     function showLimitWarning() {
       const limit = state.user ? USER_LIMIT : FREE_LIMIT;
-      $('#limit-message').textContent = `You've used all ${limit} ${state.user ? '' : 'free '}credits for today.`;
-      
-      // Calculate time until midnight
-      const now = new Date();
-      const midnight = new Date(now);
-      midnight.setHours(24, 0, 0, 0);
-      const diff = midnight - now;
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      $('#reset-time').textContent = `Resets in ${hours}h ${mins}m`;
-      
+      const isUser = !!state.user;
+      $('#limit-message').innerHTML = `
+        You've used all <strong>${limit}</strong> ${isUser ? '' : 'free '}credits for today.<br>
+        <span class="text-[var(--fg-tertiary)] text-sm mt-2 block">Come back tomorrow to continue processing images!</span>
+        ${!isUser ? '<br><span class="text-[var(--accent)] text-sm mt-2 block font-medium">Sign in to get 10 free credits per day!</span>' : ''}
+      `;
       [uploadSection, loadingSection, resultsSection].forEach(s => s?.classList.add('hidden'));
       limitWarning.classList.remove('hidden');
       limitWarning.classList.add('animate-scale-in');
@@ -1431,7 +1283,7 @@
     }
 
     // =============================================
-    // PROCESSING
+    // PROCESSING - UPDATED TO USE CUSTOM API
     // =============================================
 
     async function startProcessing() {
@@ -1456,6 +1308,7 @@
         progressText.textContent = 'Optimizing...';
         loadingTitle.textContent = 'Processing image';
         
+        // For preview quality, resize to save bandwidth/time
         const resizedFile = await resizeForAPI(state.file, 'preview');
         
         await simulateProgress(progressBar, 50, 400);
@@ -1463,16 +1316,18 @@
         loadingTitle.textContent = 'AI is working';
         loadingSubtitle.textContent = 'This usually takes 3-5 seconds';
 
-        const previewResult = await callRemoveBgAPI(resizedFile, 'preview');
+        // Call our custom API
+        const previewResult = await callRemoveBgAPI(resizedFile);
         state.resultBlobs.preview = previewResult;
 
         await simulateProgress(progressBar, 80, 300);
         progressText.textContent = 'Generating HD version...';
         
+        // Generate HD version using full file or larger resize
         const hdFile = await resizeForAPI(state.file, 'hd');
-        const hdResult = await callRemoveBgAPI(hdFile, 'auto');
+        const hdResult = await callRemoveBgAPI(hdFile);
         state.resultBlobs.hd = hdResult;
-        state.resultBlobs.full = hdResult;
+        state.resultBlobs.full = hdResult; // Full uses same as HD for now
 
         await simulateProgress(progressBar, 100, 200);
         progressText.textContent = 'Complete!';
@@ -1488,7 +1343,7 @@
 
     function resizeForAPI(file, quality) {
       return new Promise((resolve, reject) => {
-        const preset = PRICING[quality];
+        const preset = QUALITY_PRESETS[quality];
         if (!preset.maxWidth) { resolve(file); return; }
 
         const img = new Image();
@@ -1520,20 +1375,19 @@
       });
     }
 
-    async function callRemoveBgAPI(file, size) {
-      const fd = new FormData();
-      fd.append('image_file', file);
-      fd.append('size', size);
+    // Updated API call to use custom endpoint
+    async function callRemoveBgAPI(file) {
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+      const response = await fetch(REMOVE_BG_API_URL, {
         method: 'POST',
-        headers: { 'X-Api-Key': REMOVE_BG_API_KEY },
-        body: fd
+        body: formData
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.errors?.[0]?.title || `API Error (${response.status})`);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new Error(`API Error (${response.status}): ${errorText}`);
       }
 
       return response.blob();
@@ -1603,56 +1457,21 @@
     }
 
     // =============================================
-    // QUALITY SELECTION & DOWNLOAD WITH PRICING
+    // QUALITY SELECTION & DOWNLOAD
     // =============================================
 
     function selectQuality(quality) {
-      // Check if locked
-      const isLocked = !state.purchasedQualities[quality] && !state.isAdmin && quality !== 'preview';
-      
-      if (isLocked) {
-        openPricingModal();
-        return;
-      }
-      
       state.selectedQuality = quality;
       
       document.querySelectorAll('.download-option').forEach(opt => {
         opt.classList.toggle('selected', opt.dataset.quality === quality);
       });
 
-      $('#download-size-label').textContent = PRICING[quality].label;
+      $('#download-size-label').textContent = QUALITY_PRESETS[quality].label;
 
       const blob = state.resultBlobs[quality] || state.resultBlobs.preview;
       if (blob && resultsSection.classList.contains('hidden') === false) {
         resultImage.src = URL.createObjectURL(blob);
-      }
-    }
-
-    function handleDownload() {
-      const quality = state.selectedQuality;
-      const isLocked = !state.purchasedQualities[quality] && !state.isAdmin && quality !== 'preview';
-      
-      if (isLocked) {
-        openPricingModal();
-        return;
-      }
-      
-      downloadResult();
-    }
-
-    function purchasePlan(planType) {
-      // Simulate purchase flow
-      const price = PRICING[planType].price;
-      
-      if (confirm(`Purchase ${PRICING[planType].label} for RM${price}? (Demo mode)`)) {
-        state.purchasedQualities[planType] = true;
-        localStorage.setItem('luvimage_purchases', JSON.stringify(state.purchasedQualities));
-        
-        alert(`Success! You now have access to ${PRICING[planType].label} exports.`);
-        closePricingModal();
-        updateDownloadLocks();
-        selectQuality(planType);
       }
     }
 
@@ -1664,145 +1483,11 @@
       const a = document.createElement('a');
       a.href = url;
       const baseName = state.file.name.replace(/\.[^/.]+$/, '');
-      a.download = `${baseName}_nobg_${PRICING[state.selectedQuality].label.toLowerCase().replace(/\s+/g, '_')}.png`;
+      a.download = `${baseName}_nobg_${QUALITY_PRESETS[state.selectedQuality].label.toLowerCase()}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    }
-
-    // =============================================
-    // PRICING MODAL
-    // =============================================
-
-    function openPricingModal() {
-      const modal = $('#pricing-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closePricingModal() {
-      const modal = $('#pricing-modal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-      document.body.style.overflow = '';
-    }
-
-    // =============================================
-    // ADMIN DASHBOARD
-    // =============================================
-
-    function openAdminDashboard() {
-      if (!state.isAdmin) return;
-      
-      const modal = $('#admin-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      document.body.style.overflow = 'hidden';
-      
-      loadAdminData();
-    }
-
-    function closeAdminDashboard() {
-      const modal = $('#admin-modal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-      document.body.style.overflow = '';
-    }
-
-    function loadAdminData() {
-      // Load mock data
-      state.userList = [...MOCK_USERS];
-      
-      // Update stats
-      $('#admin-total-users').textContent = state.userList.length;
-      $('#admin-active-today').textContent = state.userList.filter(u => u.status === 'active').length;
-      $('#admin-premium-users').textContent = state.userList.filter(u => u.plan !== 'free').length;
-      $('#admin-revenue').textContent = state.userList.reduce((sum, u) => {
-        if (u.plan === 'hd') return sum + 5;
-        if (u.plan === 'full') return sum + 15;
-        return sum;
-      }, 0);
-      
-      renderUserTable(state.userList);
-    }
-
-    function renderUserTable(users) {
-      const tbody = $('#admin-user-list');
-      tbody.innerHTML = users.map(user => `
-        <tr>
-          <td>
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-sm font-semibold text-[var(--accent)]">
-                ${user.name.split(' ').map(n => n[0]).join('')}
-              </div>
-              <span class="font-medium text-[var(--fg)]">${user.name}</span>
-            </div>
-          </td>
-          <td class="text-[var(--fg-secondary)]">${user.email}</td>
-          <td>
-            <span class="badge ${user.plan === 'full' ? 'badge-warning' : user.plan === 'hd' ? 'badge-premium' : 'badge-neutral'}">
-              ${user.plan.toUpperCase()}
-            </span>
-          </td>
-          <td>
-            <span class="inline-flex items-center gap-1.5 text-xs font-medium ${user.status === 'active' ? 'text-[var(--success)]' : user.status === 'pending' ? 'text-[var(--warning)]' : 'text-[var(--fg-tertiary)]'}">
-              <span class="w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-[var(--success)]' : user.status === 'pending' ? 'bg-[var(--warning)]' : 'bg-[var(--fg-tertiary)]'}"></span>
-              ${user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-            </span>
-          </td>
-          <td class="text-[var(--fg-tertiary)]">${user.lastActive}</td>
-          <td>
-            <div class="flex items-center gap-2">
-              <button onclick="sendVerification('${user.email}')" class="p-2 rounded-lg hover:bg-blue-50 text-[var(--accent)] transition-colors" title="Send verification code" ${user.verified ? 'disabled style="opacity:0.3"' : ''}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-              </button>
-              <button onclick="resetPassword('${user.email}')" class="p-2 rounded-lg hover:bg-amber-50 text-[var(--warning)] transition-colors" title="Send reset password">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              </button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    function filterUsers() {
-      const search = $('#admin-search').value.toLowerCase();
-      const filtered = state.userList.filter(user => 
-        user.name.toLowerCase().includes(search) || 
-        user.email.toLowerCase().includes(search)
-      );
-      renderUserTable(filtered);
-    }
-
-    function refreshUserList() {
-      // Simulate refresh
-      loadAdminData();
-      alert('User list refreshed!');
-    }
-
-    async function sendVerification(email) {
-      if (!supabase) {
-        alert(`Verification email sent to ${email} (Demo)`);
-        return;
-      }
-      
-      // In real app: await supabase.auth.admin.sendVerificationEmail({ email })
-      alert(`Verification code sent to ${email}`);
-    }
-
-    async function resetPassword(email) {
-      if (!supabase) {
-        alert(`Password reset link sent to ${email} (Demo)`);
-        return;
-      }
-      
-      // In real app: await supabase.auth.admin.resetPasswordForEmail(email)
-      const confirmed = confirm(`Send password reset link to ${email}?`);
-      if (confirmed) {
-        alert(`Password reset link sent to ${email}`);
-      }
     }
 
     // =============================================
@@ -1855,20 +1540,22 @@
       initAuth();
       checkAndResetDailyUsage();
       updateUsageDisplay();
-      updateDownloadLocks();
     });
 
     document.addEventListener('keydown', e => { 
       if (e.key === 'Escape') {
         closeAuthModal();
-        closePricingModal();
-        closeAdminDashboard();
+        closeAdminPanel();
       }
     });
     
-    $('#auth-modal')?.addEventListener('click', e => { if (e.target.id === 'auth-modal') closeAuthModal(); });
-    $('#pricing-modal')?.addEventListener('click', e => { if (e.target.id === 'pricing-modal') closePricingModal(); });
-    $('#admin-modal')?.addEventListener('click', e => { if (e.target.id === 'admin-modal') closeAdminDashboard(); });
+    $('#auth-modal')?.addEventListener('click', e => { 
+      if (e.target.id === 'auth-modal') closeAuthModal(); 
+    });
+    
+    $('#admin-modal')?.addEventListener('click', e => { 
+      if (e.target.id === 'admin-modal') closeAdminPanel(); 
+    });
   </script>
 </body>
 </html>
