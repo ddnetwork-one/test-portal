@@ -8,13 +8,18 @@
   <!-- CRITICAL: Prevent FOUC on refresh - runs before paint -->
   <script>
     (function() {
-      var p = window.location.pathname.split('/').pop() || 'home';
-      var valid = ['home','pricing','faq','about','contact','login','terms','privacy','careers','blog','blog-company','blog-danial','blog-nurul','blog-putri'];
-      if(!valid.includes(p)) p = 'home';
-      window.__INITIAL_PAGE = p;
-      
-      // Hide all pages initially to prevent flash
-      document.documentElement.style.visibility = 'hidden';
+      try {
+        var p = window.location.pathname.split('/').pop() || 'home';
+        var valid = ['home','pricing','faq','about','contact','login','terms','privacy','careers','blog','blog-company','blog-danial','blog-nurul','blog-putri'];
+        if(!valid.includes(p)) p = 'home';
+        window.__INITIAL_PAGE = p;
+        
+        // Hide all pages initially to prevent flash
+        document.documentElement.style.visibility = 'hidden';
+      } catch(e) {
+        window.__INITIAL_PAGE = 'home';
+        console.error('Init error:', e);
+      }
     })();
   </script>
   
@@ -744,88 +749,6 @@
       animation: pulseSlow 4s ease-in-out infinite;
     }
 
-    /* Compare Table Styles */
-    .compare-table-container {
-      background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
-      backdrop-filter: blur(40px) saturate(180%);
-      -webkit-backdrop-filter: blur(40px) saturate(180%);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 24px;
-      overflow: hidden;
-      transition: all 0.4s ease;
-    }
-
-    .compare-table-toggle {
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.3s ease;
-    }
-
-    .compare-table-toggle:hover {
-      background: rgba(255,255,255,0.05);
-    }
-
-    .compare-table-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .compare-table-container.open .compare-table-content {
-      max-height: 2000px;
-    }
-
-    .compare-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-    }
-
-    .compare-table th {
-      background: rgba(255,255,255,0.03);
-      padding: 1.25rem 1rem;
-      text-align: center;
-      font-weight: 600;
-      font-size: 0.875rem;
-      letter-spacing: 0.02em;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.9);
-    }
-
-    .compare-table td {
-      padding: 1rem;
-      text-align: center;
-      font-size: 0.875rem;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      color: rgba(255,255,255,0.6);
-      vertical-align: middle;
-    }
-
-    .compare-table tr:last-child td { border-bottom: none; }
-
-    .compare-table td:first-child {
-      text-align: left;
-      font-weight: 500;
-      color: rgba(255,255,255,0.8);
-      font-size: 0.8rem;
-    }
-
-    .compare-table .feature-category {
-      background: rgba(255,255,255,0.02);
-      font-weight: 700;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.4);
-      padding-top: 1.5rem;
-    }
-
-    .check-icon { color: #34d399; display: inline-flex; align-items: center; justify-content: center; }
-    .cross-icon { color: rgba(255,255,255,0.2); display: inline-flex; align-items: center; justify-content: center; }
-
-    .highlight-col { background: rgba(139, 92, 246, 0.05); }
-    .highlight-col td { color: rgba(255,255,255,0.9); font-weight: 500; }
-
     /* Blog Grid Modern */
     .blog-grid-modern {
       display: grid;
@@ -1322,7 +1245,7 @@
 <main id="app">
 
 <!-- ==================== HOME PAGE ==================== -->
-<section class="page" id="page-home" data-page-title="Luviio - Premium Digital Solutions">
+<section class="page active" id="page-home" data-page-title="Luviio - Premium Digital Solutions">
   
   <!-- Hero Section -->
   <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-20">
@@ -2129,8 +2052,8 @@
         <!-- FAQ Item 5 - Technical -->
         <div class="faq-item accordion-item group relative rounded-2xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-white/[0.04] to-transparent backdrop-blur-xl transition-all duration-300 hover:border-white/15" data-category="technical" data-keywords="domain hosting provide server ssl certificate dns configuration">
           <div class="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-blue-500/0 to-cyan-500/0 group-hover:from-purple-500/5 group-hover:via-blue-500/5 group-hover:to-cyan-500/5 transition-all duration-500 opacity-0 group-hover:opacity-100"></div>
-          
-          <button class="relative w-full px-5 sm:px-7 py-5 sm:py-6 flex items-start sm:items-center justify-between text-left gap-4" onclick="toggleAccordion(this)">
+
+                    <button class="relative w-full px-5 sm:px-7 py-5 sm:py-6 flex items-start sm:items-center justify-between text-left gap-4" onclick="toggleAccordion(this)">
             <div class="flex items-start gap-3 sm:gap-4 flex-1">
               <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-cyan-500/15 to-blue-500/15 flex items-center justify-center shrink-0 border border-white/10 mt-0.5 sm:mt-0">
                 <span class="text-xs sm:text-sm font-bold text-cyan-300/80">05</span>
@@ -3362,38 +3285,51 @@
 
 
 <script>
+// ==================== CRITICAL FIX: DECLARE ALL VARIABLES BEFORE USE ====================
+// This prevents the "ReferenceError: activeCategory is not defined" that causes HTTP 500
+
+// Global state variables - MUST be declared before any function calls
+let currentPage = window.__INITIAL_PAGE || 'home';
+let activeCategory = 'all'; // FIX: This was missing, causing the crash!
+
 // ==================== CRITICAL: INITIALIZATION - RUNS IMMEDIATELY ====================
 (function() {
-  // Prevent FOUC - show correct page immediately
-  var initialPage = window.__INITIAL_PAGE || 'home';
-  
-  // Show only the correct page immediately
-  document.addEventListener('DOMContentLoaded', function() {
-    // Hide all pages first
-    var pages = document.querySelectorAll('.page');
-    pages.forEach(function(p) { 
-      p.classList.remove('active'); 
-      p.style.display = 'none'; 
+  try {
+    // Prevent FOUC - show correct page immediately
+    var initialPage = window.__INITIAL_PAGE || 'home';
+    
+    // Show only the correct page immediately
+    document.addEventListener('DOMContentLoaded', function() {
+      // Hide all pages first
+      var pages = document.querySelectorAll('.page');
+      pages.forEach(function(p) { 
+        p.classList.remove('active'); 
+        p.style.display = 'none'; 
+      });
+      
+      // Show target page
+      var target = document.getElementById('page-' + initialPage);
+      if (target) {
+        target.style.display = 'block';
+        target.classList.add('active');
+      }
+      
+      // Update page title
+      updatePageTitle(initialPage);
+      
+      // Make visible now that correct page is showing
+      document.documentElement.style.visibility = 'visible';
+      
+      // Initialize reveals after paint
+      requestAnimationFrame(function() {
+        initRevealAnimations();
+      });
     });
-    
-    // Show target page
-    var target = document.getElementById('page-' + initialPage);
-    if (target) {
-      target.style.display = 'block';
-      target.classList.add('active');
-    }
-    
-    // Update page title
-    updatePageTitle(initialPage);
-    
-    // Make visible now that correct page is showing
+  } catch(e) {
+    console.error('Init error:', e);
+    // Fallback: ensure visibility even if error occurs
     document.documentElement.style.visibility = 'visible';
-    
-    // Initialize reveals after paint
-    requestAnimationFrame(function() {
-      initRevealAnimations();
-    });
-  });
+  }
 })();
 
 // ==================== PAGE TITLE MANAGEMENT ====================
@@ -3405,8 +3341,6 @@ function updatePageTitle(pageId) {
 }
 
 // ==================== SIMPLE SPA NAVIGATION ====================
-let currentPage = window.__INITIAL_PAGE || 'home';
-
 function navigateTo(page) {
   if (currentPage === page) return;
 
@@ -3632,12 +3566,16 @@ function filterFAQs(query) {
     noResults.classList.add('hidden');
   }
 
-  updateActiveTab('all');
+  // Reset category tabs when searching
+  updateActiveTabUI('all');
+  activeCategory = 'all'; // FIX: Update the global variable
 }
 
 function filterCategory(category) {
+  // FIX: Update global variable
   activeCategory = category;
   
+  // Update UI
   document.querySelectorAll('.faq-tab').forEach(tab => {
     if (tab.dataset.category === category) {
       tab.classList.add('active', 'bg-white/5', 'border-white/10', 'text-white/80');
@@ -3670,11 +3608,22 @@ function filterCategory(category) {
     noResults.classList.add('hidden');
   }
 
-  document.getElementById('faqSearch').value = '';
+  // Clear search input
+  const searchInput = document.getElementById('faqSearch');
+  if (searchInput) searchInput.value = '';
 }
 
-function updateActiveTab(category) {
-  activeCategory = category;
+// Helper function to update tab UI
+function updateActiveTabUI(category) {
+  document.querySelectorAll('.faq-tab').forEach(tab => {
+    if (tab.dataset.category === category) {
+      tab.classList.add('active', 'bg-white/5', 'border-white/10', 'text-white/80');
+      tab.classList.remove('border-white/5', 'text-white/50');
+    } else {
+      tab.classList.remove('active', 'bg-white/5', 'border-white/10', 'text-white/80');
+      tab.classList.add('border-white/5', 'text-white/50');
+    }
+  });
 }
 </script>
 
