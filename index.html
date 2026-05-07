@@ -6,17 +6,23 @@
   <title>Luviio - Premium Digital Solutions</title>
   
   <!-- CRITICAL: Prevent FOUC on refresh - runs before paint -->
-  <script>
-    (function() {
-      var p = window.location.pathname.split('/').pop() || 'home';
-      var valid = ['home','pricing','faq','about','contact','login','terms','privacy','careers','blog','blog-company','blog-danial','blog-nurul','blog-putri'];
-      if(!valid.includes(p)) p = 'home';
-      window.__INITIAL_PAGE = p;
-      
-      // Hide all pages initially to prevent flash
-      document.documentElement.style.visibility = 'hidden';
-    })();
-  </script>
+<script>
+  (function() {
+    var p = window.location.pathname.split('/').pop() || 'home';
+    var valid = ['home','pricing','faq','about','contact','login','terms','privacy','careers','blog','blog-company','blog-danial','blog-nurul','blog-putri'];
+    if(!valid.includes(p)) p = 'home';
+    window.__INITIAL_PAGE = p;
+    
+    // Prevent FOUC - hide until correct page is shown
+    document.documentElement.style.visibility = 'hidden';
+    
+    // EMERGENCY FALLBACK: Force show after 5 seconds if JS errors occur
+    setTimeout(function() {
+      document.documentElement.style.visibility = 'visible';
+      console.warn('Emergency visibility fallback activated');
+    }, 5000);
+  })();
+</script>
   
   <script src="https://cdn.tailwindcss.com"></script>
   
@@ -3416,8 +3422,19 @@
 const SUPABASE_URL = "https://vlnxkgdhjvunhqtlbxls.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsbnhrZ2RoanZ1bmhxdGxieGxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMTY5MTQsImV4cCI6MjA5MzY5MjkxNH0.8V3h0AlWlHsMZv-TOy-fvixNdt4TU4aqfcGqVwldBgw";
 
-// Initialize Supabase Client
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// Initialize Supabase Client (with error handling)
+let supabase = null;
+try {
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('Supabase initialized successfully');
+  } else {
+    console.warn('Supabase library not loaded');
+  }
+} catch(e) {
+  console.error('Supabase init error:', e);
+  supabase = null;
+}
 
 // ==================== FORM SUBMISSION HELPER ====================
 async function sendForm(payload) {
@@ -3620,43 +3637,87 @@ async function handleCareerSubmit(event) {
 
 // ==================== CRITICAL: INITIALIZATION - RUNS IMMEDIATELY ====================
 (function() {
-  // Prevent FOUC - show correct page immediately
   var initialPage = window.__INITIAL_PAGE || 'home';
   
-  // Show only the correct page immediately
   document.addEventListener('DOMContentLoaded', function() {
-    // Hide all pages first
-    var pages = document.querySelectorAll('.page');
-    pages.forEach(function(p) { 
-      p.classList.remove('active'); 
-      p.style.display = 'none'; 
-    });
-    
-    // Show target page
-    var target = document.getElementById('page-' + initialPage);
-    if (target) {
-      target.style.display = 'block';
-      target.classList.add('active');
-    }
-    
-    // Update page title
-    updatePageTitle(initialPage);
-    
-    // Make visible now that correct page is showing
-    document.documentElement.style.visibility = 'visible';
-    
-    // Initialize reveals after paint
-    requestAnimationFrame(function() {
-      initRevealAnimations();
-    });
-
-    // Check for existing Supabase session on login page
-    if (initialPage === 'login' && supabase) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          navigateTo('home');
+    try {
+      // Safety: Ensure we have pages to work with
+      var pages = document.querySelectorAll('.page');
+      if (!pages || pages.length === 0) {
+        console.error('No .page elements found!');
+        document.documentElement.style.visibility = 'visible';
+        return;
+      }
+      
+      // Hide all pages first
+      pages.forEach(function(p) { 
+        p.classList.remove('active'); 
+        p.style.display = 'none'; 
+      });
+      
+      // Show target page
+      var target = document.getElementById('page-' + initialPage);
+      if (!target) {
+        console.warn('Page not found:', initialPage, '- falling back to home');
+        target = document.getElementById('page-home');
+      }
+      
+      if (target) {
+        target.style.display = 'block';
+        target.classList.add('active');
+        
+        // Update page title safely
+        try {
+          if (typeof updatePageTitle === 'function') {
+            updatePageTitle(initialPage);
+          } else if (target.dataset.pageTitle) {
+            document.title = target.dataset.pageTitle;
+          }
+        } catch(e) {
+          console.warn('Title update failed:', e);
+        }
+      }
+      
+      // Make visible now that correct page is showing
+      document.documentElement.style.visibility = 'visible';
+      
+      // Initialize reveals after paint (with safety check)
+      requestAnimationFrame(function() {
+        try {
+          if (typeof initRevealAnimations === 'function') {
+            initRevealAnimations();
+          }
+        } catch(e) {
+          console.warn('Reveal animations failed:', e);
         }
       });
+
+      // Check for existing Supabase session on login page (safely)
+      if (initialPage === 'login') {
+        try {
+          if (typeof supabase !== 'undefined' && supabase && supabase.auth) {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+              if (session && typeof navigateTo === 'function') {
+                navigateTo('home');
+              }
+            }).catch(function(err) {
+              console.warn('Session check failed:', err);
+            });
+          }
+        } catch(e) {
+          console.warn('Supabase check failed:', e);
+        }
+      }
+      
+    } catch(error) {
+      console.error('CRITICAL INIT ERROR:', error);
+      // Last resort: show everything
+      document.documentElement.style.visibility = 'visible';
+      var allPages = document.querySelectorAll('.page');
+      if (allPages.length > 0) {
+        allPages[0].style.display = 'block';
+        allPages[0].classList.add('active');
+      }
     }
   });
 })();
