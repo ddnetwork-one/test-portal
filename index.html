@@ -68,6 +68,8 @@
             'sm-elevated': 'rgba(63, 71, 93, 0.06) 18.8px 37.5px 39.3px -3.7px, rgba(63, 71, 93, 0.07) 12.3px 15.4px 25.8px -3.2px, rgba(63, 71, 93, 0.08) 7.7px 15.4px 16.1px -2.7px, rgba(63, 71, 93, 0.09) 4.6px 9.1px 9.6px -2.1px, rgba(63, 71, 93, 0.1) 2.6px 5.1px 5.4px -1.6px, rgba(63, 71, 93, 0.11) 1.4px 2.8px 2.9px -1.1px, rgba(63, 71, 93, 0.12) 0.7px 1.5px 1.6px -0.5px, rgba(63, 71, 93, 0.15) 0.3px 0.5px 0.5px 0px',
             'glass': '0 8px 32px 0 rgba(31, 33, 35, 0.08)',
             'glass-hover': '0 8px 32px 0 rgba(31, 33, 35, 0.15)',
+            'liquid-glow': '0 0 40px rgba(22, 114, 235, 0.15), 0 0 80px rgba(22, 114, 235, 0.05)',
+            'liquid-inner': 'inset 0 1px 1px rgba(255,255,255,0.8), inset 0 -1px 1px rgba(0,0,0,0.05)',
           },
           maxWidth: {
             'container': '1200px',
@@ -108,51 +110,285 @@
     ::-webkit-scrollbar-thumb { background: #D2D3D6; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #6D7178; }
 
-    /* ==================== GLASSMORPHISM UTILITIES ==================== */
-    .glass {
-      background: rgba(255, 255, 255, 0.65);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 8px 32px 0 rgba(31, 33, 35, 0.05);
-    }
+    /* ==================== LIQUID GLASSMORPHISM SYSTEM ==================== */
     
-    .glass-dark {
-      background: rgba(31, 33, 35, 0.75);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    .liquid-glass {
+      position: relative;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.85) 0%,
+        rgba(255, 255, 255, 0.65) 50%,
+        rgba(255, 255, 255, 0.75) 100%
+      );
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 
+        0 8px 32px 0 rgba(31, 33, 35, 0.06),
+        inset 0 1px 1px rgba(255, 255, 255, 0.9),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.03);
+      overflow: hidden;
     }
 
-    .glass-card {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(228, 229, 230, 0.5);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -50%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 45%,
+        rgba(255, 255, 255, 0.6) 50%,
+        rgba(255, 255, 255, 0.4) 55%,
+        transparent 100%
+      );
+      transform: translateX(-100%) rotate(2deg);
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
     }
 
-    .glass-card:hover {
-      background: rgba(255, 255, 255, 0.85);
-      border-color: rgba(22, 114, 235, 0.2);
-      box-shadow: 0 8px 32px 0 rgba(31, 33, 35, 0.12), 0 0 0 1px rgba(22, 114, 235, 0.1);
+    .liquid-glass:hover::before {
+      transform: translateX(100%) rotate(2deg);
+    }
+
+    .liquid-glass-dark {
+      position: relative;
+      background: linear-gradient(
+        135deg,
+        rgba(31, 33, 35, 0.85) 0%,
+        rgba(31, 33, 35, 0.75) 50%,
+        rgba(31, 33, 35, 0.8) 100%
+      );
+      backdrop-filter: blur(30px) saturate(180%);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 
+        0 8px 32px 0 rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .liquid-card {
+      position: relative;
+      background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.7) 40%,
+        rgba(250, 250, 252, 0.8) 100%
+      );
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      border: 1px solid rgba(228, 229, 230, 0.4);
+      box-shadow: 
+        0 4px 24px rgba(31, 33, 35, 0.04),
+        0 1px 2px rgba(31, 33, 35, 0.02),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .liquid-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.8),
+        transparent
+      );
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .liquid-card:hover {
+      background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 255, 0.85) 40%,
+        rgba(250, 250, 252, 0.9) 100%
+      );
+      border-color: rgba(22, 114, 235, 0.25);
+      box-shadow: 
+        0 12px 40px rgba(31, 33, 35, 0.08),
+        0 4px 12px rgba(22, 114, 235, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 0 0 1px rgba(22, 114, 235, 0.08);
       transform: translateY(-4px);
     }
 
-    .glass-nav {
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border-bottom: 1px solid rgba(228, 229, 230, 0.4);
+    .liquid-card:hover::after {
+      opacity: 1;
     }
 
-    .glass-toast {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(228, 229, 230, 0.6);
-      box-shadow: 0 8px 32px 0 rgba(31, 33, 35, 0.1);
+    .liquid-nav {
+      position: relative;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.88) 0%,
+        rgba(255, 255, 255, 0.78) 100%
+      );
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      border-bottom: 1px solid rgba(228, 229, 230, 0.3);
+      box-shadow: 
+        0 4px 30px rgba(31, 33, 35, 0.03),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .liquid-nav.scrolled {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.92) 0%,
+        rgba(255, 255, 255, 0.86) 100%
+      );
+      box-shadow: 
+        0 4px 30px rgba(31, 33, 35, 0.06),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .liquid-toast {
+      position: relative;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.92) 0%,
+        rgba(255, 255, 255, 0.82) 100%
+      );
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(228, 229, 230, 0.5);
+      box-shadow: 
+        0 8px 32px rgba(31, 33, 35, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      overflow: hidden;
+    }
+
+    .liquid-toast::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: currentColor;
+      opacity: 0.8;
+      border-radius: 4px 0 0 4px;
+    }
+
+    /* Liquid Button Effect */
+    .liquid-btn {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1672EB 0%, #1272D4 100%);
+      box-shadow: 
+        0 4px 15px rgba(22, 114, 235, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .liquid-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+      );
+      transition: left 0.5s ease;
+    }
+
+    .liquid-btn:hover::before {
+      left: 100%;
+    }
+
+    .liquid-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 
+        0 8px 25px rgba(22, 114, 235, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    /* Liquid Input */
+    .liquid-input {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(250, 250, 252, 0.9) 100%
+      );
+      border: 1px solid rgba(209, 209, 209, 0.6);
+      box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.02),
+        0 1px 0 rgba(255, 255, 255, 0.8);
+      transition: all 0.3s ease;
+    }
+
+    .liquid-input:focus {
+      border-color: #1672EB;
+      box-shadow: 
+        0 0 0 3px rgba(22, 114, 235, 0.1),
+        inset 0 2px 4px rgba(0, 0, 0, 0.02),
+        0 1px 0 rgba(255, 255, 255, 0.8);
+      outline: none;
+    }
+
+    /* Legacy aliases for compatibility */
+    .glass { 
+      background: rgba(255, 255, 255, 0.65); 
+      backdrop-filter: blur(20px); 
+      -webkit-backdrop-filter: blur(20px); 
+      border: 1px solid rgba(255, 255, 255, 0.3); 
+      box-shadow: 0 8px 32px 0 rgba(31, 33, 35, 0.05); 
+    }
+    
+    .glass-dark { 
+      background: rgba(31, 33, 35, 0.75); 
+      backdrop-filter: blur(24px); 
+      -webkit-backdrop-filter: blur(24px); 
+      border: 1px solid rgba(255, 255, 255, 0.1); 
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); 
+    }
+
+    .glass-card { 
+      background: rgba(255, 255, 255, 0.7); 
+      backdrop-filter: blur(16px); 
+      -webkit-backdrop-filter: blur(16px); 
+      border: 1px solid rgba(228, 229, 230, 0.5); 
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+
+    .glass-card:hover { 
+      background: rgba(255, 255, 255, 0.85); 
+      border-color: rgba(22, 114, 235, 0.2); 
+      box-shadow: 0 8px 32px 0 rgba(31, 33, 35, 0.12), 0 0 0 1px rgba(22, 114, 235, 0.1); 
+      transform: translateY(-4px); 
+    }
+
+    .glass-nav { 
+      background: rgba(255, 255, 255, 0.75); 
+      backdrop-filter: blur(24px) saturate(180%); 
+      -webkit-backdrop-filter: blur(24px) saturate(180%); 
+      border-bottom: 1px solid rgba(228, 229, 230, 0.4); 
+    }
+
+    .glass-toast { 
+      background: rgba(255, 255, 255, 0.85); 
+      backdrop-filter: blur(16px); 
+      -webkit-backdrop-filter: blur(16px); 
+      border: 1px solid rgba(228, 229, 230, 0.6); 
+      box-shadow: 0 8px 32px 0 rgba(31, 33, 35, 0.1); 
     }
 
     /* ==================== PARALLAX SYSTEM ==================== */
@@ -234,6 +470,16 @@
     @keyframes morph {
       0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
       50% { border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%; }
+    }
+    
+    @keyframes liquid-shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
+    @keyframes gentle-pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 0.9; transform: scale(1.02); }
     }
     
     /* Raindrop Menu Animation */
@@ -1036,6 +1282,181 @@
       border-radius: 6px;
       margin-bottom: 24px;
     }
+
+    /* Blog Article Styles */
+    .article-prose h2 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 26px;
+      font-weight: 600;
+      color: #1F2123;
+      margin-top: 36px;
+      margin-bottom: 16px;
+    }
+
+    .article-prose h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: #1F2123;
+      margin-top: 28px;
+      margin-bottom: 12px;
+    }
+
+    .article-prose p {
+      font-family: Inter, sans-serif;
+      font-size: 16px;
+      line-height: 1.8;
+      color: #4F5257;
+      margin-bottom: 20px;
+    }
+
+    .article-prose blockquote {
+      border-left: 4px solid #1672EB;
+      padding-left: 24px;
+      margin: 28px 0;
+      font-style: italic;
+      color: #1F2123;
+      background: linear-gradient(90deg, rgba(22, 114, 235, 0.05), transparent);
+      padding: 20px 24px;
+      border-radius: 0 12px 12px 0;
+    }
+
+    .article-prose blockquote p {
+      font-size: 18px;
+      line-height: 1.7;
+      color: #1F2123;
+      margin-bottom: 8px;
+    }
+
+    .mission-box {
+      background: linear-gradient(135deg, rgba(22, 114, 235, 0.08), rgba(207, 233, 209, 0.08));
+      border: 1px solid rgba(22, 114, 235, 0.15);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+
+    .mission-box h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1672EB;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .role-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+    }
+
+    .role-list li {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(228, 229, 230, 0.5);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 15px;
+      color: #4F5257;
+    }
+
+    .role-list li:last-child {
+      border-bottom: none;
+    }
+
+    .role-list li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: #1672EB;
+      border-radius: 50%;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    .author-card {
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(228, 229, 230, 0.6);
+      border-radius: 16px;
+      padding: 28px;
+      margin-top: 32px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .author-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      flex-shrink: 0;
+    }
+
+    .author-info h4 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1F2123;
+      margin-bottom: 4px;
+    }
+
+    .author-info p {
+      font-size: 14px;
+      color: #6D7178;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .team-grid-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin: 32px 0;
+    }
+
+    .team-mini-card {
+      background: white;
+      border: 1px solid rgba(228, 229, 230, 0.5);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .team-mini-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(31, 33, 35, 0.08);
+      border-color: rgba(22, 114, 235, 0.3);
+    }
+
+    .team-mini-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 16px;
+      border: 3px solid rgba(22, 114, 235, 0.1);
+    }
+
+    .team-mini-name {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1F2123;
+      margin-bottom: 4px;
+    }
+
+    .team-mini-role {
+      font-size: 13px;
+      color: #6D7178;
+    }
   </style>
 </head>
 <body>
@@ -1044,7 +1465,7 @@
   <div id="toast-container"></div>
 
   <!-- ==================== HEADER ==================== -->
-  <header id="header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 glass-nav" style="height: 68px;">
+  <header id="header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 liquid-nav" style="height: 68px;">
     <div class="mx-auto max-w-container px-comfortable h-full flex items-center justify-between">
       <!-- Logo -->
       <a href="#/" class="flex items-center gap-small group" aria-label="Luviio Home" onclick="navigateTo('/')">
@@ -1140,7 +1561,7 @@
         <button class="font-body text-[16px] font-bold text-dark-charcoal hover:text-electric-blue hover:underline hover:decoration-2 hover:underline-electric-blue transition-all duration-200" onclick="showToast('Sign in page would open here', 'info')">
           Sign in
         </button>
-        <button class="font-body text-[16px] font-bold text-white bg-electric-blue hover:bg-electric-blue-dark px-standard py-small rounded-standard shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] focus-ring" style="height: 40px; line-height: 24px;" onclick="navigateTo('/contact')">
+        <button class="liquid-btn font-body text-[16px] font-medium text-white px-standard py-small rounded-standard focus-ring" style="height: 40px; line-height: 24px;" onclick="navigateTo('/contact')">
           Contact Sales
         </button>
         <button class="bg-dark-gray-sec text-white font-body text-[16px] font-medium px-standard py-small rounded-standard shadow-md hover:bg-dark-charcoal hover:shadow-lg transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed focus-ring" style="height: 40px; line-height: 24px;" onclick="showToast('Welcome! Let\'s build something great.', 'success')">
@@ -1233,7 +1654,7 @@
         <div class="max-w-container mx-auto px-comfortable lg:px-large relative z-10">
           <div class="grid lg:grid-cols-2 gap-comfortable lg:gap-large items-center">
             <div>
-              <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-warm-beige/60 text-deep-brown font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable glass-card">
+              <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-warm-beige/60 text-deep-brown font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable liquid-card">
                 <i data-lucide="sparkles" class="w-4 h-4"></i>
                 Trusted by 100+ businesses in Malaysia
               </div>
@@ -1274,7 +1695,7 @@
             </div>
 
             <div class="reveal animate-fade-in-up delay-300 relative">
-              <div class="glass-card rounded-standard p-comfortable lg:p-large animate-float" style="animation-duration: 8s;">
+              <div class="liquid-card rounded-standard p-comfortable lg:p-large animate-float" style="animation-duration: 8s;">
                 <div class="flex items-center gap-small mb-medium">
                   <div class="w-3 h-3 rounded-full bg-error-red/60"></div>
                   <div class="w-3 h-3 rounded-full bg-warning-gold/60"></div>
@@ -1292,7 +1713,7 @@
                   </div>
                 </div>
               </div>
-              <div class="absolute -bottom-4 -left-4 glass-card rounded-standard shadow-md px-standard py-small font-body text-[14px] font-medium text-dark-charcoal flex items-center gap-small animate-float" style="animation-duration: 6s; animation-delay: 1s;">
+              <div class="absolute -bottom-4 -left-4 liquid-card rounded-standard shadow-md px-standard py-small font-body text-[14px] font-medium text-dark-charcoal flex items-center gap-small animate-float" style="animation-duration: 6s; animation-delay: 1s;">
                 <i data-lucide="trending-up" class="w-4 h-4 text-success-green"></i>
                 +340% traffic increase
               </div>
@@ -1344,7 +1765,7 @@
           </div>
 
           <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-comfortable">
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large group cursor-default">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large group cursor-default">
               <div class="w-12 h-12 bg-electric-blue/10 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-electric-blue/20 transition-colors">
                 <i data-lucide="layout" class="w-6 h-6 text-electric-blue"></i>
               </div>
@@ -1353,7 +1774,7 @@
                 Stunning, conversion-focused designs that capture your brand essence.
               </p>
             </div>
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large group cursor-default">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large group cursor-default">
               <div class="w-12 h-12 bg-soft-mint/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-soft-mint transition-colors">
                 <i data-lucide="code-2" class="w-6 h-6 text-success-green"></i>
               </div>
@@ -1362,7 +1783,7 @@
                 Robust, scalable applications built with cutting-edge technologies.
               </p>
             </div>
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large group cursor-default">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large group cursor-default">
               <div class="w-12 h-12 bg-light-coral/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-light-coral transition-colors">
                 <i data-lucide="smartphone" class="w-6 h-6 text-error-red"></i>
               </div>
@@ -1371,7 +1792,7 @@
                 Native and cross-platform mobile solutions.
               </p>
             </div>
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large group cursor-default">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large group cursor-default">
               <div class="w-12 h-12 bg-warm-beige/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-warm-beige transition-colors">
                 <i data-lucide="monitor-smartphone" class="w-6 h-6 text-deep-brown"></i>
               </div>
@@ -1403,7 +1824,7 @@
 
           <div class="grid md:grid-cols-3 gap-comfortable lg:gap-large">
             <div class="reveal text-center">
-              <div class="w-16 h-16 mx-auto glass-card rounded-standard shadow-md flex items-center justify-center mb-comfortable">
+              <div class="w-16 h-16 mx-auto liquid-card rounded-standard shadow-md flex items-center justify-center mb-comfortable">
                 <span class="font-display text-[28px] font-normal text-electric-blue">1</span>
               </div>
               <h3 class="font-display text-[26px] font-normal leading-[34px] text-dark-charcoal mb-medium">Discovery Call</h3>
@@ -1412,7 +1833,7 @@
               </p>
             </div>
             <div class="reveal text-center">
-              <div class="w-16 h-16 mx-auto glass-card rounded-standard shadow-md flex items-center justify-center mb-comfortable">
+              <div class="w-16 h-16 mx-auto liquid-card rounded-standard shadow-md flex items-center justify-center mb-comfortable">
                 <span class="font-display text-[28px] font-normal text-electric-blue">2</span>
               </div>
               <h3 class="font-display text-[26px] font-normal leading-[34px] text-dark-charcoal mb-medium">Build & Iterate</h3>
@@ -1421,7 +1842,7 @@
               </p>
             </div>
             <div class="reveal text-center">
-              <div class="w-16 h-16 mx-auto glass-card rounded-standard shadow-md flex items-center justify-center mb-comfortable">
+              <div class="w-16 h-16 mx-auto liquid-card rounded-standard shadow-md flex items-center justify-center mb-comfortable">
                 <span class="font-display text-[28px] font-normal text-electric-blue">3</span>
               </div>
               <h3 class="font-display text-[26px] font-normal leading-[34px] text-dark-charcoal mb-medium">Launch & Support</h3>
@@ -1472,7 +1893,7 @@
 
           <div class="grid md:grid-cols-3 gap-comfortable max-w-[1100px] mx-auto">
             <!-- Starter Preview -->
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large">
               <div class="font-body text-[14px] font-semibold text-text-gray uppercase tracking-wider mb-medium">Starter</div>
               <div class="flex items-baseline gap-1 mb-comfortable">
                 <span class="font-display text-[40px] font-normal text-dark-charcoal leading-[48px]">MYR 150</span>
@@ -1499,11 +1920,11 @@
                 <li class="flex items-start gap-small"><i data-lucide="check" class="w-4 h-4 text-electric-blue mt-0.5 flex-shrink-0"></i><span class="text-[14px] text-white">Payment gateway setup</span></li>
                 <li class="flex items-start gap-small"><i data-lucide="check" class="w-4 h-4 text-electric-blue mt-0.5 flex-shrink-0"></i><span class="text-[14px] text-white">Priority support</span></li>
               </ul>
-              <button onclick="navigateTo('/pricing')" class="w-full bg-electric-blue text-white font-body text-[14px] font-medium px-standard py-small rounded-standard shadow-md hover:bg-electric-blue-dark transition-all text-center" style="height: 40px;">View details →</button>
+              <button onclick="navigateTo('/pricing')" class="w-full liquid-btn text-white font-body text-[14px] font-medium px-standard py-small rounded-standard text-center" style="height: 40px;">View details →</button>
             </div>
 
             <!-- Pro IT Preview -->
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large">
               <div class="font-body text-[14px] font-semibold text-text-gray uppercase tracking-wider mb-medium">Pro IT</div>
               <div class="flex items-baseline gap-1 mb-comfortable">
                 <span class="font-display text-[40px] font-normal text-dark-charcoal leading-[48px]">MYR 1,900</span>
@@ -1532,7 +1953,7 @@
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.04] bg-electric-blue blur-[120px] pointer-events-none"></div>
 
         <div class="max-w-container mx-auto px-comfortable lg:px-large relative z-10">
-          <div class="glass-dark rounded-comfort p-large lg:p-xxl text-center relative overflow-hidden">
+          <div class="liquid-glass-dark rounded-comfort p-large lg:p-xxl text-center relative overflow-hidden">
             <div class="absolute inset-0 opacity-[0.04]" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
 
             <div class="relative z-10">
@@ -1544,8 +1965,8 @@
               </p>
 
               <form class="reveal flex flex-col sm:flex-row items-center gap-medium max-w-[520px] mx-auto" onsubmit="handleNewsletter(event)">
-                <input type="email" id="newsletter-email-home" required placeholder="Enter your email" class="flex-1 w-full bg-white/10 text-white font-body text-[13.33px] font-normal px-standard py-[6px] rounded-pill border border-white/20 focus-ring placeholder:text-white/50 backdrop-blur-sm transition-all duration-200" style="height: 48px;">
-                <button type="submit" class="bg-electric-blue text-white font-body text-[16px] font-medium px-large py-small rounded-standard shadow-md hover:bg-electric-blue-dark transition-all duration-200 active:scale-[0.98] focus-ring whitespace-nowrap" style="height: 48px; min-width: 140px;">
+                <input type="email" id="newsletter-email-home" required placeholder="Enter your email" class="liquid-input flex-1 w-full text-white font-body text-[13.33px] font-normal px-standard py-[6px] rounded-pill border border-white/20 focus-ring placeholder:text-white/50 backdrop-blur-sm transition-all duration-200" style="height: 48px;">
+                <button type="submit" class="liquid-btn text-white font-body text-[16px] font-medium px-large py-small rounded-standard focus-ring whitespace-nowrap" style="height: 48px; min-width: 140px;">
                   Book consultation
                 </button>
               </form>
@@ -1565,7 +1986,7 @@
         <div class="orb orb-mint parallax-layer parallax-medium" style="width: 400px; height: 400px; bottom: -100px; left: 10%; opacity: 0.1;" data-speed="0.06"></div>
         
         <div class="max-w-container mx-auto px-comfortable lg:px-large relative z-10 text-center">
-          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-electric-blue/10 text-electric-blue font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable glass-card">
+          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-electric-blue/10 text-electric-blue font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable liquid-card">
             <i data-lucide="box" class="w-4 h-4"></i>
             Our Platform
           </div>
@@ -1632,7 +2053,7 @@
               </button>
             </div>
             <div class="order-1 lg:order-2">
-              <div class="glass-card rounded-comfort p-8 aspect-square flex items-center justify-center relative overflow-hidden">
+              <div class="liquid-card rounded-comfort p-8 aspect-square flex items-center justify-center relative overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-br from-electric-blue/5 to-transparent"></div>
                 <div class="grid grid-cols-3 gap-3 relative z-10">
                   <div class="w-full aspect-square rounded-standard bg-electric-blue/10 flex items-center justify-center">
@@ -1670,7 +2091,7 @@
           <!-- Feature 2: Development Stack -->
           <div class="grid lg:grid-cols-2 gap-comfortable lg:gap-large items-center mb-xxl reveal">
             <div>
-              <div class="glass-card rounded-comfort p-8 relative overflow-hidden">
+              <div class="liquid-card rounded-comfort p-8 relative overflow-hidden">
                 <div class="absolute inset-0 bg-gradient-to-br from-soft-mint/20 to-transparent"></div>
                 <div class="relative z-10 space-y-4">
                   <div class="flex items-center gap-4 p-4 bg-white/60 rounded-standard">
@@ -1745,7 +2166,7 @@
               </p>
             </div>
             
-            <div class="glass-card rounded-comfort overflow-hidden shadow-sm-elevated">
+            <div class="liquid-card rounded-comfort overflow-hidden shadow-sm-elevated">
               <div class="bg-dark-charcoal px-6 py-3 flex items-center gap-2 border-b border-white/10">
                 <div class="w-3 h-3 rounded-full bg-error-red/60"></div>
                 <div class="w-3 h-3 rounded-full bg-warning-gold/60"></div>
@@ -1801,7 +2222,7 @@
       <!-- CTA -->
       <section class="py-massive bg-light-gray-bg relative overflow-hidden">
         <div class="max-w-container mx-auto px-comfortable lg:px-large relative z-10">
-          <div class="glass-dark rounded-comfort p-large lg:p-xxl text-center relative overflow-hidden">
+          <div class="liquid-glass-dark rounded-comfort p-large lg:p-xxl text-center relative overflow-hidden">
             <div class="absolute inset-0 opacity-[0.04]" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
             <div class="relative z-10">
               <h2 class="reveal font-display text-[36px] md:text-[48px] font-normal leading-[44px] text-white mb-comfortable">
@@ -1810,7 +2231,7 @@
               <p class="reveal font-body text-[18px] font-normal leading-[28px] text-text-gray max-w-[500px] mx-auto mb-large">
                 Book a demo and see how Luviio can transform your digital presence in under 30 minutes.
               </p>
-              <button class="reveal bg-electric-blue text-white font-body text-[16px] font-medium px-large py-small rounded-standard shadow-md hover:bg-electric-blue-dark transition-all duration-200 inline-flex items-center gap-2" style="height: 48px;" onclick="showToast('Demo booking opening...', 'success')">
+              <button class="reveal liquid-btn text-white font-body text-[16px] font-medium px-large py-small rounded-standard inline-flex items-center gap-2" style="height: 48px;" onclick="showToast('Demo booking opening...', 'success')">
                 <i data-lucide="play-circle" class="w-5 h-5"></i>
                 Book a demo
               </button>
@@ -1828,7 +2249,7 @@
         <div class="orb orb-blue parallax-layer parallax-slow" style="width: 600px; height: 600px; top: -100px; right: -100px; opacity: 0.08;" data-speed="0.03"></div>
         
         <div class="max-w-container mx-auto px-comfortable lg:px-large relative z-10 text-center">
-          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-warm-beige/60 text-deep-brown font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable glass-card">
+          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-warm-beige/60 text-deep-brown font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable liquid-card">
             <i data-lucide="tag" class="w-4 h-4"></i>
             Transparent pricing, no surprises
           </div>
@@ -1849,7 +2270,7 @@
           <div class="grid md:grid-cols-3 gap-comfortable max-w-[1100px] mx-auto">
 
             <!-- STARTER -->
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large flex flex-col">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large flex flex-col">
               <div class="mb-comfortable">
                 <div class="font-body text-[14px] font-semibold text-text-gray uppercase tracking-wider mb-medium">Starter</div>
                 <p class="font-body text-[16px] text-text-gray mb-medium">Perfect for small businesses & startups</p>
@@ -1960,14 +2381,14 @@
                   <li class="flex items-center gap-small text-[14px] text-text-gray"><i data-lucide="check" class="w-4 h-4 text-electric-blue"></i> Monthly reviews</li>
                   <li class="flex items-center gap-small text-[14px] text-text-gray"><i data-lucide="check" class="w-4 h-4 text-electric-blue"></i> SEO tracking</li>
                 </ul>
-                <button class="w-full bg-electric-blue text-white font-body text-[16px] font-medium px-standard py-small rounded-standard shadow-md hover:bg-electric-blue-dark transition-all duration-200 active:scale-[0.98] focus-ring text-center" style="height: 48px;" onclick="showToast('Starting Growth plan...', 'success')">
+                <button class="w-full liquid-btn text-white font-body text-[16px] font-medium px-standard py-small rounded-standard text-center" style="height: 48px;" onclick="showToast('Starting Growth plan...', 'success')">
                   Get Started Now
                 </button>
               </div>
             </div>
 
             <!-- PRO IT -->
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large flex flex-col">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large flex flex-col">
               <div class="mb-comfortable">
                 <div class="font-body text-[14px] font-semibold text-text-gray uppercase tracking-wider mb-medium">Pro IT</div>
                 <p class="font-body text-[16px] text-text-gray mb-medium">Full outsourced IT department</p>
@@ -2047,7 +2468,7 @@
           </div>
 
           <!-- DESKTOP TABLE VIEW -->
-          <div class="reveal desktop-table-view glass-card rounded-standard overflow-hidden border border-border-gray/50 shadow-sm-elevated">
+          <div class="reveal desktop-table-view liquid-card rounded-standard overflow-hidden border border-border-gray/50 shadow-sm-elevated">
             <div class="comparison-table-container">
               <table class="comparison-table w-full">
                 <thead>
@@ -2139,10 +2560,10 @@
                   </tr>
                   <tr class="hover:bg-light-gray-bg/30 transition-colors">
                     <td class="p-comfortable text-dark-charcoal">Response time</td>
-                <td class="p-comfortable text-center text-text-gray">24-48 hours</td>
+                    <td class="p-comfortable text-center text-text-gray">24-48 hours</td>
                     <td class="p-comfortable text-center text-dark-charcoal font-medium bg-electric-blue/[0.03]">12-24 hours</td>
                     <td class="p-comfortable text-center text-dark-charcoal font-medium">&lt; 4 hours</td>
-              </tr>
+                </tr>
                 </tbody>
               </table>
             </div>
@@ -2203,7 +2624,7 @@
 
             <!-- Growth Mobile Card -->
             <div class="mobile-plan-card featured">
-              <div class="flex items-center justify-between mb-3 pb-3 border-b border-blue-100">
+<div class="flex items-center justify-between mb-3 pb-3 border-b border-blue-100">
                 <div>
                   <div class="flex items-center gap-2">
                     <h3 class="font-display text-[20px] font-bold text-dark-charcoal">Growth</h3>
@@ -2304,7 +2725,7 @@
 
           <div class="reveal text-center mt-large">
             <p class="font-body text-[16px] text-text-gray mb-comfortable">Still not sure which plan fits?</p>
-            <button class="bg-dark-gray-sec text-white font-body text-[16px] font-medium px-large py-small rounded-standard shadow-md hover:bg-dark-charcoal transition-all duration-200 inline-flex items-center gap-2" style="height: 48px;" onclick="navigateTo('/contact')">
+            <button class="liquid-btn bg-dark-gray-sec text-white font-body text-[16px] font-medium px-large py-small rounded-standard inline-flex items-center gap-2" style="height: 48px;" onclick="navigateTo('/contact')">
               <i data-lucide="calendar" class="w-4 h-4"></i>
               Book free consultation
             </button>
@@ -2321,9 +2742,9 @@
             </h2>
           </div>
 
-          <div class="reveal max-w-[850px] mx-auto glass-card rounded-standard overflow-hidden" id="faq-container">
+          <div class="reveal max-w-[850px] mx-auto liquid-card rounded-standard overflow-hidden" id="faq-container">
             
-            <!-- FAQ Items (abbreviated for space - same as original) -->
+            <!-- FAQ Item 1: Timeline -->
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">
                 <span>How long does it take to build a website?</span>
@@ -2331,7 +2752,7 @@
               </button>
               <div class="faq-answer">
                 <div class="faq-answer-content">
-                  <p class="mb-4">Every project is different, but here's our typical delivery timeline:</p>
+                  <p class="mb-4">The timeline depends on the size and complexity of your project. Most Starter websites are completed within 1–2 weeks, while Growth and eCommerce projects typically take around 3–4 weeks. For fully custom solutions, we'll provide a detailed timeline in your proposal before development begins.</p>
                   
                   <div class="grid sm:grid-cols-3 gap-3 mb-4">
                     <div class="timeline-card">
@@ -2340,7 +2761,7 @@
                       <span class="timeline-badge">1–2 Weeks</span>
                     </div>
                     <div class="timeline-card">
-                      <h4>Growth / eCommerce Website</h4>
+                      <h4>Growth / eCommerce</h4>
                       <p>For online stores & larger business websites</p>
                       <span class="timeline-badge">3–4 Weeks</span>
                     </div>
@@ -2356,6 +2777,7 @@
               </div>
             </div>
 
+            <!-- FAQ Item 2: Maintenance -->
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">
                 <span>Do you offer ongoing maintenance?</span>
@@ -2363,7 +2785,7 @@
               </button>
               <div class="faq-answer">
                 <div class="faq-answer-content">
-                  <p class="mb-4">Yes — we handle everything after launch so your website stays fast, secure, and up to date.</p>
+                  <p class="mb-4">Yes. We provide ongoing maintenance and support for all website plans to ensure your site remains secure, updated, and running smoothly.</p>
                   
                   <div class="support-grid">
                     <div class="support-item">
@@ -2383,6 +2805,7 @@
               </div>
             </div>
 
+            <!-- FAQ Item 3: Payment Methods -->
             <div class="faq-item">
               <button class="faq-question" onclick="toggleFaq(this)">
                 <span>What payment methods do you accept?</span>
@@ -2390,7 +2813,7 @@
               </button>
               <div class="faq-answer">
                 <div class="faq-answer-content">
-                  <p class="mb-3">We support secure local and international payment options through Stripe & FPX.</p>
+                  <p class="mb-3">We accept secure payments through Stripe and FPX. Supported payment methods include Visa, Mastercard, credit and debit cards, as well as FPX online banking for Malaysian customers.</p>
                   <div class="payment-methods">
                     <div class="payment-chip"><svg width="20" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Visa</div>
                     <div class="payment-chip"><svg width="20" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Mastercard</div>
@@ -2401,16 +2824,109 @@
               </div>
             </div>
 
+            <!-- FAQ Item 4: Hosting & Domain -->
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">
+                <span>Do you provide hosting and domain services?</span>
+                <i data-lucide="chevron-down" class="faq-icon w-5 h-5 text-text-gray"></i>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-content">
+                  <p>Yes, we can handle the entire technical setup for you, including premium hosting, SSL certificates, and domain management assistance. Every website includes secure HTTPS protection and reliable hosting with high uptime performance.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ Item 5: Revisions -->
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">
+                <span>How many revisions are included?</span>
+                <i data-lucide="chevron-down" class="faq-icon w-5 h-5 text-text-gray"></i>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-content">
+                  <p>We believe great websites are built through collaboration. During the design phase, we include up to <strong>3 revision rounds</strong> for major changes, while the development phase includes unlimited minor tweaks and refinements to ensure everything is polished before launch.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ Item 6: Response Time -->
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">
+                <span>What's your response time like?</span>
+                <i data-lucide="chevron-down" class="faq-icon w-5 h-5 text-text-gray"></i>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-content">
+                  <p>We aim to provide fast and reliable communication throughout every project. Most emails are answered within <strong>2 hours</strong>, while WhatsApp messages are typically replied to within <strong>30 minutes</strong> during working hours.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ Item 7: Technologies -->
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">
+                <span>What technologies do you use?</span>
+                <i data-lucide="chevron-down" class="faq-icon w-5 h-5 text-text-gray"></i>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-content">
+                  <p class="mb-3">We use modern and scalable technologies based on your project requirements:</p>
+                  <div class="tech-stack-grid">
+                    <div class="tech-category">
+                      <div class="tech-category-title">Frontend</div>
+                      <div class="tech-tags">
+                        <div class="tech-tag">React / Next.js</div>
+                        <div class="tech-tag">Vue.js</div>
+                        <div class="tech-tag">Tailwind CSS</div>
+                      </div>
+                    </div>
+                    <div class="tech-category">
+                      <div class="tech-category-title">Backend</div>
+                      <div class="tech-tags">
+                        <div class="tech-tag">Node.js</div>
+                        <div class="tech-tag">Python</div>
+                        <div class="tech-tag">Firebase</div>
+                      </div>
+                    </div>
+                    <div class="tech-category">
+                      <div class="tech-category-title">eCommerce</div>
+                      <div class="tech-tags">
+                        <div class="tech-tag">Shopify</div>
+                        <div class="tech-tag">WordPress</div>
+                        <div class="tech-tag">WooCommerce</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ Item 8: Cancellation & Refunds -->
+            <div class="faq-item">
+              <button class="faq-question" onclick="toggleFaq(this)">
+                <span>Can I cancel anytime? What's your refund policy?</span>
+                <i data-lucide="chevron-down" class="faq-icon w-5 h-5 text-text-gray"></i>
+              </button>
+              <div class="faq-answer">
+                <div class="faq-answer-content">
+                  <p class="mb-3">Yes, you may cancel anytime as we do not require long-term contracts. However, completed or delivered work is non-refundable. If you decide to leave, we will provide your website files and project assets so you remain in full control of your business data.</p>
+                  <a href="#/refund" onclick="navigateTo('/refund')" class="text-electric-blue hover:underline font-medium">Read our full Refund Policy →</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ Item 9: Contact CTA -->
             <div class="faq-item !border-b-0">
               <button class="faq-question" onclick="toggleFaq(this)">
-                <span>Still Have Questions?</span>
+                <span>Still have questions?</span>
                 <i data-lucide="chevron-down" class="faq-icon w-5 h-5 text-text-gray"></i>
               </button>
               <div class="faq-answer">
                 <div class="faq-answer-content">
                   <div class="contact-cta-box">
                     <h4>Contact Options</h4>
-                    <p>We're here to help you succeed online.</p>
+                    <p>If you can't find the information you're looking for, feel free to contact our team anytime. We're always happy to help you choose the right solution for your business.</p>
                     <div class="contact-buttons">
                       <button class="contact-btn contact-btn-primary" onclick="navigateTo('/contact')">
                         <i data-lucide="mail" class="w-4 h-4"></i> Contact Us
@@ -2438,7 +2954,7 @@
         <div class="orb orb-beige parallax-layer parallax-medium" style="width: 400px; height: 400px; bottom: -100px; left: -100px; opacity: 0.06;" data-speed="0.05"></div>
         
         <div class="max-w-container mx-auto px-comfortable lg:px-large relative z-10 text-center">
-          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-warm-beige/60 text-deep-brown font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable glass-card">
+          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-warm-beige/60 text-deep-brown font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable liquid-card">
             <i data-lucide="layers" class="w-4 h-4"></i>
             What We Do
           </div>
@@ -2460,7 +2976,7 @@
           <div class="grid md:grid-cols-2 gap-comfortable lg:gap-large">
 
             <!-- Website Design -->
-            <div id="design" class="reveal glass-card rounded-standard p-comfortable lg:p-large group">
+            <div id="design" class="reveal liquid-card rounded-standard p-comfortable lg:p-large group">
               <div class="w-14 h-14 bg-electric-blue/10 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-electric-blue/20 transition-colors">
                 <i data-lucide="layout" class="w-7 h-7 text-electric-blue"></i>
               </div>
@@ -2492,7 +3008,7 @@
             </div>
 
             <!-- Web Development -->
-            <div id="dev" class="reveal glass-card rounded-standard p-comfortable lg:p-large group">
+            <div id="dev" class="reveal liquid-card rounded-standard p-comfortable lg:p-large group">
               <div class="w-14 h-14 bg-soft-mint/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-soft-mint transition-colors">
                 <i data-lucide="code-2" class="w-7 h-7 text-success-green"></i>
               </div>
@@ -2501,7 +3017,7 @@
                 Robust, scalable applications built with cutting-edge technologies and industry best practices.
               </p>
               <ul class="space-y-small mb-comfortable">
-                <li class="flex items-center gap small text-[15px] text-dark-charcoal">
+                <li class="flex items-start gap small text-[15px] text-dark-charcoal">
                   <i data-lucide="check-circle" class="w-4 h-4 text-success-green flex-shrink-0"></i>
                   Modern frameworks (React, Next.js, Laravel)
                 </li>
@@ -2524,7 +3040,7 @@
             </div>
 
             <!-- Mobile Apps -->
-            <div id="mobile" class="reveal glass-card rounded-standard p-comfortable lg:p-large group">
+            <div id="mobile" class="reveal liquid-card rounded-standard p-comfortable lg:p-large group">
               <div class="w-14 h-14 bg-light-coral/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-light-coral transition-colors">
                 <i data-lucide="smartphone" class="w-7 h-7 text-error-red"></i>
               </div>
@@ -2556,7 +3072,7 @@
             </div>
 
             <!-- IT Support -->
-            <div id="it" class="reveal glass-card rounded-standard p-comfortable lg:p-large group">
+            <div id="it" class="reveal liquid-card rounded-standard p-comfortable lg:p-large group">
               <div class="w-14 h-14 bg-warm-beige/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-warm-beige transition-colors">
                 <i data-lucide="monitor-smartphone" class="w-7 h-7 text-deep-brown"></i>
               </div>
@@ -2602,22 +3118,22 @@
 
           <div class="grid md:grid-cols-4 gap-comfortable">
             <div class="reveal text-center">
-              <div class="w-12 h-12 mx-auto glass-card rounded-standard shadow-md flex items-center justify-center mb-comfortable text-electric-blue font-display text-[24px] font-bold">1</div>
+              <div class="w-12 h-12 mx-auto liquid-card rounded-standard shadow-md flex items-center justify-center mb-comfortable text-electric-blue font-display text-[24px] font-bold">1</div>
               <h3 class="font-body text-[18px] font-semibold text-dark-charcoal mb-small">Discover</h3>
               <p class="font-body text-[14px] text-text-gray leading-[22px]">We learn your business inside out.</p>
             </div>
             <div class="reveal text-center">
-              <div class="w-12 h-12 mx-auto glass-card rounded-standard shadow-md flex items-center justify-center mb-comfortable text-electric-blue font-display text-[24px] font-bold">2</div>
+              <div class="w-12 h-12 mx-auto liquid-card rounded-standard shadow-md flex items-center justify-center mb-comfortable text-electric-blue font-display text-[24px] font-bold">2</div>
               <h3 class="font-body text-[18px] font-semibold text-dark-charcoal mb-small">Design</h3>
               <p class="font-body text-[14px] text-text-gray leading-[22px]">Wireframes & prototypes crafted to convert.</p>
             </div>
             <div class="reveal text-center">
-              <div class="w-12 h-12 mx-auto glass-card rounded-standard shadow-md flex items-center justify-center mb-comfortable text-electric-blue font-display text-[24px] font-bold">3</div>
+              <div class="w-12 h-12 mx-auto liquid-card rounded-standard shadow-md flex items-center justify-center mb-comfortable text-electric-blue font-display text-[24px] font-bold">3</div>
               <h3 class="font-body text-[18px] font-semibold text-dark-charcoal mb-small">Develop</h3>
               <p class="font-body text-[14px] text-text-gray leading-[22px]">Clean code with regular client reviews.</p>
             </div>
             <div class="reveal text-center">
-              <div class="w-12 h-12 mx-auto glass-card rounded-standard shadow-md flex items-center justify-center mb-comfortable text-electric-blue font-display text-[24px] font-bold">4</div>
+              <div class="w-12 h-12 mx-auto liquid-card rounded-standard shadow-md flex items-center justify-center mb-comfortable text-electric-blue font-display text-[24px] font-bold">4</div>
               <h3 class="font-body text-[18px] font-semibold text-dark-charcoal mb-small">Support</h3>
               <p class="font-body text-[14px] text-text-gray leading-[22px]">Launch, monitor, maintain & improve.</p>
             </div>
@@ -2628,7 +3144,7 @@
       <!-- CTA -->
       <section class="py-massive">
         <div class="max-w-container mx-auto px-comfortable lg:px-large">
-          <div class="glass-dark rounded-comfort p-large lg:p-xxl text-center relative overflow-hidden">
+          <div class="liquid-glass-dark rounded-comfort p-large lg:p-xxl text-center relative overflow-hidden">
             <div class="absolute inset-0 opacity-[0.04]" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 60px 60px;"></div>
             <div class="relative z-10">
               <h2 class="reveal font-display text-[36px] md:text-[48px] font-normal leading-[44px] text-white mb-comfortable">
@@ -2637,7 +3153,7 @@
               <p class="reveal font-body text-[18px] font-normal leading-[28px] text-text-gray max-w-[500px] mx-auto mb-large">
                 Tell us about your vision. We'll propose the best approach and give you an honest timeline and quote.
               </p>
-              <button class="reveal bg-electric-blue text-white font-body text-[16px] font-medium px-large py-small rounded-standard shadow-md hover:bg-electric-blue-dark transition-all duration-200 inline-flex items-center gap-2" style="height: 48px;" onclick="navigateTo('/contact')">
+              <button class="reveal liquid-btn text-white font-body text-[16px] font-medium px-large py-small rounded-standard inline-flex items-center gap-2" style="height: 48px;" onclick="navigateTo('/contact')">
                 Start a project
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
               </button>
@@ -2655,7 +3171,7 @@
         <div class="orb orb-blue parallax-layer parallax-slow" style="width: 800px; height: 800px; top: -200px; left: 50%; transform: translateX(-50%); opacity: 0.06;" data-speed="0.02"></div>
         
         <div class="max-w-container mx-auto px-comfortable lg:px-large relative z-10 text-center">
-          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-warm-beige/60 text-deep-brown font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable glass-card">
+          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-warm-beige/60 text-deep-brown font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable liquid-card">
             <i data-lucide="book-open" class="w-4 h-4"></i>
             Insights
           </div>
@@ -2676,11 +3192,11 @@
         <div class="max-w-container mx-auto px-comfortable lg:px-large">
           
           <!-- Featured Post -->
-          <article class="reveal glass-card rounded-standard overflow-hidden mb-large hover:shadow-sm-elevated transition-all duration-300 cursor-pointer group" onclick="openArticle('company')">
+          <article class="reveal liquid-card rounded-standard overflow-hidden mb-large hover:shadow-sm-elevated transition-all duration-300 cursor-pointer group" onclick="openArticle('company')">
             <div class="grid md:grid-cols-2 gap-0">
               <div class="aspect-video md:aspect-auto bg-gradient-to-br from-electric-blue/20 to-electric-blue/5 flex items-center justify-center p-large">
                 <div class="text-center">
-                  <div class="w-20 h-20 mx-auto glass-card rounded-full shadow-md flex items-center justify-center mb-medium">
+                  <div class="w-20 h-20 mx-auto liquid-card rounded-full shadow-md flex items-center justify-center mb-medium">
                     <span class="font-display text-[32px] font-bold text-electric-blue">L</span>
                   </div>
                   <span class="font-display text-[24px] font-medium text-dark-charcoal">Luviio Company</span>
@@ -2708,7 +3224,7 @@
           <div class="grid md:grid-cols-3 gap-comfortable">
 
             <!-- Danial Danish -->
-            <article class="reveal team-card glass-card rounded-standard overflow-hidden cursor-pointer group" onclick="openArticle('danial')">
+            <article class="reveal team-card liquid-card rounded-standard overflow-hidden cursor-pointer group" onclick="openArticle('danial')">
               <div class="aspect-[4/3] overflow-hidden bg-light-gray-bg">
                 <img src="https://images.luviio.com/dd-web.jpeg" alt="Danial Danish" class="team-img w-full h-full object-cover transition-transform duration-500">
               </div>
@@ -2730,7 +3246,7 @@
             </article>
 
             <!-- Nurul Nabila -->
-            <article class="reveal team-card glass-card rounded-standard overflow-hidden cursor-pointer group" onclick="openArticle('nurul')">
+            <article class="reveal team-card liquid-card rounded-standard overflow-hidden cursor-pointer group" onclick="openArticle('nurul')">
               <div class="aspect-[4/3] overflow-hidden bg-light-gray-bg">
                 <img src="https://images.luviio.com/nurulnabila-web.jpeg" alt="Nurul Nabila" class="team-img w-full h-full object-cover transition-transform duration-500">
               </div>
@@ -2752,7 +3268,7 @@
             </article>
 
             <!-- Putri Erinna -->
-            <article class="reveal team-card glass-card rounded-standard overflow-hidden cursor-pointer group" onclick="openArticle('putri')">
+            <article class="reveal team-card liquid-card rounded-standard overflow-hidden cursor-pointer group" onclick="openArticle('putri')">
               <div class="aspect-[4/3] overflow-hidden bg-light-gray-bg">
                 <img src="https://images.luviio.com/1E43D901-B454-4373-870C-85EFCCFF51D6_1_105_c.jpeg" alt="Putri Erinna" class="team-img w-full h-full object-cover transition-transform duration-500">
               </div>
@@ -2780,11 +3296,11 @@
       <!-- ARTICLE MODAL / DETAIL VIEW -->
       <div id="article-view" class="hidden fixed inset-0 bg-white z-[100] overflow-y-auto">
         <div class="max-w-container mx-auto px-comfortable lg:px-large pt-[100px] pb-xxl">
-          <button onclick="closeArticle()" class="fixed top-[80px] left-comfortable flex items-center gap-2 font-body text-[14px] font-medium text-text-gray hover:text-electric-blue transition-colors mb-large glass-card px-3 py-2 rounded-standard">
+          <button onclick="closeArticle()" class="fixed top-[80px] left-comfortable flex items-center gap-2 font-body text-[14px] font-medium text-text-gray hover:text-electric-blue transition-colors mb-large liquid-card px-3 py-2 rounded-standard">
             <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to blog
           </button>
           
-          <div id="article-content" class="max-w-[800px] mx-auto">
+          <div id="article-content" class="max-w-[800px] mx-auto article-prose">
             <!-- Content injected by JS -->
           </div>
         </div>
@@ -2797,7 +3313,7 @@
       <!-- HERO -->
       <section class="pt-[160px] pb-[80px]">
         <div class="max-w-container mx-auto px-comfortable lg:px-large text-center">
-          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-electric-blue/10 text-electric-blue font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable glass-card">
+          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-electric-blue/10 text-electric-blue font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable liquid-card">
             <i data-lucide="file-text" class="w-4 h-4"></i>
             Documentation
           </div>
@@ -2813,7 +3329,7 @@
           <div class="reveal max-w-[500px] mx-auto">
             <div class="relative">
               <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-text-gray"></i>
-              <input type="text" placeholder="Search documentation..." class="w-full glass-card text-dark-charcoal font-body text-[16px] pl-12 pr-4 py-3 rounded-standard focus-ring placeholder:text-text-gray transition-all" onfocusout="showToast('Search coming soon!', 'info')">
+              <input type="text" placeholder="Search documentation..." class="w-full liquid-input text-dark-charcoal font-body text-[16px] pl-12 pr-4 py-3 rounded-standard focus-ring placeholder:text-text-gray transition-all" onfocusout="showToast('Search coming soon!', 'info')">
             </div>
           </div>
         </div>
@@ -2824,7 +3340,7 @@
         <div class="max-w-container mx-auto px-comfortable lg:px-large">
           <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-comfortable">
 
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Getting Started guide...', 'success')">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Getting Started guide...', 'success')">
               <div class="w-12 h-12 bg-electric-blue/10 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-electric-blue/20 transition-colors">
                 <i data-lucide="rocket" class="w-6 h-6 text-electric-blue"></i>
               </div>
@@ -2836,7 +3352,7 @@
               </div>
             </div>
 
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Design Guidelines...', 'success')">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Design Guidelines...', 'success')">
               <div class="w-12 h-12 bg-soft-mint/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-soft-mint transition-colors">
                 <i data-lucide="palette" class="w-6 h-6 text-success-green"></i>
               </div>
@@ -2848,7 +3364,7 @@
               </div>
             </div>
 
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Dev docs...', 'success')">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Dev docs...', 'success')">
               <div class="w-12 h-12 bg-light-coral/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-light-coral transition-colors">
                 <i data-lucide="code-2" class="w-6 h-6 text-error-red"></i>
               </div>
@@ -2860,7 +3376,7 @@
               </div>
             </div>
 
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Support docs...', 'success')">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Support docs...', 'success')">
               <div class="w-12 h-12 bg-warm-beige/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-warm-beige transition-colors">
                 <i data-lucide="life-buoy" class="w-6 h-6 text-deep-brown"></i>
               </div>
@@ -2872,7 +3388,7 @@
               </div>
             </div>
 
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="navigateTo('/pricing')">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="navigateTo('/pricing')">
               <div class="w-12 h-12 bg-electric-blue/10 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-electric-blue/20 transition-colors">
                 <i data-lucide="credit-card" class="w-6 h-6 text-electric-blue"></i>
               </div>
@@ -2884,7 +3400,7 @@
               </div>
             </div>
 
-            <div class="reveal glass-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Changelog...', 'success')">
+            <div class="reveal liquid-card rounded-standard p-comfortable lg:p-large cursor-pointer group" onclick="showToast('Opening Changelog...', 'success')">
               <div class="w-12 h-12 bg-soft-mint/60 rounded-standard flex items-center justify-center mb-comfortable group-hover:bg-soft-mint transition-colors">
                 <i data-lucide="git-branch" class="w-6 h-6 text-success-green"></i>
               </div>
@@ -2910,7 +3426,7 @@
         <div class="orb orb-mint parallax-layer parallax-medium" style="width: 400px; height: 400px; bottom: -100px; left: -50px; opacity: 0.06;" data-speed="0.05"></div>
         
         <div class="max-w-container mx-auto px-comfortable lg:px-large relative z-10 text-center">
-          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-electric-blue/10 text-electric-blue font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable glass-card">
+          <div class="reveal animate-fade-in-up inline-flex items-center gap-small bg-electric-blue/10 text-electric-blue font-body text-[14px] font-semibold px-medium py-small rounded-pill mb-comfortable liquid-card">
             <i data-lucide="mail" class="w-4 h-4"></i>
             Get in Touch
           </div>
@@ -2936,7 +3452,7 @@
               
               <!-- Direct Contact Cards -->
               <div class="space-y-comfortable">
-                <div class="reveal glass-card rounded-standard p-comfortable flex items-start gap-4 group hover:border-electric-blue/30 transition-all">
+                <div class="reveal liquid-card rounded-standard p-comfortable flex items-start gap-4 group hover:border-electric-blue/30 transition-all">
                   <div class="w-12 h-12 bg-electric-blue/10 rounded-standard flex items-center justify-center flex-shrink-0 group-hover:bg-electric-blue/20 transition-colors">
                     <i data-lucide="mail" class="w-6 h-6 text-electric-blue"></i>
                   </div>
@@ -2947,7 +3463,7 @@
                   </div>
                 </div>
 
-                <div class="reveal glass-card rounded-standard p-comfortable flex items-start gap-4 group hover:border-success-green/30 transition-all">
+                <div class="reveal liquid-card rounded-standard p-comfortable flex items-start gap-4 group hover:border-success-green/30 transition-all">
                   <div class="w-12 h-12 bg-soft-mint/60 rounded-standard flex items-center justify-center flex-shrink-0 group-hover:bg-soft-mint transition-colors">
                     <i data-lucide="message-circle" class="w-6 h-6 text-success-green"></i>
                   </div>
@@ -2958,7 +3474,7 @@
                   </div>
                 </div>
 
-                <div class="reveal glass-card rounded-standard p-comfortable flex items-start gap-4 group hover:border-warning-gold/30 transition-all">
+                <div class="reveal liquid-card rounded-standard p-comfortable flex items-start gap-4 group hover:border-warning-gold/30 transition-all">
                   <div class="w-12 h-12 bg-warm-beige/60 rounded-standard flex items-center justify-center flex-shrink-0 group-hover:bg-warm-beige transition-colors">
                     <i data-lucide="phone" class="w-6 h-6 text-deep-brown"></i>
                   </div>
@@ -2969,7 +3485,7 @@
                   </div>
                 </div>
 
-                <div class="reveal glass-card rounded-standard p-comfortable flex items-start gap-4 group hover:border-error-red/30 transition-all">
+                <div class="reveal liquid-card rounded-standard p-comfortable flex items-start gap-4 group hover:border-error-red/30 transition-all">
                   <div class="w-12 h-12 bg-light-coral/60 rounded-standard flex items-center justify-center flex-shrink-0 group-hover:bg-light-coral transition-colors">
                     <i data-lucide="map-pin" class="w-6 h-6 text-error-red"></i>
                   </div>
@@ -2982,7 +3498,7 @@
               </div>
 
               <!-- Office Hours Card -->
-              <div class="reveal glass-dark rounded-standard p-comfortable">
+              <div class="reveal liquid-glass-dark rounded-standard p-comfortable">
                 <h3 class="font-body text-[16px] font-semibold text-white mb-4 flex items-center gap-2">
                   <i data-lucide="clock" class="w-5 h-5 text-electric-blue"></i>
                   Office Hours
@@ -3010,13 +3526,13 @@
               <div class="reveal">
                 <h3 class="font-body text-[14px] font-bold text-dark-charcoal uppercase tracking-wider mb-3">Follow Us</h3>
                 <div class="flex items-center gap-3">
-                  <a href="#" class="w-11 h-11 rounded-standard glass-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200" aria-label="Twitter">
+                  <a href="#" class="w-11 h-11 rounded-standard liquid-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200" aria-label="Twitter">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
                   </a>
-                  <a href="#" class="w-11 h-11 rounded-standard glass-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200" aria-label="LinkedIn">
+                  <a href="#" class="w-11 h-11 rounded-standard liquid-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200" aria-label="LinkedIn">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
                   </a>
-                  <a href="#" class="w-11 h-11 rounded-standard glass-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200" aria-label="Instagram">
+                  <a href="#" class="w-11 h-11 rounded-standard liquid-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200" aria-label="Instagram">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
                   </a>
                 </div>
@@ -3025,7 +3541,7 @@
 
             <!-- Contact Form Column -->
             <div class="lg:col-span-3">
-              <div class="reveal glass-card rounded-comfort p-comfortable lg:p-large">
+              <div class="reveal liquid-card rounded-comfort p-comfortable lg:p-large">
                 <h2 class="font-display text-[28px] font-normal leading-[36px] text-dark-charcoal mb-2">Send us a message</h2>
                 <p class="font-body text-[15px] text-text-gray mb-large">Fill out the form below and we'll get back to you within 24 hours.</p>
                 
@@ -3033,27 +3549,27 @@
                   <div class="grid sm:grid-cols-2 gap-medium">
                     <div>
                       <label class="block font-body text-[13px] font-semibold text-dark-charcoal mb-2">First Name *</label>
-                      <input type="text" required placeholder="John" class="w-full bg-white border border-input-border rounded-standard px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all">
+                      <input type="text" required placeholder="John" class="liquid-input w-full px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all">
                     </div>
                     <div>
                       <label class="block font-body text-[13px] font-semibold text-dark-charcoal mb-2">Last Name *</label>
-                      <input type="text" required placeholder="Doe" class="w-full bg-white border border-input-border rounded-standard px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all">
+                      <input type="text" required placeholder="Doe" class="liquid-input w-full px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all">
                     </div>
                   </div>
                   
                   <div>
                     <label class="block font-body text-[13px] font-semibold text-dark-charcoal mb-2">Email Address *</label>
-                    <input type="email" required placeholder="john@company.com" class="w-full bg-white border border-input-border rounded-standard px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all">
+                    <input type="email" required placeholder="john@company.com" class="liquid-input w-full px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all">
                   </div>
                   
                   <div>
                     <label class="block font-body text-[13px] font-semibold text-dark-charcoal mb-2">Company Name</label>
-                    <input type="text" placeholder="Your Company Sdn Bhd" class="w-full bg-white border border-input-border rounded-standard px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all">
+                    <input type="text" placeholder="Your Company Sdn Bhd" class="liquid-input w-full px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all">
                   </div>
                   
                   <div>
                     <label class="block font-body text-[13px] font-semibold text-dark-charcoal mb-2">What can we help you with? *</label>
-                    <select required class="w-full bg-white border border-input-border rounded-standard px-4 py-3 font-body text-[15px] focus-ring text-dark-charcoal appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236D7178' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; background-size: 18px;">
+                    <select required class="liquid-input w-full px-4 py-3 font-body text-[15px] focus-ring text-dark-charcoal appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236D7178' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; background-size: 18px;">
                       <option value="" disabled selected>Select a service...</option>
                       <option value="website-design">Website Design</option>
                       <option value="web-development">Web Development</option>
@@ -3066,7 +3582,7 @@
                   
                   <div>
                     <label class="block font-body text-[13px] font-semibold text-dark-charcoal mb-2">Project Budget (Optional)</label>
-                    <select class="w-full bg-white border border-input-border rounded-standard px-4 py-3 font-body text-[15px] focus-ring text-dark-charcoal appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236D7178' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; background-size: 18px;">
+                    <select class="liquid-input w-full px-4 py-3 font-body text-[15px] focus-ring text-dark-charcoal appearance-none cursor-pointer" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236D7178' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 12px center; background-size: 18px;">
                       <option value="">Select budget range...</option>
                       <option value="under-5k">Under MYR 5,000</option>
                       <option value="5k-15k">MYR 5,000 – 15,000</option>
@@ -3077,7 +3593,7 @@
                   
                   <div>
                     <label class="block font-body text-[13px] font-semibold text-dark-charcoal mb-2">Tell us about your project *</label>
-                    <textarea required rows="5" placeholder="Describe your project goals, timeline, or any specific requirements..." class="w-full bg-white border border-input-border rounded-standard px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all resize-vertical"></textarea>
+                    <textarea required rows="5" placeholder="Describe your project goals, timeline, or any specific requirements..." class="liquid-input w-full px-4 py-3 font-body text-[15px] focus-ring placeholder:text-text-gray/60 transition-all resize-vertical"></textarea>
                   </div>
                   
                   <div class="flex items-start gap-small">
@@ -3087,7 +3603,7 @@
                     </label>
                   </div>
                   
-                  <button type="submit" class="w-full bg-electric-blue text-white font-body text-[16px] font-semibold px-large py-small rounded-standard shadow-md hover:bg-electric-blue-dark hover:shadow-lg transition-all duration-200 active:scale-[0.98] focus-ring flex items-center justify-center gap-2" style="height: 52px;">
+                  <button type="submit" class="liquid-btn w-full text-white font-body text-[16px] font-semibold px-large py-small rounded-standard flex items-center justify-center gap-2" style="height: 52px;">
                     <i data-lucide="send" class="w-5 h-5"></i>
                     Send Message
                   </button>
@@ -3386,16 +3902,16 @@
           </p>
           
           <div class="flex items-center gap-3">
-            <a href="#" class="w-10 h-10 rounded-standard glass-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200 group" aria-label="Twitter">
+            <a href="#" class="w-10 h-10 rounded-standard liquid-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200 group" aria-label="Twitter">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
             </a>
-            <a href="#" class="w-10 h-10 rounded-standard glass-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200 group" aria-label="LinkedIn">
+            <a href="#" class="w-10 h-10 rounded-standard liquid-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200 group" aria-label="LinkedIn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
             </a>
-            <a href="#" class="w-10 h-10 rounded-standard glass-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200 group" aria-label="Instagram">
+            <a href="#" class="w-10 h-10 rounded-standard liquid-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200 group" aria-label="Instagram">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
             </a>
-            <a href="#" class="w-10 h-10 rounded-standard glass-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200 group" aria-label="WhatsApp">
+            <a href="#" class="w-10 h-10 rounded-standard liquid-card flex items-center justify-center hover:border-electric-blue hover:text-electric-blue hover:shadow-md text-text-gray transition-all duration-200 group" aria-label="WhatsApp">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
             </a>
           </div>
@@ -3476,8 +3992,8 @@
           <div class="mt-5 pt-5 border-t border-border-gray/30">
             <p class="font-body text-[12px] font-semibold text-dark-charcoal uppercase tracking-wider mb-2">Stay Updated</p>
             <form onsubmit="handleNewsletter(event)" class="flex gap-2">
-              <input type="email" required placeholder="Your email" class="flex-1 min-w-0 bg-white/60 border border-border-gray/50 rounded-subtle px-3 py-2 text-[13px] focus-ring placeholder:text-text-gray/60 backdrop-blur-sm font-body">
-              <button type="submit" class="bg-electric-blue text-white px-3 py-2 rounded-subtle text-[13px] font-medium hover:bg-electric-blue-dark transition-colors flex-shrink-0">
+              <input type="email" required placeholder="Your email" class="liquid-input flex-1 min-w-0 text-[13px] focus-ring placeholder:text-text-gray/60 backdrop-blur-sm font-body">
+              <button type="submit" class="liquid-btn text-white px-3 py-2 rounded-subtle text-[13px] font-medium flex-shrink-0">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
             </form>
@@ -3533,14 +4049,14 @@
       if (metaDesc) {
         const descriptions = {
           '/': 'Luviio provides digital solutions including website design, development, mobile apps, and IT support for modern businesses in Malaysia.',
-          '/product': 'Explore Luviio\'s product platform featuring design systems, modern tech stack, and a powerful client portal dashboard.',
+          '/product': "Explore Luviio's product platform featuring design systems, modern tech stack, and a powerful client portal dashboard.",
           '/services': 'Comprehensive digital services: Website Design, Web Development, Mobile Applications, and IT Support tailored for your business.',
           '/pricing': 'Simple, transparent pricing plans designed for Malaysian businesses. Starter, Growth, and Pro IT options available.',
           '/blog': 'Read insights from the Luviio team about design, technology, business growth, and digital transformation.',
           '/docs': 'Access documentation, guides, API references, and support resources for all Luviio services.',
           '/contact': 'Contact Luviio for digital solutions. Get a free consultation, request a quote, or speak with our team.',
           '/privacy': 'Learn how Luviio collects, uses, and protects your personal information in our Privacy Policy.',
-          '/terms': 'Read Luviio\'s Terms of Service governing the use of our digital services and platforms.',
+          '/terms': "Read Luviio's Terms of Service governing the use of our digital services and platforms.",
           '/refund': 'Understand Luviio\'s refund policy for subscriptions, custom projects, and one-time services.'
         };
         metaDesc.setAttribute('content', descriptions[path] || descriptions['/']);
@@ -3667,11 +4183,9 @@
       const currentScroll = window.scrollY;
       
       if (currentScroll > 50) {
-        header.style.background = 'rgba(255, 255, 255, 0.85)';
-        header.style.boxShadow = '0 4px 30px rgba(31, 33, 35, 0.08)';
+        header.classList.add('scrolled');
       } else {
-        header.style.background = 'rgba(255, 255, 255, 0.75)';
-        header.style.boxShadow = 'none';
+        header.classList.remove('scrolled');
       }
 
       lastScroll = currentScroll;
@@ -3774,8 +4288,8 @@
       const toast = document.createElement('div');
       toast.className = 'toast';
       toast.innerHTML = `
-        <div class="glass-toast flex items-center gap-3 px-5 py-4 rounded-standard shadow-lg" style="background: ${bgMap[type]}; border-left: 4px solid ${colorMap[type]};">
-          <i data-lucide="${iconMap[type]}" class="w-5 h-5 flex-shrink-0" style="color: ${colorMap[type]};"></i>
+        <div class="liquid-toast flex items-center gap-3 px-5 py-4 rounded-standard shadow-lg" style="color: ${colorMap[type]};">
+          <i data-lucide="${iconMap[type]}" class="w-5 h-5 flex-shrink-0"></i>
           <span class="font-body text-[14px] font-medium text-dark-charcoal flex-1">${message}</span>
           <button class="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/60 transition-colors flex-shrink-0" onclick="removeToast(this.closest('.toast'))">
             <i data-lucide="x" class="w-4 h-4 text-text-gray"></i>
@@ -3805,40 +4319,65 @@
         image: null,
         content: `
           <div class="prose prose-lg max-w-none">
-            <p class="font-body text-[18px] leading-[28px] text-text-gray mb-8 first-letter:text-[48px] first-letter:font-display first-letter:text-electric-blue first-letter:float-left first-letter:mr-2 first-letter:mt-[-8px]">
-              A digital service company built on a simple but powerful idea: technology should help businesses grow without making things complicated.
+            <p class="first-letter:text-[48px] first-letter:font-display first-letter:text-electric-blue first-letter:float-left first-letter:mr-2 first-letter:mt-[-8px] first-letter:font-bold">
+              Luviio is a digital service company built on a simple but powerful idea: technology should help businesses grow without making things complicated.
             </p>
             
-            <h2 class="font-display text-[28px] font-normal text-dark-charcoal mt-12 mb-4">Our Philosophy</h2>
-            <p class="font-body text-[16px] leading-[26px] text-text-gray mb-6">
-              At Luviio, we believe that great technology doesn't have to be complex. Our mission is to democratize access to enterprise-grade digital solutions.
-            </p>
+            <p>In a world where digital transformation often feels expensive, slow, and overwhelming, Luviio was created to offer a different experience—one that is fast, clear, and practical. Based in Malaysia, the company focuses on helping startups and small-to-medium businesses build their digital presence through websites, mobile apps, and IT solutions.</p>
             
-            <div class="glass-card rounded-standard p-6 my-8 border-l-4 border-electric-blue">
-              <p class="font-body text-[16px] italic text-dark-charcoal">
-                "Technology should serve the business, not the other way around."
-              </p>
-              <p class="font-body text-[14px] text-text-gray mt-2">— Danial Danish, Founder & CEO</p>
+            <p>But Luviio is not just a service provider. It is a lean, collaborative system where every role matters and every decision is made with speed and purpose.</p>
+            
+            <div class="mission-box">
+              <h4><i data-lucide="target" class="w-5 h-5"></i> Mission</h4>
+              <p>Luviio's mission is to simplify digital transformation by delivering accessible, efficient, and reliable technology solutions for growing businesses.</p>
             </div>
 
-            <h2 class="font-display text-[28px] font-normal text-dark-charcoal mt-12 mb-4">Meet The Team</h2>
-            <div class="grid md:grid-cols-3 gap-6 my-8">
-              <div class="glass-card rounded-standard p-5 text-center cursor-pointer hover:shadow-md transition-shadow" onclick="openArticle('danial')">
-                <img src="https://images.luviio.com/dd-web.jpeg" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover ring-2 ring-white shadow-md">
-                <div class="font-body text-[16px] font-semibold text-dark-charcoal">Danial Danish</div>
-                <div class="font-body text-[13px] text-text-gray">Founder & CEO</div>
+            <h2>🧩 What Luviio Does</h2>
+            <ul class="role-list">
+              <li>Website design and development</li>
+              <li>Mobile application development</li>
+              <li>IT support and outsourcing</li>
+              <li>Digital optimization for businesses</li>
+            </ul>
+
+            <h2>🚀 Story</h2>
+            <p>Luviio started with a belief that small teams can move faster than large organizations when they are focused and aligned. Instead of building layers of complexity, the company focuses on direct communication, fast execution, and continuous improvement.</p>
+            
+            <p>Every project is treated as a partnership—not just a transaction. The goal is not only to deliver software, but to help businesses grow confidently in the digital world.</p>
+
+            <blockquote>
+              <p>"We believe that great technology should feel invisible—it should simply work, empower, and grow with your business."</p>
+            </blockquote>
+
+            <h2>🌱 The Team</h2>
+            <p>Together, Luviio and its core team represent a simple but powerful structure:</p>
+            
+            <div class="team-grid-preview">
+              <div class="team-mini-card" onclick="openArticle('danial')">
+                <img src="https://images.luviio.com/dd-web.jpeg" class="team-mini-img" alt="Danial">
+                <div class="team-mini-name">Danial Danish</div>
+                <div class="team-mini-role">Founder & CEO</div>
               </div>
-              <div class="glass-card rounded-standard p-5 text-center cursor-pointer hover:shadow-md transition-shadow" onclick="openArticle('nurul')">
-                <img src="https://images.luviio.com/nurulnabila-web.jpeg" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover ring-2 ring-white shadow-md">
-                <div class="font-body text-[16px] font-semibold text-dark-charcoal">Nurul Nabila</div>
-                <div class="font-body text-[13px] text-text-gray">Co-Founder & Lead Project</div>
+              <div class="team-mini-card" onclick="openArticle('nurul')">
+                <img src="https://images.luviio.com/nurulnabila-web.jpeg" class="team-mini-img" alt="Nurul">
+                <div class="team-mini-name">Nurul Nabila</div>
+                <div class="team-mini-role">Co-Founder & Lead Project</div>
               </div>
-              <div class="glass-card rounded-standard p-5 text-center cursor-pointer hover:shadow-md transition-shadow" onclick="openArticle('putri')">
-                <img src="https://images.luviio.com/1E43D901-B454-4373-870C-85EFCCFF51D6_1_105_c.jpeg" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover ring-2 ring-white shadow-md">
-                <div class="font-body text-[16px] font-semibold text-dark-charcoal">Putri Erinna</div>
-                <div class="font-body text-[13px] text-text-gray">Client Relations & Marketing</div>
+              <div class="team-mini-card" onclick="openArticle('putri')">
+                <img src="https://images.luviio.com/1E43D901-B454-4373-870C-85EFCCFF51D6_1_105_c.jpeg" class="team-mini-img" alt="Putri">
+                <div class="team-mini-name">Putri Erinna</div>
+                <div class="team-mini-role">Client Relations & Marketing</div>
               </div>
             </div>
+
+            <h2>🌱 Final Reflection</h2>
+            <p>Each role is different, but all move toward the same goal: helping businesses grow through better digital solutions.</p>
+            <ul class="role-list">
+              <li>A company focused on clarity and speed</li>
+              <li>A founder focused on building and systems</li>
+              <li>A project lead focused on structure and delivery</li>
+              <li>A client manager focused on connection and growth</li>
+            </ul>
           </div>
         `
       },
@@ -3856,14 +4395,44 @@
               <div class="font-body text-[14px] text-text-gray">Founder & CEO at Luviio</div>
             </div>
           </div>
-          <p class="font-body text-[18px] leading-[28px] text-text-gray mb-8">
-            Behind Luviio's technical direction is Danial Danish, the Founder and CEO. His journey is rooted in curiosity, problem-solving, and a passion for building systems that actually work.
-          </p>
-          <blockquote class="border-l-4 border-electric-blue pl-6 my-8 italic bg-light-gray-bg/50 py-4 pr-4 rounded-r-standard">
-            <p class="font-body text-[18px] text-dark-charcoal leading-[28px]">
-              "Great code isn't just about syntax—it's about solving real problems for real people."
-            </p>
+          
+          <p>Behind Luviio's technical direction is Danial Danish, the Founder and CEO. His journey is rooted in curiosity, problem-solving, and a passion for building systems that actually work in the real world.</p>
+          
+          <p>Danial is not a traditional CEO who stays distant from operations. Instead, he is deeply involved in development, architecture, and technical decision-making.</p>
+
+          <div class="mission-box">
+            <h4><i data-lucide="rocket" class="w-5 h-5"></i> Mission</h4>
+            <p>His mission is to build practical and scalable digital systems that help businesses operate more efficiently and grow sustainably.</p>
+          </div>
+
+          <h2>🧩 Role in Luviio</h2>
+          <p>Danial's responsibilities include:</p>
+          <ul class="role-list">
+            <li>Leading software development</li>
+            <li>Designing system architecture</li>
+            <li>Making technical decisions</li>
+            <li>Ensuring performance and scalability</li>
+            <li>Guiding product direction</li>
+          </ul>
+          
+          <p>He acts as both the engineer and the strategist, ensuring that ideas are not only creative but also executable.</p>
+
+          <h2>🚀 Story</h2>
+          <p>Danial's approach is hands-on. He believes that understanding the code means understanding the product—and understanding the product means building better solutions.</p>
+          
+          <p>His leadership style is shaped by action, not theory. Instead of over-planning, he focuses on building, testing, and improving continuously. This mindset has shaped Luviio into a company that values speed, learning, and adaptability.</p>
+
+          <blockquote>
+            <p>"Great code isn't just about syntax—it's about solving real problems for real people. Every line should serve a purpose."</p>
           </blockquote>
+
+          <div class="author-card">
+            <img src="https://images.luviio.com/dd-web.jpeg" class="author-avatar" alt="Danial">
+            <div class="author-info">
+              <h4>Danial Danish</h4>
+              <p>Founder & CEO at Luviio. Passionate about building systems that scale and solving complex problems with elegant solutions.</p>
+            </div>
+          </div>
         `
       },
       nurul: {
@@ -3880,18 +4449,48 @@
               <div class="font-body text-[14px] text-text-gray">Co-Founder & Lead Project Manager</div>
             </div>
           </div>
-          <p class="font-body text-[18px] leading-[28px] text-text-gray mb-8">
-            Every fast-moving team needs someone who ensures everything stays aligned. At Luviio, that role is handled by Nurul Nabila, also known as Bella.
-          </p>
-          <blockquote class="border-l-4 border-success-green pl-6 my-8 italic bg-light-gray-bg/50 py-4 pr-4 rounded-r-standard">
-            <p class="font-body text-[18px] text-dark-charcoal leading-[28px]">
-              "Structure doesn't limit creativity—it enables it."
-            </p>
+          
+          <p>Every fast-moving team needs someone who ensures everything stays aligned and organized. At Luviio, that role is handled by Nurul Nabila, also known as Bella, the Co-founder and Project Lead.</p>
+          
+          <p>Bella is the person who brings structure into fast-paced execution. While ideas move quickly in development, she ensures they are translated into clear plans, timelines, and deliverables.</p>
+
+          <div class="mission-box" style="border-color: rgba(0, 138, 39, 0.2); background: linear-gradient(135deg, rgba(207, 233, 209, 0.08), transparent);">
+            <h4 style="color: #008A27;"><i data-lucide="clipboard-check" class="w-5 h-5"></i> Mission</h4>
+            <p>Bella's mission is to ensure every project is delivered smoothly, clearly, and on time while maintaining strong communication between clients and the team.</p>
+          </div>
+
+          <h2>🧩 Role in Luviio</h2>
+          <p>Her responsibilities include:</p>
+          <ul class="role-list">
+            <li>Project planning and scheduling</li>
+            <li>Coordinating between clients and developers</li>
+            <li>Managing workflows and timelines</li>
+            <li>Ensuring delivery quality</li>
+            <li>Maintaining clarity across teams</li>
+          </ul>
+          
+          <p>In a startup environment, things can move fast—and sometimes unpredictably. Bella plays a key role in stabilizing that speed.</p>
+
+          <h2>🚀 Story</h2>
+          <p>She ensures that no matter how complex a project becomes, there is always a clear path forward. Her ability to organize, communicate, and align everyone keeps Luviio's delivery process efficient and reliable.</p>
+          
+          <p>She is the operational backbone of the company—quiet, structured, and essential.</p>
+
+          <blockquote style="border-color: #008A27;">
+            <p>"Structure doesn't limit creativity—it enables it. When everyone knows what to do and when, magic happens."</p>
           </blockquote>
+
+          <div class="author-card">
+            <img src="https://images.luviio.com/nurulnabila-web.jpeg" class="author-avatar" alt="Bella">
+            <div class="author-info">
+              <h4>Nurul Nabila (Bella)</h4>
+              <p>Co-Founder & Lead Project at Luviio. The operational force ensuring every project delivers on time, on budget, and beyond expectations.</p>
+            </div>
+          </div>
         `
       },
       putri: {
-        title: 'Putri Erinna: The Connector of People & Growth',
+        title: 'Putri Erinna: The Connector of People, Ideas, and Growth',
         author: 'Putri Erinna',
         date: 'December 2024',
         readTime: '6 min read',
@@ -3904,14 +4503,44 @@
               <div class="font-body text-[14px] text-text-gray">Client Relations & Marketing Manager</div>
             </div>
           </div>
-          <p class="font-body text-[18px] leading-[28px] text-text-gray mb-8">
-            At the front of Luviio's communication and relationships is Putri Erinna, responsible for client relations and marketing.
-          </p>
-          <blockquote class="border-l-4 border-error-red pl-6 my-8 italic bg-light-gray-bg/50 py-4 pr-4 rounded-r-standard">
-            <p class="font-body text-[18px] text-dark-charcoal leading-[28px]">
-              "Technology is useless if people don't feel heard."
-            </p>
+          
+          <p>At the front of Luviio's communication and relationships is Putri Erinna, the person responsible for client relations and marketing.</p>
+          
+          <p>Putri plays a key role in making sure that every client interaction feels human, clear, and supportive. She is often the bridge between business needs and technical solutions.</p>
+
+          <div class="mission-box" style="border-color: rgba(227, 35, 29, 0.2); background: linear-gradient(135deg, rgba(254, 218, 209, 0.08), transparent);">
+            <h4 style="color: #E3231D;"><i data-lucide="heart-handshake" class="w-5 h-5"></i> Mission</h4>
+            <p>Putri's mission is to build strong, lasting relationships with clients while helping Luviio grow through clear communication and meaningful engagement.</p>
+          </div>
+
+          <h2>🧩 Role in Luviio</h2>
+          <p>Her responsibilities include:</p>
+          <ul class="role-list">
+            <li>Managing client communication</li>
+            <li>Understanding client requirements</li>
+            <li>Handling onboarding and feedback</li>
+            <li>Supporting marketing and outreach</li>
+            <li>Strengthening brand presence</li>
+          </ul>
+          
+          <p>Putri's strength lies in connection. She understands that behind every project is a real business with goals, challenges, and expectations.</p>
+
+          <h2>🚀 Story</h2>
+          <p>Her communication style is calm, clear, and approachable, which helps clients feel understood from the very beginning. She ensures that ideas are not lost in translation between clients and developers.</p>
+          
+          <p>Through her work, Luviio becomes more than a technical service—it becomes a trusted partner.</p>
+
+          <blockquote style="border-color: #E3231D;">
+            <p>"Technology is useless if people don't feel heard. My job is to make sure every client knows they're not just a ticket number—they're a partner."</p>
           </blockquote>
+
+          <div class="author-card">
+            <img src="https://images.luviio.com/1E43D901-B454-4373-870C-85EFCCFF51D6_1_105_c.jpeg" class="author-avatar" alt="Putri">
+            <div class="author-info">
+              <h4>Putri Erinna</h4>
+              <p>Client Relations & Marketing at Luviio. Building bridges between businesses and technology through genuine human connection.</p>
+            </div>
+          </div>
         `
       }
     };
@@ -3944,7 +4573,7 @@
         
         <div class="mt-16 pt-8 border-t border-border-gray/50">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <button onclick="closeArticle()" class="inline-flex items-center gap-2 font-body text-[16px] font-bold text-electric-blue hover:underline glass-card px-4 py-2 rounded-standard transition-all">
+            <button onclick="closeArticle()" class="inline-flex items-center gap-2 font-body text-[16px] font-bold text-electric-blue hover:underline liquid-card px-4 py-2 rounded-standard transition-all">
               <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to blog
             </button>
             <button onclick="navigateTo('/blog'); closeArticle();" class="inline-flex items-center gap-2 bg-light-gray-bg px-4 py-2 rounded-standard font-body text-[14px] font-medium text-dark-charcoal hover:bg-border-gray transition-colors">
